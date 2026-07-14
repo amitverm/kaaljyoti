@@ -1,6 +1,12 @@
 # Miscellaneous
 *.class
 *.lock
+# …but the pub and CocoaPods lockfiles ARE tracked: this is an app,
+# not a library — published source must resolve to the exact dependency
+# versions the store builds were tested with (a fresh resolve once
+# pulled a broken firebase_core/firebase_messaging pair).
+!pubspec.lock
+!ios/Podfile.lock
 *.log
 *.pyc
 *.swp
@@ -117,3 +123,29 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+# macOS
+.DS_Store
+
+# Local env
+*.env
+
+# macOS
+.DS_Store
+
+# Local env
+*.env
+
+# Local config (real keys) — never commit
+env.json
+# Any per-environment config (env.staging.json etc.) — only the
+# example template is tracked.
+env.*.json
+!env.example.json
+
+# IDE state (machine-local; workspace.xml leaks local paths)
+.idea/
+*.iml
+
+# Supabase CLI link state — identifies the linked project/account
+# (project ref, org id, pooler host). Never publish.
+supabase/.temp/

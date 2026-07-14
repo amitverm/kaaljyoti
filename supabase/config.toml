@@ -1,0 +1,64 @@
+# Supabase CLI config for Kaal Jyoti.
+# Docs: https://supabase.com/docs/guides/local-development/cli/config
+
+project_id = "the-third-eye"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+max_rows = 100 # PostgREST page cap; matches the app's own pagination limits
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+# The Flutter app signs users in with email OTP / OAuth via supabase_flutter;
+# defaults are fine for local dev.
+
+[edge_runtime]
+enabled = true
+
+# ---------------------------------------------------------------------------
+# Edge functions
+# ---------------------------------------------------------------------------
+# combination-search is user-facing: the platform pre-verifies the JWT and the
+# function verifies it again via supabase-js.
+[functions.combination-search]
+verify_jwt = true
+
+# request-matching is INTERNAL-only: it must accept the X-Internal-Token
+# header (no JWT), so platform JWT verification is disabled and
+# requireInternal() in the function is the sole authentication layer.
+[functions.request-matching]
+verify_jwt = false
+
+# moderate-request and moderate-chart-report are callable by ops tooling
+# (X-Internal-Token / service-role key, no JWT) OR by an in-app admin's own
+# JWT (§ Admin, 0008_admin_role.sql) — since the ops-tooling path still has
+# no JWT, platform JWT verification stays disabled and
+# requireInternalOrAdmin() in the function does all authentication itself,
+# including the admin check.
+[functions.moderate-request]
+verify_jwt = false
+
+[functions.moderate-chart-report]
+verify_jwt = false
+
+# delete-account is user-facing: the platform pre-verifies the JWT and the
+# function verifies it again (and only ever deletes the verified caller).
+[functions.delete-account]
+verify_jwt = true
+
+# Database-webhook target (notifications INSERT -> push/email fan-out).
+# verify_jwt must be off so the webhook's X-Internal-Token path is
+# reachable; requireInternal() is the sole authentication layer.
+[functions.send-notification]
+verify_jwt = false

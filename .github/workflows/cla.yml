@@ -1,0 +1,51 @@
+# Copyright-assignment gate for external PRs (see CONTRIBUTING.md).
+#
+# Every PR gets a failing "CLA Assistant" check until the author posts
+# the exact signing comment below. Signatures (GitHub login + timestamp)
+# are committed to the `cla-signatures` branch as the permanent record;
+# a returning contributor is recognised automatically.
+#
+# After the first external PR arrives, also enable branch protection on
+# main requiring this check, so an unsigned PR cannot be merged even by
+# accident.
+name: CLA Assistant
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize]
+
+permissions:
+  actions: write
+  contents: write # commits signatures to the cla-signatures branch
+  pull-requests: write
+  statuses: write
+
+jobs:
+  cla:
+    # This name is what branch rulesets match as a required status
+    # check — keep it in sync with the "CLA Assistant" entry there.
+    name: CLA Assistant
+    runs-on: ubuntu-latest
+    steps:
+      - uses: contributor-assistant/github-action@v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          path-to-signatures: signatures/cla.json
+          branch: cla-signatures
+          path-to-document: https://github.com/amitverm/kaaljyoti/blob/main/CONTRIBUTING.md
+          allowlist: amitverm,dependabot[bot]
+          custom-pr-sign-comment: >-
+            I have read the contribution terms in CONTRIBUTING.md and I
+            hereby assign the copyright of this and all my future
+            contributions to this project to Amit Verma.
+          custom-notsigned-prcomment: >-
+            Thank you for the contribution! Kaal Jyoti accepts changes
+            only with copyright assignment (this keeps future licensing
+            options open — see CONTRIBUTING.md, "License and copyright
+            of contributions"). To agree, please post the following
+            comment exactly as written:
+          custom-allsigned-prcomment: >-
+            All contributors have signed the copyright assignment. ✅

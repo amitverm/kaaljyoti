@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark-mode palette for the home-screen widgets. -->
+<resources>
+    <color name="widget_bg">#1C1916</color>
+    <color name="widget_ink">#EDE6D9</color>
+    <color name="widget_ink_soft">#A39684</color>
+    <color name="widget_maroon">#E88270</color>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#F8F3E8</color>
+    <color name="splash_background">#F8F3E8</color>
+
+    <!-- Home-screen widget palette (dark variants in values-night). -->
+    <color name="widget_bg">#F8F3E8</color>
+    <color name="widget_ink">#2A2118</color>
+    <color name="widget_ink_soft">#8A7A66</color>
+    <color name="widget_maroon">#7B2D26</color>
+</resources>

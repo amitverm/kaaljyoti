@@ -1,0 +1,83 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Kaal Jyoti",
+  "@appTitle": {
+    "description": "TERMINOLOGY POLICY (brief §2.4): Sanskrit-derived astrological terms — nakshatra names, graha/planet names in context, dasha system names, tithi/yoga/karana names, 'kundli', 'lagna', 'ayanamsa', 'Mahakosh' — are FIXED across all languages and must NOT be translated. UI copy (buttons, labels, explanations) IS translated. New languages: add app_<code>.arb beside this file; no code changes required."
+  },
+  "kundlisTitle": "Kundlis",
+  "newKundli": "New Kundli",
+  "birthDetailsTitle": "Birth Details",
+  "prashnaTitle": "Prashna Kundli",
+  "nameLabel": "Name",
+  "dateOfBirth": "Date of birth",
+  "timeLabel": "Time",
+  "placeOfBirth": "Place of birth",
+  "castKundli": "Cast Kundli",
+  "prashnaHint": "Or cast a Prashna kundli for this exact moment",
+  "trustStatement": "Computed on-device. Your kundali never leaves this phone unless you turn on sync.",
+  "savedEncrypted": "{count} saved · encrypted on this device",
+  "@savedEncrypted": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "signInBanner": "Kundlis are device-only right now. Sign in to unlock sync + Mahakosh.",
+  "signIn": "Sign in",
+  "signOut": "Sign out",
+  "createAccount": "Create account",
+  "arrange": "Arrange",
+  "newView": "+ New view",
+  "onThisView": "ON THIS VIEW",
+  "widgetLibrary": "WIDGET LIBRARY",
+  "emptyView": "This view is empty — add widgets from the library.",
+  "done": "Done",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "deleteKundli": "Delete kundli",
+  "recalcWarning": "Changing birth details recalculates every widget for this kundli.",
+  "cloudSync": "Cloud sync",
+  "deviceOnly": "Device only",
+  "synced": "Synced",
+  "notShared": "Not shared",
+  "share": "Share…",
+  "withdraw": "Withdraw",
+  "exportPrint": "Export / Print",
+  "generateShare": "Generate & share",
+  "print": "Print",
+  "coverPage": "Cover page",
+  "mahakoshTitle": "Mahakosh",
+  "researchTitle": "Research",
+  "combinationQuery": "COMBINATION QUERY",
+  "addFilter": "Add filter",
+  "searchCharts": "Search charts",
+  "chartsMatch": "{count} charts match",
+  "@chartsMatch": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "shareToMahakosh": "Share to Mahakosh",
+  "publishToMahakosh": "Publish to Mahakosh",
+  "consentMain": "I consent to share this data for research",
+  "consentThirdParty": "I confirm I have this person's consent to share their birth data for research",
+  "consentHealth": "I specifically consent to sharing health-related information for research. This is sensitive personal data and is treated separately from general consent.",
+  "myOwn": "My own",
+  "someoneElses": "Someone else's",
+  "addLifeEvents": "Add life events (optional)",
+  "healthRelatedIncluded": "Health-related event included",
+  "notificationsTitle": "Notifications",
+  "profileTitle": "Profile",
+  "defaultAyanamsa": "Default ayanamsa",
+  "defaultChartStyle": "Default chart style",
+  "openRequests": "{count} open requests · pattern research",
+  "@openRequests": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "yours": "YOURS",
+  "respondWithChart": "Respond with a chart",
+  "submitForReview": "Submit for review"
+}

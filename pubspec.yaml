@@ -1,0 +1,106 @@
+name: kaaljyoti
+description: "Kaal Jyoti — Horoscope Calculator. High-precision Vedic astrology & kundali platform, deeply customizable, mobile-native."
+publish_to: "none"
+version: 0.1.0+11
+
+# Requires Flutter 3.27+ (Color.withValues) / Dart 3.6+.
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State & navigation
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+
+  # Astrology engine — Swiss Ephemeris FFI bindings
+  sweph: ^2.10.0
+
+  # Local storage (offline-first, encrypted at rest)
+  sqflite_sqlcipher: ^3.1.0
+  flutter_secure_storage: ^9.2.2
+  path_provider: ^2.1.3
+  path: ^1.9.0
+  shared_preferences: ^2.2.3
+
+  # Backend (Mahakosh, auth, opt-in sync)
+  supabase_flutter: ^2.5.6
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.0
+  crypto: ^3.0.3 # Apple sign-in nonce hashing
+
+  # PDF export / print
+  pdf: ^3.11.0
+  printing: ^5.13.0
+
+  # OS home-screen widgets (panchang + transit)
+  home_widget: ^0.7.0
+
+  # Location ("use current location" + instant Prashna); geocoding
+  # reverse-labels the Today place
+  geolocator: ^13.0.1
+  geocoding: ^3.0.0
+  flutter_timezone: ^3.0.1
+
+  # Utilities
+  http: ^1.2.1
+  intl: any
+  timezone: ^0.9.3
+  uuid: ^4.4.0
+  google_fonts: ^6.2.1
+  url_launcher: ^6.3.0 # AGPL §13 source-offer links in the Menu footer
+
+  # Crash reporting — inert unless SENTRY_DSN is provided at build time
+  sentry_flutter: ^8.14.2
+  firebase_core: ^4.11.0
+  firebase_messaging: ^16.4.1
+  package_info_plus: ^9.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+  # App icon & splash generation (Kaal Jyoti branding)
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.1
+
+flutter:
+  uses-material-design: true
+  generate: true # gen_l10n from lib/l10n/*.arb
+
+  # Bundled type faces (Marcellus, IBM Plex Sans 400/500/600, IBM Plex
+  # Mono 400/500). Placed in the top-level google_fonts/ folder that the
+  # google_fonts package auto-detects, so text renders from these static
+  # assets with NO runtime network fetch (see GoogleFonts.config in
+  # main.dart). Fonts are OFL-licensed; see google_fonts/OFL.txt.
+  assets:
+    - google_fonts/
+    # In-app brand emblem (512px, rendered from branding/kaaljyoti_icon.svg
+    # like the launcher art) — sign-in screen and first-run empty state.
+    - assets/emblem.png
+
+# App launcher icon — regenerate with:
+#   dart run flutter_launcher_icons
+# Source art lives in branding/generated/ (rendered from branding/kaaljyoti_icon.svg)
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "branding/generated/icon_source_1024.png"
+  adaptive_icon_background: "#F8F3E8"
+  adaptive_icon_foreground: "branding/generated/adaptive_foreground_1024.png"
+  min_sdk_android: 21
+
+# Native splash screen — regenerate with:
+#   dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#F8F3E8"
+  image: "branding/generated/splash_emblem_1024.png"
+  android_12:
+    image: "branding/generated/android12_emblem_1024.png"
+    color: "#F8F3E8"

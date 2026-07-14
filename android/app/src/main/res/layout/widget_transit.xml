@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Live Transit home-screen widget. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tw_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/widget_bg"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tw_asc"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/widget_maroon"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="Transit" />
+
+        <TextView
+            android:id="@+id/tw_updated"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/widget_ink_soft"
+            android:textSize="11sp"
+            android:text="" />
+    </LinearLayout>
+
+    <!-- Fallback single-line graha summary — shown only when the sky
+         line can't be parsed into the 3×3 grid below. -->
+    <TextView
+        android:id="@+id/tw_line"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/widget_ink"
+        android:textSize="13sp"
+        android:lineSpacingExtra="3dp"
+        android:maxLines="3"
+        android:ellipsize="end"
+        android:visibility="gone"
+        android:text="—" />
+
+    <!-- 3×3 graha grid (matches the iOS medium widget): one cell per
+         graha, filled row-major (Su Mo Ma / Me Ju Ve / Sa Ra Ke) with
+         styled text set from the provider. -->
+    <LinearLayout
+        android:id="@+id/tw_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/tw_g0" style="@style/WidgetGrahaCell" />
+            <TextView android:id="@+id/tw_g1" style="@style/WidgetGrahaCell" />
+            <TextView android:id="@+id/tw_g2" style="@style/WidgetGrahaCell" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/tw_g3" style="@style/WidgetGrahaCell" />
+            <TextView android:id="@+id/tw_g4" style="@style/WidgetGrahaCell" />
+            <TextView android:id="@+id/tw_g5" style="@style/WidgetGrahaCell" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/tw_g6" style="@style/WidgetGrahaCell" />
+            <TextView android:id="@+id/tw_g7" style="@style/WidgetGrahaCell" />
+            <TextView android:id="@+id/tw_g8" style="@style/WidgetGrahaCell" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Native-drawn transit chart (north/south per app setting).
+         Replaces the graha line on tall ("large") widgets only; the
+         chart already carries every placement. -->
+    <ImageView
+        android:id="@+id/tw_chart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="6dp"
+        android:visibility="gone"
+        android:contentDescription="@null" />
+</LinearLayout>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget-picker descriptions (shown under the widget name on
+     Android 12+). Kept in sync with the iOS widget descriptions in
+     KaalJyotiWidgets.swift. -->
+<resources>
+    <string name="widget_panchang_description">Tithi, nakshatra, sunrise/sunset and Rahu Kaal for your city.</string>
+    <string name="widget_transit_description">The current sky: rising lagna and every graha\'s sign.</string>
+</resources>
