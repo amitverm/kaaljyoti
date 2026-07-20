@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../charts/pinch_zoom.dart';
 import '../charts/sbc_painter.dart';
@@ -11,8 +11,12 @@ import '../core/astro/sarvatobhadra.dart';
 import '../core/astro/transit.dart' as transit;
 import '../core/theme/theme.dart';
 import '../state/providers.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
+
+String _sarvatobhadraTitle(AppLocalizations l10n) =>
+    l10n.moduleSarvatobhadraTitle;
 
 /// Sarvatobhadra Chakra — the fixed 9×9 transit grid with vedha
 /// analysis on the natal anchors (janma nakshatra, rashi, lagna,
@@ -24,6 +28,7 @@ class SarvatobhadraModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'sarvatobhadra',
         title: 'Sarvatobhadra Chakra',
+        localizedTitle: _sarvatobhadraTitle,
         icon: Icons.grid_on,
         category: 'Chakra',
         defaultSpan: CardSpan.full,
@@ -42,11 +47,12 @@ class SarvatobhadraModule extends AstroModule {
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
-    final v = _SbcVedhas(ctx.snapshot, null);
+    final l10n = ctx.l10n;
+    final v = _SbcVedhas(ctx.snapshot, null, l10n);
     return [
-      pdfSectionHeader('Sarvatobhadra Chakra — vedhas on natal anchors'),
+      pdfSectionHeader(l10n.sarvatobhadraPdfHeader),
       pw.TableHelper.fromTextArray(
-        headers: ['Natal anchor', 'Vedha from (transit)'],
+        headers: [l10n.sbcNatalAnchor, l10n.sbcVedhaFrom],
         data: [
           for (final e in v.anchorReport.entries)
             [e.key, e.value.isEmpty ? '—' : e.value.join(', ')],
@@ -63,7 +69,7 @@ class SarvatobhadraModule extends AstroModule {
 
 /// Everything the painter + report need for one instant.
 class _SbcVedhas {
-  _SbcVedhas(AstroSnapshot s, DateTime? fixed) {
+  _SbcVedhas(AstroSnapshot s, DateTime? fixed, AppLocalizations l10n) {
     final tPos = transit.currentTransitPositions(
         ayanamsaId: s.ayanamsaId, at: fixed ?? DateTime.now());
 
@@ -86,7 +92,10 @@ class _SbcVedhas {
     final tithiCell = sbcTithiCell(s.panchang.tithiIndex);
     final varaCell = sbcVaraCell(s.panchang.vara);
     anchors = {
-      janmaCell, rashiCell, lagnaCell, tithiCell,
+      janmaCell,
+      rashiCell,
+      lagnaCell,
+      tithiCell,
       if (varaCell != null) varaCell,
     };
 
@@ -94,16 +103,20 @@ class _SbcVedhas {
     maleficVedha = {};
     beneficVedha = {};
     final vedhas = sbcVedhasByPlanet(tPos);
-    final anchorHits = <String, List<String>>{
-      'Janma nakshatra (${Nakshatra28.abbrs[Nakshatra28.fromLongitude(s.positions[Planet.moon]!.longitude)]})':
-          [],
-      'Janma rashi (${s.moonSign.western})': [],
-      'Lagna (${s.lagnaSign.western})': [],
-      'Janma tithi group': [],
-      'Janma vara': [],
+    final anchorHits = <String, List<({String label, bool malefic})>>{
+      l10n.sbcJanmaNakshatra(nakshatra28AbbrLabel(l10n,
+          Nakshatra28.fromLongitude(s.positions[Planet.moon]!.longitude))): [],
+      l10n.sbcJanmaRashi(s.moonSign.label(l10n)): [],
+      l10n.sbcLagnaAnchor(s.lagnaSign.label(l10n)): [],
+      l10n.sbcJanmaTithiGroup: [],
+      l10n.sbcJanmaVara: [],
     };
     final anchorCells = [
-      janmaCell, rashiCell, lagnaCell, tithiCell, varaCell,
+      janmaCell,
+      rashiCell,
+      lagnaCell,
+      tithiCell,
+      varaCell,
     ];
     vedhas.forEach((planet, cells) {
       final malefic = isChakraMalefic(planet);
@@ -112,8 +125,11 @@ class _SbcVedhas {
       for (var i = 0; i < anchorCells.length; i++) {
         final a = anchorCells[i];
         if (a != null && set.contains(a)) {
-          anchorHits[anchorHits.keys.elementAt(i)]!.add(
-              '${planet.displayName}${malefic ? ' (M)' : ' (B)'}');
+          anchorHits[anchorHits.keys.elementAt(i)]!.add((
+            label: '${planet.label(l10n)}'
+                ' (${malefic ? l10n.sbcMaleficMark : l10n.sbcBeneficMark})',
+            malefic: malefic,
+          ));
         }
       }
     });
@@ -125,7 +141,7 @@ class _SbcVedhas {
   late final Set<(int, int)> anchors;
   late final Set<(int, int)> maleficVedha;
   late final Set<(int, int)> beneficVedha;
-  late final Map<String, List<String>> anchorReport;
+  late final Map<String, List<({String label, bool malefic})>> anchorReport;
 }
 
 class _SbcBody extends ConsumerWidget {
@@ -136,34 +152,32 @@ class _SbcBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final s = ctx.snapshot;
     final fixed = ref.watch(transitFixedTimeProvider(ctx.kundli.id));
-    final v = _SbcVedhas(s, fixed);
+    final v = _SbcVedhas(s, fixed, l10n);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (detail) ...[
-          Text('Sarvatobhadra Chakra', style: TETheme.serif(size: 18)),
+          Text(l10n.moduleSarvatobhadraTitle, style: KJTheme.serif(size: 18)),
           const SizedBox(height: 4),
           Text(
-            'Fixed 9×9 grid. Each transiting graha pierces three vedha'
-            ' lines (across + both diagonals) from its nakshatra. Warm'
-            ' tint: malefic vedha; green: benefic; deep tint: your natal'
-            ' anchors. Across is strongest at normal speed, the forward'
-            ' diagonal when fast (always Sun/Moon), the rear when'
-            ' retrograde (always Rahu/Ketu).',
-            style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+            l10n.sbcBlurb,
+            style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 12),
         ],
         // Pinch to zoom (two fingers), card and detail alike — 81
-        // cells of small text want magnification.
-        PinchZoom(
-          child: AspectRatio(
-            aspectRatio: 1,
+        // cells of small text want magnification. AspectRatio outside
+        // PinchZoom so the zoom viewport is bounded (see chart_view).
+        AspectRatio(
+          aspectRatio: 1,
+          child: PinchZoom(
             child: CustomPaint(
               painter: SbcPainter(
+                l10n: l10n,
                 anchors: v.anchors,
                 maleficVedha: v.maleficVedha,
                 beneficVedha: v.beneficVedha,
@@ -175,10 +189,8 @@ class _SbcBody extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          fixed != null
-              ? 'Transit as of chosen time'
-              : 'Transit live · natal planets in ink, transit in green',
-          style: TETheme.mono(size: 11, color: TEColors.inkSoft),
+          fixed != null ? l10n.kotaTransitAsOf : l10n.sbcTransitLive,
+          style: KJTheme.mono(size: 11, color: KJColors.inkSoft),
         ),
         if (detail) ...[
           const SizedBox(height: 8),
@@ -194,14 +206,14 @@ class _SbcBody extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Text(
-              '${e.key}: ${e.value.isEmpty ? 'no vedha' : e.value.join(', ')}',
-              style: TETheme.mono(
+              '${e.key}: ${e.value.isEmpty ? context.l10n.sbNoVedha : e.value.map((h) => h.label).join(', ')}',
+              style: KJTheme.mono(
                 size: 11,
-                color: e.value.any((s) => s.endsWith('(M)'))
-                    ? TEColors.maroon
+                color: e.value.any((h) => h.malefic)
+                    ? KJColors.maroon
                     : e.value.isEmpty
-                        ? TEColors.inkSoft
-                        : TEColors.forest,
+                        ? KJColors.inkSoft
+                        : KJColors.forest,
               ),
             ),
           ),

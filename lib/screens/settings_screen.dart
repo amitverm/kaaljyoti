@@ -13,6 +13,7 @@ import '../core/astro/ayanamsa.dart';
 import '../core/date_format.dart';
 import '../core/theme/theme.dart';
 import '../core/theme/type_scale.dart';
+import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
 
@@ -28,13 +29,56 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final ayanamsa = ref.watch(defaultAyanamsaProvider);
     final dateFormat = ref.watch(dateFormatProvider);
+    final language = ref.watch(languageProvider);
+    final l10n = context.l10n;
+
+    // (stored value, display label). Built from the locales gen-l10n
+    // found — a new app_<code>.arb appears here on its own, no edit
+    // needed. Each language's name comes from its OWN file's
+    // languageEndonym, so it reads in its own script and is never
+    // translated into the current UI language.
+    final languageChoices = [
+      ('system', l10n.languageSystemDefault),
+      for (final locale in AppLocalizations.supportedLocales)
+        (
+          locale.languageCode,
+          lookupAppLocalizations(locale).languageEndonym,
+        ),
+    ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n.stTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
         children: [
-          _label('DATE FORMAT'),
+          _label(l10n.languageTitle.toUpperCase()),
+          Card(
+            child: Column(
+              children: [
+                for (final (code, label) in languageChoices) ...[
+                  if (code != 'system') const Divider(height: 1),
+                  RadioListTile<String>(
+                    value: code,
+                    groupValue: language,
+                    activeColor: KJColors.maroon,
+                    onChanged: (v) {
+                      if (v != null) {
+                        ref.read(languageProvider.notifier).update(v);
+                      }
+                    },
+                    title: Text(label, style: const TextStyle(fontSize: 14.5)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.languageSectionNote,
+            style: TextStyle(fontSize: 12, color: KJColors.inkSoft),
+          ),
+          const SizedBox(height: 20),
+          _label(l10n.stSectionDateFormat),
           Card(
             child: Column(
               children: [
@@ -44,7 +88,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   RadioListTile<DateFormatPref>(
                     value: pref,
                     groupValue: dateFormat,
-                    activeColor: TEColors.maroon,
+                    activeColor: KJColors.maroon,
                     onChanged: (p) {
                       if (p != null) {
                         ref.read(dateFormatProvider.notifier).update(p);
@@ -59,9 +103,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Applies everywhere dates appear. Spelled-out formats avoid any '
-            'day/month confusion; numeric formats are more compact.',
-            style: TextStyle(fontSize: 12, color: TEColors.inkSoft),
+            l10n.stDateFormatNote,
+            style: TextStyle(fontSize: 12, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 20),
           _label('DEFAULTS'),
@@ -69,10 +112,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               children: [
                 ListTile(
-                  title: const Text('Default ayanamsa'),
+                  title: Text(l10n.stDefaultAyanamsa),
                   subtitle: Text(
-                    '${Ayanamsa.byId(ayanamsa.value ?? Ayanamsa.lahiri.id).name}'
-                    ' — overridable per kundli',
+                    l10n.stAyanamsaSubtitle(
+                        Ayanamsa.byId(ayanamsa.value ?? Ayanamsa.lahiri.id)
+                            .name),
                     style: const TextStyle(fontSize: 12),
                   ),
                   trailing: const Icon(Icons.chevron_right, size: 20),
@@ -80,7 +124,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  title: const Text('Default chart style'),
+                  title: Text(l10n.stDefaultChartStyle),
                   trailing: const Icon(Icons.chevron_right, size: 20),
                   onTap: _pickChartStyle,
                 ),
@@ -88,13 +132,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          _label('CHART TEXT FORMAT'),
+          _label(l10n.stSectionChartText),
           _chartTextCard(),
           const SizedBox(height: 6),
           Text(
-            'How planets, degrees and signs render inside the charts. '
-            'Changes apply to every chart immediately.',
-            style: TextStyle(fontSize: 12, color: TEColors.inkSoft),
+            l10n.stChartTextNote,
+            style: TextStyle(fontSize: 12, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 20),
           _label('APPEARANCE'),
@@ -108,6 +151,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// [chartTuning] notifier (charts repaint live) and are persisted
   /// via [SettingsRepository].
   Widget _chartTextCard() {
+    final l10n = context.l10n;
     return ValueListenableBuilder<ChartTuning>(
       valueListenable: chartTuning,
       builder: (context, t, _) {
@@ -132,8 +176,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   children: [
                     Text(label, style: const TextStyle(fontSize: 13.5)),
                     Text('${(value * 100).round()}%',
-                        style:
-                            TETheme.mono(size: 12, color: TEColors.inkSoft)),
+                        style: KJTheme.mono(size: 12, color: KJColors.inkSoft)),
                   ],
                 ),
                 Slider(
@@ -141,7 +184,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   min: min,
                   max: max,
                   divisions: divisions,
-                  activeColor: TEColors.maroon,
+                  activeColor: KJColors.maroon,
                   onChanged: onChanged,
                 ),
               ],
@@ -154,7 +197,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 sliderRow(
-                  label: 'Planet size',
+                  label: l10n.stPlanetSize,
                   value: t.baseScale,
                   min: 0.7,
                   max: 1.6,
@@ -162,7 +205,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onChanged: (v) => set(t.copyWith(baseScale: v)),
                 ),
                 sliderRow(
-                  label: 'Degrees & marks size',
+                  label: l10n.stDegreesMarksSize,
                   value: t.annotationScale,
                   min: 0.5,
                   max: 1.0,
@@ -172,30 +215,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  title: const Text('Bold planet names',
-                      style: TextStyle(fontSize: 13.5)),
-                  activeThumbColor: TEColors.maroon,
+                  title: Text(l10n.stBoldPlanetNames,
+                      style: const TextStyle(fontSize: 13.5)),
+                  activeThumbColor: KJColors.maroon,
                   value: t.weight != FontWeight.w400,
                   onChanged: (v) => set(t.copyWith(
                       weight: v ? FontWeight.w600 : FontWeight.w400)),
                 ),
                 const SizedBox(height: 4),
-                const Text('Degree detail', style: TextStyle(fontSize: 13.5)),
+                Text(l10n.stDegreeDetail,
+                    style: const TextStyle(fontSize: 13.5)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   children: [
-                    for (final (minutes, label) in const [
-                      (true, "Minutes — 23°41'"),
-                      (false, 'Whole — 23°'),
+                    for (final (minutes, label) in [
+                      (true, l10n.stDegreeMinutes),
+                      (false, l10n.stDegreeWhole),
                     ])
                       ChoiceChip(
                         label: Text(label),
                         selected: t.degreeMinutes == minutes,
                         labelStyle: TextStyle(
                             color: t.degreeMinutes == minutes
-                                ? TEColors.paper
-                                : TEColors.ink),
+                                ? KJColors.paper
+                                : KJColors.ink),
                         onSelected: (_) =>
                             set(t.copyWith(degreeMinutes: minutes)),
                       ),
@@ -210,23 +254,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       style: TextStyle(fontSize: 13.5)),
                   children: [
                     sliderRow(
-                      label: 'Smallest allowed size',
+                      label: l10n.stSmallestSize,
                       value: t.minFontScale,
                       min: 0.3,
                       max: 1.0,
                       divisions: 14,
                       onChanged: (v) => set(t.copyWith(minFontScale: v)),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
-                        'In a crowded house the text shrinks to fit, but '
-                        'never below this fraction of its normal size.',
-                        style: TextStyle(fontSize: 11.5),
+                        l10n.stSmallestSizeNote,
+                        style: const TextStyle(fontSize: 11.5),
                       ),
                     ),
                     sliderRow(
-                      label: 'Sign label size',
+                      label: l10n.stSignLabelSize,
                       value: t.signScale,
                       min: 0.7,
                       max: 1.5,
@@ -234,7 +277,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onChanged: (v) => set(t.copyWith(signScale: v)),
                     ),
                     sliderRow(
-                      label: 'Text area within house',
+                      label: l10n.stTextAreaInHouse,
                       value: t.contentInflate,
                       min: 1.0,
                       max: 1.35,
@@ -247,7 +290,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => set(ChartTuning.defaults),
-                    child: const Text('Reset to defaults'),
+                    child: Text(l10n.stResetDefaults),
                   ),
                 ),
               ],
@@ -259,6 +302,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _appearanceCard() {
+    final l10n = context.l10n;
     final appearance = ref.watch(appearanceProvider);
     final notifier = ref.read(appearanceProvider.notifier);
 
@@ -271,9 +315,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Text size', style: TextStyle(fontSize: 13.5)),
+                Text(l10n.stTextSize, style: const TextStyle(fontSize: 13.5)),
                 Text('${(appearance.textScale * 100).round()}%',
-                    style: TETheme.mono(size: 12, color: TEColors.inkSoft)),
+                    style: KJTheme.mono(size: 12, color: KJColors.inkSoft)),
               ],
             ),
             Slider(
@@ -281,63 +325,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               min: 1.0,
               max: 1.6,
               divisions: 6,
-              activeColor: TEColors.maroon,
+              activeColor: KJColors.maroon,
               onChanged: (v) =>
                   notifier.update(appearance.copyWith(textScale: v)),
             ),
             const SizedBox(height: 4),
-            const Text('Theme', style: TextStyle(fontSize: 13.5)),
+            Text(l10n.stTheme, style: const TextStyle(fontSize: 13.5)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               children: [
-                for (final (name, label) in const [
-                  ('classic', 'Classic'),
-                  ('contrast', 'High contrast'),
-                  ('dark', 'Dark'),
+                for (final (name, label) in [
+                  ('classic', l10n.stThemeClassic),
+                  ('contrast', l10n.stThemeHighContrast),
+                  ('dark', l10n.stThemeDark),
                 ])
                   ChoiceChip(
                     label: Text(label),
                     selected: appearance.paletteName == name,
                     labelStyle: TextStyle(
                         color: appearance.paletteName == name
-                            ? TEColors.paper
-                            : TEColors.ink),
-                    onSelected: (_) => notifier
-                        .update(appearance.copyWith(paletteName: name)),
+                            ? KJColors.paper
+                            : KJColors.ink),
+                    onSelected: (_) =>
+                        notifier.update(appearance.copyWith(paletteName: name)),
                   ),
               ],
             ),
             const SizedBox(height: 12),
-            const Text('Typography', style: TextStyle(fontSize: 13.5)),
+            Text(l10n.stTypography, style: const TextStyle(fontSize: 13.5)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               children: [
-                for (final (editorial, label) in const [
-                  (true, 'Editorial'),
-                  (false, 'Plain'),
+                for (final (editorial, label) in [
+                  (true, l10n.stTypeEditorial),
+                  (false, l10n.stTypePlain),
                 ])
                   ChoiceChip(
                     label: Text(label),
                     selected: appearance.serifHeadings == editorial,
                     labelStyle: TextStyle(
                         color: appearance.serifHeadings == editorial
-                            ? TEColors.paper
-                            : TEColors.ink),
-                    onSelected: (_) => notifier.update(
-                        appearance.copyWith(serifHeadings: editorial)),
+                            ? KJColors.paper
+                            : KJColors.ink),
+                    onSelected: (_) => notifier
+                        .update(appearance.copyWith(serifHeadings: editorial)),
                   ),
               ],
             ),
             const SizedBox(height: 6),
             Text(
               appearance.serifHeadings
-                  ? 'Editorial — Marcellus display headings with IBM Plex '
-                      'for body and data. The classic look.'
-                  : 'Plain — IBM Plex throughout, no serif. Cleaner and '
-                      'more legible at large text sizes.',
-              style: TEType.caption(),
+                  ? l10n.stTypographyNoteEditorial
+                  : l10n.stTypographyNotePlain,
+              style: KJType.caption(),
             ),
           ],
         ),
@@ -345,12 +387,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _label(String t) => TESectionLabel(t, padded: true);
+  Widget _label(String t) => KJSectionLabel(t, padded: true);
 
   void _pickAyanamsa() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       builder: (ctx) => ListView(
         padding: const EdgeInsets.symmetric(vertical: 12),
         children: [
@@ -359,9 +401,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               dense: true,
               title: Text(a.name),
               onTap: () async {
-                await ref
-                    .read(settingsRepoProvider)
-                    .setDefaultAyanamsaId(a.id);
+                await ref.read(settingsRepoProvider).setDefaultAyanamsaId(a.id);
                 ref.invalidate(defaultAyanamsaProvider);
                 if (ctx.mounted) Navigator.pop(ctx);
               },
@@ -374,7 +414,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _pickChartStyle() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       builder: (ctx) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -382,7 +422,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           for (final s in ChartStyle.values)
             ListTile(
               dense: true,
-              title: Text(s.displayName),
+              title: Text(s.label(context.l10n)),
               onTap: () async {
                 await ref
                     .read(settingsRepoProvider)

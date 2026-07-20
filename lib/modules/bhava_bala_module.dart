@@ -6,14 +6,17 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../core/astro/bhava_bala.dart';
 import '../core/astro/shadbala.dart' show computeShadbalaSync;
 import '../core/theme/theme.dart';
 import '../state/providers.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
+
+String _bhavaBalaTitle(AppLocalizations l10n) => l10n.moduleBhavaBalaTitle;
 
 String _fmt1(double v) => v.toStringAsFixed(1);
 
@@ -24,6 +27,7 @@ class BhavaBalaModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'bhava_bala',
         title: 'Bhava Bala',
+        localizedTitle: _bhavaBalaTitle,
         icon: Icons.home_work_outlined,
         category: 'Chart & Grahas',
         defaultSpan: CardSpan.full,
@@ -44,18 +48,25 @@ class BhavaBalaModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final shadbala = computeShadbalaSync(ctx.snapshot);
     final results = computeBhavaBala(ctx.snapshot, shadbala);
+    final l10n = ctx.l10n;
     return [
-      pdfSectionHeader('Bhava Bala'),
+      pdfSectionHeader(l10n.moduleBhavaBalaTitle),
       pw.TableHelper.fromTextArray(
-        headers: const [
-          'House', 'Rashi', 'From Lord', 'Dig', 'Drishti', 'Planets-in',
-          'Day-Night', 'Rupas',
+        headers: [
+          l10n.labelHouse,
+          l10n.labelSign,
+          l10n.bbFromLord,
+          l10n.sbDig,
+          l10n.bbDrishti,
+          l10n.bbPlanetsIn,
+          l10n.bbDayNight,
+          l10n.sbRupas,
         ],
         data: [
           for (final r in results)
             [
               '${r.house}',
-              r.sign.western,
+              r.sign.label(l10n),
               _fmt1(r.fromLord),
               _fmt1(r.dig),
               _fmt1(r.drishti),
@@ -80,10 +91,7 @@ class BhavaBalaModule extends AstroModule {
       ),
       pw.SizedBox(height: 4),
       pw.Text(
-        'Shashtiamsas (Virupas); Rupas = total/60, can be negative. '
-        'Bhavadhipati/Drishti components carry the same validation '
-        'caveats as shadbala.dart and bhava_bala.dart doc comments — '
-        'not yet numerically validated against a printed reference.',
+        l10n.bbPdfNote,
         style: pw.TextStyle(fontSize: 7.5, color: pdfInkSoft),
       ),
     ];
@@ -97,11 +105,12 @@ class _BhavaBalaBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final async = ref.watch(bhavaBalaProvider(ctx.kundli.id));
     return async.when(
       loading: () => const SizedBox(
           height: 90, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('Could not compute: $e'),
+      error: (e, _) => Text(l10n.sbCouldNotCompute('$e')),
       data: (results) {
         final maxScale = [
           480.0,
@@ -122,9 +131,8 @@ class _BhavaBalaBody extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  'Bhava (house) strength — not to be confused with the '
-                  'planets\' own Shadbala above',
-                  style: TETheme.mono(size: 10, color: TEColors.inkSoft),
+                  l10n.bbCardCaption,
+                  style: KJTheme.mono(size: 10, color: KJColors.inkSoft),
                 ),
               ),
           ],
@@ -145,8 +153,9 @@ class _BhavaBar extends StatelessWidget {
     // (via planetInk) — cycle through the same maroon family, tinted
     // pastel exactly like Shadbala's bars (Task 10 treatment), so the
     // two strength widgets read as a matched pair.
-    final color = TEColors.maroon;
-    final pastel = Color.lerp(color, TEColors.paper, 0.5)!;
+    final l10n = context.l10n;
+    final color = KJColors.maroon;
+    final pastel = Color.lerp(color, KJColors.paper, 0.5)!;
     final negative = result.total < 0;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -155,24 +164,22 @@ class _BhavaBar extends StatelessWidget {
         children: [
           SizedBox(
             width: 44,
-            child: Text('H${result.house}',
+            child: Text(l10n.bbHouseShort('${result.house}'),
                 style: TextStyle(
                     fontSize: 13, fontWeight: FontWeight.w700, color: color)),
           ),
           Expanded(
             child: LayoutBuilder(builder: (context, constraints) {
-              final w = constraints.maxWidth;
-              final fillFrac =
-                  (result.total.abs() / maxScale).clamp(0.0, 1.0);
+              final fillFrac = (result.total.abs() / maxScale).clamp(0.0, 1.0);
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
                   Container(
                     height: 16,
                     decoration: BoxDecoration(
-                      color: TEColors.paperAlt,
+                      color: KJColors.paperAlt,
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: TEColors.hairline),
+                      border: Border.all(color: KJColors.hairline),
                     ),
                     child: Align(
                       alignment: Alignment.centerLeft,
@@ -184,7 +191,7 @@ class _BhavaBar extends StatelessWidget {
                             Container(
                               decoration: BoxDecoration(
                                 color: negative
-                                    ? TEColors.maroon.withValues(alpha: 0.18)
+                                    ? KJColors.maroon.withValues(alpha: 0.18)
                                     : pastel,
                                 borderRadius: BorderRadius.circular(4),
                               ),
@@ -195,7 +202,7 @@ class _BhavaBar extends StatelessWidget {
                               bottom: 0,
                               child: Container(
                                   width: 2,
-                                  color: negative ? TEColors.maroon : color),
+                                  color: negative ? KJColors.maroon : color),
                             ),
                           ],
                         ),
@@ -210,9 +217,10 @@ class _BhavaBar extends StatelessWidget {
           SizedBox(
             width: 96,
             child: Text(
-              '${result.sign.western.substring(0, 3)} · ${_fmt1(result.rupas)}R',
-              style: TETheme.mono(
-                  size: 11, color: negative ? TEColors.maroon : TEColors.forest),
+              l10n.bbBarValue(result.sign.abbrLabel(l10n), _fmt1(result.rupas)),
+              style: KJTheme.mono(
+                  size: 11,
+                  color: negative ? KJColors.maroon : KJColors.forest),
             ),
           ),
         ],
@@ -227,12 +235,13 @@ class _ComponentBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final parts = <(String, double)>[
-      ('From Lord', result.fromLord),
-      ('Dig', result.dig),
-      ('Drishti', result.drishti),
-      ('Planets-in', result.planetsIn),
-      ('Day-Night', result.dayNight),
+      (l10n.bbFromLord, result.fromLord),
+      (l10n.sbDig, result.dig),
+      (l10n.bbDrishti, result.drishti),
+      (l10n.bbPlanetsIn, result.planetsIn),
+      (l10n.bbDayNight, result.dayNight),
     ];
     return Padding(
       padding: const EdgeInsets.only(left: 52),
@@ -245,7 +254,7 @@ class _ComponentBreakdown extends StatelessWidget {
               '$label ${_fmt1(value)}',
               style: TextStyle(
                 fontSize: 11,
-                color: value < 0 ? TEColors.maroon : TEColors.inkSoft,
+                color: value < 0 ? KJColors.maroon : KJColors.inkSoft,
               ),
             ),
         ],

@@ -25,9 +25,8 @@ class KarakamshaLagna {
 
 KarakamshaLagna karakamshaLagna(AstroSnapshot snapshot) {
   final karakas = saptaKarakas(snapshot.positions);
-  final ak = karakas.entries
-      .firstWhere((e) => e.value == Karaka.atmakaraka)
-      .key;
+  final ak =
+      karakas.entries.firstWhere((e) => e.value == Karaka.atmakaraka).key;
   final sign = navamsaSign(snapshot.positions[ak]!.longitude);
   return KarakamshaLagna(atmakaraka: ak, sign: sign);
 }

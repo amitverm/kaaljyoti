@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../charts/bindu_chart.dart';
 import '../core/astro/ashtakavarga.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
+
+String _ashtakavargaTitle(AppLocalizations l10n) =>
+    l10n.moduleAshtakavargaTitle;
 
 /// Ashtakavarga: SAV/BAV bindu counts drawn in the classical chart
 /// layout (numbers per house). The card shows one chart — SAV by
@@ -20,6 +24,7 @@ class AshtakavargaModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'ashtakavarga',
         title: 'Ashtakavarga',
+        localizedTitle: _ashtakavargaTitle,
         icon: Icons.apps_outlined,
         category: 'Chart & Grahas',
         defaultSpan: CardSpan.half,
@@ -29,28 +34,28 @@ class AshtakavargaModule extends AstroModule {
   Planet? _selected(Map<String, dynamic> config) {
     final raw = config['chart'] as String?;
     if (raw == null || raw == 'sav') return null;
-    return Planet.values.firstWhere((p) => p.name == raw,
-        orElse: () => Planet.sun);
+    return Planet.values
+        .firstWhere((p) => p.name == raw, orElse: () => Planet.sun);
   }
 
   @override
-  List<ModuleConfigChoice> configChoices() => [
+  List<ModuleConfigChoice> configChoices(AppLocalizations l10n) => [
         ModuleConfigChoice(
           key: 'chart',
-          label: 'Chart',
+          label: l10n.cfgChart,
           options: [
-            ('sav', 'Sarvashtakavarga (SAV)'),
+            ('sav', l10n.savFull),
             for (final p in ashtakavargaPlanets)
-              (p.name, '${p.displayName} BAV'),
+              (p.name, l10n.bavOf(p.label(l10n))),
           ],
         ),
-        chartStyleChoice,
+        chartStyleChoice(l10n),
       ];
 
   @override
-  String? configSummary(Map<String, dynamic> config) {
+  String? configSummary(Map<String, dynamic> config, AppLocalizations l10n) {
     final p = _selected(config);
-    return p == null ? 'SAV' : '${p.abbr} BAV';
+    return p == null ? 'SAV' : l10n.bavOf(p.abbrLabel(l10n));
   }
 
   @override
@@ -70,11 +75,9 @@ class AshtakavargaModule extends AstroModule {
         ),
         const SizedBox(height: 10),
         Text(
-          planet == null
-              ? 'Sarvashtakavarga · ${scores.fold(0, (a, b) => a + b)} bindus'
-              : '${planet.displayName} Bhinnashtakavarga · '
-                  '${scores.fold(0, (a, b) => a + b)} bindus',
-          style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+          '${planet == null ? context.l10n.avSarv : context.l10n.avBhinnaOf(planet.label(context.l10n))}'
+          ' · ${context.l10n.avBindusCount('${scores.fold(0, (a, b) => a + b)}')}',
+          style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
         ),
       ],
     );
@@ -89,12 +92,12 @@ class AshtakavargaModule extends AstroModule {
     final av = ctx.ashtakavarga;
     final sav = av.sav();
     return [
-      pdfSectionHeader('Ashtakavarga'),
+      pdfSectionHeader(ctx.l10n.moduleAshtakavargaTitle),
       pw.TableHelper.fromTextArray(
         headers: [
-          'Chart',
-          for (final s in ZodiacSign.values) s.western.substring(0, 3),
-          'Total',
+          ctx.l10n.cfgChart,
+          for (final s in ZodiacSign.values) s.abbrLabel(ctx.l10n),
+          ctx.l10n.labelTotal,
         ],
         data: [
           ['SAV', ...sav.map((v) => '$v'), '${sav.fold(0, (a, b) => a + b)}'],
@@ -113,8 +116,7 @@ class AshtakavargaModule extends AstroModule {
       ),
       pw.SizedBox(height: 4),
       pw.Text(
-        'Bindus per sign; SAV is the sum of the seven graha BAVs '
-        '(grand total 337).',
+        ctx.l10n.avPdfNote,
         style: pdfLabel(),
       ),
     ];
@@ -155,13 +157,12 @@ class _AshtakavargaDetailBodyState extends State<_AshtakavargaDetailBody> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Ashtakavarga', style: TETheme.serif(size: 18)),
+          Text(context.l10n.moduleAshtakavargaTitle,
+              style: KJTheme.serif(size: 18)),
           const SizedBox(height: 4),
           Text(
-            'Benefic points (bindus) per sign. SAV sums the seven graha'
-            ' charts; a graha transiting a high-bindu sign of its own BAV'
-            ' gives better results.',
-            style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+            context.l10n.avBlurb,
+            style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -193,11 +194,10 @@ class _AshtakavargaDetailBodyState extends State<_AshtakavargaDetailBody> {
           ),
           const SizedBox(height: 12),
           Text(
-            '${_selected == null ? 'Sarvashtakavarga' : '${_selected!.displayName} Bhinnashtakavarga'}'
-            ' · $total bindus\n'
-            'Strongest: ${ZodiacSign.values[maxIdx].western} (${scores[maxIdx]})'
-            ' · Weakest: ${ZodiacSign.values[minIdx].western} (${scores[minIdx]})',
-            style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+            '${_selected == null ? context.l10n.avSarv : context.l10n.avBhinnaOf(_selected!.label(context.l10n))}'
+            ' · ${context.l10n.avBindusCount('$total')}\n'
+            '${context.l10n.avStrongWeak(ZodiacSign.values[maxIdx].label(context.l10n), '${scores[maxIdx]}', ZodiacSign.values[minIdx].label(context.l10n), '${scores[minIdx]}')}',
+            style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
           ),
         ],
       ),

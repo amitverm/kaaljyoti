@@ -20,8 +20,7 @@ class ResearchRepository {
         .order('created_at', ascending: false)
         .limit(100);
     return [
-      for (final r in rows)
-        ResearchRequest.fromJson(r, currentUserId: _userId),
+      for (final r in rows) ResearchRequest.fromJson(r, currentUserId: _userId),
     ];
   }
 

@@ -13,10 +13,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 
-/// reason code -> user-facing label. Kept in sync with the
-/// chart_reports.reason check constraint (0007_report_mahakosh_chart.sql).
+/// reason code -> English fallback label. The reason CODES are the
+/// persisted contract, kept in sync with the chart_reports.reason check
+/// constraint (0007_report_mahakosh_chart.sql); the display strings come
+/// from [reportReasonLabel]. Only the keys are load-bearing here.
 const kReportReasons = {
   'deanonymization': 'Could identify a real, named person',
   'health_privacy': 'Sensitive health information shouldn’t be public',
@@ -37,7 +40,7 @@ Future<void> showReportChartSheet(
 }) async {
   final result = await showModalBottomSheet<(String, String)>(
     context: context,
-    backgroundColor: TEColors.paper,
+    backgroundColor: KJColors.paper,
     isScrollControlled: true,
     builder: (ctx) => _ReportSheet(mkCode: mkCode),
   );
@@ -46,16 +49,16 @@ Future<void> showReportChartSheet(
 
   final repo = ref.read(mahakoshRepoProvider);
   if (repo == null) return;
+  // Captured before the await — context must not be used across
+  // suspension points.
+  final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
   try {
     await repo.reportChart(mkCode, reason: reason, details: details);
     onReported?.call();
-    messenger.showSnackBar(SnackBar(content: Text(
-        'Chart $mkCode reported and hidden from your view — our team '
-        'will review it.')));
+    messenger.showSnackBar(SnackBar(content: Text(l10n.rcReported(mkCode))));
   } catch (e) {
-    messenger
-        .showSnackBar(SnackBar(content: Text('Could not report chart: $e')));
+    messenger.showSnackBar(SnackBar(content: Text(l10n.rcReportError('$e'))));
   }
 }
 
@@ -90,14 +93,12 @@ class _ReportSheetState extends State<_ReportSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Report Chart ${widget.mkCode}',
-              style: TETheme.serif(size: 18)),
+          Text(context.l10n.rcTitle(widget.mkCode),
+              style: KJTheme.serif(size: 18)),
           const SizedBox(height: 6),
           Text(
-            'Sends the chart for review by our team and hides it from '
-            'your own view right away. The contributor is never told who '
-            'reported it.',
-            style: TextStyle(fontSize: 12.5, color: TEColors.inkSoft),
+            context.l10n.rcBlurb,
+            style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 10),
           for (final e in kReportReasons.entries)
@@ -106,16 +107,17 @@ class _ReportSheetState extends State<_ReportSheet> {
               dense: true,
               value: e.key,
               groupValue: _reason,
-              activeColor: TEColors.maroon,
-              title: Text(e.value, style: const TextStyle(fontSize: 13.5)),
+              activeColor: KJColors.maroon,
+              title: Text(reportReasonLabel(context.l10n, e.key),
+                  style: const TextStyle(fontSize: 13.5)),
               onChanged: (v) => setState(() => _reason = v!),
             ),
           const SizedBox(height: 8),
           TextField(
             controller: _detailsController,
             maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Additional details (optional)',
+            decoration: InputDecoration(
+              labelText: context.l10n.rcDetails,
             ),
           ),
           const SizedBox(height: 16),
@@ -124,7 +126,7 @@ class _ReportSheetState extends State<_ReportSheet> {
               context,
               (_reason, _detailsController.text.trim()),
             ),
-            child: const Text('Submit report'),
+            child: Text(context.l10n.rcSubmit),
           ),
         ],
       ),

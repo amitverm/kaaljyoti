@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import 'core/theme/theme.dart';
+import 'l10n/gen/app_localizations.dart';
 import 'state/providers.dart';
 import 'screens/admin_screen.dart';
 import 'screens/arrange_screen.dart';
@@ -173,11 +175,10 @@ final _router = GoRouter(
         path: '/notifications',
         builder: (_, __) => const NotificationsScreen()),
     GoRoute(path: '/muhurta', builder: (_, __) => const MuhurtaScreen()),
-    GoRoute(
-        path: '/ashtakoota', builder: (_, __) => const AshtakootaScreen()),
+    GoRoute(path: '/ashtakoota', builder: (_, __) => const AshtakootaScreen()),
     GoRoute(path: '/signin', builder: (_, __) => const SignInScreen()),
     GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
-    // Not in TENavPill/any visible nav — reachable only via the
+    // Not in KJNavPill/any visible nav — reachable only via the
     // conditional "Admin" tile on the Menu, itself shown only when
     // isAdminProvider resolves true. The screen re-checks admin status
     // itself; see admin_screen.dart's doc comment for the real (server-
@@ -186,15 +187,70 @@ final _router = GoRouter(
   ],
 );
 
-class ThirdEyeApp extends ConsumerWidget {
-  const ThirdEyeApp({super.key});
+class KaalJyotiApp extends ConsumerStatefulWidget {
+  const KaalJyotiApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<KaalJyotiApp> createState() => _KaalJyotiAppState();
+}
+
+class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp> {
+  /// Routes the nav pill treats as top-level; restoring one of these
+  /// uses `go` (no artificial back stack), anything deeper is pushed on
+  /// top of Today so back behaves normally.
+  static const _rootRoutes = {'/', '/today', '/mahakosh', '/research', '/menu'};
+
+  /// Only a recently-recorded route is restored: the target is the OS
+  /// killing the app during a short background stint (the state-loss
+  /// bug), NOT a next-morning launch — Today greets first by design.
+  static const _restoreWindow = Duration(minutes: 30);
+
+  @override
+  void initState() {
+    super.initState();
+    // Read BEFORE attaching the persist listener: go_router notifies
+    // once while setting up the initial '/today', and attaching first
+    // let that overwrite the saved route before restore could read it
+    // (the QA symptom: kill on a dashboard, reopen, land on a tab).
+    _maybeRestoreRoute()
+        .whenComplete(() => _router.routerDelegate.addListener(_persistRoute));
+  }
+
+  @override
+  void dispose() {
+    _router.routerDelegate.removeListener(_persistRoute);
+    super.dispose();
+  }
+
+  void _persistRoute() {
+    final route = _router.routerDelegate.currentConfiguration.uri.toString();
+    ref.read(settingsRepoProvider).setLastRoute(route);
+  }
+
+  Future<void> _maybeRestoreRoute() async {
+    final last = await ref.read(settingsRepoProvider).lastRoute();
+    if (last == null || last.route == '/today') return;
+    if (DateTime.now().difference(last.at) > _restoreWindow) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // A stale id (kundli deleted elsewhere) just lands on that
+      // screen's own error/empty state — no pre-validation needed.
+      if (_rootRoutes.contains(last.route)) {
+        _router.go(last.route);
+      } else {
+        _router.push(last.route);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final appearance = ref.watch(appearanceProvider);
     // Load & track the app-wide date format so every screen/module renders
     // the user's chosen style; changes flip the ValueKey below and rebuild.
     final dateFormat = ref.watch(dateFormatProvider);
+    // App language — 'system' follows the device locale; anything else
+    // forces that language app-wide (Settings ▸ Language).
+    final language = ref.watch(languageProvider);
 
     // Drive live cross-device kundli sync for the app's whole lifetime
     // (pull on launch/sign-in + realtime subscription). Watching it here
@@ -207,18 +263,31 @@ class ThirdEyeApp extends ConsumerWidget {
     ref.read(pushServiceProvider)?.onOpenRoute = _router.push;
 
     // Apply palette + font mode BEFORE the tree builds — widgets and
-    // painters read TEColors/TETheme statics at build/paint time.
-    TEColors.current = TEPalette.byName(appearance.paletteName);
-    TETheme.useSerif = appearance.serifHeadings;
+    // painters read KJColors/KJTheme statics at build/paint time.
+    KJColors.current = KJPalette.byName(appearance.paletteName);
+    KJTheme.useSerif = appearance.serifHeadings;
+
+    // Drive intl's default locale from the app language so every bare
+    // `DateFormat(...)` (dasha timelines, event dates, etc.) renders
+    // month and weekday names in the UI language — no need to thread a
+    // locale through each call site. Clamped to the languages we ship
+    // symbols for, matching how localeResolutionCallback falls back.
+    final deviceLang =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    final effectiveLang = language == 'system' ? deviceLang : language;
+    Intl.defaultLocale = AppLocalizations.supportedLocales
+            .any((l) => l.languageCode == effectiveLang)
+        ? effectiveLang
+        : 'en';
 
     return MaterialApp.router(
       // Changing the key forces a full rebuild so every screen picks
       // up the new palette immediately.
       key: ValueKey(
-          '${appearance.paletteName}_${appearance.serifHeadings}_${dateFormat.name}'),
+          '${appearance.paletteName}_${appearance.serifHeadings}_${dateFormat.name}_$language'),
       title: 'Kaal Jyoti',
-      theme: TETheme.build(
-        palette: TEColors.current,
+      theme: KJTheme.build(
+        palette: KJColors.current,
         serifHeadings: appearance.serifHeadings,
       ),
       routerConfig: _router,
@@ -230,26 +299,52 @@ class ThirdEyeApp extends ConsumerWidget {
         child: child ?? const SizedBox(),
       ),
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      // Honour the phone's English region (en-US, en-GB, en-IN, …) so the
-      // date picker's input field uses the user's expected date order.
+      // Settings ▸ Language override: null follows the device locale.
+      locale: language == 'system' ? null : Locale(language),
+      // Every app_<code>.arb becomes a supported language automatically
+      // (gen-l10n generates AppLocalizations.supportedLocales from the
+      // files present) — adding a language must never mean editing this
+      // list. The extra English regions are appended only so the date
+      // picker's input field follows the user's expected date order
+      // (en-US vs en-GB, …); they all resolve to the same 'en' strings.
       supportedLocales: const [
-        Locale('en'),
+        ...AppLocalizations.supportedLocales,
         Locale('en', 'GB'),
         Locale('en', 'IN'),
         Locale('en', 'AU'),
         Locale('en', 'CA'),
       ],
       localeResolutionCallback: (deviceLocale, supported) {
-        // Pass the device locale straight through for any English region so
-        // MaterialLocalizations formats dates the way the user's phone does.
-        if (deviceLocale != null && deviceLocale.languageCode == 'en') {
-          return deviceLocale;
+        // Any language we ship translations for resolves to itself;
+        // English regions pass straight through so MaterialLocalizations
+        // formats dates the way the user's phone does.
+        final resolved = deviceLocale != null &&
+                supported
+                    .any((l) => l.languageCode == deviceLocale.languageCode)
+            ? (deviceLocale.languageCode == 'en'
+                ? deviceLocale
+                : Locale(deviceLocale.languageCode))
+            : const Locale('en');
+        // Re-sync intl here too: Flutter re-runs this callback when the
+        // DEVICE locale changes while the app is running (the build-time
+        // assignment above only reruns when a provider changes), so bare
+        // `DateFormat(...)` output follows a live system-language switch
+        // instead of going stale until the next rebuild. Only in system
+        // mode: this callback receives the DEVICE locale even when a
+        // Settings ▸ Language override is active, and must not clobber
+        // the forced language set at build time.
+        if (language == 'system') {
+          Intl.defaultLocale = AppLocalizations.supportedLocales
+                  .contains(Locale(resolved.languageCode))
+              ? resolved.languageCode
+              : 'en';
         }
-        return const Locale('en');
+        return resolved;
       },
     );
   }

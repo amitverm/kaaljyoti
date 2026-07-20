@@ -9,13 +9,15 @@ import 'package:go_router/go_router.dart';
 import '../core/theme/theme.dart';
 import '../core/theme/tokens.dart';
 import '../core/theme/type_scale.dart';
+import '../l10n/astro_l10n.dart';
 
 /// The one uppercase section eyebrow used across the app — Mono / Kicker
 /// per the type handout (Plex Mono 500, 10px, +0.18em tracking, muted
 /// ink). Replaces the eight hand-rolled copies that had drifted on size
 /// and letter-spacing. The label is uppercased for you.
-class TESectionLabel extends StatelessWidget {
-  const TESectionLabel(this.label, {super.key, this.color, this.padded = false});
+class KJSectionLabel extends StatelessWidget {
+  const KJSectionLabel(this.label,
+      {super.key, this.color, this.padded = false});
 
   final String label;
   final Color? color;
@@ -26,16 +28,16 @@ class TESectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Text(label.toUpperCase(), style: TEType.kicker(color: color));
+    final text = Text(label.toUpperCase(), style: KJType.kicker(color: color));
     if (!padded) return text;
     return Padding(
-      padding: const EdgeInsets.only(bottom: TESpace.sm),
+      padding: const EdgeInsets.only(bottom: KJSpace.sm),
       child: text,
     );
   }
 }
 
-enum TESection { today, kundlis, mahakosh, research, menu }
+enum KJSection { today, kundlis, mahakosh, research, menu }
 
 /// Padding for form-style screens: 16pt on phones, but on wide
 /// displays (tablet / landscape) the content is centered at a
@@ -47,21 +49,25 @@ EdgeInsets formPadding(BuildContext context, {double maxWidth = 520}) {
 }
 
 /// Floating text-first pill navigation (design §3.1).
-class TENavPill extends StatelessWidget {
-  const TENavPill({super.key, required this.current});
-  final TESection current;
+class KJNavPill extends StatelessWidget {
+  const KJNavPill({super.key, required this.current});
+  final KJSection current;
 
   // Nav labels say WHERE you are; screen headers say WHAT you see
   // (the Home screen's header remains "Kundlis"). Text-first by
   // design; the single trailing icon is the Menu page (profile,
   // subscription, settings…), which reads fine as the conventional ☰.
-  static const _items = <(TESection, String?, IconData?, String)>[
-    (TESection.today, 'Today', null, '/today'),
-    (TESection.kundlis, 'Home', null, '/'),
-    (TESection.mahakosh, 'Mahakosh', null, '/mahakosh'),
-    (TESection.research, 'Research', null, '/research'),
-    (TESection.menu, null, Icons.menu, '/menu'),
-  ];
+  /// Labels are resolved per build (they're localized); the icon-only
+  /// Menu entry keeps a null label.
+  static List<(KJSection, String?, IconData?, String)> _itemsFor(
+          AppLocalizations l10n) =>
+      [
+        (KJSection.today, l10n.navToday, null, '/today'),
+        (KJSection.kundlis, l10n.navHome, null, '/'),
+        (KJSection.mahakosh, l10n.navMahakosh, null, '/mahakosh'),
+        (KJSection.research, l10n.navResearch, null, '/research'),
+        (KJSection.menu, null, Icons.menu, '/menu'),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -72,13 +78,13 @@ class TENavPill extends StatelessWidget {
       child: Center(
         heightFactor: 1,
         child: Container(
-          padding: const EdgeInsets.all(TESpace.xs),
+          padding: const EdgeInsets.all(KJSpace.xs),
           decoration: BoxDecoration(
-            color: TEColors.ink,
-            borderRadius: TERadius.all(TERadius.pill),
+            color: KJColors.ink,
+            borderRadius: KJRadius.all(KJRadius.pill),
             boxShadow: [
               BoxShadow(
-                color: TEColors.ink.withValues(alpha: TETint.medium),
+                color: KJColors.ink.withValues(alpha: KJTint.medium),
                 blurRadius: 18,
                 offset: const Offset(0, 6),
               ),
@@ -87,35 +93,37 @@ class TENavPill extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              for (final (section, label, icon, path) in _items)
+              for (final (section, label, icon, path)
+                  in _itemsFor(context.l10n))
                 GestureDetector(
                   onTap: () => context.go(path),
                   child: Container(
                     padding: EdgeInsets.symmetric(
-                        horizontal: icon != null ? TESpace.md + 1 : TESpace.lg,
-                        vertical: TESpace.sm + 1),
+                        horizontal: icon != null ? KJSpace.md + 1 : KJSpace.lg,
+                        vertical: KJSpace.sm + 1),
                     decoration: BoxDecoration(
                       color: section == current
-                          ? TEColors.maroon
+                          ? KJColors.maroon
                           : Colors.transparent,
-                      borderRadius: TERadius.all(TERadius.pill),
+                      borderRadius: KJRadius.all(KJRadius.pill),
                     ),
                     child: icon != null
                         ? Icon(
                             icon,
-                            size: TEIcon.md,
+                            size: KJIcon.md,
                             color: section == current
-                                ? TEColors.paper
-                                : TEColors.paper.withValues(alpha: TETint.inactive),
+                                ? KJColors.paper
+                                : KJColors.paper
+                                    .withValues(alpha: KJTint.inactive),
                           )
                         : Text(
                             label!,
-                            style: TEType.chip(
+                            style: KJType.chip(
                               size: 12.5,
                               color: section == current
-                                  ? TEColors.paper
-                                  : TEColors.paper
-                                      .withValues(alpha: TETint.inactive),
+                                  ? KJColors.paper
+                                  : KJColors.paper
+                                      .withValues(alpha: KJTint.inactive),
                             ).copyWith(
                               fontWeight: section == current
                                   ? FontWeight.w600
@@ -133,8 +141,8 @@ class TENavPill extends StatelessWidget {
 }
 
 /// Scaffold wrapper for top-level sections.
-class TEScaffold extends StatelessWidget {
-  const TEScaffold({
+class KJScaffold extends StatelessWidget {
+  const KJScaffold({
     super.key,
     required this.section,
     required this.body,
@@ -142,7 +150,7 @@ class TEScaffold extends StatelessWidget {
     this.floatingAction,
   });
 
-  final TESection section;
+  final KJSection section;
   final Widget body;
   final PreferredSizeWidget? appBar;
   final Widget? floatingAction;
@@ -153,7 +161,7 @@ class TEScaffold extends StatelessWidget {
       appBar: appBar,
       body: body,
       floatingActionButton: floatingAction,
-      bottomNavigationBar: TENavPill(current: section),
+      bottomNavigationBar: KJNavPill(current: section),
     );
   }
 }
@@ -195,19 +203,18 @@ class ModuleCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Icon(Icons.drag_indicator,
-                  size: 14, color: TEColors.inkSoft.withValues(alpha: 0.55)),
+                  size: 14, color: KJColors.inkSoft.withValues(alpha: 0.55)),
             ),
-          Expanded(child: TESectionLabel(title)),
+          Expanded(child: KJSectionLabel(title)),
           if (onSettings != null)
             IconButton(
-              icon: Icon(Icons.more_horiz, size: 18, color: TEColors.inkSoft),
+              icon: Icon(Icons.more_horiz, size: 18, color: KJColors.inkSoft),
               onPressed: onSettings,
               visualDensity: VisualDensity.compact,
             ),
           if (onDetail != null)
             IconButton(
-              icon:
-                  Icon(Icons.arrow_forward, size: 18, color: TEColors.maroon),
+              icon: Icon(Icons.arrow_forward, size: 18, color: KJColors.maroon),
               onPressed: onDetail,
               visualDensity: VisualDensity.compact,
             ),
@@ -271,15 +278,14 @@ class EmptyState extends StatelessWidget {
             ],
             Text(message,
                 textAlign: TextAlign.center,
-                style: TEType.body(size: 14, color: TEColors.inkSoft)),
+                style: KJType.body(size: 14, color: KJColors.inkSoft)),
             if (actionLabel != null) ...[
               const SizedBox(height: 16),
               FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
             if (secondaryLabel != null) ...[
               const SizedBox(height: 8),
-              TextButton(
-                  onPressed: onSecondary, child: Text(secondaryLabel!)),
+              TextButton(onPressed: onSecondary, child: Text(secondaryLabel!)),
             ],
           ],
         ),
@@ -289,8 +295,8 @@ class EmptyState extends StatelessWidget {
 }
 
 /// Small tag chip (lagna/moon-sign quick reads, sync status, …).
-class TETag extends StatelessWidget {
-  const TETag(this.label, {super.key, this.maroon = false});
+class KJTag extends StatelessWidget {
+  const KJTag(this.label, {super.key, this.maroon = false});
   final String label;
   final bool maroon;
 
@@ -298,21 +304,21 @@ class TETag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: TESpace.sm + 2, vertical: TESpace.xs),
+          horizontal: KJSpace.sm + 2, vertical: KJSpace.xs),
       decoration: BoxDecoration(
         color: maroon
-            ? TEColors.maroon.withValues(alpha: TETint.faint)
-            : TEColors.paperAlt,
-        borderRadius: TERadius.all(TERadius.md),
+            ? KJColors.maroon.withValues(alpha: KJTint.faint)
+            : KJColors.paperAlt,
+        borderRadius: KJRadius.all(KJRadius.md),
         border: Border.all(
             color: maroon
-                ? TEColors.maroon.withValues(alpha: TETint.muted)
-                : TEColors.hairline),
+                ? KJColors.maroon.withValues(alpha: KJTint.muted)
+                : KJColors.hairline),
       ),
       child: Text(
         label,
-        style: TEType.chip(
-            size: 11.5, color: maroon ? TEColors.maroon : TEColors.inkSoft),
+        style: KJType.chip(
+            size: 11.5, color: maroon ? KJColors.maroon : KJColors.inkSoft),
       ),
     );
   }

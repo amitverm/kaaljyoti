@@ -11,6 +11,7 @@ import '../core/theme/theme.dart';
 import '../mahakosh/models.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 import 'research_board_screen.dart';
 
 class NewRequestScreen extends ConsumerStatefulWidget {
@@ -29,6 +30,9 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
   Future<void> _submit() async {
     final repo = ref.read(researchRepoProvider);
     if (repo == null || _criteria.isEmpty) return;
+    // Captured before the first await — context must not be used across
+    // suspension points.
+    final l10n = context.l10n;
     setState(() => _submitting = true);
     try {
       await repo.submit(
@@ -40,9 +44,8 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
       );
       ref.invalidate(researchBoardProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                'Request submitted — it goes live after a quick review.')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.nrSubmitted)));
         context.pop();
       }
     } finally {
@@ -53,38 +56,35 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New Research Request')),
+      appBar: AppBar(title: Text(context.l10n.nrTitle)),
       body: ListView(
         padding: formPadding(context),
         children: [
           TextField(
             controller: _titleController,
-            decoration: const InputDecoration(
-                labelText: 'Title',
-                hintText: 'e.g. Mars in 7H + Rahu dasha at marriage'),
+            decoration: InputDecoration(
+                labelText: context.l10n.nrTitleLabel,
+                hintText: context.l10n.nrTitleHint),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _descController,
             maxLines: 3,
-            decoration: const InputDecoration(
-                labelText: 'Purpose',
-                hintText:
-                    'What pattern are you researching, and why?'),
+            decoration: InputDecoration(
+                labelText: context.l10n.nrPurpose,
+                hintText: context.l10n.nrPurposeHint),
           ),
           const SizedBox(height: 6),
           Text(
-            'Title and purpose are shown publicly — don\'t include names, '
-            'contact details, or anything that could identify a real '
-            'person.',
-            style: TextStyle(fontSize: 11.5, color: TEColors.inkSoft),
+            context.l10n.nrPrivacyHint,
+            style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 20),
-          Text('CRITERIA (structured — runs as a real query)',
+          Text(context.l10n.nrCriteriaSection,
               style: TextStyle(
                   fontSize: 10.5,
                   letterSpacing: 1.1,
-                  color: TEColors.inkSoft,
+                  color: KJColors.inkSoft,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
           Wrap(
@@ -93,13 +93,13 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
             children: [
               for (final f in _criteria)
                 InputChip(
-                  label: Text(f.label,
+                  label: Text(mahakoshFilterLabel(context.l10n, f),
                       style: const TextStyle(fontSize: 12.5)),
                   onDeleted: () => setState(() => _criteria.remove(f)),
                 ),
               ActionChip(
                 avatar: const Icon(Icons.add, size: 16),
-                label: const Text('Add criterion'),
+                label: Text(context.l10n.nrAddCriterion),
                 onPressed: _addCriterion,
               ),
             ],
@@ -111,15 +111,15 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
                     _submitting
                 ? null
                 : _submit,
-            child: Text(_submitting ? 'Submitting…' : 'Submit for review'),
+            child: Text(_submitting
+                ? context.l10n.nrSubmitting
+                : context.l10n.nrSubmit),
           ),
           const SizedBox(height: 10),
           Text(
-            'Requests are reviewed before going live — primarily to catch '
-            'attempts to identify a specific known individual rather than '
-            'genuine pattern research.',
+            context.l10n.nrModerationNote,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11.5, color: TEColors.inkSoft),
+            style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
           ),
         ],
       ),
@@ -132,25 +132,24 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
     final houseController = ValueNotifier<int>(7);
     await showModalBottomSheet(
       context: context,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Add criterion', style: TETheme.serif(size: 18)),
+            Text(context.l10n.nrAddCriterion, style: KJTheme.serif(size: 18)),
             const SizedBox(height: 12),
             ValueListenableBuilder(
               valueListenable: planetController,
-              builder: (_, planet, __) =>
-                  DropdownButtonFormField<Planet>(
+              builder: (_, planet, __) => DropdownButtonFormField<Planet>(
                 value: planet,
-                decoration: const InputDecoration(labelText: 'Planet'),
+                decoration: InputDecoration(labelText: context.l10n.nrPlanet),
                 items: [
                   for (final p in Planet.values)
                     DropdownMenuItem(
                         value: p,
-                        child: Text(p.displayName,
+                        child: Text(p.label(context.l10n),
                             style: TextStyle(color: planetInk(p)))),
                 ],
                 onChanged: (p) => planetController.value = p!,
@@ -162,10 +161,11 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
               builder: (_, house, __) => DropdownButtonFormField<int>(
                 value: house,
                 decoration:
-                    const InputDecoration(labelText: 'House (from lagna)'),
+                    InputDecoration(labelText: context.l10n.nrHouseFromLagna),
                 items: [
                   for (var h = 1; h <= 12; h++)
-                    DropdownMenuItem(value: h, child: Text('${h}H')),
+                    DropdownMenuItem(
+                        value: h, child: Text(context.l10n.nrHouseN('$h'))),
                 ],
                 onChanged: (v) => houseController.value = v!,
               ),
@@ -180,7 +180,7 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
                     )));
                 Navigator.pop(ctx);
               },
-              child: const Text('Add'),
+              child: Text(context.l10n.nrAdd),
             ),
           ],
         ),

@@ -16,6 +16,7 @@ import '../mahakosh/models.dart';
 import '../mahakosh/report_chart.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 
 class MahakoshSearchScreen extends ConsumerStatefulWidget {
   const MahakoshSearchScreen({super.key});
@@ -34,7 +35,6 @@ class _FilterEntry {
 class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
   final List<_FilterEntry> _filters = [];
   String _combineOp = 'AND';
-  bool _searching = false;
   int? _total;
   List<MahakoshChartSummary> _results = [];
 
@@ -80,7 +80,6 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
   Future<void> _search() async {
     final repo = ref.read(mahakoshRepoProvider);
     if (repo == null || _filters.isEmpty) return;
-    setState(() => _searching = true);
     try {
       final res = await repo.search(_buildTree());
       setState(() {
@@ -90,11 +89,9 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Search failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.msSearchFailed('$e'))));
       }
-    } finally {
-      if (mounted) setState(() => _searching = false);
     }
   }
 
@@ -103,14 +100,14 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
     final repo = ref.watch(mahakoshRepoProvider);
     final user = ref.watch(authUserProvider).value;
 
-    return TEScaffold(
-      section: TESection.mahakosh,
+    return KJScaffold(
+      section: KJSection.mahakosh,
       appBar: AppBar(
-        title: const Text('Mahakosh'),
+        title: Text(context.l10n.mahakoshTitle),
         actions: [
           if (repo != null && user != null)
             IconButton(
-              tooltip: 'Filter charts',
+              tooltip: context.l10n.msFilterCharts,
               icon: _filters.isEmpty
                   ? const Icon(Icons.filter_list)
                   : Badge.count(
@@ -122,15 +119,11 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
         ],
       ),
       body: repo == null
-          ? const EmptyState(
-              message:
-                  'Mahakosh needs the backend configured (SUPABASE_URL / '
-                  'SUPABASE_ANON_KEY). See supabase/README.md.')
+          ? EmptyState(message: context.l10n.msBackendMissing)
           : user == null
               ? EmptyState(
-                  message:
-                      'Sign in to search the community research repository.',
-                  actionLabel: 'Sign in',
+                  message: context.l10n.msSignInPrompt,
+                  actionLabel: context.l10n.signIn,
                   onAction: () => context.push('/signin'),
                 )
               : _body(),
@@ -142,31 +135,30 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
         ref.watch(mahakoshBookmarkCodesProvider).value ?? const <String>{};
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-      children: _searched
-          ? _resultsSection(bookmarked)
-          : _browseSection(bookmarked),
+      children:
+          _searched ? _resultsSection(bookmarked) : _browseSection(bookmarked),
     );
   }
 
-  TextStyle get _sectionLabelStyle => TEType.kicker();
+  TextStyle get _sectionLabelStyle => KJType.kicker();
 
   List<Widget> _resultsSection(Set<String> bookmarked) => [
         Row(
           children: [
             Expanded(
-              child: Text('${_total ?? 0} charts match',
-                  style: TETheme.mono(size: 12, color: TEColors.inkSoft)),
+              child: Text(context.l10n.chartsMatch(_total ?? 0),
+                  style: KJTheme.mono(size: 12, color: KJColors.inkSoft)),
             ),
             TextButton(
               onPressed: _openQueryPanel,
-              child: Text('Filters (${_filters.length})'),
+              child: Text(context.l10n.msFiltersCount('${_filters.length}')),
             ),
             TextButton(
               onPressed: () => setState(() {
                 _filters.clear();
                 _searched = false;
               }),
-              child: const Text('Clear'),
+              child: Text(context.l10n.msClear),
             ),
           ],
         ),
@@ -177,9 +169,9 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
   List<Widget> _browseSection(Set<String> bookmarked) => [
         Row(
           children: [
-            for (final t in const [
-              ('browse', 'Browse'),
-              ('bookmarks', 'Bookmarks'),
+            for (final t in [
+              ('browse', context.l10n.msBrowse),
+              ('bookmarks', context.l10n.msBookmarks),
             ])
               Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -187,7 +179,7 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
                   label: Text(t.$2),
                   selected: _tab == t.$1,
                   labelStyle: TextStyle(
-                      color: _tab == t.$1 ? TEColors.paper : TEColors.ink),
+                      color: _tab == t.$1 ? KJColors.paper : KJColors.ink),
                   onSelected: (_) => setState(() => _tab = t.$1),
                 ),
               ),
@@ -203,8 +195,8 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
   List<Widget> _communityChildren(Set<String> bookmarked) => [
         Text(
           _communityTotal == null
-              ? 'COMMUNITY CHARTS'
-              : 'COMMUNITY CHARTS · $_communityTotal contributed',
+              ? context.l10n.msCommunityCharts
+              : context.l10n.msCommunityChartsCount(_communityTotal!),
           style: _sectionLabelStyle,
         ),
         const SizedBox(height: 10),
@@ -212,9 +204,8 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
-              'No charts contributed yet — be the first: share a kundli '
-              'from its Edit screen.',
-              style: TextStyle(fontSize: 13, color: TEColors.inkSoft),
+              context.l10n.msNoCharts,
+              style: TextStyle(fontSize: 13, color: KJColors.inkSoft),
             ),
           ),
         for (final r in _recent) _chartRow(r, bookmarked),
@@ -228,14 +219,14 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(
-                  'No bookmarks yet. Tap the bookmark icon on any chart to '
-                  'keep it here for quick access.',
-                  style: TextStyle(fontSize: 13, color: TEColors.inkSoft),
+                  context.l10n.msNoBookmarks,
+                  style: TextStyle(fontSize: 13, color: KJColors.inkSoft),
                 ),
               ),
             ]
           : [
-              Text('BOOKMARKED · ${list.length}', style: _sectionLabelStyle),
+              Text(context.l10n.msBookmarked('${list.length}'),
+                  style: _sectionLabelStyle),
               const SizedBox(height: 10),
               for (final b in list)
                 b.chart != null
@@ -251,8 +242,8 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
       error: (e, _) => [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text('Could not load bookmarks: $e',
-              style: TextStyle(fontSize: 13, color: TEColors.inkSoft)),
+          child: Text(context.l10n.msBookmarksError('$e'),
+              style: TextStyle(fontSize: 13, color: KJColors.inkSoft)),
         ),
       ],
     );
@@ -272,7 +263,7 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not update bookmark: $e')));
+            SnackBar(content: Text(context.l10n.msBookmarkError('$e'))));
       }
     }
   }
@@ -282,16 +273,16 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
   Widget _unavailableBookmarkRow(String mkCode) => Card(
         margin: const EdgeInsets.only(bottom: 8),
         child: ListTile(
-          title: Text('Chart $mkCode',
+          title: Text(context.l10n.msChartCode(mkCode),
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: TEColors.inkSoft)),
-          subtitle: Text('No longer available on Mahakosh',
-              style: TextStyle(fontSize: 12, color: TEColors.inkSoft)),
+                  color: KJColors.inkSoft)),
+          subtitle: Text(context.l10n.msNoLongerAvailable,
+              style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
           trailing: IconButton(
-            icon: Icon(Icons.bookmark, size: 20, color: TEColors.maroon),
-            tooltip: 'Remove bookmark',
+            icon: Icon(Icons.bookmark, size: 20, color: KJColors.maroon),
+            tooltip: context.l10n.msRemoveBookmark,
             visualDensity: VisualDensity.compact,
             onPressed: () => _toggleBookmark(mkCode, true),
           ),
@@ -310,39 +301,37 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        title: Text('Chart ${r.mkCode} (anonymized)',
-            style: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w600)),
-        subtitle: Text(parts.join(' · '),
-            style: const TextStyle(fontSize: 12)),
+        title: Text(context.l10n.hcChartAnonymized(r.mkCode),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        subtitle: Text(parts.join(' · '), style: const TextStyle(fontSize: 12)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(
-                  isBm ? Icons.bookmark : Icons.bookmark_border,
-                  size: 20,
-                  color: isBm ? TEColors.maroon : TEColors.inkSoft),
-              tooltip: isBm ? 'Remove bookmark' : 'Bookmark',
+              icon: Icon(isBm ? Icons.bookmark : Icons.bookmark_border,
+                  size: 20, color: isBm ? KJColors.maroon : KJColors.inkSoft),
+              tooltip: isBm
+                  ? context.l10n.msRemoveBookmark
+                  : context.l10n.msBookmark,
               visualDensity: VisualDensity.compact,
               onPressed: () => _toggleBookmark(r.mkCode, isBm),
             ),
             PopupMenuButton<void>(
-              tooltip: 'More',
-              icon: Icon(Icons.more_vert, size: 20, color: TEColors.inkSoft),
+              tooltip: context.l10n.msMore,
+              icon: Icon(Icons.more_vert, size: 20, color: KJColors.inkSoft),
               itemBuilder: (ctx) => [
                 PopupMenuItem(
                   onTap: () => _hideChart(r),
-                  child: const Text('Hide from my view'),
+                  child: Text(context.l10n.msHideFromView),
                 ),
                 PopupMenuItem(
                   onTap: () => showReportChartSheet(context, ref, r.mkCode,
                       onReported: () => _removeRow(r)),
-                  child: const Text('Report...'),
+                  child: Text(context.l10n.rdReport),
                 ),
               ],
             ),
-            Icon(Icons.chevron_right, size: 20, color: TEColors.inkSoft),
+            Icon(Icons.chevron_right, size: 20, color: KJColors.inkSoft),
           ],
         ),
         onTap: () => context.push('/mahakosh/chart/${r.mkCode}'),
@@ -394,9 +383,9 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
       await repo.hideChart(r.mkCode);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Hidden Chart ${r.mkCode} from your view.'),
+        content: Text(context.l10n.rdHidden(r.mkCode)),
         action: SnackBarAction(
-          label: 'Undo',
+          label: context.l10n.rdUndo,
           onPressed: () async {
             await repo.unhideChart(r.mkCode);
             if (inSearchResults) {
@@ -410,8 +399,8 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
     } catch (e) {
       _restoreRow(r, inSearchResults);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not hide chart: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.rdHideError('$e'))));
       }
     }
   }
@@ -420,7 +409,7 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
     final result = await showModalBottomSheet<(List<_FilterEntry>, String)>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -461,7 +450,8 @@ class _QueryPanelState extends State<_QueryPanel> {
   void initState() {
     super.initState();
     _filters = [
-      for (final e in widget.initial) _FilterEntry(e.filter)..negated = e.negated,
+      for (final e in widget.initial)
+        _FilterEntry(e.filter)..negated = e.negated,
     ];
     _combineOp = widget.combineOp;
   }
@@ -469,7 +459,7 @@ class _QueryPanelState extends State<_QueryPanel> {
   Future<void> _addFilter() async {
     final filter = await showModalBottomSheet<AtomicFilter>(
       context: context,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       isScrollControlled: true,
       builder: (ctx) => const _FilterBuilderSheet(),
     );
@@ -495,12 +485,12 @@ class _QueryPanelState extends State<_QueryPanel> {
             Row(
               children: [
                 Expanded(
-                    child:
-                        Text('Filter charts', style: TETheme.serif(size: 18))),
+                    child: Text(context.l10n.msFilterCharts,
+                        style: KJTheme.serif(size: 18))),
                 if (_filters.isNotEmpty)
                   TextButton(
                     onPressed: () => setState(_filters.clear),
-                    child: const Text('Clear all'),
+                    child: Text(context.l10n.msClearAll),
                   ),
               ],
             ),
@@ -511,17 +501,17 @@ class _QueryPanelState extends State<_QueryPanel> {
               children: [
                 for (final e in _filters)
                   InputChip(
-                    label:
-                        Text('${e.negated ? 'NOT ' : ''}${e.filter.label}'),
+                    label: Text('${e.negated ? context.l10n.msNot : ''}'
+                        '${mahakoshFilterLabel(context.l10n, e.filter)}'),
                     labelStyle: TextStyle(
                         fontSize: 12.5,
-                        color: e.negated ? TEColors.maroon : TEColors.ink),
+                        color: e.negated ? KJColors.maroon : KJColors.ink),
                     onPressed: () => setState(() => e.negated = !e.negated),
                     onDeleted: () => setState(() => _filters.remove(e)),
                   ),
                 ActionChip(
                   avatar: const Icon(Icons.add, size: 16),
-                  label: const Text('Add filter'),
+                  label: Text(context.l10n.addFilter),
                   onPressed: _addFilter,
                 ),
               ],
@@ -531,9 +521,9 @@ class _QueryPanelState extends State<_QueryPanel> {
                 padding: const EdgeInsets.only(top: 10),
                 child: Row(
                   children: [
-                    Text('Combine with',
-                        style: TextStyle(
-                            fontSize: 12.5, color: TEColors.inkSoft)),
+                    Text(context.l10n.msCombineWith,
+                        style:
+                            TextStyle(fontSize: 12.5, color: KJColors.inkSoft)),
                     const SizedBox(width: 10),
                     for (final op in ['AND', 'OR'])
                       Padding(
@@ -544,8 +534,8 @@ class _QueryPanelState extends State<_QueryPanel> {
                           labelStyle: TextStyle(
                               fontSize: 12,
                               color: _combineOp == op
-                                  ? TEColors.paper
-                                  : TEColors.ink),
+                                  ? KJColors.paper
+                                  : KJColors.ink),
                           onSelected: (_) => setState(() => _combineOp = op),
                         ),
                       ),
@@ -554,11 +544,10 @@ class _QueryPanelState extends State<_QueryPanel> {
               ),
             const SizedBox(height: 18),
             FilledButton(
-              onPressed: () =>
-                  Navigator.pop(context, (_filters, _combineOp)),
+              onPressed: () => Navigator.pop(context, (_filters, _combineOp)),
               child: Text(_filters.isEmpty
-                  ? 'Clear filters & browse'
-                  : 'Search charts'),
+                  ? context.l10n.msClearFiltersBrowse
+                  : context.l10n.msSearchCharts),
             ),
           ],
         ),
@@ -585,17 +574,26 @@ class _FilterBuilderSheetState extends State<_FilterBuilderSheet> {
   DateTime? _dateFrom;
   DateTime? _dateTo;
 
-  static const _types = {
-    'planet_in_house': 'Planet in house',
-    'planet_in_sign': 'Planet in sign',
-    'planet_in_nakshatra': 'Planet in nakshatra',
-    'yoga_present': 'Yoga present',
-    'life_event': 'Life event tag',
-    'birth_range': 'Birth date',
-  };
+  static const _typeCodes = [
+    'planet_in_house',
+    'planet_in_sign',
+    'planet_in_nakshatra',
+    'yoga_present',
+    'life_event',
+    'birth_range',
+  ];
 
-  static String _fmtDate(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
+  String _typeLabel(AppLocalizations l10n, String code) => switch (code) {
+        'planet_in_house' => l10n.msTypePlanetInHouse,
+        'planet_in_sign' => l10n.msTypePlanetInSign,
+        'planet_in_nakshatra' => l10n.msTypePlanetInNakshatra,
+        'yoga_present' => l10n.msTypeYogaPresent,
+        'life_event' => l10n.msTypeLifeEvent,
+        'birth_range' => l10n.msTypeBirthRange,
+        _ => code,
+      };
+
+  static String _fmtDate(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
       '${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
 
@@ -615,10 +613,11 @@ class _FilterBuilderSheetState extends State<_FilterBuilderSheet> {
           Row(
             children: [
               Expanded(
-                  child: Text('Add filter', style: TETheme.serif(size: 18))),
+                  child: Text(context.l10n.msAddFilterTitle,
+                      style: KJTheme.serif(size: 18))),
               IconButton(
                 icon: const Icon(Icons.close),
-                tooltip: 'Cancel',
+                tooltip: context.l10n.cancel,
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -628,15 +627,14 @@ class _FilterBuilderSheetState extends State<_FilterBuilderSheet> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final t in _types.entries)
+              for (final code in _typeCodes)
                 ChoiceChip(
-                  label: Text(t.value),
-                  selected: _type == t.key,
+                  label: Text(_typeLabel(context.l10n, code)),
+                  selected: _type == code,
                   labelStyle: TextStyle(
                       fontSize: 12,
-                      color:
-                          _type == t.key ? TEColors.paper : TEColors.ink),
-                  onSelected: (_) => setState(() => _type = t.key),
+                      color: _type == code ? KJColors.paper : KJColors.ink),
+                  onSelected: (_) => setState(() => _type = code),
                 ),
             ],
           ),
@@ -644,12 +642,12 @@ class _FilterBuilderSheetState extends State<_FilterBuilderSheet> {
           if (_type.startsWith('planet_'))
             DropdownButtonFormField<Planet>(
               value: _planet,
-              decoration: const InputDecoration(labelText: 'Planet'),
+              decoration: InputDecoration(labelText: context.l10n.nrPlanet),
               items: [
                 for (final p in Planet.values)
                   DropdownMenuItem(
                       value: p,
-                      child: Text(p.displayName,
+                      child: Text(p.label(context.l10n),
                           style: TextStyle(color: planetInk(p)))),
               ],
               onChanged: (p) => setState(() => _planet = p!),
@@ -658,11 +656,11 @@ class _FilterBuilderSheetState extends State<_FilterBuilderSheet> {
           if (_type == 'planet_in_sign')
             DropdownButtonFormField<int>(
               value: _sign,
-              decoration: const InputDecoration(labelText: 'Sign'),
+              decoration: InputDecoration(labelText: context.l10n.msSign),
               items: [
                 for (final s in ZodiacSign.values)
                   DropdownMenuItem(
-                      value: s.index, child: Text(s.western)),
+                      value: s.index, child: Text(s.label(context.l10n))),
               ],
               onChanged: (v) => setState(() => _sign = v!),
             ),
@@ -670,42 +668,44 @@ class _FilterBuilderSheetState extends State<_FilterBuilderSheet> {
             DropdownButtonFormField<int>(
               value: _house,
               decoration:
-                  const InputDecoration(labelText: 'House (from lagna)'),
+                  InputDecoration(labelText: context.l10n.nrHouseFromLagna),
               items: [
                 for (var h = 1; h <= 12; h++)
-                  DropdownMenuItem(value: h, child: Text('${h}H')),
+                  DropdownMenuItem(
+                      value: h, child: Text(context.l10n.nrHouseN('$h'))),
               ],
               onChanged: (v) => setState(() => _house = v!),
             ),
           if (_type == 'planet_in_nakshatra')
             DropdownButtonFormField<int>(
               value: _nakshatra,
-              decoration: const InputDecoration(labelText: 'Nakshatra'),
+              decoration:
+                  InputDecoration(labelText: context.l10n.labelNakshatra),
               items: [
                 for (final n in Nakshatra.values)
                   DropdownMenuItem(
-                      value: n.index, child: Text(n.displayName)),
+                      value: n.index, child: Text(n.label(context.l10n))),
               ],
               onChanged: (v) => setState(() => _nakshatra = v!),
             ),
           if (_type == 'yoga_present')
             TextField(
               controller: _yogaController,
-              decoration: const InputDecoration(
-                  labelText: 'Yoga code',
+              decoration: InputDecoration(
+                  labelText: context.l10n.msYogaCode,
                   helperText:
                       'e.g. gaja_kesari, raj_yoga, mangal_dosha, kaal_sarp'),
             ),
           if (_type == 'life_event')
             TextField(
               controller: _tagController,
-              decoration: const InputDecoration(
-                  labelText: 'Event tag',
+              decoration: InputDecoration(
+                  labelText: context.l10n.msEventTag,
                   helperText: 'e.g. marriage, career_change, transplant'),
             ),
           if (_type == 'birth_range') ...[
-            Text('Born between (either side optional)',
-                style: TextStyle(fontSize: 12.5, color: TEColors.inkSoft)),
+            Text(context.l10n.msBornBetween,
+                style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft)),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -723,8 +723,8 @@ class _FilterBuilderSheetState extends State<_FilterBuilderSheet> {
                     },
                     onLongPress: () => setState(() => _dateFrom = null),
                     child: Text(_dateFrom == null
-                        ? 'From date'
-                        : TEDate.date(_dateFrom!)),
+                        ? context.l10n.msFromDate
+                        : KJDate.date(_dateFrom!)),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -741,15 +741,16 @@ class _FilterBuilderSheetState extends State<_FilterBuilderSheet> {
                       if (d != null) setState(() => _dateTo = d);
                     },
                     onLongPress: () => setState(() => _dateTo = null),
-                    child: Text(
-                        _dateTo == null ? 'To date' : TEDate.date(_dateTo!)),
+                    child: Text(_dateTo == null
+                        ? context.l10n.msToDate
+                        : KJDate.date(_dateTo!)),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 4),
-            Text('Long-press a button to clear it.',
-                style: TextStyle(fontSize: 11, color: TEColors.inkSoft)),
+            Text(context.l10n.msLongPressClear,
+                style: TextStyle(fontSize: 11, color: KJColors.inkSoft)),
           ],
           const SizedBox(height: 18),
           FilledButton(
@@ -757,26 +758,22 @@ class _FilterBuilderSheetState extends State<_FilterBuilderSheet> {
               if (_type == 'birth_range' &&
                   _dateFrom == null &&
                   _dateTo == null) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Set at least one date bound.')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(context.l10n.msSetDateBound)));
                 return;
               }
               final filter = switch (_type) {
-                'planet_in_sign' => AtomicFilter(
-                    type: _type, planet: _planet.name, sign: _sign),
+                'planet_in_sign' =>
+                  AtomicFilter(type: _type, planet: _planet.name, sign: _sign),
                 'planet_in_house' => AtomicFilter(
                     type: _type, planet: _planet.name, house: _house),
                 'planet_in_nakshatra' => AtomicFilter(
-                    type: _type,
-                    planet: _planet.name,
-                    nakshatra: _nakshatra),
+                    type: _type, planet: _planet.name, nakshatra: _nakshatra),
                 'yoga_present' => AtomicFilter(
-                    type: _type,
-                    yogaCode: _yogaController.text.trim()),
+                    type: _type, yogaCode: _yogaController.text.trim()),
                 'birth_range' => AtomicFilter(
                     type: _type,
-                    dateFrom:
-                        _dateFrom == null ? null : _fmtDate(_dateFrom!),
+                    dateFrom: _dateFrom == null ? null : _fmtDate(_dateFrom!),
                     dateTo: _dateTo == null ? null : _fmtDate(_dateTo!),
                   ),
                 _ => AtomicFilter(
@@ -784,7 +781,7 @@ class _FilterBuilderSheetState extends State<_FilterBuilderSheet> {
               };
               Navigator.pop(context, filter);
             },
-            child: const Text('Add'),
+            child: Text(context.l10n.nrAdd),
           ),
         ],
       ),

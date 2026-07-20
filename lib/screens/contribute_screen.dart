@@ -12,6 +12,7 @@ import '../core/theme/theme.dart';
 import '../mahakosh/models.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 
 class ContributeScreen extends ConsumerStatefulWidget {
   const ContributeScreen({super.key, required this.kundliId});
@@ -56,12 +57,13 @@ class _ContributeScreenState extends ConsumerState<ContributeScreen> {
   Future<void> _submit() async {
     final repo = ref.read(mahakoshRepoProvider);
     if (repo == null) return;
+    // Captured before the first await — context must not be used across
+    // suspension points.
+    final l10n = context.l10n;
     setState(() => _submitting = true);
     try {
-      final snapshot =
-          await ref.read(snapshotProvider(widget.kundliId).future);
-      final kundli =
-          await ref.read(kundliRepoProvider).byId(widget.kundliId);
+      final snapshot = await ref.read(snapshotProvider(widget.kundliId).future);
+      final kundli = await ref.read(kundliRepoProvider).byId(widget.kundliId);
       // Location generalized: keep only the trailing (country/region)
       // parts, never the exact place.
       final parts = kundli!.placeName.split(', ');
@@ -80,15 +82,14 @@ class _ContributeScreenState extends ConsumerState<ContributeScreen> {
           .update(kundli.copyWith(mahakoshCode: mkCode));
       ref.invalidate(kundlisProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(
-                'Chart contributed to Mahakosh · community research ($mkCode)')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.cbContributed(mkCode))));
         context.go('/mahakosh');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not contribute: $e')));
+            .showSnackBar(SnackBar(content: Text(l10n.cbError('$e'))));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -105,68 +106,63 @@ class _ContributeScreenState extends ConsumerState<ContributeScreen> {
 
     if (repo == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Share to Mahakosh')),
-        body: const EmptyState(
-            message: 'Mahakosh needs the backend configured. '
-                'See supabase/README.md.'),
+        appBar: AppBar(title: Text(context.l10n.cbTitle)),
+        body: EmptyState(message: context.l10n.cbBackendMissing),
       );
     }
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Share to Mahakosh')),
+        appBar: AppBar(title: Text(context.l10n.cbTitle)),
         body: EmptyState(
-          message: 'Sign in to contribute charts to community research.',
-          actionLabel: 'Sign in',
+          message: context.l10n.cbSignInPrompt,
+          actionLabel: context.l10n.signIn,
           onAction: () => context.push('/signin'),
         ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Share to Mahakosh')),
+      appBar: AppBar(title: Text(context.l10n.cbTitle)),
       body: ListView(
         padding: formPadding(context),
         children: [
-          Text('This chart will be shared',
-              style: TETheme.serif(size: 18)),
-          Text('anonymously with the research community.',
-              style: TextStyle(fontSize: 13.5, color: TEColors.inkSoft)),
+          Text(context.l10n.cbHeading, style: KJTheme.serif(size: 18)),
+          Text(context.l10n.cbSubheading,
+              style: TextStyle(fontSize: 13.5, color: KJColors.inkSoft)),
           const SizedBox(height: 12),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  _AnonRow('Name removed — never stored or shown'),
-                  _AnonRow('Birth date & place are shown to researchers'),
-                  _AnonRow('Exact birth time is used for calculations '
-                      'but never displayed'),
-                  _AnonRow('Life events you add are visible to '
-                      'researchers'),
+                children: [
+                  _AnonRow(context.l10n.cbAnonName),
+                  _AnonRow(context.l10n.cbAnonBirth),
+                  _AnonRow(context.l10n.cbAnonTime),
+                  _AnonRow(context.l10n.cbAnonEvents),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Text('This is:',
-              style: TextStyle(fontSize: 13.5, color: TEColors.inkSoft)),
+          Text(context.l10n.cbThisIs,
+              style: TextStyle(fontSize: 13.5, color: KJColors.inkSoft)),
           const SizedBox(height: 8),
           Row(
             children: [
               ChoiceChip(
-                label: const Text('My own'),
+                label: Text(context.l10n.myOwn),
                 selected: _isOwn,
-                labelStyle: TextStyle(
-                    color: _isOwn ? TEColors.paper : TEColors.ink),
+                labelStyle:
+                    TextStyle(color: _isOwn ? KJColors.paper : KJColors.ink),
                 onSelected: (_) => setState(() => _isOwn = true),
               ),
               const SizedBox(width: 10),
               ChoiceChip(
-                label: const Text("Someone else's"),
+                label: Text(context.l10n.someoneElses),
                 selected: !_isOwn,
-                labelStyle: TextStyle(
-                    color: !_isOwn ? TEColors.paper : TEColors.ink),
+                labelStyle:
+                    TextStyle(color: !_isOwn ? KJColors.paper : KJColors.ink),
                 onSelected: (_) => setState(() => _isOwn = false),
               ),
             ],
@@ -175,27 +171,22 @@ class _ContributeScreenState extends ConsumerState<ContributeScreen> {
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
-              activeColor: TEColors.maroon,
+              activeColor: KJColors.maroon,
               value: _thirdPartyConsent,
-              onChanged: (v) =>
-                  setState(() => _thirdPartyConsent = v ?? false),
-              title: const Text(
-                'I confirm I have this person\'s consent to share their '
-                'birth data for research',
-                style: TextStyle(fontSize: 13),
+              onChanged: (v) => setState(() => _thirdPartyConsent = v ?? false),
+              title: Text(
+                context.l10n.cbThirdPartyConsent,
+                style: const TextStyle(fontSize: 13),
               ),
             ),
           const Divider(height: 32),
-          Text('Life events', style: TETheme.serif(size: 16)),
+          Text(context.l10n.cbLifeEvents, style: KJTheme.serif(size: 16)),
           const SizedBox(height: 4),
           Text(
             _events.isEmpty
-                ? 'Dated, tagged events make a chart useful for pattern '
-                    'research (e.g. Marriage · 2014, Career change · 2019).'
-                : 'Pulled from this kundli\'s Life Events. Add more below for '
-                    'this submission; manage them permanently on the kundli\'s '
-                    'Life Events screen.',
-            style: TextStyle(fontSize: 12.5, color: TEColors.inkSoft),
+                ? context.l10n.cbEventsEmptyHint
+                : context.l10n.cbEventsPulledHint,
+            style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 10),
           for (final e in _events)
@@ -206,9 +197,9 @@ class _ContributeScreenState extends ConsumerState<ContributeScreen> {
                 title: Text(
                     '${e.tag}${e.eventDate != null ? ' · ${e.eventDate!.year}' : ''}'),
                 subtitle: e.isHealthRelated
-                    ? Text('Health-related event',
-                        style: TextStyle(
-                            fontSize: 11.5, color: TEColors.maroon))
+                    ? Text(context.l10n.cbHealthRelatedEvent,
+                        style:
+                            TextStyle(fontSize: 11.5, color: KJColors.maroon))
                     : null,
                 trailing: IconButton(
                   icon: const Icon(Icons.close, size: 18),
@@ -218,35 +209,30 @@ class _ContributeScreenState extends ConsumerState<ContributeScreen> {
             ),
           TextField(
             controller: _tagController,
-            decoration:
-                const InputDecoration(hintText: 'e.g. Organ transplant'),
+            decoration: InputDecoration(hintText: context.l10n.cbTagHint),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _noteController,
             maxLines: 2,
-            decoration:
-                const InputDecoration(hintText: 'Notes for researchers'),
+            decoration: InputDecoration(hintText: context.l10n.cbNotesHint),
           ),
           const SizedBox(height: 6),
           Text(
-            'Event text is visible to researchers on the anonymized chart — '
-            'don\'t include names, contact details, hospitals or other '
-            'places, or anything that could identify a real person.',
-            style: TextStyle(fontSize: 11.5, color: TEColors.inkSoft),
+            context.l10n.cbEventPrivacyWarning,
+            style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 4),
           Row(
             children: [
               Checkbox(
                 value: _eventIsHealth,
-                activeColor: TEColors.maroon,
-                onChanged: (v) =>
-                    setState(() => _eventIsHealth = v ?? false),
+                activeColor: KJColors.maroon,
+                onChanged: (v) => setState(() => _eventIsHealth = v ?? false),
               ),
-              const Expanded(
-                  child: Text('Health-related',
-                      style: TextStyle(fontSize: 12.5))),
+              Expanded(
+                  child: Text(context.l10n.cbHealthRelated,
+                      style: const TextStyle(fontSize: 12.5))),
               TextButton(
                 onPressed: () async {
                   final d = await showDatePicker(
@@ -258,7 +244,7 @@ class _ContributeScreenState extends ConsumerState<ContributeScreen> {
                   if (d != null) setState(() => _eventDate = d);
                 },
                 child: Text(_eventDate == null
-                    ? 'Date…'
+                    ? context.l10n.cbDate
                     : '${_eventDate!.year}'),
               ),
               TextButton(
@@ -278,7 +264,7 @@ class _ContributeScreenState extends ConsumerState<ContributeScreen> {
                     _eventDate = null;
                   });
                 },
-                child: const Text('Add event'),
+                child: Text(context.l10n.cbAddEvent),
               ),
             ],
           ),
@@ -286,25 +272,24 @@ class _ContributeScreenState extends ConsumerState<ContributeScreen> {
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
-            activeColor: TEColors.maroon,
+            activeColor: KJColors.maroon,
             value: _mainConsent,
             onChanged: (v) => setState(() => _mainConsent = v ?? false),
-            title: const Text(
-                'I consent to share this chart and the life events above — '
-                'including any health-related ones — for community research',
-                style: TextStyle(fontSize: 13.5)),
+            title: Text(context.l10n.cbMainConsent,
+                style: const TextStyle(fontSize: 13.5)),
           ),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: _canSubmit ? _submit : null,
-            child: Text(
-                _submitting ? 'Publishing…' : 'Publish to Mahakosh'),
+            child: Text(_submitting
+                ? context.l10n.cbPublishing
+                : context.l10n.cbPublish),
           ),
           const SizedBox(height: 8),
           Text(
-            'You can withdraw this chart at any time from Kundli Details.',
+            context.l10n.cbWithdrawNote,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11.5, color: TEColors.inkSoft),
+            style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
           ),
         ],
       ),
@@ -322,7 +307,7 @@ class _AnonRow extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.check, size: 15, color: TEColors.forest),
+            Icon(Icons.check, size: 15, color: KJColors.forest),
             const SizedBox(width: 8),
             Expanded(
               child: Text(text, style: const TextStyle(fontSize: 13.5)),

@@ -11,6 +11,7 @@ import '../core/constants.dart';
 import '../core/theme/theme.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 
 /// The Menu landing page (last pill item) — home for everything that
 /// isn't a daily-use section. The account lives inline at the top (no
@@ -27,76 +28,76 @@ class MenuScreen extends ConsumerWidget {
     // (see admin_repository.dart's doc comment).
     final isAdmin = ref.watch(isAdminProvider).value ?? false;
 
-    return TEScaffold(
-      section: TESection.menu,
-      appBar: AppBar(title: const Text('Menu')),
+    return KJScaffold(
+      section: KJSection.menu,
+      appBar: AppBar(title: Text(context.l10n.mnTitle)),
       body: ListView(
         padding: formPadding(context),
         children: [
-          _label('TOOLS'),
+          _label(context.l10n.mnSectionTools),
           _tile(
             context,
             icon: Icons.brightness_5_outlined,
-            title: 'Muhurta',
-            subtitle: 'Choghadiya, Hora, Rahu Kaal & auspicious timings',
+            title: context.l10n.mhTitle,
+            subtitle: context.l10n.mnMuhurtaSubtitle,
             onTap: () => context.push('/muhurta'),
           ),
           _tile(
             context,
             icon: Icons.favorite_border,
-            title: 'Ashtakoota Guna Milan',
-            subtitle: 'Marriage compatibility — 36-point koota match',
+            title: context.l10n.mnAshtakoota,
+            subtitle: context.l10n.mnAshtakootaSubtitle,
             onTap: () => context.push('/ashtakoota'),
           ),
           const SizedBox(height: 18),
-          _label('ACCOUNT'),
+          _label(context.l10n.mnSectionAccount),
           _accountCard(context, ref, user),
           const SizedBox(height: 8),
           _tile(
             context,
             icon: Icons.settings_outlined,
-            title: 'Settings',
-            subtitle: 'Date format, default ayanamsa & chart style, appearance',
+            title: context.l10n.mnSettings,
+            subtitle: context.l10n.mnSettingsSubtitle,
             onTap: () => context.push('/settings'),
           ),
           _tile(
             context,
             icon: Icons.notifications_none,
-            title: 'Notifications',
-            subtitle: 'Research replies & updates',
+            title: context.l10n.notificationsTitle,
+            subtitle: context.l10n.mnNotificationsSubtitle,
             onTap: () => context.push('/notifications'),
           ),
           const SizedBox(height: 18),
-          _label('MAHAKOSH'),
+          _label(context.l10n.mnSectionMahakosh),
           _tile(
             context,
             icon: Icons.visibility_off_outlined,
-            title: 'Hidden charts',
-            subtitle: "Charts you've hidden from your own Mahakosh view",
+            title: context.l10n.mnHiddenCharts,
+            subtitle: context.l10n.mnHiddenChartsSubtitle,
             onTap: () => context.push('/mahakosh/hidden'),
           ),
           if (isAdmin) ...[
             const SizedBox(height: 18),
-            _label('ADMIN'),
+            _label(context.l10n.mnSectionAdmin),
             _tile(
               context,
               icon: Icons.shield_outlined,
-              title: 'Moderation queue',
-              subtitle: 'Pending research requests & chart reports',
+              title: context.l10n.mnModerationQueue,
+              subtitle: context.l10n.mnModerationSubtitle,
               onTap: () => context.push('/admin'),
             ),
           ],
           const SizedBox(height: 18),
-          _label('ABOUT'),
+          _label(context.l10n.mnSectionAbout),
           _tile(
             context,
             icon: Icons.description_outlined,
-            title: 'Open-source licenses',
-            subtitle: 'Licenses of the libraries this app is built on',
+            title: context.l10n.mnLicenses,
+            subtitle: context.l10n.mnLicensesSubtitle,
             onTap: () => showLicensePage(
               context: context,
               applicationName: kAppName,
-              applicationLegalese: '© 2026 Amit Verma',
+              applicationLegalese: kCopyrightLine,
             ),
           ),
           const SizedBox(height: 28),
@@ -118,28 +119,28 @@ class MenuScreen extends ConsumerWidget {
         child: user == null
             ? Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Signed out — kundlis stay on this device.',
-                      style: TextStyle(fontSize: 13.5),
+                      context.l10n.mnSignedOut,
+                      style: const TextStyle(fontSize: 13.5),
                     ),
                   ),
                   FilledButton(
                     onPressed: () => context.push('/signin'),
-                    child: const Text('Sign in'),
+                    child: Text(context.l10n.signIn),
                   ),
                 ],
               )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(user.email ?? 'Account',
+                  Text(user.email ?? context.l10n.mnAccountFallback,
                       style: const TextStyle(
                           fontSize: 14.5, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
-                  Text('Sync + Mahakosh enabled',
-                      style: TextStyle(
-                          fontSize: 12.5, color: TEColors.inkSoft)),
+                  Text(context.l10n.mnSyncEnabled,
+                      style:
+                          TextStyle(fontSize: 12.5, color: KJColors.inkSoft)),
                   const SizedBox(height: 10),
                   Row(
                     children: [
@@ -151,11 +152,11 @@ class MenuScreen extends ConsumerWidget {
                           ref.invalidate(kundlisProvider);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content:
-                                    Text('Synced (${pulled ?? 0} pulled).')));
+                                content: Text(
+                                    context.l10n.mnSynced('${pulled ?? 0}'))));
                           }
                         },
-                        child: const Text('Sync now'),
+                        child: Text(context.l10n.mnSyncNow),
                       ),
                       const SizedBox(width: 10),
                       TextButton(
@@ -165,7 +166,7 @@ class MenuScreen extends ConsumerWidget {
                               ?.auth
                               .signOut();
                         },
-                        child: const Text('Sign out'),
+                        child: Text(context.l10n.signOut),
                       ),
                     ],
                   ),
@@ -173,8 +174,8 @@ class MenuScreen extends ConsumerWidget {
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       onPressed: () => _confirmDeleteAccount(context, ref),
-                      child: Text('Delete account…',
-                          style: TextStyle(color: TEColors.maroon)),
+                      child: Text(context.l10n.mnDeleteAccount,
+                          style: TextStyle(color: KJColors.maroon)),
                     ),
                   ),
                 ],
@@ -188,34 +189,25 @@ class MenuScreen extends ConsumerWidget {
   /// delete-account edge function. Public description of exactly what is
   /// and isn't removed: kaaljyoti.com/delete-account.html — keep the
   /// dialog text consistent with that page.
-  Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmDeleteAccount(
+      BuildContext context, WidgetRef ref) async {
     final client = ref.read(supabaseClientProvider);
     if (client == null) return;
+    final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete account?'),
-        content: const Text(
-            'This permanently deletes your account: synced kundli copies, '
-            'notifications and your sign-in identity. Kundlis stored on '
-            'this device are not affected.\n\n'
-            'Your comments in discussions remain, shown as from a deleted '
-            'account. Delete any comments you don\'t want to keep before '
-            'deleting your account.\n\n'
-            'Charts you shared with Mahakosh stay in the research pool, '
-            'anonymized. To remove one from the pool, withdraw it on its '
-            'kundli\'s edit screen BEFORE deleting your account — '
-            'afterwards it can no longer be traced back to you.\n\n'
-            'This cannot be undone.'),
+        title: Text(ctx.l10n.mnDeleteAccountTitle),
+        content: Text(ctx.l10n.mnDeleteAccountBody),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(ctx.l10n.cancel)),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text('Delete forever',
-                  style: TextStyle(color: TEColors.maroon))),
+              child: Text(ctx.l10n.mnDeleteForever,
+                  style: TextStyle(color: KJColors.maroon))),
         ],
       ),
     );
@@ -227,15 +219,14 @@ class MenuScreen extends ConsumerWidget {
       // local one (a global sign-out would call the dead session's
       // endpoint and fail).
       await client.auth.signOut(scope: SignOutScope.local);
-      messenger.showSnackBar(
-          const SnackBar(content: Text('Your account has been deleted.')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.mnAccountDeleted)));
     } catch (e) {
       final detail = e is FunctionException
           ? ((e.details is Map ? (e.details as Map)['error'] : null) ??
               'status ${e.status}')
           : e;
       messenger.showSnackBar(
-          SnackBar(content: Text('Could not delete account: $detail')));
+          SnackBar(content: Text(l10n.mnDeleteAccountError('$detail'))));
     }
   }
 
@@ -249,13 +240,13 @@ class MenuScreen extends ConsumerWidget {
           child: url == null
               ? Text(text,
                   textAlign: TextAlign.center,
-                  style: TETheme.mono(size: 11, color: TEColors.inkSoft))
+                  style: KJTheme.mono(size: 11, color: KJColors.inkSoft))
               : InkWell(
                   onTap: () => launchUrl(Uri.parse(url),
                       mode: LaunchMode.externalApplication),
                   child: Text(text,
                       textAlign: TextAlign.center,
-                      style: TETheme.mono(size: 11, color: TEColors.maroon)
+                      style: KJTheme.mono(size: 11, color: KJColors.maroon)
                           .copyWith(decoration: TextDecoration.underline)),
                 ),
         );
@@ -264,14 +255,18 @@ class MenuScreen extends ConsumerWidget {
         FutureBuilder<PackageInfo>(
           future: _packageInfo,
           builder: (_, snap) => line(snap.hasData
-              ? 'Kaal Jyoti v${snap.data!.version} (${snap.data!.buildNumber})'
-              : 'Kaal Jyoti'),
+              ? context.l10n
+                  .mnVersion(snap.data!.version, snap.data!.buildNumber)
+              : kAppName),
         ),
-        line('Free & open source software'),
-        line('Released under the GNU AGPL v3', url: kLicenseUrl),
-        line('Source code', url: kSourceRepoUrl),
-        line('Planetary calculations powered by the Swiss Ephemeris'),
-        line('No warranty — see license for details'),
+        line(kCopyrightLine),
+        line(context.l10n.mnAuthorCredit, url: kAuthorLinkedInUrl),
+        line(kWebsite, url: kWebsiteUrl),
+        line(context.l10n.mnFoss),
+        line(context.l10n.mnLicenseLine, url: kLicenseUrl),
+        line(context.l10n.mnSourceCode, url: kSourceRepoUrl),
+        line(context.l10n.mnEphemerisCredit),
+        line(context.l10n.mnNoWarranty),
       ],
     );
   }
@@ -283,7 +278,7 @@ class MenuScreen extends ConsumerWidget {
           style: TextStyle(
             fontSize: 10.5,
             letterSpacing: 1.1,
-            color: TEColors.inkSoft,
+            color: KJColors.inkSoft,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -303,22 +298,22 @@ class MenuScreen extends ConsumerWidget {
         enabled: enabled,
         leading: Icon(icon,
             color: enabled
-                ? TEColors.maroon
-                : TEColors.inkSoft.withValues(alpha: 0.5)),
+                ? KJColors.maroon
+                : KJColors.inkSoft.withValues(alpha: 0.5)),
         title: Text(title,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
               color: enabled
-                  ? TEColors.ink
-                  : TEColors.inkSoft.withValues(alpha: 0.7),
+                  ? KJColors.ink
+                  : KJColors.inkSoft.withValues(alpha: 0.7),
             )),
         subtitle: Text(subtitle,
-            style: TextStyle(fontSize: 12, color: TEColors.inkSoft)),
+            style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
         trailing: enabled
             ? const Icon(Icons.chevron_right, size: 20)
-            : Text('soon',
-                style: TETheme.mono(size: 10, color: TEColors.inkSoft)),
+            : Text(context.l10n.mnSoon,
+                style: KJTheme.mono(size: 10, color: KJColors.inkSoft)),
         onTap: onTap,
       ),
     );

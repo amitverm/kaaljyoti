@@ -9,10 +9,10 @@ import 'type_scale.dart';
 /// used anywhere a planet's name appears in the app (charts, tables,
 /// dasha lords, chips), so grahas read consistently everywhere.
 Color planetInk(Planet planet) {
-  final c = TEColors.planets;
+  final c = KJColors.planets;
   return switch (planet) {
     Planet.sun => c.sun,
-    Planet.moon => c.moon ?? TEColors.ink,
+    Planet.moon => c.moon ?? KJColors.ink,
     Planet.mars => c.mars,
     Planet.mercury => c.mercury,
     Planet.jupiter => c.jupiter,
@@ -33,8 +33,8 @@ Color signInk(ZodiacSign sign) => planetInk(sign.lord);
 /// red, Mercury green, Jupiter saffron, Venus pink, Saturn blue, Rahu
 /// grey, Ketu dark brown. Each palette carries its own set so the
 /// hues stay legible on that palette's paper.
-class TEPlanetInk {
-  const TEPlanetInk({
+class KJPlanetInk {
+  const KJPlanetInk({
     required this.sun,
     this.moon, // null → falls back to the palette's ink
     required this.mars,
@@ -60,8 +60,8 @@ class TEPlanetInk {
 /// A complete color palette. Three variants ship: classic (the
 /// finalized Claude Design warm-paper look), high-contrast (elderly-
 /// friendly: black ink, strong borders), and dark.
-class TEPalette {
-  const TEPalette({
+class KJPalette {
+  const KJPalette({
     required this.name,
     required this.paper,
     required this.paperAlt,
@@ -95,9 +95,9 @@ class TEPalette {
   final Color transit;
 
   /// Per-planet chart label colours for this palette.
-  final TEPlanetInk planets;
+  final KJPlanetInk planets;
 
-  static const _classicPlanets = TEPlanetInk(
+  static const _classicPlanets = KJPlanetInk(
     sun: Color(0xFFB4540A), // dark red / golden
     mars: Color(0xFFC62828), // red
     mercury: Color(0xFF2E7D32), // green
@@ -108,7 +108,7 @@ class TEPalette {
     ketu: Color(0xFF5D4037), // dark brown
   );
 
-  static const _contrastPlanets = TEPlanetInk(
+  static const _contrastPlanets = KJPlanetInk(
     sun: Color(0xFF8F3F00),
     mars: Color(0xFFA31515),
     mercury: Color(0xFF1B5E20),
@@ -119,7 +119,7 @@ class TEPalette {
     ketu: Color(0xFF4E342E),
   );
 
-  static const _darkPlanets = TEPlanetInk(
+  static const _darkPlanets = KJPlanetInk(
     sun: Color(0xFFE8B25E),
     mars: Color(0xFFE57373),
     mercury: Color(0xFF81C784),
@@ -130,7 +130,7 @@ class TEPalette {
     ketu: Color(0xFFBCAAA4),
   );
 
-  static const classic = TEPalette(
+  static const classic = KJPalette(
     name: 'classic',
     paper: Color(0xFFFCFAF4),
     paperAlt: Color(0xFFF7F3EA),
@@ -146,7 +146,7 @@ class TEPalette {
 
   /// High contrast: black ink, darker accents, strong borders — for
   /// readers who find the classic palette too soft.
-  static const highContrast = TEPalette(
+  static const highContrast = KJPalette(
     name: 'contrast',
     paper: Color(0xFFFFFDF7),
     paperAlt: Color(0xFFFFF8E8),
@@ -161,7 +161,7 @@ class TEPalette {
     planets: _contrastPlanets,
   );
 
-  static const dark = TEPalette(
+  static const dark = KJPalette(
     name: 'dark',
     paper: Color(0xFF201D15),
     paperAlt: Color(0xFF2A261C),
@@ -179,15 +179,15 @@ class TEPalette {
 
   static const all = [classic, highContrast, dark];
 
-  static TEPalette byName(String? name) =>
+  static KJPalette byName(String? name) =>
       all.firstWhere((p) => p.name == name, orElse: () => classic);
 }
 
 /// Runtime color access used across the app (screens, painters, PDF
 /// chrome). Reads from the ACTIVE palette — set by the appearance
 /// settings before the widget tree rebuilds. Not const on purpose.
-abstract final class TEColors {
-  static TEPalette current = TEPalette.classic;
+abstract final class KJColors {
+  static KJPalette current = KJPalette.classic;
 
   static Color get paper => current.paper;
   static Color get paperAlt => current.paperAlt;
@@ -199,22 +199,22 @@ abstract final class TEColors {
   static Color get ink => current.ink;
   static Color get inkSoft => current.inkSoft;
   static Color get hairline => current.hairline;
-  static TEPlanetInk get planets => current.planets;
+  static KJPlanetInk get planets => current.planets;
 }
 
-abstract final class TETheme {
+abstract final class KJTheme {
   /// When false ("Simple" font style), headings use IBM Plex Sans too —
   /// more legible at large text sizes.
   static bool useSerif = true;
 
   static ThemeData build({
-    TEPalette palette = TEPalette.classic,
+    KJPalette palette = KJPalette.classic,
     bool serifHeadings = true,
   }) {
-    // TEType reads these statics; set them first so the type scale below
+    // KJType reads these statics; set them first so the type scale below
     // resolves against the palette + font mode this theme is built for.
-    TEColors.current = palette;
-    TETheme.useSerif = serifHeadings;
+    KJColors.current = palette;
+    KJTheme.useSerif = serifHeadings;
 
     final base = ThemeData(
       useMaterial3: true,
@@ -231,9 +231,8 @@ abstract final class TETheme {
         surface: palette.paper,
         onSurface: palette.ink,
         outline: palette.hairline,
-        error: palette.isDark
-            ? const Color(0xFFE08A8A)
-            : const Color(0xFF8C2B2B),
+        error:
+            palette.isDark ? const Color(0xFFE08A8A) : const Color(0xFF8C2B2B),
       ),
     );
 
@@ -241,24 +240,24 @@ abstract final class TETheme {
     // framework-driven text (app bars, dialogs, list tiles, buttons,
     // chips, inputs) follows the scale without one-off styles.
     final text = TextTheme(
-      displayLarge: TEType.hero(color: palette.ink), // Marcellus 34
-      displayMedium: TEType.screenTitle(size: 26, color: palette.ink),
-      displaySmall: TEType.screenTitle(size: 22, color: palette.ink),
-      headlineMedium: TEType.subhead(color: palette.ink),
-      headlineSmall: TEType.subhead(color: palette.ink),
-      titleLarge: TEType.subhead(color: palette.ink), // Marcellus 16.5
-      titleMedium: TEType.button(color: palette.ink), // Plex Sans 15/600
-      titleSmall: TEType.bodyStrong(size: 13, color: palette.ink),
-      bodyLarge: TEType.body(size: 14, color: palette.ink),
-      bodyMedium: TEType.body(size: 13, color: palette.ink),
-      bodySmall: TEType.caption(color: palette.inkSoft),
-      labelLarge: TEType.button(color: palette.ink), // buttons
-      labelMedium: TEType.chip(color: palette.ink), // chips
-      labelSmall: TEType.kicker(color: palette.inkSoft), // eyebrows
+      displayLarge: KJType.hero(color: palette.ink), // Marcellus 34
+      displayMedium: KJType.screenTitle(size: 26, color: palette.ink),
+      displaySmall: KJType.screenTitle(size: 22, color: palette.ink),
+      headlineMedium: KJType.subhead(color: palette.ink),
+      headlineSmall: KJType.subhead(color: palette.ink),
+      titleLarge: KJType.subhead(color: palette.ink), // Marcellus 16.5
+      titleMedium: KJType.button(color: palette.ink), // Plex Sans 15/600
+      titleSmall: KJType.bodyStrong(size: 13, color: palette.ink),
+      bodyLarge: KJType.body(size: 14, color: palette.ink),
+      bodyMedium: KJType.body(size: 13, color: palette.ink),
+      bodySmall: KJType.caption(color: palette.inkSoft),
+      labelLarge: KJType.button(color: palette.ink), // buttons
+      labelMedium: KJType.chip(color: palette.ink), // chips
+      labelSmall: KJType.kicker(color: palette.inkSoft), // eyebrows
     );
 
-    final appBarTitle = TEType.screenTitle(
-        size: serifHeadings ? 24 : 22, color: palette.ink);
+    final appBarTitle =
+        KJType.screenTitle(size: serifHeadings ? 24 : 22, color: palette.ink);
 
     return base.copyWith(
       textTheme: text,
@@ -273,7 +272,7 @@ abstract final class TETheme {
         color: palette.paper,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: TERadius.all(TERadius.lg),
+          borderRadius: KJRadius.all(KJRadius.lg),
           side: BorderSide(color: palette.hairline),
         ),
         margin: EdgeInsets.zero,
@@ -284,8 +283,8 @@ abstract final class TETheme {
           foregroundColor: palette.paper,
           shape: const StadiumBorder(),
           padding: const EdgeInsets.symmetric(
-              horizontal: TESpace.xxl, vertical: TESpace.md + 2),
-          textStyle: TEType.button(),
+              horizontal: KJSpace.xxl, vertical: KJSpace.md + 2),
+          textStyle: KJType.button(),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -294,8 +293,8 @@ abstract final class TETheme {
           side: BorderSide(color: palette.ink),
           shape: const StadiumBorder(),
           padding: const EdgeInsets.symmetric(
-              horizontal: TESpace.xl, vertical: TESpace.md),
-          textStyle: TEType.button(),
+              horizontal: KJSpace.xl, vertical: KJSpace.md),
+          textStyle: KJType.button(),
         ),
       ),
       chipTheme: base.chipTheme.copyWith(
@@ -304,22 +303,22 @@ abstract final class TETheme {
         side: BorderSide(color: palette.hairline),
         // Explicit ink — a colorless label style lets chips fall back
         // to framework defaults that can render invisibly on paper.
-        labelStyle: TEType.chip(color: palette.ink, size: 12.5),
+        labelStyle: KJType.chip(color: palette.ink, size: 12.5),
         shape: const StadiumBorder(),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: palette.paperAlt,
         border: OutlineInputBorder(
-          borderRadius: TERadius.all(TERadius.md),
+          borderRadius: KJRadius.all(KJRadius.md),
           borderSide: BorderSide(color: palette.hairline),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: TERadius.all(TERadius.md),
+          borderRadius: KJRadius.all(KJRadius.md),
           borderSide: BorderSide(color: palette.hairline),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: TERadius.all(TERadius.md),
+          borderRadius: KJRadius.all(KJRadius.md),
           borderSide: BorderSide(color: palette.maroon, width: 1.5),
         ),
       ),
@@ -334,19 +333,26 @@ abstract final class TETheme {
   static ThemeData light() => build();
 
   /// IBM Plex Mono — degrees / coordinates / tabular data.
+  ///
+  /// [weight] is snapped to a bundled weight (w400/w500/w600) via
+  /// [plexBundledWeight] — runtime font fetching is disabled
+  /// (main.dart), so an unbundled weight would make google_fonts throw
+  /// per render (Sentry KAALJYOTI-PROD-3).
   static TextStyle mono({
     double size = 13,
     Color? color,
     FontWeight weight = FontWeight.w400,
   }) =>
       GoogleFonts.ibmPlexMono(
-          fontSize: size, color: color ?? TEColors.ink, fontWeight: weight);
+          fontSize: size,
+          color: color ?? KJColors.ink,
+          fontWeight: plexBundledWeight(weight));
 
   /// Display face — Marcellus in classic mode, Plex Sans in simple.
   static TextStyle serif({double size = 20, Color? color}) => useSerif
-      ? GoogleFonts.marcellus(fontSize: size, color: color ?? TEColors.ink)
+      ? GoogleFonts.marcellus(fontSize: size, color: color ?? KJColors.ink)
       : GoogleFonts.ibmPlexSans(
           fontSize: size,
-          color: color ?? TEColors.ink,
+          color: color ?? KJColors.ink,
           fontWeight: FontWeight.w600);
 }

@@ -2,16 +2,20 @@
 // merging, duration text, and Ashtakavarga severity tagging. No
 // ephemeris/FFI: severity tests build a minimal fixed AstroSnapshot
 // (only the fields Ashtakavarga actually reads: positions + ascendant).
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kaaljyoti/core/astro/ashtakavarga.dart';
+import 'package:kaaljyoti/l10n/gen/app_localizations.dart';
 import 'package:kaaljyoti/core/astro/models.dart';
 import 'package:kaaljyoti/core/astro/transit_scan.dart';
 import 'package:kaaljyoti/modules/sade_sati_module.dart';
 
-SadeSatiPhase _phase(String label, ZodiacSign sign, DateTime start, DateTime end) =>
-    SadeSatiPhase(label: label, sign: sign, start: start, end: end);
+SadeSatiPhase _phase(SadeSatiPhaseKind kind, ZodiacSign sign, DateTime start,
+        DateTime end) =>
+    SadeSatiPhase(kind: kind, sign: sign, start: start, end: end);
 
-AstroSnapshot _fixtureSnapshot(Map<Planet, double> longitudes, double ascendant) {
+AstroSnapshot _fixtureSnapshot(
+    Map<Planet, double> longitudes, double ascendant) {
   PlanetPosition pos(Planet p, double lon) =>
       PlanetPosition(planet: p, longitude: lon, latitude: 0, speed: 1);
   return AstroSnapshot(
@@ -35,7 +39,9 @@ AstroSnapshot _fixtureSnapshot(Map<Planet, double> longitudes, double ascendant)
       pada: 1,
       yogaIndex: 0,
       yogaName: 'Vishkambha',
+      karanaIndex: 1,
       karanaName: 'Bava',
+      varaIndex: 6,
       vara: 'Sunday',
     ),
     yogas: const [],
@@ -46,13 +52,20 @@ void main() {
   group('mergeCycleByLabel', () {
     test('one interval per label -> passthrough, no re-entries', () {
       final cycle = [
-        _phase('Rising', ZodiacSign.pisces, DateTime.utc(2020), DateTime.utc(2022)),
-        _phase('Peak', ZodiacSign.aries, DateTime.utc(2022), DateTime.utc(2024, 6)),
-        _phase('Setting', ZodiacSign.taurus, DateTime.utc(2024, 6), DateTime.utc(2027)),
+        _phase(SadeSatiPhaseKind.rising, ZodiacSign.pisces, DateTime.utc(2020),
+            DateTime.utc(2022)),
+        _phase(SadeSatiPhaseKind.peak, ZodiacSign.aries, DateTime.utc(2022),
+            DateTime.utc(2024, 6)),
+        _phase(SadeSatiPhaseKind.setting, ZodiacSign.taurus,
+            DateTime.utc(2024, 6), DateTime.utc(2027)),
       ];
       final merged = mergeCycleByLabel(cycle);
       expect(merged.length, 3);
-      expect(merged.map((m) => m.label), ['Rising', 'Peak', 'Setting']);
+      expect(merged.map((m) => m.kind), [
+        SadeSatiPhaseKind.rising,
+        SadeSatiPhaseKind.peak,
+        SadeSatiPhaseKind.setting
+      ]);
       for (final m in merged) {
         expect(m.hasReentries, false);
       }
@@ -66,23 +79,29 @@ void main() {
       // the retro dip counts inside Peak, the segments tile the whole
       // cycle, and retro lengthens a cycle — never shortens it.
       final cycle = [
-        _phase('Rising', ZodiacSign.pisces, DateTime.utc(2020), DateTime.utc(2022)),
-        _phase('Peak', ZodiacSign.aries, DateTime.utc(2022), DateTime.utc(2022, 6)),
-        _phase('Rising', ZodiacSign.pisces, DateTime.utc(2022, 6), DateTime.utc(2022, 8)),
-        _phase('Peak', ZodiacSign.aries, DateTime.utc(2022, 8), DateTime.utc(2024, 6)),
-        _phase('Setting', ZodiacSign.taurus, DateTime.utc(2024, 6), DateTime.utc(2027)),
+        _phase(SadeSatiPhaseKind.rising, ZodiacSign.pisces, DateTime.utc(2020),
+            DateTime.utc(2022)),
+        _phase(SadeSatiPhaseKind.peak, ZodiacSign.aries, DateTime.utc(2022),
+            DateTime.utc(2022, 6)),
+        _phase(SadeSatiPhaseKind.rising, ZodiacSign.pisces,
+            DateTime.utc(2022, 6), DateTime.utc(2022, 8)),
+        _phase(SadeSatiPhaseKind.peak, ZodiacSign.aries, DateTime.utc(2022, 8),
+            DateTime.utc(2024, 6)),
+        _phase(SadeSatiPhaseKind.setting, ZodiacSign.taurus,
+            DateTime.utc(2024, 6), DateTime.utc(2027)),
       ];
       final merged = mergeCycleByLabel(cycle);
       expect(merged.length, 3);
-      final rising = merged.firstWhere((m) => m.label == 'Rising');
-      final peak = merged.firstWhere((m) => m.label == 'Peak');
+      final rising =
+          merged.firstWhere((m) => m.kind == SadeSatiPhaseKind.rising);
+      final peak = merged.firstWhere((m) => m.kind == SadeSatiPhaseKind.peak);
       expect(rising.hasReentries, true);
       expect(rising.subPhases.length, 2);
       expect(peak.hasReentries, true);
       // Calendar span: first Peak entry (2022) until Setting begins
       // (2024-06) — the 2-month retro dip is included, not subtracted.
-      expect(peak.duration,
-          DateTime.utc(2024, 6).difference(DateTime.utc(2022)));
+      expect(
+          peak.duration, DateTime.utc(2024, 6).difference(DateTime.utc(2022)));
       // And the three segments tile the cycle exactly.
       final total = merged.fold(Duration.zero, (a, m) => a + m.duration);
       expect(total, DateTime.utc(2027).difference(DateTime.utc(2020)));
@@ -92,11 +111,14 @@ void main() {
   group('groupIntoCycles', () {
     test('a >2yr gap starts a new cycle; a short gap does not', () {
       final phases = [
-        _phase('Rising', ZodiacSign.pisces, DateTime.utc(2020), DateTime.utc(2022)),
+        _phase(SadeSatiPhaseKind.rising, ZodiacSign.pisces, DateTime.utc(2020),
+            DateTime.utc(2022)),
         // ~6 month gap (retro dip out of the zone) - same cycle.
-        _phase('Peak', ZodiacSign.aries, DateTime.utc(2022, 7), DateTime.utc(2024)),
+        _phase(SadeSatiPhaseKind.peak, ZodiacSign.aries, DateTime.utc(2022, 7),
+            DateTime.utc(2024)),
         // ~29 year gap - genuinely the next Sade Sati cycle.
-        _phase('Rising', ZodiacSign.pisces, DateTime.utc(2053), DateTime.utc(2055)),
+        _phase(SadeSatiPhaseKind.rising, ZodiacSign.pisces, DateTime.utc(2053),
+            DateTime.utc(2055)),
       ];
       final cycles = groupIntoCycles(phases);
       expect(cycles.length, 2);
@@ -106,11 +128,16 @@ void main() {
   });
 
   group('approxYears', () {
+    // The module's formatters are locale-aware now; assert against the
+    // English (template) localization.
+    final l10n = lookupAppLocalizations(const Locale('en'));
     test('renders a half-year fraction with the ½ glyph', () {
-      expect(approxYears(const Duration(days: 2739)), '≈7½ years'); // ~7.5y
+      expect(
+          approxYears(l10n, const Duration(days: 2739)), '≈7½ years'); // ~7.5y
     });
     test('renders a whole year with no fraction', () {
-      expect(approxYears(const Duration(days: 2922)), '≈8 years'); // ~8.0y
+      expect(
+          approxYears(l10n, const Duration(days: 2922)), '≈8 years'); // ~8.0y
     });
   });
 
@@ -154,7 +181,9 @@ void main() {
       );
       final av = Ashtakavarga(snapshot);
       final sev = severityOf(av, ZodiacSign.aries);
-      expect(severityTag(sev), 'Sa BAV ${sev.bav}/8 · SAV ${sev.sav} · ${sev.band}');
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      expect(severityTag(l10n, sev),
+          'Sa BAV ${sev.bav}/8 · SAV ${sev.sav} · ${sev.band}');
     });
   });
 }

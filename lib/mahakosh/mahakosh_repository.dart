@@ -285,8 +285,7 @@ class MahakoshRepository {
   /// select on mahakosh_charts deliberately excludes hidden charts.
   Future<List<HiddenMahakoshChart>> hiddenCharts() async {
     if (!isSignedIn) return [];
-    final rows =
-        await _client.rpc('list_hidden_mahakosh_charts') as List;
+    final rows = await _client.rpc('list_hidden_mahakosh_charts') as List;
     return [
       for (final r in rows)
         HiddenMahakoshChart.fromJson((r as Map).cast<String, dynamic>()),
@@ -313,10 +312,8 @@ class MahakoshRepository {
 
   Future<int> unreadCount() async {
     if (!isSignedIn) return 0;
-    final rows = await _client
-        .from('notifications')
-        .select('id')
-        .eq('read', false);
+    final rows =
+        await _client.from('notifications').select('id').eq('read', false);
     return rows.length;
   }
 }

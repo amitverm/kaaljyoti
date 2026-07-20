@@ -125,8 +125,7 @@ class Kundli {
         name: r['name'] as String,
         relationTag: r['relation_tag'] as String,
         note: r['note'] as String?,
-        birthUtc: DateTime.fromMillisecondsSinceEpoch(
-            r['birth_utc'] as int,
+        birthUtc: DateTime.fromMillisecondsSinceEpoch(r['birth_utc'] as int,
             isUtc: true),
         latitude: r['lat'] as double,
         longitude: r['lon'] as double,
@@ -139,11 +138,9 @@ class Kundli {
         isEphemeral: ((r['is_ephemeral'] as int?) ?? 0) == 1,
         syncEnabled: (r['sync_enabled'] as int) == 1,
         mahakoshCode: r['mahakosh_code'] as String?,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-            r['created_at'] as int,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(r['created_at'] as int,
             isUtc: true),
-        updatedAt: DateTime.fromMillisecondsSinceEpoch(
-            r['updated_at'] as int,
+        updatedAt: DateTime.fromMillisecondsSinceEpoch(r['updated_at'] as int,
             isUtc: true),
       );
 }
@@ -306,14 +303,13 @@ class KundliEvent {
         eventDate: r['event_date'] == null
             ? null
             : DateTime.fromMillisecondsSinceEpoch(r['event_date'] as int),
-        datePrecision: EventDatePrecision.byName(r['date_precision'] as String?),
+        datePrecision:
+            EventDatePrecision.byName(r['date_precision'] as String?),
         ageYears: r['age_years'] as int?,
         isHealthRelated: ((r['is_health_related'] as int?) ?? 0) == 1,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-            r['created_at'] as int,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(r['created_at'] as int,
             isUtc: true),
-        updatedAt: DateTime.fromMillisecondsSinceEpoch(
-            r['updated_at'] as int,
+        updatedAt: DateTime.fromMillisecondsSinceEpoch(r['updated_at'] as int,
             isUtc: true),
       );
 }

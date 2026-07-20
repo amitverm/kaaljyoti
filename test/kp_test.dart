@@ -68,7 +68,8 @@ void main() {
           // nakshatra: nak * span itself can land a float-ulp below
           // the boundary (e.g. 3 · 360/27 < 40.0) and register a
           // spurious run from the previous nakshatra's last sub.
-          final lon = nak * Nakshatra.span + ((i + 0.5) / 4000) * Nakshatra.span;
+          final lon =
+              nak * Nakshatra.span + ((i + 0.5) / 4000) * Nakshatra.span;
           final sub = KpLords.fromLongitude(lon).subLord;
           if (seen.isEmpty || seen.last != sub) seen.add(sub);
         }
@@ -143,8 +144,7 @@ void main() {
       // U.Phalguni, U.Ashadha) signify house 1 at A level.
       final h1 = kp.significators[0];
       for (final p in kp.planets) {
-        final inStarOfOccupant =
-            h1.occupants.contains(p.lords.starLord);
+        final inStarOfOccupant = h1.occupants.contains(p.lords.starLord);
         expect(h1.inStarOfOccupants.contains(p.planet), inStarOfOccupant,
             reason: p.planet.displayName);
       }

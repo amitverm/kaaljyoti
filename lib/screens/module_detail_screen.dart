@@ -8,6 +8,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/astro_l10n.dart';
+import '../widgetsystem/astro_module.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
 import '../widgetsystem/registry.dart';
@@ -39,8 +41,7 @@ class ModuleDetailScreen extends ConsumerStatefulWidget {
   final String? viewId;
 
   @override
-  ConsumerState<ModuleDetailScreen> createState() =>
-      _ModuleDetailScreenState();
+  ConsumerState<ModuleDetailScreen> createState() => _ModuleDetailScreenState();
 }
 
 class _ModuleDetailScreenState extends ConsumerState<ModuleDetailScreen> {
@@ -68,20 +69,17 @@ class _ModuleDetailScreenState extends ConsumerState<ModuleDetailScreen> {
     final ctxAsync = ref.watch(moduleContextProvider(widget.kundliId));
 
     if (module == null) {
-      return const Scaffold(body: Center(child: Text('Unknown module')));
+      return Scaffold(body: Center(child: Text(context.l10n.mdUnknownModule)));
     }
 
     final config = _config ?? widget.initialConfig ?? const {};
-    final summary = module.configSummary(config);
     return Scaffold(
       appBar: AppBar(
-        title: Text(summary == null
-            ? module.meta.title
-            : '${module.meta.title} · $summary'),
+        title: Text(moduleInstanceTitle(module, config, context.l10n)),
       ),
       body: ctxAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(message: 'Calculation failed: $e'),
+        error: (e, _) => EmptyState(message: context.l10n.mdCalcFailed('$e')),
         data: (baseCtx) {
           final effective = _config ?? widget.initialConfig ?? baseCtx.config;
           // onConfigChanged lets the module's own detail body (chart

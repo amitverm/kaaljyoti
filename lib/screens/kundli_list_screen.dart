@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import '../core/date_format.dart';
 import '../core/theme/theme.dart';
 import '../data/models.dart';
+import '../l10n/astro_l10n.dart';
 import '../services/location_service.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
@@ -20,13 +21,14 @@ class KundliListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final kundlis = ref.watch(kundlisProvider);
     final user = ref.watch(authUserProvider).value;
 
-    return TEScaffold(
-      section: TESection.kundlis,
+    return KJScaffold(
+      section: KJSection.kundlis,
       appBar: AppBar(
-        title: const Text('Kundlis'),
+        title: Text(l10n.kundlisTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none),
@@ -41,7 +43,7 @@ class KundliListScreen extends ConsumerWidget {
                 style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 18, vertical: 8)),
-                child: const Text('+ New'),
+                child: Text(l10n.plusNew),
               ),
             ),
           ),
@@ -49,19 +51,17 @@ class KundliListScreen extends ConsumerWidget {
       ),
       body: kundlis.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(message: 'Could not load kundlis: $e'),
+        error: (e, _) => EmptyState(message: l10n.klLoadError('$e')),
         data: (list) {
           if (list.isEmpty) {
             return Column(
               children: [
                 Expanded(
                   child: EmptyState(
-                    leading: Image.asset('assets/emblem.png',
-                        width: 64, height: 64),
-                    message:
-                        'No kundlis yet. Cast the first one — computed '
-                        'entirely on this device.',
-                    actionLabel: 'New Kundli',
+                    leading:
+                        Image.asset('assets/emblem.png', width: 64, height: 64),
+                    message: l10n.klEmpty,
+                    actionLabel: l10n.newKundli,
                     onAction: () => context.push('/new'),
                   ),
                 ),
@@ -74,15 +74,14 @@ class KundliListScreen extends ConsumerWidget {
                     child: Column(
                       children: [
                         Text(
-                          'Already used Kaal Jyoti before? Sign in to '
-                          'restore your synced kundlis.',
+                          l10n.klRestoreNudge,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                              fontSize: 12.5, color: TEColors.inkSoft),
+                              fontSize: 12.5, color: KJColors.inkSoft),
                         ),
                         TextButton(
                           onPressed: () => context.push('/signin'),
-                          child: const Text('Sign in'),
+                          child: Text(l10n.signIn),
                         ),
                       ],
                     ),
@@ -96,17 +95,16 @@ class KundliListScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  '${list.length} saved · encrypted on this device',
-                  style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+                  l10n.savedEncrypted(list.length),
+                  style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
                 ),
               ),
               if (user == null) _signInBanner(context),
               for (final k in list) _KundliRow(kundli: k),
               const SizedBox(height: 8),
               Center(
-                child: Text('Long-press + New for a Prashna kundli',
-                    style:
-                        TETheme.mono(size: 10.5, color: TEColors.inkSoft)),
+                child: Text(l10n.klLongPressPrashna,
+                    style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft)),
               ),
             ],
           );
@@ -120,16 +118,18 @@ class KundliListScreen extends ConsumerWidget {
   /// Keep / Discard. Falls back to the manual form if location is
   /// unavailable.
   Future<void> _castPrashna(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(const SnackBar(
-      content: Text('Casting Prashna for this moment…'),
-      duration: Duration(seconds: 10),
+    messenger.showSnackBar(SnackBar(
+      content: Text(l10n.klCastingPrashna),
+      duration: const Duration(seconds: 10),
     ));
     try {
       final place = await LocationService().currentPlace();
       final now = DateTime.now();
       final kundli = await ref.read(kundliRepoProvider).create(
-            name: 'Prashna · ${DateFormat('d MMM, HH:mm').format(now)}',
+            name: l10n.klPrashnaName(
+                DateFormat('d MMM, HH:mm', l10n.localeName).format(now)),
             relationTag: 'Prashna',
             birthUtc: now.toUtc(),
             latitude: place.latitude,
@@ -147,9 +147,8 @@ class KundliListScreen extends ConsumerWidget {
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(SnackBar(
         content: Text(denied.permanently
-            ? 'Location is disabled for this app — enable it in Settings, '
-                'or enter the place manually.'
-            : 'Location unavailable — enter the place manually.'),
+            ? l10n.klLocationDisabled
+            : l10n.klLocationUnavailable),
       ));
       if (context.mounted) context.push('/new?prashna=1');
     } catch (_) {
@@ -164,16 +163,15 @@ class KundliListScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Kundlis are device-only right now. Sign in to unlock '
-                  'sync + Mahakosh.',
-                  style: TextStyle(fontSize: 13),
+                  context.l10n.signInBanner,
+                  style: const TextStyle(fontSize: 13),
                 ),
               ),
               TextButton(
                 onPressed: () => context.push('/signin'),
-                child: const Text('Sign in'),
+                child: Text(context.l10n.signIn),
               ),
             ],
           ),
@@ -187,8 +185,9 @@ class _KundliRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final snapshot = ref.watch(snapshotProvider(kundli.id));
-    final birthFmt = DateFormat('${TEDate.pref.datePattern} · HH:mm');
+    final birthFmt = DateFormat('${KJDate.pref.datePattern} · HH:mm');
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -206,14 +205,13 @@ class _KundliRow extends ConsumerWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(kundli.name, style: TETheme.serif(size: 18)),
+                    child: Text(kundli.name, style: KJTheme.serif(size: 18)),
                   ),
-                  TETag(kundli.relationTag),
+                  KJTag(relationTagLabel(l10n, kundli.relationTag)),
                   IconButton(
                     icon: Icon(Icons.edit_outlined,
-                        size: 18, color: TEColors.inkSoft),
-                    onPressed: () =>
-                        context.push('/kundli/${kundli.id}/edit'),
+                        size: 18, color: KJColors.inkSoft),
+                    onPressed: () => context.push('/kundli/${kundli.id}/edit'),
                     visualDensity: VisualDensity.compact,
                   ),
                 ],
@@ -221,7 +219,7 @@ class _KundliRow extends ConsumerWidget {
               Text(
                 '${birthFmt.format(kundli.toBirthData().localDateTime)} · '
                 '${kundli.placeName}',
-                style: TextStyle(fontSize: 12.5, color: TEColors.inkSoft),
+                style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft),
               ),
               if (kundli.note != null && kundli.note!.trim().isNotEmpty)
                 Padding(
@@ -233,7 +231,7 @@ class _KundliRow extends ConsumerWidget {
                     style: TextStyle(
                         fontSize: 12.5,
                         fontStyle: FontStyle.italic,
-                        color: TEColors.inkSoft),
+                        color: KJColors.inkSoft),
                   ),
                 ),
               const SizedBox(height: 10),
@@ -242,20 +240,22 @@ class _KundliRow extends ConsumerWidget {
                 runSpacing: 6,
                 children: [
                   snapshot.when(
-                    data: (s) => TETag('Lagna ${s.lagnaSign.western}',
+                    data: (s) => KJTag(
+                        '${l10n.labelLagna} ${s.lagnaSign.label(l10n)}',
                         maroon: true),
-                    loading: () => const TETag('Lagna …'),
-                    error: (_, __) => const TETag('Lagna ?'),
+                    loading: () => KJTag('${l10n.labelLagna} …'),
+                    error: (_, __) => KJTag('${l10n.labelLagna} ?'),
                   ),
                   snapshot.when(
-                    data: (s) => TETag('Moon ${s.moonSign.western}'),
-                    loading: () => const TETag('Moon …'),
-                    error: (_, __) => const TETag('Moon ?'),
+                    data: (s) =>
+                        KJTag('${l10n.planetMoon} ${s.moonSign.label(l10n)}'),
+                    loading: () => KJTag('${l10n.planetMoon} …'),
+                    error: (_, __) => KJTag('${l10n.planetMoon} ?'),
                   ),
-                  if (kundli.isPrashna) const TETag('Prashna'),
-                  TETag(kundli.syncEnabled ? 'Synced' : 'Device only'),
+                  if (kundli.isPrashna) KJTag(l10n.tagPrashna),
+                  KJTag(kundli.syncEnabled ? l10n.synced : l10n.deviceOnly),
                   if (kundli.isSharedToMahakosh)
-                    TETag('Mahakosh ${kundli.mahakoshCode}'),
+                    KJTag(context.l10n.klMahakoshTag(kundli.mahakoshCode!)),
                 ],
               ),
             ],

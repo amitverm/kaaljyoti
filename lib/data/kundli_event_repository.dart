@@ -91,8 +91,8 @@ class KundliEventRepository {
       String kundliId, List<KundliEvent> events) async {
     final db = await _db.database;
     await db.transaction((txn) async {
-      await txn
-          .delete('kundli_events', where: 'kundli_id = ?', whereArgs: [kundliId]);
+      await txn.delete('kundli_events',
+          where: 'kundli_id = ?', whereArgs: [kundliId]);
       for (final e in events) {
         await txn.insert('kundli_events', e.toRow());
       }

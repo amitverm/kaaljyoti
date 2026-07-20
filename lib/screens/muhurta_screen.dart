@@ -20,6 +20,7 @@ import '../core/theme/theme.dart';
 import '../data/settings_repository.dart';
 import '../services/current_location_service.dart';
 import '../services/place_lookup_service.dart';
+import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
 
@@ -71,11 +72,6 @@ class _MuhurtaScreenState extends ConsumerState<MuhurtaScreen> {
   Object? _error;
 
   static final _hm = DateFormat('HH:mm');
-  static const _weekdays = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
-    'Sunday',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -137,7 +133,11 @@ class _MuhurtaScreenState extends ConsumerState<MuhurtaScreen> {
         abhijit: abhijitMuhurtaWindow(sunrise, sunset),
         abhijitApplies: abhijitApplies(sunrise),
       );
-      if (mounted) setState(() { _data = data; _error = null; });
+      if (mounted)
+        setState(() {
+          _data = data;
+          _error = null;
+        });
     } catch (e) {
       if (mounted) setState(() => _error = e);
     }
@@ -169,13 +169,13 @@ class _MuhurtaScreenState extends ConsumerState<MuhurtaScreen> {
   Widget build(BuildContext context) {
     final d = _data;
     return Scaffold(
-      appBar: AppBar(title: const Text('Muhurta')),
+      appBar: AppBar(title: Text(context.l10n.mhTitle)),
       body: d == null
           ? Center(
               child: _error != null
                   ? Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Text('Calculation failed: $_error',
+                      child: Text(context.l10n.tdCalcFailed('$_error'),
                           textAlign: TextAlign.center))
                   : const CircularProgressIndicator())
           : RefreshIndicator(
@@ -186,52 +186,73 @@ class _MuhurtaScreenState extends ConsumerState<MuhurtaScreen> {
                   _dateplaceRow(),
                   const SizedBox(height: 12),
                   ModuleCard(
-                    title: 'Panchang',
+                    title: context.l10n.modulePanchangTitle,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _row('Tithi', '${d.panchang.paksha} ${d.panchang.tithiName}'),
-                        _row('Vara', d.panchang.vara),
-                        _row('Nakshatra',
-                            '${d.panchang.nakshatra.displayName} · pada ${d.panchang.pada}'),
-                        _row('Yoga', d.panchang.yogaName),
-                        _row('Karana', d.panchang.karanaName),
-                        _row('Sunrise / Sunset',
+                        _row(
+                            context.l10n.labelTithi,
+                            '${pakshaLabelForIndex(context.l10n, d.panchang.tithiIndex)}'
+                            ' ${tithiLabelForIndex(context.l10n, d.panchang.tithiIndex)}'),
+                        _row(
+                            context.l10n.labelVara,
+                            varaLabelForIndex(
+                                context.l10n, d.panchang.varaIndex)),
+                        _row(
+                            context.l10n.labelNakshatra,
+                            '${d.panchang.nakshatra.label(context.l10n)} · '
+                            '${context.l10n.labelPada} ${d.panchang.pada}'),
+                        _row(
+                            context.l10n.labelYoga,
+                            yogaLabelForIndex(
+                                context.l10n, d.panchang.yogaIndex)),
+                        _row(
+                            context.l10n.labelKarana,
+                            karanaLabelForIndex(
+                                context.l10n, d.panchang.karanaIndex)),
+                        _row(context.l10n.tdSunriseSunset,
                             '${_hm.format(d.sunrise)} / ${_hm.format(d.sunset)}'),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
                   ModuleCard(
-                    title: 'Windows',
+                    title: context.l10n.mhWindowsCard,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _windowRow('Abhijit Muhurta'
-                            '${d.abhijitApplies ? '' : ' (avoid — Wednesday)'}',
-                            d.abhijit, good: d.abhijitApplies),
-                        _windowRow('Rahu Kaal', d.rahuKaal, good: false),
-                        _windowRow('Yamaganda', d.yamaganda, good: false),
-                        _windowRow('Gulika Kaal', d.gulikaKaal, good: false),
+                        _windowRow(
+                            '${context.l10n.mhAbhijitMuhurta}'
+                            '${d.abhijitApplies ? '' : context.l10n.mhAbhijitAvoidWednesday}',
+                            d.abhijit,
+                            good: d.abhijitApplies),
+                        _windowRow(context.l10n.mhRahuKaal, d.rahuKaal,
+                            good: false),
+                        _windowRow(context.l10n.mhYamaganda, d.yamaganda,
+                            good: false),
+                        _windowRow(context.l10n.mhGulikaKaal, d.gulikaKaal,
+                            good: false),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
                   ModuleCard(
-                    title: 'Choghadiya',
-                    child: _ChoghadiyaTable(day: d.choghadiyaDay, night: d.choghadiyaNight),
+                    title: context.l10n.mhChoghadiyaCard,
+                    child: _ChoghadiyaTable(
+                        day: d.choghadiyaDay, night: d.choghadiyaNight),
                   ),
                   const SizedBox(height: 12),
                   ModuleCard(
-                    title: 'Hora',
+                    title: context.l10n.mhHoraCard,
                     child: _HoraTable(hora: d.hora),
                   ),
                   const SizedBox(height: 12),
                   ModuleCard(
-                    title: 'Personalize',
+                    title: context.l10n.mhPersonalizeCard,
                     child: _PersonalizeSection(
                       selectedKundliId: _personalizeKundliId,
-                      onChanged: (id) => setState(() => _personalizeKundliId = id),
+                      onChanged: (id) =>
+                          setState(() => _personalizeKundliId = id),
                       dayNakshatra: d.panchang.nakshatra,
                       dayMoonSign: d.moonSign,
                     ),
@@ -254,12 +275,12 @@ class _MuhurtaScreenState extends ConsumerState<MuhurtaScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.calendar_today_outlined,
-                        size: 16, color: TEColors.maroon),
+                        size: 16, color: KJColors.maroon),
                     const SizedBox(width: 6),
                     Text(
-                      '${_weekdays[_date.weekday - 1]} · '
-                      '${TEDate.date(_date)}',
-                      style: TETheme.serif(size: 16),
+                      '${weekdayLabel(context.l10n, _date.weekday)} · '
+                      '${KJDate.date(_date)}',
+                      style: KJTheme.serif(size: 16),
                     ),
                   ],
                 ),
@@ -274,11 +295,11 @@ class _MuhurtaScreenState extends ConsumerState<MuhurtaScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.place_outlined, size: 14, color: TEColors.maroon),
+                  Icon(Icons.place_outlined, size: 14, color: KJColors.maroon),
                   const SizedBox(width: 3),
                   Text(
                     _place?.name.split(',').first ?? '',
-                    style: TETheme.mono(size: 11.5, color: TEColors.maroon),
+                    style: KJTheme.mono(size: 11.5, color: KJColors.maroon),
                   ),
                 ],
               ),
@@ -295,14 +316,16 @@ class _MuhurtaScreenState extends ConsumerState<MuhurtaScreen> {
             SizedBox(
               width: 118,
               child: Text(label,
-                  style: TETheme.mono(size: 11.5, color: TEColors.inkSoft)),
+                  style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft)),
             ),
-            Expanded(child: Text(value, style: const TextStyle(fontSize: 13.5))),
+            Expanded(
+                child: Text(value, style: const TextStyle(fontSize: 13.5))),
           ],
         ),
       );
 
-  Widget _windowRow(String label, TimeWindow w, {required bool good}) => Padding(
+  Widget _windowRow(String label, TimeWindow w, {required bool good}) =>
+      Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,14 +333,14 @@ class _MuhurtaScreenState extends ConsumerState<MuhurtaScreen> {
             SizedBox(
               width: 150,
               child: Text(label,
-                  style: TETheme.mono(size: 11.5, color: TEColors.inkSoft)),
+                  style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft)),
             ),
             Expanded(
               child: Text(
                 '${_hm.format(w.start)} – ${_hm.format(w.end)}',
                 style: TextStyle(
                   fontSize: 13.5,
-                  color: good ? TEColors.forest : TEColors.maroon,
+                  color: good ? KJColors.forest : KJColors.maroon,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -339,11 +362,11 @@ class _ChoghadiyaTable extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _label('DAY'),
-        for (final s in day) _segRow(s),
+        _label(context.l10n.mhDay),
+        for (final s in day) _segRow(context.l10n, s),
         const SizedBox(height: 8),
-        _label('NIGHT'),
-        for (final s in night) _segRow(s),
+        _label(context.l10n.mhNight),
+        for (final s in night) _segRow(context.l10n, s),
       ],
     );
   }
@@ -354,24 +377,24 @@ class _ChoghadiyaTable extends StatelessWidget {
             style: TextStyle(
                 fontSize: 10.5,
                 letterSpacing: 0.8,
-                color: TEColors.inkSoft,
+                color: KJColors.inkSoft,
                 fontWeight: FontWeight.w600)),
       );
 
-  Widget _segRow(MuhurtaSegment s) => Padding(
+  Widget _segRow(AppLocalizations l10n, MuhurtaSegment s) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
         child: Row(
           children: [
             SizedBox(
               width: 110,
               child: Text('${_hm.format(s.start)} – ${_hm.format(s.end)}',
-                  style: TETheme.mono(size: 11, color: TEColors.inkSoft)),
+                  style: KJTheme.mono(size: 11, color: KJColors.inkSoft)),
             ),
-            Text(s.name,
+            Text(s.choghadiya?.label(l10n) ?? '',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: (s.good ?? false) ? TEColors.forest : TEColors.maroon,
+                  color: (s.good ?? false) ? KJColors.forest : KJColors.maroon,
                 )),
           ],
         ),
@@ -397,13 +420,15 @@ class _HoraTable extends StatelessWidget {
                 SizedBox(
                   width: 110,
                   child: Text('${_hm.format(s.start)} – ${_hm.format(s.end)}',
-                      style: TETheme.mono(size: 11, color: TEColors.inkSoft)),
+                      style: KJTheme.mono(size: 11, color: KJColors.inkSoft)),
                 ),
-                Text(s.name,
+                Text(s.planet?.label(context.l10n) ?? '',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: s.planet != null ? planetInk(s.planet!) : TEColors.ink,
+                      color: s.planet != null
+                          ? planetInk(s.planet!)
+                          : KJColors.ink,
                     )),
               ],
             ),
@@ -434,13 +459,14 @@ class _PersonalizeSection extends ConsumerWidget {
       children: [
         kundlis.when(
           loading: () => const LinearProgressIndicator(),
-          error: (e, _) => Text('Could not load kundlis: $e'),
+          error: (e, _) => Text(context.l10n.klLoadError('$e')),
           data: (list) => DropdownButton<String?>(
             isExpanded: true,
             value: selectedKundliId,
-            hint: const Text('Choose a kundli…'),
+            hint: Text(context.l10n.mhChooseKundli),
             items: [
-              const DropdownMenuItem<String?>(value: null, child: Text('None')),
+              DropdownMenuItem<String?>(
+                  value: null, child: Text(context.l10n.mhNone)),
               for (final k in list)
                 DropdownMenuItem<String?>(value: k.id, child: Text(k.name)),
             ],
@@ -453,10 +479,11 @@ class _PersonalizeSection extends ConsumerWidget {
             final snapshot = ref.watch(snapshotProvider(selectedKundliId!));
             return snapshot.when(
               loading: () => const LinearProgressIndicator(),
-              error: (e, _) => Text('Could not compute: $e'),
+              error: (e, _) => Text(context.l10n.mhComputeError('$e')),
               data: (s) {
                 final tara = taraBala(
-                    janmaNakshatra: s.moonNakshatra, dayNakshatra: dayNakshatra);
+                    janmaNakshatra: s.moonNakshatra,
+                    dayNakshatra: dayNakshatra);
                 final chandra = chandraBala(
                     janmaRashi: s.moonSign, dayMoonSign: dayMoonSign);
                 return Column(
@@ -466,14 +493,14 @@ class _PersonalizeSection extends ConsumerWidget {
                       children: [
                         SizedBox(
                           width: 110,
-                          child: Text('Tara bala',
-                              style: TETheme.mono(
-                                  size: 11.5, color: TEColors.inkSoft)),
+                          child: Text(context.l10n.mhTaraBala,
+                              style: KJTheme.mono(
+                                  size: 11.5, color: KJColors.inkSoft)),
                         ),
                         Expanded(
-                          child: TETag(
-                            '${tara.label}'
-                            '${tara.favorable ? ' · favorable' : ' · unfavorable'}',
+                          child: KJTag(
+                            '${tara.taraLabel(context.l10n)}'
+                            '${tara.favorable ? context.l10n.mhFavorableSuffix : context.l10n.mhUnfavorableSuffix}',
                             maroon: !tara.favorable,
                           ),
                         ),
@@ -484,16 +511,19 @@ class _PersonalizeSection extends ConsumerWidget {
                       children: [
                         SizedBox(
                           width: 110,
-                          child: Text('Chandra bala',
-                              style: TETheme.mono(
-                                  size: 11.5, color: TEColors.inkSoft)),
+                          child: Text(context.l10n.mhChandraBala,
+                              style: KJTheme.mono(
+                                  size: 11.5, color: KJColors.inkSoft)),
                         ),
                         Expanded(
-                          child: TETag(
+                          child: KJTag(
                             switch (chandra) {
-                              ChandraBalaResult.favorable => 'Favorable',
-                              ChandraBalaResult.neutral => 'Neutral',
-                              ChandraBalaResult.unfavorable => 'Unfavorable',
+                              ChandraBalaResult.favorable =>
+                                context.l10n.mhFavorable,
+                              ChandraBalaResult.neutral =>
+                                context.l10n.mhNeutral,
+                              ChandraBalaResult.unfavorable =>
+                                context.l10n.mhUnfavorable,
                             },
                             maroon: chandra == ChandraBalaResult.unfavorable,
                           ),
@@ -566,7 +596,7 @@ class _MuhurtaPlacePickerDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Muhurta location'),
+      title: Text(context.l10n.muMuhurtaLocation),
       content: SizedBox(
         width: 360,
         child: Column(
@@ -580,16 +610,17 @@ class _MuhurtaPlacePickerDialogState
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : Icon(Icons.my_location, color: TEColors.maroon),
+                  : Icon(Icons.my_location, color: KJColors.maroon),
               title: Text(
-                _locating ? 'Locating…' : 'Use current location',
-                style: TextStyle(color: TEColors.maroon, fontSize: 14),
+                _locating
+                    ? context.l10n.muLocating
+                    : context.l10n.muUseCurrentLocation,
+                style: TextStyle(color: KJColors.maroon, fontSize: 14),
               ),
               subtitle: _locateFailed
-                  ? const Text(
-                      'Could not get location — check permission,'
-                      ' or search below',
-                      style: TextStyle(fontSize: 11),
+                  ? Text(
+                      context.l10n.muLocationError,
+                      style: const TextStyle(fontSize: 11),
                     )
                   : null,
               onTap: _locating ? null : _useCurrentLocation,
@@ -599,7 +630,7 @@ class _MuhurtaPlacePickerDialogState
             TextField(
               controller: _controller,
               autofocus: true,
-              decoration: const InputDecoration(hintText: 'Search city…'),
+              decoration: InputDecoration(hintText: context.l10n.muSearchCity),
               onChanged: _onChanged,
             ),
             const SizedBox(height: 8),
@@ -622,7 +653,7 @@ class _MuhurtaPlacePickerDialogState
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
       ],
     );

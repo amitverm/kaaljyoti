@@ -6,7 +6,15 @@ library;
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tzmap;
+// latest_all (596 zones), NOT latest (431): the trimmed set is missing
+// CURRENT zones our own geocoder returns — Asia/Yangon (~5M people),
+// America/Ciudad_Juarez, Barnaul, Tomsk, Atyrau, Punta_Arenas, Nuuk,
+// Famagusta… — and a missing zone made tz.getLocation throw, killing
+// chart creation for those birthplaces entirely (P0, found 2026-07-15;
+// India-only testing never caught it because Asia/Kolkata IS in the
+// trimmed set). Costs +114KB. See test/place_timezone_test.dart.
+import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../core/constants.dart';
@@ -65,6 +73,41 @@ class PlaceLookupService {
           timezoneName: (r['timezone'] as String?) ?? 'UTC',
         ),
     ];
+  }
+
+  /// All IANA zone names in the bundled (full) tz database, sorted —
+  /// backs the manual place entry's timezone picker. The geocoder is a
+  /// single point of failure for chart creation (an unfound village
+  /// blocks the kundli entirely), so manual entry must not depend on it.
+  List<String> allTimezoneNames() {
+    _ensureTz();
+    return tz.timeZoneDatabase.locations.keys.toList()..sort();
+  }
+
+  bool isValidTimezone(String name) {
+    _ensureTz();
+    return tz.timeZoneDatabase.locations.containsKey(name);
+  }
+
+  /// IANA zone for a coordinate — offline polygon lookup
+  /// (lat_lng_to_timezone), so manual place entry can derive the zone
+  /// from lat/long instead of asking the user for it. Returns null if
+  /// the mapped name isn't in our tz database (dataset drift) — the
+  /// caller keeps its manual override field for that case.
+  String? timezoneForLatLng(double latitude, double longitude) {
+    final name = tzmap.latLngToTimezoneString(latitude, longitude);
+    return isValidTimezone(name) ? name : null;
+  }
+
+  /// UTC offset (minutes) in [timezoneName] at a given UTC instant —
+  /// the inverse direction of [resolveLocalTime] (used e.g. for the
+  /// varsha pravesh instant, whose offset may differ from birth's own
+  /// when the zone has DST).
+  int offsetMinutesAtUtc(String timezoneName, DateTime utc) {
+    _ensureTz();
+    return tz.TZDateTime.from(utc, tz.getLocation(timezoneName))
+        .timeZoneOffset
+        .inMinutes;
   }
 
   /// UTC offset (minutes) in [timezoneName] at the given LOCAL wall

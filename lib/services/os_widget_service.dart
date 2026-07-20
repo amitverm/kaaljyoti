@@ -11,6 +11,15 @@
 /// the Today screen computes (app open / minute tick), so widget data
 /// is at most one app-session stale — both widgets also show their
 /// "as of" date so staleness is visible, never misleading.
+///
+/// TODO(l10n): this whole surface is still English — the weekday list,
+/// 'till', 'Rahu Kaal', 'Abhijit', '(avoid)', 'Disha Shool', 'Rising',
+/// and the raw `western`/`displayName` sign and nakshatra names below.
+/// The app's localization pass did not reach it. Fixing it means
+/// passing AppLocalizations into [pushToday] (same trick as the PDF
+/// exporter — no BuildContext out here), and first deciding whether a
+/// widget should follow the in-app language setting or the OS locale,
+/// and whether the native Swift/Kotlin views hold strings of their own.
 library;
 
 import 'dart:convert';
@@ -98,9 +107,12 @@ class OsWidgetService {
       await HomeWidget.saveWidgetData<String>(
           'pw_abhijit',
           'Abhijit ${_window(d.abhijitMuhurta)}'
-          '${d.at.weekday == DateTime.wednesday ? ' (avoid)' : ''}');
-      await HomeWidget.saveWidgetData<String>('pw_disha',
-          d.dishaShool == null ? '—' : 'Disha Shool · ${d.dishaShool}');
+              '${d.at.weekday == DateTime.wednesday ? ' (avoid)' : ''}');
+      await HomeWidget.saveWidgetData<String>(
+          'pw_disha',
+          d.dishaShool == null
+              ? '—'
+              : 'Disha Shool · ${d.dishaShool!.displayName}');
       await HomeWidget.saveWidgetData<String>(
           'pw_place', place.name.split(',').first);
       // iOS timeline hint: rebuild the panchang entry when the tithi

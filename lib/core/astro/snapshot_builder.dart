@@ -16,7 +16,13 @@ class SnapshotBuilder {
 
   Future<AstroSnapshot> build(BirthData birth, int ayanamsaId) async {
     await EphemerisService.init();
+    return buildSync(birth, ayanamsaId);
+  }
 
+  /// Synchronous core of [build] — for callers that already run after
+  /// ephemeris init (the PDF exporter's varsha chart), mirroring the
+  /// computeShadbala/computeShadbalaSync split.
+  AstroSnapshot buildSync(BirthData birth, int ayanamsaId) {
     final jd = _eph.julianDayUt(birth.dateTimeUtc);
     final positions = _eph.planetPositions(jd, ayanamsaId);
     final houses = _eph.housesAndAscendant(

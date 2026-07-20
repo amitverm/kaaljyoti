@@ -10,7 +10,7 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../charts/chart_style.dart';
 import '../core/astro/ashtakavarga.dart';
@@ -18,6 +18,7 @@ import '../core/astro/dasha/dasha.dart';
 import '../core/astro/dasha/dasha_registry.dart';
 import '../core/astro/models.dart';
 import '../data/models.dart';
+import '../l10n/gen/app_localizations.dart';
 export '../data/models.dart' show CardSpan;
 
 /// metadata — id, title, icon, category, default size.
@@ -27,16 +28,26 @@ class ModuleMeta {
     required this.title,
     required this.icon,
     required this.category,
+    this.localizedTitle,
     this.defaultSpan = CardSpan.half,
     this.hasDetailView = true,
   });
 
   final String id; // stable — persisted in view_widgets rows
+
+  /// English title — the stable fallback (and what tests assert on).
   final String title;
+
+  /// Locale-aware title (a static tear-off so the meta stays const);
+  /// hosts render [titleFor], never [title] directly.
+  final String Function(AppLocalizations l10n)? localizedTitle;
+
   final IconData icon;
-  final String category; // 'Chart & Grahas', 'Timing & Dashas', …
+  final String category; // stable grouping key — display via l10n
   final CardSpan defaultSpan;
   final bool hasDetailView;
+
+  String titleFor(AppLocalizations l10n) => localizedTitle?.call(l10n) ?? title;
 }
 
 /// A declarative per-instance config option. Modules expose these;
@@ -48,6 +59,7 @@ class ModuleConfigChoice {
     required this.label,
     required this.options, // (storedValue, displayLabel)
     this.defaultValue,
+    this.toggleOnValue,
   });
 
   final String key;
@@ -60,34 +72,33 @@ class ModuleConfigChoice {
   /// independently of which one is the default.
   final String? defaultValue;
 
+  /// For a plain Hide/Show choice, the stored value meaning "shown"
+  /// ('on' or 'show' — both conventions are in use). Non-null marks the
+  /// choice as a binary toggle; hosts render those as one selectable
+  /// pill grouped with other toggles instead of a full Hide/Show
+  /// section. Declared EXPLICITLY (never derived from display labels —
+  /// labels are localized, see l10n.hide/l10n.show).
+  final String? toggleOnValue;
+
   String get effectiveDefault => defaultValue ?? options.first.$1;
 
-  /// True when this is a plain Hide/Show choice — exactly two options
-  /// labelled 'Hide' and 'Show'. Hosts render these as a single
-  /// selectable toggle pill (selected = the "shown" value) grouped with
-  /// other toggles, instead of giving each its own Hide/Show section.
-  /// Matched by label rather than stored value so both value conventions
-  /// in use — 'off'/'on' and 'hide'/'show' — are covered.
-  bool get isBinaryToggle => onValue != null;
+  bool get isBinaryToggle => toggleOnValue != null;
 
-  /// For a [isBinaryToggle] choice, the stored value meaning "shown"
-  /// (the option whose display label is 'Show'); null otherwise.
-  String? get onValue {
-    if (options.length != 2) return null;
-    String? label(int i) => options[i].$2.trim().toLowerCase();
-    final labels = {label(0), label(1)};
-    if (!labels.containsAll(const {'hide', 'show'})) return null;
-    return options.firstWhere((o) => o.$2.trim().toLowerCase() == 'show').$1;
-  }
+  /// The stored value meaning "shown"; null when not a toggle.
+  String? get onValue => toggleOnValue;
 
-  /// For a [isBinaryToggle] choice, the stored value meaning "hidden"
-  /// (the option whose display label is 'Hide'); null otherwise.
+  /// The stored value meaning "hidden"; null when not a toggle.
   String? get offValue {
-    final on = onValue;
+    final on = toggleOnValue;
     if (on == null) return null;
     return options.firstWhere((o) => o.$1 != on).$1;
   }
 }
+
+/// The standard Hide/Show option pair for a binary toggle choice, in
+/// the canonical display order. Pass `toggleOnValue: 'on'` alongside.
+List<(String, String)> onOffOptions(AppLocalizations l10n) =>
+    [('off', l10n.hide), ('on', l10n.show)];
 
 /// dataSource — everything a module may pull from, built once per
 /// chart. Dasha trees are computed lazily and memoized here so
@@ -100,7 +111,8 @@ class ModuleContext {
     this.config = const {},
     this.anonymized = false,
     this.onConfigChanged,
-  });
+    AppLocalizations? l10n,
+  }) : _l10n = l10n;
 
   final Kundli kundli;
   final AstroSnapshot snapshot;
@@ -122,6 +134,31 @@ class ModuleContext {
   /// dashboard card and PDF, where a module must not mutate its config —
   /// there such controls behave as ephemeral, local-only state.
   final void Function(Map<String, dynamic> config)? onConfigChanged;
+
+  final AppLocalizations? _l10n;
+
+  /// Localized strings for the context-free render path (pdfView has no
+  /// BuildContext). Widget paths should prefer `context.l10n`. Falls
+  /// back to English when the host didn't inject one (e.g. tests).
+  AppLocalizations get l10n =>
+      _l10n ?? lookupAppLocalizations(const Locale('en'));
+
+  /// Copy with localized strings injected (see [l10n]); the PDF export
+  /// screen calls this before handing the context to the exporter.
+  ModuleContext withL10n(AppLocalizations l10n) {
+    final ctx = ModuleContext(
+      kundli: kundli,
+      snapshot: snapshot,
+      chartStyle: chartStyle,
+      config: config,
+      anonymized: anonymized,
+      onConfigChanged: onConfigChanged,
+      l10n: l10n,
+    );
+    ctx._dashaCache.addAll(_dashaCache);
+    ctx._ashtakavarga = _ashtakavarga;
+    return ctx;
+  }
 
   final Map<DashaSystem, DashaResult> _dashaCache = {};
 
@@ -147,6 +184,7 @@ class ModuleContext {
       config: config,
       anonymized: anonymized,
       onConfigChanged: onConfigChanged ?? this.onConfigChanged,
+      l10n: _l10n,
     );
     ctx._dashaCache.addAll(_dashaCache);
     ctx._ashtakavarga = _ashtakavarga;
@@ -180,9 +218,26 @@ abstract class AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx);
 
   /// Per-instance config options, rendered generically by hosts.
-  List<ModuleConfigChoice> configChoices() => const [];
+  /// Labels and option display strings come from [l10n]; stored values
+  /// stay locale-independent (they're persisted in view_widgets rows).
+  List<ModuleConfigChoice> configChoices(AppLocalizations l10n) => const [];
 
   /// Short label describing an instance's config (shown on the card
   /// header and in Arrange), e.g. 'D9' or 'South Indian'. Null = none.
-  String? configSummary(Map<String, dynamic> config) => null;
+  String? configSummary(Map<String, dynamic> config, AppLocalizations l10n) =>
+      null;
+}
+
+/// Card/app-bar/checklist title for a module instance — the localized
+/// module title plus its config summary when one exists
+/// ('Divisional Chart · D9'). Shared by every host surface.
+String moduleInstanceTitle(
+  AstroModule module,
+  Map<String, dynamic> config,
+  AppLocalizations l10n,
+) {
+  final summary = module.configSummary(config, l10n);
+  return summary == null
+      ? module.meta.titleFor(l10n)
+      : '${module.meta.titleFor(l10n)} · $summary';
 }

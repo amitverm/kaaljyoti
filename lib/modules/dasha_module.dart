@@ -1,26 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../core/astro/dasha/dasha.dart';
 import '../core/astro/models.dart';
 import '../core/date_format.dart';
 import '../core/theme/theme.dart';
 import '../core/theme/type_scale.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
+
+String _dashaPeriodsTitle(AppLocalizations l10n) =>
+    l10n.moduleDashaPeriodsTitle;
 
 // Full-date formatters follow the user's app-wide date-format choice
 // (read lazily via getters so a settings change is picked up on rebuild).
 // The compact _fmtShort/_fmtUntil stay fixed — they are deliberately terse
 // labels inside dense dasha timelines, not full dates.
-DateFormat get _fmt => DateFormat(TEDate.pref.datePattern);
+DateFormat get _fmt => DateFormat(KJDate.pref.datePattern);
 final _fmtShort = DateFormat('d MMM yy');
-DateFormat get _fmtTime => DateFormat('${TEDate.pref.datePattern}, HH:mm');
+DateFormat get _fmtTime => DateFormat('${KJDate.pref.datePattern}, HH:mm');
 final _fmtUntil = DateFormat('d MMM, HH:mm');
 
 /// Short level names used in chips ('Antar Saturn', 'Pran Sun', …).
-const _levelShort = ['Maha', 'Antar', 'Pratyantar', 'Sookshma', 'Pran'];
+List<String> _levelShort(AppLocalizations l10n) => [
+      l10n.dmLevelShortMaha,
+      l10n.dmLevelShortAntar,
+      l10n.dmLevelShortPratyantar,
+      l10n.dmLevelShortSookshma,
+      l10n.dmLevelShortPran,
+    ];
 
 /// Professional level tags for breadcrumbs and lineage (MD/AD/PD/SD/PrD).
 const _levelAbbr = ['MD', 'AD', 'PD', 'SD', 'PrD'];
@@ -41,56 +51,51 @@ String _rangeText(DashaPeriod p, {bool anonymized = false}) {
 }
 
 /// Compact duration: '16y', '2y 2m', '3m 12d', '14d', '38h', '55m'.
-String _lenText(Duration d) {
+String _lenText(AppLocalizations l10n, Duration d) {
   final days = d.inDays;
   if (days >= 365) {
     final y = days ~/ 365;
     final m = ((days % 365) / 30.44).round();
-    return m > 0 ? '${y}y ${m}m' : '${y}y';
+    return m > 0
+        ? '${l10n.dmUnitYears('$y')} ${l10n.dmUnitMonths('$m')}'
+        : l10n.dmUnitYears('$y');
   }
   if (days >= 45) {
     final m = (days / 30.44).floor();
     final rem = (days - m * 30.44).round();
-    return rem > 0 ? '${m}m ${rem}d' : '${m}m';
+    return rem > 0
+        ? '${l10n.dmUnitMonths('$m')} ${l10n.dmUnitDays('$rem')}'
+        : l10n.dmUnitMonths('$m');
   }
-  if (days >= 3) return '${days}d';
-  if (d.inHours >= 1) return '${d.inHours}h';
-  return '${d.inMinutes}m';
+  if (days >= 3) return l10n.dmUnitDays('$days');
+  if (d.inHours >= 1) return l10n.dmUnitHours('${d.inHours}');
+  return l10n.dmUnitMinutes('${d.inMinutes}');
 }
 
 int _ageYears(DateTime birth, DateTime t) {
   var y = t.year - birth.year;
-  if (t.month < birth.month ||
-      (t.month == birth.month && t.day < birth.day)) {
+  if (t.month < birth.month || (t.month == birth.month && t.day < birth.day)) {
     y--;
   }
   return y < 0 ? 0 : y;
 }
 
-/// Age span label for a period: 'age 32–48' (or 'age 34' when equal).
-String _ageSpan(DateTime birth, DashaPeriod p) {
+/// Bare age span for a period: '32–48' (or '34' when equal).
+String _ageSpanBare(DateTime birth, DashaPeriod p) {
   final a = _ageYears(birth, p.start);
   final b = _ageYears(birth, p.end);
-  return a == b ? 'age $a' : 'age $a–$b';
+  return a == b ? '$a' : '$a–$b';
 }
 
-const _signAbbrs = [
-  'Ar', 'Ta', 'Ge', 'Cn', 'Le', 'Vi', 'Li', 'Sc', 'Sg', 'Cp', 'Aq', 'Pi',
-];
-
-String _abbrOf(DashaPeriod p) {
-  if (p.planet != null) return p.planet!.abbr;
-  if (p.sign != null) return _signAbbrs[p.sign!.index];
-  return p.lordLabel.substring(0, 2);
-}
-
-String _firstWord(String s) => s.split(' ').first;
+/// Age span label for a period: 'age 32–48' (or 'age 34' when equal).
+String _ageSpan(AppLocalizations l10n, DateTime birth, DashaPeriod p) =>
+    l10n.dmAge(_ageSpanBare(birth, p));
 
 /// Lord ink: planets use the traditional palette; rashis (Jaimini)
 /// take their lord planet's colour via [signInk].
 Color _lordInk(DashaPeriod p) => p.planet != null
     ? planetInk(p.planet!)
-    : (p.sign != null ? signInk(p.sign!) : TEColors.ink);
+    : (p.sign != null ? signInk(p.sign!) : KJColors.ink);
 
 // ---------------------------------------------------------------------------
 // Professional context helpers (all four are toggleable extras)
@@ -98,21 +103,24 @@ Color _lordInk(DashaPeriod p) => p.planet != null
 
 /// Sandhi (junction) alert when [t] falls in the fragile opening or
 /// closing stretch of [p] — 1/7th of the period, capped at 30 days.
-String? _sandhiText(DashaPeriod p, DateTime t) {
+String? _sandhiText(AppLocalizations l10n, DashaPeriod p, DateTime t) {
   if (!p.contains(t)) return null;
   var thresh = p.length ~/ 7;
   const cap = Duration(days: 30);
   if (thresh > cap) thresh = cap;
   final toEnd = p.end.difference(t);
-  if (toEnd <= thresh) return 'sandhi · ends in ${_lenText(toEnd)}';
+  if (toEnd <= thresh) return l10n.dmSandhiEndsIn(_lenText(l10n, toEnd));
   final sinceStart = t.difference(p.start);
-  if (sinceStart <= thresh) return 'sandhi · began ${_lenText(sinceStart)} ago';
+  if (sinceStart <= thresh) {
+    return l10n.dmSandhiBegan(_lenText(l10n, sinceStart));
+  }
   return null;
 }
 
 /// Natal placement of the period's lord: sign · house · nakshatra-pada
 /// for grahas; house-from-lagna + lord placement for rashis (Jaimini).
-String? _placementText(ModuleContext ctx, DashaPeriod p) {
+String? _placementText(
+    AppLocalizations l10n, ModuleContext ctx, DashaPeriod p) {
   final snap = ctx.snapshot;
   if (p.planet != null) {
     final pos = snap.positions[p.planet!];
@@ -126,34 +134,45 @@ String? _placementText(ModuleContext ctx, DashaPeriod p) {
         if (s.lord == p.planet)
           ((s.index - snap.lagnaSign.index + 12) % 12) + 1,
     ]..sort();
-    return '${pos.sign.western} · H${snap.houseOf(pos.longitude)} · '
-        '${pos.nakshatra.displayName} ${pos.pada}'
-        '${owned.isEmpty ? '' : ' · lord of ${owned.map((h) => 'H$h').join(', ')}'}';
+    return '${pos.sign.label(l10n)} · H${snap.houseOf(pos.longitude)} · '
+        '${pos.nakshatra.label(l10n)} ${pos.pada}'
+        '${owned.isEmpty ? '' : ' · ${l10n.dmLordOf(owned.map((h) => 'H$h').join(', '))}'}';
   }
   if (p.sign != null) {
     final house = ((p.sign!.index - snap.lagnaSign.index + 12) % 12) + 1;
     final lord = p.sign!.lord;
     final pos = snap.positions[lord];
     if (pos == null) return 'H$house';
-    return 'H$house · lord ${lord.displayName} in ${pos.sign.western}';
+    return 'H$house · ${l10n.dmLordIn(lord.label(l10n), pos.sign.label(l10n))}';
   }
   return null;
 }
 
-/// Names of natal yogas whose participants include this period's lord
-/// (rashi periods use the sign's Vedic lord).
-List<String> _activeYogas(ModuleContext ctx, DashaPeriod p) {
+/// Localized names of natal yogas whose participants include this
+/// period's lord (rashi periods use the sign's Vedic lord). Hidden
+/// codes are filtered like every display surface.
+List<String> _activeYogas(
+    AppLocalizations l10n, ModuleContext ctx, DashaPeriod p) {
   final planet = p.planet ?? p.sign?.lord;
   if (planet == null) return const [];
   return [
-    for (final y in ctx.snapshot.yogas)
-      if (y.participants.contains(planet)) y.name,
+    for (final y in visibleYogas(ctx.snapshot.yogas))
+      if (y.participants.contains(planet)) yogaName(l10n, y),
   ];
 }
 
 /// 'Me › Ju › Sa › Ve › Mo' compact chain.
-String _chainAbbr(List<DashaPeriod> chain) =>
-    chain.map(_abbrOf).join(' › ');
+/// Short lord NAME (no parenthetical): localized planet/yogini/sign name.
+String _lordName(AppLocalizations l10n, DashaPeriod p) {
+  final sign = p.sign;
+  if (sign != null) return sign.label(l10n);
+  final full = dashaLordLabel(l10n, p);
+  final paren = full.indexOf(' (');
+  return paren > 0 ? full.substring(0, paren) : full;
+}
+
+String _chainAbbr(AppLocalizations l10n, List<DashaPeriod> chain) =>
+    chain.map((p) => dashaLordAbbr(l10n, p)).join(' › ');
 
 // ---------------------------------------------------------------------------
 // Module
@@ -168,6 +187,7 @@ class DashaModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'dasha',
         title: 'Dasha Periods',
+        localizedTitle: _dashaPeriodsTitle,
         icon: Icons.timeline,
         category: 'Timing & Dashas',
         defaultSpan: CardSpan.full,
@@ -175,27 +195,28 @@ class DashaModule extends AstroModule {
 
   /// Show/hide options for the professional extras on the compact
   /// card — all default to Hide so the card stays uncrowded.
-  static const _extraToggles = [
-    ('placements', 'Lord positions'),
-    ('sandhi', 'Sandhi alerts'),
-    ('yogas', 'Yoga activation'),
-    ('compare', 'System comparison'),
-  ];
+  static List<(String, String)> _extraToggles(AppLocalizations l10n) => [
+        ('placements', l10n.cfgLordPositions),
+        ('sandhi', l10n.cfgSandhiAlerts),
+        ('yogas', l10n.cfgYogaActivation),
+        ('compare', l10n.cfgSystemComparison),
+      ];
 
   @override
-  List<ModuleConfigChoice> configChoices() => [
+  List<ModuleConfigChoice> configChoices(AppLocalizations l10n) => [
         ModuleConfigChoice(
           key: 'system',
-          label: 'Dasha system',
+          label: l10n.cfgDashaSystem,
           options: [
-            for (final s in DashaSystem.values) (s.name, s.displayName),
+            for (final s in DashaSystem.values) (s.name, s.label(l10n)),
           ],
         ),
-        for (final (key, label) in _extraToggles)
+        for (final (key, label) in _extraToggles(l10n))
           ModuleConfigChoice(
             key: key,
             label: label,
-            options: const [('hide', 'Hide'), ('show', 'Show')],
+            options: [('hide', l10n.hide), ('show', l10n.show)],
+            toggleOnValue: 'show',
             defaultValue: 'hide',
           ),
       ];
@@ -204,13 +225,13 @@ class DashaModule extends AstroModule {
       (ctx.config[key] as String? ?? 'hide') == 'show';
 
   @override
-  String? configSummary(Map<String, dynamic> config) {
+  String? configSummary(Map<String, dynamic> config, AppLocalizations l10n) {
     final name = config['system'] as String?;
     if (name == null || name == DashaSystem.vimshottari.name) return null;
     return DashaSystem.values
         .firstWhere((s) => s.name == name,
             orElse: () => DashaSystem.vimshottari)
-        .displayName;
+        .label(l10n);
   }
 
   DashaSystem _configuredSystem(ModuleContext ctx) {
@@ -227,55 +248,55 @@ class DashaModule extends AstroModule {
 
   @override
   Widget cardView(BuildContext context, ModuleContext ctx) {
+    final l10n = context.l10n;
     final system = _configuredSystem(ctx);
     final result = ctx.dasha(system);
     final now = DateTime.now().toUtc();
     final chain = result.chainAt(now);
 
     if (chain.isEmpty) {
-      return const Text('Outside computed dasha range.');
+      return Text(l10n.dmOutsideRange);
     }
 
     final maha = chain[0];
     final antar = chain.elementAtOrNull(1);
     final birth = ctx.snapshot.birth.dateTimeUtc;
     final mahaPlace =
-        _cfgShow(ctx, 'placements') ? _placementText(ctx, maha) : null;
+        _cfgShow(ctx, 'placements') ? _placementText(l10n, ctx, maha) : null;
     final antarPlace = _cfgShow(ctx, 'placements') && antar != null
-        ? _placementText(ctx, antar)
+        ? _placementText(l10n, ctx, antar)
         : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(system.displayName.toUpperCase(), style: TEType.kicker()),
+        Text(system.label(l10n).toUpperCase(), style: KJType.kicker()),
         const SizedBox(height: 8),
         Text.rich(
           TextSpan(
-            style: TETheme.serif(size: 18),
+            style: KJTheme.serif(size: 18),
             children: [
               TextSpan(
-                text: maha.lordLabel,
+                text: dashaLordLabel(l10n, maha),
                 style: TextStyle(color: _lordInk(maha)),
               ),
-              const TextSpan(text: ' Mahadasha'),
+              TextSpan(text: ' ${dashaLevelLabel(l10n, 1)}'),
             ],
           ),
         ),
         const SizedBox(height: 4),
         Text(
           '${_rangeText(maha, anonymized: ctx.anonymized)} · '
-          '${_lenText(maha.length)} · ${_ageSpan(birth, maha)}',
-          style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+          '${_lenText(l10n, maha.length)} · ${_ageSpan(l10n, birth, maha)}',
+          style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
         ),
         if (mahaPlace != null) ...[
           const SizedBox(height: 3),
-          Text('${_abbrOf(maha)}: $mahaPlace',
-              style: TETheme.mono(size: 10.5, color: TEColors.inkSoft)),
+          Text('${dashaLordAbbr(l10n, maha)}: $mahaPlace',
+              style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft)),
         ],
         const SizedBox(height: 12),
-        _AntardashaTimeline(
-            maha: maha, now: now, anonymized: ctx.anonymized),
+        _AntardashaTimeline(maha: maha, now: now, anonymized: ctx.anonymized),
         if (antar != null) ...[
           const SizedBox(height: 8),
           Row(
@@ -284,7 +305,7 @@ class DashaModule extends AstroModule {
                 width: 9,
                 height: 9,
                 decoration: BoxDecoration(
-                  color: TEColors.maroon,
+                  color: KJColors.maroon,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -295,15 +316,15 @@ class DashaModule extends AstroModule {
                     style: const TextStyle(fontSize: 12),
                     children: [
                       TextSpan(
-                          text: antar.lordLabel,
+                          text: dashaLordLabel(l10n, antar),
                           style: TextStyle(
                               color: _lordInk(antar),
                               fontWeight: FontWeight.w600)),
                       TextSpan(
-                        text: ' Antardasha · '
+                        text: ' ${dashaLevelLabel(l10n, 2)} · '
                             '${_rangeText(antar, anonymized: ctx.anonymized)}'
-                            ' · ${_lenText(antar.length)}',
-                        style: TextStyle(color: TEColors.inkSoft),
+                            ' · ${_lenText(l10n, antar.length)}',
+                        style: TextStyle(color: KJColors.inkSoft),
                       ),
                     ],
                   ),
@@ -315,8 +336,8 @@ class DashaModule extends AstroModule {
             const SizedBox(height: 3),
             Padding(
               padding: const EdgeInsets.only(left: 15),
-              child: Text('${_abbrOf(antar)}: $antarPlace',
-                  style: TETheme.mono(size: 10.5, color: TEColors.inkSoft)),
+              child: Text('${dashaLordAbbr(l10n, antar)}: $antarPlace',
+                  style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft)),
             ),
           ],
         ],
@@ -326,14 +347,14 @@ class DashaModule extends AstroModule {
           runSpacing: 8,
           children: [
             for (final p in chain.skip(2))
-              _chainChip(p, anonymized: ctx.anonymized),
+              _chainChip(l10n, p, anonymized: ctx.anonymized),
             if (_cfgShow(ctx, 'sandhi'))
               for (final p in chain.take(2))
-                if (_sandhiText(p, now) case final s?) _sandhiChip(p, s),
+                if (_sandhiText(l10n, p, now) case final s?) _sandhiChip(p, s),
             if (_cfgShow(ctx, 'yogas'))
               for (final p in chain.take(2))
-                if (_activeYogas(ctx, p) case final ys when ys.isNotEmpty)
-                  _yogaChip(p, ys),
+                if (_activeYogas(l10n, ctx, p) case final ys when ys.isNotEmpty)
+                  _yogaChip(l10n, p, ys),
           ],
         ),
         if (_cfgShow(ctx, 'compare')) ...[
@@ -348,69 +369,69 @@ class DashaModule extends AstroModule {
   Widget _sandhiChip(DashaPeriod p, String text) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: TEColors.maroon.withValues(alpha: 0.08),
+          color: KJColors.maroon.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
-          border:
-              Border.all(color: TEColors.maroon.withValues(alpha: 0.55)),
+          border: Border.all(color: KJColors.maroon.withValues(alpha: 0.55)),
         ),
         child: Text(
           '${_levelAbbr[p.level - 1]} $text',
           style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
-              color: TEColors.maroon),
+              color: KJColors.maroon),
         ),
       );
 
   /// 'MD Jupiter activates Gaja Kesari +1' pill (tooltip lists all).
-  Widget _yogaChip(DashaPeriod p, List<String> yogas) => Tooltip(
+  Widget _yogaChip(AppLocalizations l10n, DashaPeriod p, List<String> yogas) =>
+      Tooltip(
         message: yogas.join('\n'),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: TEColors.forest.withValues(alpha: 0.08),
+            color: KJColors.forest.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(20),
-            border:
-                Border.all(color: TEColors.forest.withValues(alpha: 0.45)),
+            border: Border.all(color: KJColors.forest.withValues(alpha: 0.45)),
           ),
           child: Text(
-            '${_levelAbbr[p.level - 1]} ${_firstWord(p.lordLabel)} '
-            'activates ${yogas.first}'
+            '${_levelAbbr[p.level - 1]} '
+            '${l10n.dmActivatesYoga(dashaLordAbbr(l10n, p), yogas.first)}'
             '${yogas.length > 1 ? ' +${yogas.length - 1}' : ''}',
             style: TextStyle(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,
-                color: TEColors.forest),
+                color: KJColors.forest),
           ),
         ),
       );
 
   /// 'Pratyantar · Saturn → 14 Aug 26' pill for the running chain.
-  Widget _chainChip(DashaPeriod p, {bool anonymized = false}) {
+  Widget _chainChip(AppLocalizations l10n, DashaPeriod p,
+      {bool anonymized = false}) {
     final until = (!anonymized && p.length < _clockThreshold)
         ? _fmtUntil.format(p.end.toLocal())
         : _fmtShort.format(p.end.toLocal());
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: TEColors.paperAlt,
+        color: KJColors.paperAlt,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: TEColors.hairline),
+        border: Border.all(color: KJColors.hairline),
       ),
       child: Text.rich(
         TextSpan(
           style: const TextStyle(fontSize: 12),
           children: [
             TextSpan(
-                text: '${_levelShort[p.level - 1]} · ',
-                style: TextStyle(color: TEColors.inkSoft)),
+                text: '${_levelShort(l10n)[p.level - 1]} · ',
+                style: TextStyle(color: KJColors.inkSoft)),
             TextSpan(
-                text: _firstWord(p.lordLabel),
-                style: TextStyle(
-                    color: _lordInk(p), fontWeight: FontWeight.w600)),
+                text: dashaLordAbbr(l10n, p),
+                style:
+                    TextStyle(color: _lordInk(p), fontWeight: FontWeight.w600)),
             TextSpan(
                 text: ' → $until',
-                style: TETheme.mono(size: 10.5, color: TEColors.inkSoft)),
+                style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft)),
           ],
         ),
       ),
@@ -428,6 +449,7 @@ class DashaModule extends AstroModule {
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
+    final l10n = ctx.l10n;
     final now = DateTime.now().toUtc();
     final birth = ctx.snapshot.birth.dateTimeUtc;
     // Respect the instance config: an unconfigured instance prints all
@@ -439,8 +461,8 @@ class DashaModule extends AstroModule {
     // pages between and inside the tables.
     final blocks = <pw.Widget>[
       pdfSectionHeader(systems.length == 1
-          ? 'Dasha Periods — ${systems.first.displayName}'
-          : 'Dasha Periods'),
+          ? l10n.dmPdfHeaderWithSystem(systems.first.label(l10n))
+          : l10n.moduleDashaPeriodsTitle),
     ];
     for (final system in systems) {
       final result = ctx.dasha(system);
@@ -449,32 +471,38 @@ class DashaModule extends AstroModule {
       blocks.addAll([
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8, bottom: 2),
-          child: pw.Text(system.displayName,
-              style: pdfBody(size: 10.5)
-                  .copyWith(fontWeight: pw.FontWeight.bold)),
+          child: pw.Text(system.label(l10n),
+              style:
+                  pdfBody(size: 10.5).copyWith(fontWeight: pw.FontWeight.bold)),
         ),
-        pw.Text(system.subtitle, style: pdfLabel()),
+        pw.Text(system.subtitleLabel(l10n), style: pdfLabel()),
         // Active chain down to pran, as of print time.
         if (chain.isNotEmpty) ...[
           pw.Padding(
             padding: const pw.EdgeInsets.only(top: 4, bottom: 2),
             child: pw.Text(
-              'Active chain · ${_fmtTime.format(now.toLocal())}',
+              l10n.dmPdfActiveChain(_fmtTime.format(now.toLocal())),
               style: pdfLabel(),
             ),
           ),
           pw.TableHelper.fromTextArray(
-            headers: ['Level', 'Lord', 'From', 'To', 'Length'],
+            headers: [
+              l10n.dmColLevel,
+              l10n.dmColLord,
+              l10n.dmColFrom,
+              l10n.dmColTo,
+              l10n.dmColLength,
+            ],
             data: [
               for (final p in chain)
                 [
-                  kDashaLevelNames[p.level - 1],
-                  p.lordLabel,
+                  dashaLevelLabel(l10n, p.level),
+                  dashaLordLabel(l10n, p),
                   (p.length < _clockThreshold ? _fmtTime : _fmt)
                       .format(p.start.toLocal()),
                   (p.length < _clockThreshold ? _fmtTime : _fmt)
                       .format(p.end.toLocal()),
-                  _lenText(p.length),
+                  _lenText(l10n, p.length),
                 ],
             ],
             headerStyle: pdfLabel(),
@@ -487,15 +515,21 @@ class DashaModule extends AstroModule {
         ],
         // All mahadashas.
         pw.TableHelper.fromTextArray(
-          headers: ['Mahadasha', 'From', 'To', 'Length', 'Age'],
+          headers: [
+            l10n.dashaLevelMaha,
+            l10n.dmColFrom,
+            l10n.dmColTo,
+            l10n.dmColLength,
+            l10n.ssColAge,
+          ],
           data: [
             for (final p in result.periods.take(12))
               [
-                '${p.contains(now) ? '» ' : ''}${p.lordLabel}',
+                '${p.contains(now) ? '» ' : ''}${dashaLordLabel(l10n, p)}',
                 _fmt.format(p.start.toLocal()),
                 _fmt.format(p.end.toLocal()),
-                _lenText(p.length),
-                _ageSpan(birth, p).replaceFirst('age ', ''),
+                _lenText(l10n, p.length),
+                _ageSpanBare(birth, p),
               ],
           ],
           headerStyle: pdfLabel(),
@@ -509,19 +543,24 @@ class DashaModule extends AstroModule {
           pw.Padding(
             padding: const pw.EdgeInsets.only(top: 4, bottom: 2),
             child: pw.Text(
-              'Antardashas of ${maha.lordLabel} Mahadasha',
+              l10n.dmPdfAntardashasOf(dashaLordLabel(l10n, maha)),
               style: pdfLabel(),
             ),
           ),
           pw.TableHelper.fromTextArray(
-            headers: ['Antardasha', 'From', 'To', 'Length'],
+            headers: [
+              l10n.dashaLevelAntar,
+              l10n.dmColFrom,
+              l10n.dmColTo,
+              l10n.dmColLength,
+            ],
             data: [
               for (final a in maha.children)
                 [
-                  '${a.contains(now) ? '» ' : ''}${a.lordLabel}',
+                  '${a.contains(now) ? '» ' : ''}${dashaLordLabel(l10n, a)}',
                   _fmt.format(a.start.toLocal()),
                   _fmt.format(a.end.toLocal()),
-                  _lenText(a.length),
+                  _lenText(l10n, a.length),
                 ],
             ],
             headerStyle: pdfLabel(),
@@ -589,7 +628,7 @@ class _AntardashaTimeline extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: TEColors.hairline),
+                  border: Border.all(color: KJColors.hairline),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: ClipRRect(
@@ -597,7 +636,7 @@ class _AntardashaTimeline extends StatelessWidget {
                   child: Row(
                     children: [
                       for (var i = 0; i < antars.length; i++)
-                        _segment(antars[i], widths[i],
+                        _segment(context.l10n, antars[i], widths[i],
                             last: i == antars.length - 1),
                     ],
                   ),
@@ -613,11 +652,11 @@ class _AntardashaTimeline extends StatelessWidget {
                   child: Container(
                     width: 4,
                     decoration: BoxDecoration(
-                      color: TEColors.paper,
+                      color: KJColors.paper,
                       borderRadius: BorderRadius.circular(2),
                     ),
                     alignment: Alignment.center,
-                    child: Container(width: 2, color: TEColors.ink),
+                    child: Container(width: 2, color: KJColors.ink),
                   ),
                 ),
             ],
@@ -626,10 +665,10 @@ class _AntardashaTimeline extends StatelessWidget {
           Row(
             children: [
               Text(_fmtShort.format(maha.start.toLocal()),
-                  style: TETheme.mono(size: 9.5, color: TEColors.inkSoft)),
+                  style: KJTheme.mono(size: 9.5, color: KJColors.inkSoft)),
               const Spacer(),
               Text(_fmtShort.format(maha.end.toLocal()),
-                  style: TETheme.mono(size: 9.5, color: TEColors.inkSoft)),
+                  style: KJTheme.mono(size: 9.5, color: KJColors.inkSoft)),
             ],
           ),
         ],
@@ -637,18 +676,19 @@ class _AntardashaTimeline extends StatelessWidget {
     });
   }
 
-  Widget _segment(DashaPeriod antar, double width, {required bool last}) {
+  Widget _segment(AppLocalizations l10n, DashaPeriod antar, double width,
+      {required bool last}) {
     final isCurrent = antar.contains(now);
     final isPast = !antar.end.isAfter(now);
     final color = isCurrent
-        ? TEColors.maroon
+        ? KJColors.maroon
         : isPast
-            ? TEColors.inkSoft.withValues(alpha: 0.22)
-            : TEColors.paperAlt;
+            ? KJColors.inkSoft.withValues(alpha: 0.22)
+            : KJColors.paperAlt;
     return Tooltip(
-      message: '${antar.lordLabel}\n'
+      message: '${dashaLordLabel(l10n, antar)}\n'
           '${_rangeText(antar, anonymized: anonymized)}'
-          ' · ${_lenText(antar.length)}',
+          ' · ${_lenText(l10n, antar.length)}',
       textAlign: TextAlign.center,
       child: Container(
         width: width,
@@ -659,7 +699,7 @@ class _AntardashaTimeline extends StatelessWidget {
               ? null
               : Border(
                   right: BorderSide(
-                      color: TEColors.inkSoft.withValues(alpha: 0.45),
+                      color: KJColors.inkSoft.withValues(alpha: 0.45),
                       width: 0.7)),
         ),
         alignment: Alignment.center,
@@ -668,23 +708,22 @@ class _AntardashaTimeline extends StatelessWidget {
         // Mangala 1/36 in Yogini) so every antardasha stays named.
         child: width >= 16
             ? Text(
-                _abbrOf(antar),
+                dashaLordAbbr(l10n, antar),
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w600,
-                  color: isCurrent ? TEColors.paper : TEColors.inkSoft,
+                  color: isCurrent ? KJColors.paper : KJColors.inkSoft,
                 ),
               )
             : width >= 8
                 ? RotatedBox(
                     quarterTurns: 3,
                     child: Text(
-                      _abbrOf(antar),
+                      dashaLordAbbr(l10n, antar),
                       style: TextStyle(
                         fontSize: 7.5,
                         fontWeight: FontWeight.w600,
-                        color:
-                            isCurrent ? TEColors.paper : TEColors.inkSoft,
+                        color: isCurrent ? KJColors.paper : KJColors.inkSoft,
                       ),
                     ),
                   )
@@ -711,18 +750,18 @@ class _SystemComparison extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: TEColors.paperAlt,
+        color: KJColors.paperAlt,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: TEColors.hairline),
+        border: Border.all(color: KJColors.hairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('ALL SYSTEMS · MD › AD › PD › SD › PrD',
+          Text(context.l10n.dmAllSystems,
               style: TextStyle(
                   fontSize: 9.5,
                   letterSpacing: 0.8,
-                  color: TEColors.inkSoft,
+                  color: KJColors.inkSoft,
                   fontWeight: FontWeight.w600)),
           for (final s in DashaSystem.values)
             Padding(
@@ -731,18 +770,18 @@ class _SystemComparison extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 92,
-                    child: Text(s.displayName,
-                        style: TextStyle(
-                            fontSize: 10.5, color: TEColors.inkSoft)),
+                    child: Text(s.label(context.l10n),
+                        style:
+                            TextStyle(fontSize: 10.5, color: KJColors.inkSoft)),
                   ),
                   Expanded(
                     child: Builder(builder: (_) {
                       final chain = ctx.dasha(s).chainAt(asOf);
                       return Text(
-                        chain.isEmpty ? '—' : _chainAbbr(chain),
+                        chain.isEmpty ? '—' : _chainAbbr(context.l10n, chain),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TETheme.mono(size: 11, color: TEColors.ink),
+                        style: KJTheme.mono(size: 11, color: KJColors.ink),
                       );
                     }),
                   ),
@@ -840,10 +879,10 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
           children: [
             for (final s in DashaSystem.values)
               ChoiceChip(
-                label: Text(s.displayName),
+                label: Text(s.label(context.l10n)),
                 selected: _system == s,
                 labelStyle: TextStyle(
-                    color: _system == s ? TEColors.paper : TEColors.ink),
+                    color: _system == s ? KJColors.paper : KJColors.ink),
                 onSelected: (_) => setState(() {
                   _system = s;
                   _path.clear();
@@ -853,8 +892,8 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
           ],
         ),
         const SizedBox(height: 4),
-        Text(_system.subtitle,
-            style: TETheme.mono(size: 11, color: TEColors.inkSoft)),
+        Text(_system.subtitleLabel(context.l10n),
+            style: KJTheme.mono(size: 11, color: KJColors.inkSoft)),
         const SizedBox(height: 14),
 
         // As-of control (dasha on a date)
@@ -866,30 +905,42 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
           spacing: 6,
           runSpacing: 4,
           children: [
-            _toggleChip('Lord positions', _showPlacements, (v) => setState(() {
-                  _showPlacements = v;
-                  _persist('placements', v ? 'show' : 'hide');
-                })),
-            _toggleChip('Sandhi', _showSandhi, (v) => setState(() {
-                  _showSandhi = v;
-                  _persist('sandhi', v ? 'show' : 'hide');
-                })),
-            _toggleChip('Yogas', _showYogas, (v) => setState(() {
-                  _showYogas = v;
-                  _persist('yogas', v ? 'show' : 'hide');
-                })),
-            _toggleChip('All systems', _showCompare, (v) => setState(() {
-                  _showCompare = v;
-                  _persist('compare', v ? 'show' : 'hide');
-                })),
+            _toggleChip(
+                context.l10n.dmToggleLordPositions,
+                _showPlacements,
+                (v) => setState(() {
+                      _showPlacements = v;
+                      _persist('placements', v ? 'show' : 'hide');
+                    })),
+            _toggleChip(
+                context.l10n.dmToggleSandhi,
+                _showSandhi,
+                (v) => setState(() {
+                      _showSandhi = v;
+                      _persist('sandhi', v ? 'show' : 'hide');
+                    })),
+            _toggleChip(
+                context.l10n.dmToggleYogas,
+                _showYogas,
+                (v) => setState(() {
+                      _showYogas = v;
+                      _persist('yogas', v ? 'show' : 'hide');
+                    })),
+            _toggleChip(
+                context.l10n.dmToggleAllSystems,
+                _showCompare,
+                (v) => setState(() {
+                      _showCompare = v;
+                      _persist('compare', v ? 'show' : 'hide');
+                    })),
           ],
         ),
         const SizedBox(height: 12),
 
         // Active chain summary
         if (chain.isEmpty)
-          Text('Outside computed dasha range for this date.',
-              style: TextStyle(color: TEColors.inkSoft))
+          Text(context.l10n.dmOutsideRangeDate,
+              style: TextStyle(color: KJColors.inkSoft))
         else
           _chainCard(chain),
         if (_showCompare) ...[
@@ -905,9 +956,11 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              'within ${_path.last.lordLabel} ${_path.last.levelName}'
-              ' · ${_rangeText(_path.last, anonymized: widget.ctx.anonymized)}',
-              style: TETheme.mono(size: 10.5, color: TEColors.inkSoft),
+              context.l10n.dmWithin(
+                  dashaLordLabel(context.l10n, _path.last),
+                  dashaLevelLabel(context.l10n, _path.last.level),
+                  _rangeText(_path.last, anonymized: widget.ctx.anonymized)),
+              style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft),
             ),
           )
         else
@@ -925,11 +978,14 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
             // (Saturn AD inside Saturn MD) are never ambiguous.
             lineage: _path.isEmpty
                 ? null
-                : '${_path.map(_abbrOf).join(' / ')} / ',
-            placement:
-                _showPlacements ? _placementText(widget.ctx, p) : null,
-            yogas: _showYogas ? _activeYogas(widget.ctx, p) : const [],
-            sandhi: _showSandhi ? _sandhiText(p, asOf) : null,
+                : '${_path.map((q) => dashaLordAbbr(context.l10n, q)).join(' / ')} / ',
+            placement: _showPlacements
+                ? _placementText(context.l10n, widget.ctx, p)
+                : null,
+            yogas: _showYogas
+                ? _activeYogas(context.l10n, widget.ctx, p)
+                : const [],
+            sandhi: _showSandhi ? _sandhiText(context.l10n, p, asOf) : null,
           ),
       ],
     );
@@ -942,8 +998,7 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
         onSelected: onChanged,
         visualDensity: VisualDensity.compact,
         labelStyle: TextStyle(
-            fontSize: 11.5,
-            color: value ? TEColors.paper : TEColors.ink),
+            fontSize: 11.5, color: value ? KJColors.paper : KJColors.ink),
       );
 
   /// A period at the shown level is 'current' when it is the chain
@@ -954,8 +1009,7 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
     if (p.level - 2 >= 0) {
       // Parent shown in the drill path must equal the chain's parent.
       if (_path.length < p.level - 1) return false;
-      if (!identical(chain.elementAtOrNull(p.level - 2),
-          _path[p.level - 2])) {
+      if (!identical(chain.elementAtOrNull(p.level - 2), _path[p.level - 2])) {
         return false;
       }
     }
@@ -973,23 +1027,23 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: live
-                ? TEColors.transit.withValues(alpha: 0.12)
-                : TEColors.paperAlt,
+                ? KJColors.transit.withValues(alpha: 0.12)
+                : KJColors.paperAlt,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: TEColors.hairline),
+            border: Border.all(color: KJColors.hairline),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (live) ...[
-                Icon(Icons.circle, size: 8, color: TEColors.transit),
+                Icon(Icons.circle, size: 8, color: KJColors.transit),
                 const SizedBox(width: 6),
               ],
               Text(
                 live
-                    ? 'Now · ${_fmtTime.format(DateTime.now())}'
+                    ? context.l10n.dmNowAt(_fmtTime.format(DateTime.now()))
                     : _fmtTime.format(_asOf!),
-                style: TETheme.mono(size: 11, color: TEColors.inkSoft),
+                style: KJTheme.mono(size: 11, color: KJColors.inkSoft),
               ),
             ],
           ),
@@ -997,7 +1051,7 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
         TextButton.icon(
           onPressed: _pickAsOf,
           icon: const Icon(Icons.edit_calendar_outlined, size: 16),
-          label: const Text('Chain on a date'),
+          label: Text(context.l10n.dmChainOnDate),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             visualDensity: VisualDensity.compact,
@@ -1007,7 +1061,7 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
           TextButton.icon(
             onPressed: () => setState(() => _asOf = null),
             icon: const Icon(Icons.bolt, size: 16),
-            label: const Text('Now'),
+            label: Text(context.l10n.dmNowButton),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               visualDensity: VisualDensity.compact,
@@ -1022,30 +1076,31 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
   Widget _chainCard(List<DashaPeriod> chain) {
     return Container(
       decoration: BoxDecoration(
-        color: TEColors.paper,
+        color: KJColors.paper,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: TEColors.hairline),
+        border: Border.all(color: KJColors.hairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
-            child: Text('ACTIVE CHAIN',
+            child: Text(context.l10n.dmActiveChain,
                 style: TextStyle(
                     fontSize: 10,
                     letterSpacing: 1,
-                    color: TEColors.inkSoft,
+                    color: KJColors.inkSoft,
                     fontWeight: FontWeight.w600)),
           ),
           for (final p in chain) ...[
-            Container(height: 0.7, color: TEColors.hairline),
+            Container(height: 0.7, color: KJColors.hairline),
             Builder(builder: (_) {
               // Lord positions apply to the active chain too (matching the
               // dashboard card and the period rows below), not just the
               // drill-down list.
-              final place =
-                  _showPlacements ? _placementText(widget.ctx, p) : null;
+              final place = _showPlacements
+                  ? _placementText(context.l10n, widget.ctx, p)
+                  : null;
               return InkWell(
                 onTap: () => setState(() {
                   _path
@@ -1060,15 +1115,15 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                     children: [
                       SizedBox(
                         width: 92,
-                        child: Text(kDashaLevelNames[p.level - 1],
+                        child: Text(dashaLevelLabel(context.l10n, p.level),
                             style: TextStyle(
-                                fontSize: 10.5, color: TEColors.inkSoft)),
+                                fontSize: 10.5, color: KJColors.inkSoft)),
                       ),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(p.lordLabel,
+                            Text(dashaLordLabel(context.l10n, p),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -1077,9 +1132,9 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                                     color: _lordInk(p))),
                             if (place != null) ...[
                               const SizedBox(height: 2),
-                              Text('${_abbrOf(p)}: $place',
-                                  style: TETheme.mono(
-                                      size: 10, color: TEColors.inkSoft)),
+                              Text('${dashaLordAbbr(context.l10n, p)}: $place',
+                                  style: KJTheme.mono(
+                                      size: 10, color: KJColors.inkSoft)),
                             ],
                           ],
                         ),
@@ -1088,11 +1143,11 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                       Flexible(
                         child: Text(
                           '${_rangeText(p, anonymized: widget.ctx.anonymized)}'
-                          ' · ${_lenText(p.length)}',
+                          ' · ${_lenText(context.l10n, p.length)}',
                           maxLines: 2,
                           textAlign: TextAlign.right,
                           style:
-                              TETheme.mono(size: 9.5, color: TEColors.inkSoft),
+                              KJTheme.mono(size: 9.5, color: KJColors.inkSoft),
                         ),
                       ),
                     ],
@@ -1113,7 +1168,7 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
   Widget _breadcrumbs() {
     final crumbs = <Widget>[
       _crumbChip(
-        label: kDashaLevelNamesPlural[0],
+        label: dashaLevelLabel(context.l10n, 1, plural: true),
         active: _path.isEmpty,
         onTap: _path.isEmpty ? null : () => setState(_path.clear),
       ),
@@ -1125,7 +1180,7 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
         _crumbSep(),
         _crumbChip(
           abbr: _levelAbbr[p.level - 1],
-          label: _firstWord(p.lordLabel),
+          label: _lordName(context.l10n, p),
           ink: _lordInk(p),
           active: isLast,
           onTap: isLast
@@ -1138,11 +1193,9 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
       crumbs.addAll([
         _crumbSep(),
         Text(
-          kDashaLevelNamesPlural[_path.length],
+          dashaLevelLabel(context.l10n, _path.length + 1, plural: true),
           style: TextStyle(
-              fontSize: 13,
-              color: TEColors.ink,
-              fontWeight: FontWeight.w700),
+              fontSize: 13, color: KJColors.ink, fontWeight: FontWeight.w700),
         ),
       ]);
     }
@@ -1155,8 +1208,8 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
 
   Widget _crumbSep() => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5),
-        child: Text('›',
-            style: TextStyle(fontSize: 14, color: TEColors.inkSoft)),
+        child:
+            Text('›', style: TextStyle(fontSize: 14, color: KJColors.inkSoft)),
       );
 
   Widget _crumbChip({
@@ -1172,9 +1225,9 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
         decoration: BoxDecoration(
-          color: active ? TEColors.maroon : TEColors.paperAlt,
+          color: active ? KJColors.maroon : KJColors.paperAlt,
           borderRadius: BorderRadius.circular(16),
-          border: active ? null : Border.all(color: TEColors.hairline),
+          border: active ? null : Border.all(color: KJColors.hairline),
         ),
         child: Text.rich(
           TextSpan(
@@ -1187,8 +1240,8 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                     letterSpacing: 0.6,
                     fontWeight: FontWeight.w700,
                     color: active
-                        ? TEColors.paper.withValues(alpha: 0.8)
-                        : TEColors.inkSoft,
+                        ? KJColors.paper.withValues(alpha: 0.8)
+                        : KJColors.inkSoft,
                   ),
                 ),
               TextSpan(
@@ -1196,7 +1249,7 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: active ? TEColors.paper : (ink ?? TEColors.ink),
+                  color: active ? KJColors.paper : (ink ?? KJColors.ink),
                 ),
               ),
             ],
@@ -1221,8 +1274,8 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
       padding: const EdgeInsets.only(bottom: 6),
       child: Material(
         color: isCurrent
-            ? TEColors.maroon.withValues(alpha: 0.06)
-            : TEColors.paper,
+            ? KJColors.maroon.withValues(alpha: 0.06)
+            : KJColors.paper,
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
@@ -1232,7 +1285,7 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isCurrent ? TEColors.maroon : TEColors.hairline,
+                color: isCurrent ? KJColors.maroon : KJColors.hairline,
                 width: isCurrent ? 1.2 : 1,
               ),
             ),
@@ -1246,10 +1299,10 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                         children: [
                           if (lineage != null)
                             Text(lineage,
-                                style: TETheme.mono(
-                                    size: 11, color: TEColors.inkSoft)),
+                                style: KJTheme.mono(
+                                    size: 11, color: KJColors.inkSoft)),
                           Flexible(
-                            child: Text(p.lordLabel,
+                            child: Text(dashaLordLabel(context.l10n, p),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -1263,15 +1316,15 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 7, vertical: 2),
                               decoration: BoxDecoration(
-                                color: TEColors.maroon,
+                                color: KJColors.maroon,
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Text('CURRENT',
+                              child: Text(context.l10n.dmCurrent,
                                   style: TextStyle(
                                       fontSize: 8.5,
                                       letterSpacing: 0.8,
                                       fontWeight: FontWeight.w700,
-                                      color: TEColors.paper)),
+                                      color: KJColors.paper)),
                             ),
                           ],
                           if (sandhi != null) ...[
@@ -1281,11 +1334,11 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 7, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: TEColors.maroon
-                                      .withValues(alpha: 0.10),
+                                  color:
+                                      KJColors.maroon.withValues(alpha: 0.10),
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
-                                      color: TEColors.maroon
+                                      color: KJColors.maroon
                                           .withValues(alpha: 0.55)),
                                 ),
                                 child: Text(sandhi,
@@ -1294,7 +1347,7 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                                     style: TextStyle(
                                         fontSize: 9.5,
                                         fontWeight: FontWeight.w700,
-                                        color: TEColors.maroon)),
+                                        color: KJColors.maroon)),
                               ),
                             ),
                           ],
@@ -1303,25 +1356,26 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                       const SizedBox(height: 3),
                       Text(
                         '${_rangeText(p, anonymized: widget.ctx.anonymized)}'
-                        ' · ${_lenText(p.length)} · ${_ageSpan(birth, p)}',
-                        style: TETheme.mono(
-                            size: 10.5, color: TEColors.inkSoft),
+                        ' · ${_lenText(context.l10n, p.length)}'
+                        ' · ${_ageSpan(context.l10n, birth, p)}',
+                        style:
+                            KJTheme.mono(size: 10.5, color: KJColors.inkSoft),
                       ),
                       if (placement != null) ...[
                         const SizedBox(height: 2),
-                        Text('${_abbrOf(p)}: $placement',
-                            style: TETheme.mono(
-                                size: 10, color: TEColors.inkSoft)),
+                        Text('${dashaLordAbbr(context.l10n, p)}: $placement',
+                            style: KJTheme.mono(
+                                size: 10, color: KJColors.inkSoft)),
                       ],
                       if (yogas.isNotEmpty) ...[
                         const SizedBox(height: 2),
-                        Text('activates: ${yogas.join(' · ')}',
+                        Text(context.l10n.dmActivatesList(yogas.join(' · ')),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
-                                color: TEColors.forest)),
+                                color: KJColors.forest)),
                       ],
                       if (isCurrent) ...[
                         const SizedBox(height: 7),
@@ -1330,24 +1384,23 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                           child: LinearProgressIndicator(
                             value: p.progressAt(asOf),
                             minHeight: 4,
-                            backgroundColor: TEColors.paperAlt,
-                            valueColor:
-                                AlwaysStoppedAnimation(TEColors.maroon),
+                            backgroundColor: KJColors.paperAlt,
+                            valueColor: AlwaysStoppedAnimation(KJColors.maroon),
                           ),
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          '${(p.progressAt(asOf) * 100).round()}% elapsed',
-                          style: TETheme.mono(
-                              size: 9.5, color: TEColors.inkSoft),
+                          context.l10n.dmElapsed(
+                              '${(p.progressAt(asOf) * 100).round()}'),
+                          style:
+                              KJTheme.mono(size: 9.5, color: KJColors.inkSoft),
                         ),
                       ],
                     ],
                   ),
                 ),
                 if (canDrill)
-                  Icon(Icons.chevron_right,
-                      size: 20, color: TEColors.inkSoft),
+                  Icon(Icons.chevron_right, size: 20, color: KJColors.inkSoft),
               ],
             ),
           ),

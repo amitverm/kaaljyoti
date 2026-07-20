@@ -70,7 +70,8 @@ class DashaPeriod {
       _children ??= _childBuilder?.call(this) ?? const [];
 
   /// Whether this period can drill down without forcing a build.
-  bool get hasChildren => _childBuilder != null || (_children?.isNotEmpty ?? false);
+  bool get hasChildren =>
+      _childBuilder != null || (_children?.isNotEmpty ?? false);
 
   String get levelName => kDashaLevelNames[level - 1];
 

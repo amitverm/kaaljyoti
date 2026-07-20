@@ -15,8 +15,17 @@ void main() {
           sunrise: sunrise, sunset: sunset, nextSunrise: nextSunrise);
       expect(chog.day.length, 8);
       expect(
-        chog.day.map((s) => s.name).toList(),
-        ['Udveg', 'Char', 'Labh', 'Amrit', 'Kaal', 'Shubh', 'Rog', 'Udveg'],
+        chog.day.map((s) => s.choghadiya).toList(),
+        [
+          Choghadiya.udveg,
+          Choghadiya.char,
+          Choghadiya.labh,
+          Choghadiya.amrit,
+          Choghadiya.kaal,
+          Choghadiya.shubh,
+          Choghadiya.rog,
+          Choghadiya.udveg,
+        ],
       );
       expect(chog.day.first.start, sunrise);
       expect(chog.day.last.end, sunset);
@@ -27,16 +36,25 @@ void main() {
           sunrise: sunrise, sunset: sunset, nextSunrise: nextSunrise);
       // Day first = Udveg (index 0); 5th from it (offset +4) = Kaal.
       expect(chog.night.length, 8);
-      expect(chog.night.first.name, 'Kaal');
+      expect(chog.night.first.choghadiya, Choghadiya.kaal);
       expect(chog.night.first.start, sunset);
       expect(chog.night.last.end, nextSunrise);
     });
 
     test('good/bad flags match Amrit/Shubh/Labh/Char = good', () {
+      // Spelled out rather than derived from Choghadiya.isAuspicious —
+      // asserting the rule against the implementation that computes it
+      // would pass no matter what that implementation said.
+      const auspicious = {
+        Choghadiya.amrit,
+        Choghadiya.shubh,
+        Choghadiya.labh,
+        Choghadiya.char,
+      };
       final chog = choghadiyaSegments(
           sunrise: sunrise, sunset: sunset, nextSunrise: nextSunrise);
       for (final s in [...chog.day, ...chog.night]) {
-        expect(s.good, kChoghadiyaGood.contains(s.name));
+        expect(s.good, auspicious.contains(s.choghadiya));
       }
     });
   });
@@ -50,8 +68,14 @@ void main() {
       expect(
         hora.take(8).map((s) => s.planet).toList(),
         [
-          Planet.sun, Planet.venus, Planet.mercury, Planet.moon,
-          Planet.saturn, Planet.jupiter, Planet.mars, Planet.sun,
+          Planet.sun,
+          Planet.venus,
+          Planet.mercury,
+          Planet.moon,
+          Planet.saturn,
+          Planet.jupiter,
+          Planet.mars,
+          Planet.sun,
         ],
       );
       expect(hora.first.start, sunrise);
@@ -71,7 +95,8 @@ void main() {
   });
 
   group('inauspicious/auspicious windows', () {
-    test('Rahu Kaal / Yamaganda / Gulika Kaal use the weekday segment tables', () {
+    test('Rahu Kaal / Yamaganda / Gulika Kaal use the weekday segment tables',
+        () {
       // Sunday (DateTime.weekday == 7): Rahu 8th, Yamaganda 5th, Gulika 7th.
       final len = sunset.difference(sunrise) ~/ 8;
       final rahu = rahuKaalWindow(sunrise, sunset);
@@ -127,7 +152,8 @@ void main() {
   group('chandraBala', () {
     test('same sign as janma rashi = favorable (count 1)', () {
       expect(
-        chandraBala(janmaRashi: ZodiacSign.aries, dayMoonSign: ZodiacSign.aries),
+        chandraBala(
+            janmaRashi: ZodiacSign.aries, dayMoonSign: ZodiacSign.aries),
         ChandraBalaResult.favorable,
       );
     });

@@ -94,6 +94,16 @@ class _PinchZoomState extends State<PinchZoom> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final Size viewport = constraints.biggest;
+        // An unbounded axis silently degrades panning: the clamp guard
+        // below zeroes that axis's translation, so a zoomed chart can't
+        // pan (this is exactly what broke the chakra widgets, which
+        // nested AspectRatio INSIDE PinchZoom). Host this widget inside
+        // something bounded — SizedBox / AspectRatio outside, as
+        // chart_view does.
+        assert(
+            viewport.width.isFinite && viewport.height.isFinite,
+            'PinchZoom needs bounded constraints on both axes '
+            '(got $constraints); wrap it in a SizedBox/AspectRatio.');
         return ClipRect(
           child: RawGestureDetector(
             behavior: HitTestBehavior.opaque,

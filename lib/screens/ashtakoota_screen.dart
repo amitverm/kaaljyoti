@@ -7,17 +7,26 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../core/astro/guna_milan.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
 import '../data/models.dart' show Kundli;
-import '../modules/common.dart' show pdfInk, pdfInkSoft, pdfMaroon,
-    pdfHairline, pdfBody, pdfSectionHeader, kjPdfCredit;
+import '../modules/common.dart'
+    show
+        pdfInk,
+        pdfInkSoft,
+        pdfMaroon,
+        pdfHairline,
+        pdfBody,
+        pdfSectionHeader,
+        pdfTheme,
+        kjPdfCredit;
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 
 class AshtakootaScreen extends ConsumerStatefulWidget {
   const AshtakootaScreen({super.key});
@@ -34,10 +43,10 @@ class _AshtakootaScreenState extends ConsumerState<AshtakootaScreen> {
   Widget build(BuildContext context) {
     final kundlis = ref.watch(kundlisProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Ashtakoota Guna Milan')),
+      appBar: AppBar(title: Text(context.l10n.akTitle)),
       body: kundlis.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load kundlis: $e')),
+        error: (e, _) => Center(child: Text(context.l10n.klLoadError('$e'))),
         data: (list) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -45,7 +54,7 @@ class _AshtakootaScreenState extends ConsumerState<AshtakootaScreen> {
               children: [
                 Expanded(
                   child: _KundliPicker(
-                    label: 'Bride',
+                    label: context.l10n.akBride,
                     kundlis: list,
                     value: _brideId,
                     onChanged: (id) => setState(() => _brideId = id),
@@ -54,7 +63,7 @@ class _AshtakootaScreenState extends ConsumerState<AshtakootaScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _KundliPicker(
-                    label: 'Groom',
+                    label: context.l10n.akGroom,
                     kundlis: list,
                     value: _groomId,
                     onChanged: (id) => setState(() => _groomId = id),
@@ -70,9 +79,9 @@ class _AshtakootaScreenState extends ConsumerState<AshtakootaScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 40),
                 child: Center(
                   child: Text(
-                    'Choose both a bride and a groom kundli to see the match.',
+                    context.l10n.akChooseBoth,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: TEColors.inkSoft),
+                    style: TextStyle(color: KJColors.inkSoft),
                   ),
                 ),
               ),
@@ -102,12 +111,12 @@ class _KundliPicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TESectionLabel(label),
+        KJSectionLabel(label),
         const SizedBox(height: 4),
         DropdownButton<String?>(
           isExpanded: true,
           value: value,
-          hint: const Text('Choose…'),
+          hint: Text(context.l10n.akChoose),
           items: [
             for (final k in kundlis)
               DropdownMenuItem<String?>(value: k.id, child: Text(k.name)),
@@ -135,10 +144,10 @@ class _MatchBody extends ConsumerWidget {
       );
     }
     if (bride.hasError) {
-      return Text('Could not compute bride chart: ${bride.error}');
+      return Text(context.l10n.akBrideError('${bride.error}'));
     }
     if (groom.hasError) {
-      return Text('Could not compute groom chart: ${groom.error}');
+      return Text(context.l10n.akGroomError('${groom.error}'));
     }
     final b = bride.value!;
     final g = groom.value!;
@@ -147,17 +156,17 @@ class _MatchBody extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ModuleCard(
-          title: 'Score',
+          title: context.l10n.akScore,
           child: _ScoreDial(result: result),
         ),
         const SizedBox(height: 12),
         ModuleCard(
-          title: 'Koota breakdown',
+          title: context.l10n.akKootaBreakdown,
           child: _KootaTable(result: result),
         ),
         const SizedBox(height: 12),
         ModuleCard(
-          title: 'Mangal Dosha',
+          title: context.l10n.akMangalDosha,
           child: _MangalDoshaSection(result: result),
         ),
         const SizedBox(height: 16),
@@ -165,7 +174,7 @@ class _MatchBody extends ConsumerWidget {
           child: OutlinedButton.icon(
             onPressed: () => _exportPdf(context, b, g, result),
             icon: const Icon(Icons.picture_as_pdf_outlined),
-            label: const Text('Export PDF'),
+            label: Text(context.l10n.akExportPdf),
           ),
         ),
       ],
@@ -174,9 +183,15 @@ class _MatchBody extends ConsumerWidget {
 
   Future<void> _exportPdf(BuildContext context, AstroSnapshot bride,
       AstroSnapshot groom, GunaMilanResult result) async {
+    final l10n = context.l10n;
     final doc = pw.Document(
-      title: 'Ashtakoota Guna Milan',
+      title: l10n.akTitle,
       producer: 'Kaal Jyoti',
+      // Same theme as the main exporter — without it this document
+      // renders in the built-in non-Unicode Helvetica, which warns on
+      // "—"/"·" and covers nothing past Latin-1. This PDF prints no
+      // names, so the UI language's own script is the whole sample.
+      theme: await pdfTheme(scriptSample: l10n.languageEndonym),
     );
     doc.addPage(
       pw.MultiPage(
@@ -185,7 +200,7 @@ class _MatchBody extends ConsumerWidget {
         footer: (context) => context.pageNumber == context.pagesCount
             ? pw.Container(
                 margin: const pw.EdgeInsets.only(top: 8),
-                child: kjPdfCredit(),
+                child: kjPdfCredit(l10n),
               )
             : pw.SizedBox(),
         build: (_) => [
@@ -193,24 +208,30 @@ class _MatchBody extends ConsumerWidget {
               style: pw.TextStyle(
                   fontSize: 11, letterSpacing: 4, color: pdfInkSoft)),
           pw.SizedBox(height: 6),
-          pw.Text('Ashtakoota Guna Milan',
+          pw.Text(l10n.akTitle,
               style: pw.TextStyle(
-                  fontSize: 22,
-                  color: pdfInk,
-                  fontWeight: pw.FontWeight.bold)),
+                  fontSize: 22, color: pdfInk, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 4),
           pw.Text(
-            '${result.total.toStringAsFixed(1)} / ${GunaMilanResult.maxTotal.toStringAsFixed(0)}'
-            ' — ${result.verdict}',
+            l10n.akPdfScore(
+              result.total.toStringAsFixed(1),
+              GunaMilanResult.maxTotal.toStringAsFixed(0),
+              result.verdict.label(l10n),
+            ),
             style: pw.TextStyle(fontSize: 14, color: pdfMaroon),
           ),
-          pdfSectionHeader('Koota breakdown'),
+          pdfSectionHeader(l10n.akKootaBreakdown),
           pw.TableHelper.fromTextArray(
-            headers: const ['Koota', 'Points', 'Max', 'Notes'],
+            headers: [
+              l10n.akColKoota,
+              l10n.akColPoints,
+              l10n.akColMax,
+              l10n.akColNotes,
+            ],
             data: [
               for (final k in result.kootas)
                 [
-                  k.name,
+                  k.koota.label(l10n),
                   k.points % 1 == 0
                       ? k.points.toStringAsFixed(0)
                       : k.points.toStringAsFixed(1),
@@ -219,11 +240,14 @@ class _MatchBody extends ConsumerWidget {
                 ],
             ],
             headerStyle: pw.TextStyle(
-                fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: pdfInkSoft),
+                fontSize: 8.5,
+                fontWeight: pw.FontWeight.bold,
+                color: pdfInkSoft),
             cellStyle: pdfBody(size: 9.5),
             border: null,
             headerDecoration: const pw.BoxDecoration(
-              border: pw.Border(bottom: pw.BorderSide(color: pdfInk, width: 0.8)),
+              border:
+                  pw.Border(bottom: pw.BorderSide(color: pdfInk, width: 0.8)),
             ),
             rowDecoration: const pw.BoxDecoration(
               border: pw.Border(
@@ -232,29 +256,25 @@ class _MatchBody extends ConsumerWidget {
             cellAlignment: pw.Alignment.centerLeft,
             headerAlignment: pw.Alignment.centerLeft,
           ),
-          pdfSectionHeader('Mangal Dosha (Kuja Dosha)'),
+          pdfSectionHeader(l10n.akMangalDoshaFull),
           pw.Text(
-            'Bride: ${result.brideMangalDosha ? 'Present' : 'Not present'}   '
-            'Groom: ${result.groomMangalDosha ? 'Present' : 'Not present'}',
+            l10n.akMangalLine(
+              result.brideMangalDosha ? l10n.akPresent : l10n.akNotPresent,
+              result.groomMangalDosha ? l10n.akPresent : l10n.akNotPresent,
+            ),
             style: pdfBody(size: 10.5),
           ),
           if (result.mangalDoshaMismatch)
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 4),
               child: pw.Text(
-                'Mismatch — one chart has Mangal Dosha and the other '
-                'does not; classically this is checked further before '
-                'ruling the match in or out (mutual cancellation rules, '
-                'mitigating dignity, etc.).',
+                l10n.akMangalMismatch,
                 style: pw.TextStyle(fontSize: 9, color: pdfInkSoft),
               ),
             ),
           pw.SizedBox(height: 8),
           pw.Text(
-            'Checks Mars in 1/2/4/7/8/12 from both Lagna and Moon. '
-            'Ashtakoota tables per guna_milan.dart doc comments — not '
-            'validated against a printed reference; cross-check before '
-            'relying on this for consultations.',
+            l10n.akPdfDisclaimer,
             style: pw.TextStyle(fontSize: 7.5, color: pdfInkSoft),
           ),
         ],
@@ -275,10 +295,8 @@ class _ScoreDial extends StatelessWidget {
   Widget build(BuildContext context) {
     final frac = (result.total / GunaMilanResult.maxTotal).clamp(0.0, 1.0);
     final color = switch (result.verdict) {
-      'Excellent' => TEColors.forest,
-      'Good' => TEColors.forest,
-      'Average' => TEColors.maroon,
-      _ => TEColors.maroon,
+      GunaVerdict.excellent || GunaVerdict.good => KJColors.forest,
+      GunaVerdict.average || GunaVerdict.notRecommended => KJColors.maroon,
     };
     return Row(
       children: [
@@ -294,13 +312,13 @@ class _ScoreDial extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: frac,
                   strokeWidth: 8,
-                  backgroundColor: TEColors.paperAlt,
+                  backgroundColor: KJColors.paperAlt,
                   valueColor: AlwaysStoppedAnimation(color),
                 ),
               ),
               Text(
                 '${result.total.toStringAsFixed(1)}',
-                style: TETheme.serif(size: 20, color: color),
+                style: KJTheme.serif(size: 20, color: color),
               ),
             ],
           ),
@@ -313,10 +331,11 @@ class _ScoreDial extends StatelessWidget {
               Text(
                 '${result.total.toStringAsFixed(1)} / '
                 '${GunaMilanResult.maxTotal.toStringAsFixed(0)}',
-                style: TETheme.serif(size: 18),
+                style: KJTheme.serif(size: 18),
               ),
               const SizedBox(height: 4),
-              TETag(result.verdict, maroon: color == TEColors.maroon),
+              KJTag(result.verdict.label(context.l10n),
+                  maroon: color == KJColors.maroon),
             ],
           ),
         ),
@@ -341,7 +360,7 @@ class _KootaTable extends StatelessWidget {
               children: [
                 SizedBox(
                   width: 100,
-                  child: Text(k.name,
+                  child: Text(k.koota.label(context.l10n),
                       style: const TextStyle(
                           fontSize: 13.5, fontWeight: FontWeight.w600)),
                 ),
@@ -349,18 +368,20 @@ class _KootaTable extends StatelessWidget {
                   width: 64,
                   child: Text(
                     '${k.points % 1 == 0 ? k.points.toStringAsFixed(0) : k.points.toStringAsFixed(1)} / ${k.maxPoints.toStringAsFixed(0)}',
-                    style: TETheme.mono(
+                    style: KJTheme.mono(
                       size: 12,
                       color: k.points >= k.maxPoints
-                          ? TEColors.forest
-                          : (k.points == 0 ? TEColors.maroon : TEColors.inkSoft),
+                          ? KJColors.forest
+                          : (k.points == 0
+                              ? KJColors.maroon
+                              : KJColors.inkSoft),
                     ),
                   ),
                 ),
                 Expanded(
                   child: Text(
                     k.note ?? '',
-                    style: TextStyle(fontSize: 12, color: TEColors.inkSoft),
+                    style: TextStyle(fontSize: 12, color: KJColors.inkSoft),
                   ),
                 ),
               ],
@@ -384,10 +405,13 @@ class _MangalDoshaSection extends StatelessWidget {
           children: [
             SizedBox(
               width: 80,
-              child: Text('Bride',
-                  style: TETheme.mono(size: 11.5, color: TEColors.inkSoft)),
+              child: Text(context.l10n.akBride,
+                  style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft)),
             ),
-            TETag(result.brideMangalDosha ? 'Present' : 'Not present',
+            KJTag(
+                result.brideMangalDosha
+                    ? context.l10n.akPresent
+                    : context.l10n.akNotPresent,
                 maroon: result.brideMangalDosha),
           ],
         ),
@@ -396,19 +420,21 @@ class _MangalDoshaSection extends StatelessWidget {
           children: [
             SizedBox(
               width: 80,
-              child: Text('Groom',
-                  style: TETheme.mono(size: 11.5, color: TEColors.inkSoft)),
+              child: Text(context.l10n.akGroom,
+                  style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft)),
             ),
-            TETag(result.groomMangalDosha ? 'Present' : 'Not present',
+            KJTag(
+                result.groomMangalDosha
+                    ? context.l10n.akPresent
+                    : context.l10n.akNotPresent,
                 maroon: result.groomMangalDosha),
           ],
         ),
         if (result.mangalDoshaMismatch) ...[
           const SizedBox(height: 10),
           Text(
-            'Mismatch — classically checked further (mutual cancellation, '
-            'mitigating dignity) before ruling the match in or out.',
-            style: TextStyle(fontSize: 12, color: TEColors.maroon),
+            context.l10n.akMangalMismatchScreen,
+            style: TextStyle(fontSize: 12, color: KJColors.maroon),
           ),
         ],
       ],

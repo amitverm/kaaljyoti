@@ -12,6 +12,7 @@ import '../mahakosh/models.dart';
 import '../mahakosh/report_chart.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 import 'research_board_screen.dart';
 
 final requestMatchesProvider =
@@ -31,37 +32,35 @@ class RequestDetailScreen extends ConsumerWidget {
     final matches = ref.watch(requestMatchesProvider(requestId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Research Request')),
+      appBar: AppBar(title: Text(context.l10n.rdTitle)),
       body: board.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(message: 'Could not load: $e'),
+        error: (e, _) => EmptyState(message: context.l10n.uiCouldNotLoad('$e')),
         data: (requests) {
-          final request =
-              requests.where((r) => r.id == requestId).firstOrNull;
+          final request = requests.where((r) => r.id == requestId).firstOrNull;
           if (request == null) {
-            return const EmptyState(message: 'Request not found.');
+            return EmptyState(message: context.l10n.rdNotFound);
           }
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text(request.title, style: TETheme.serif(size: 20)),
+              Text(request.title, style: KJTheme.serif(size: 20)),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  TETag(
+                  KJTag(
                     switch (request.status) {
-                      'pending_review' => 'In review',
-                      'live' => 'Live',
-                      'rejected' => 'Not approved',
+                      'pending_review' => context.l10n.rdStatusInReview,
+                      'live' => context.l10n.rdStatusLive,
+                      'rejected' => context.l10n.rdStatusNotApproved,
                       _ => request.status,
                     },
                     maroon: request.status == 'live',
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    TEDate.date(request.createdAt),
-                    style:
-                        TETheme.mono(size: 11, color: TEColors.inkSoft),
+                    KJDate.date(request.createdAt),
+                    style: KJTheme.mono(size: 11, color: KJColors.inkSoft),
                   ),
                 ],
               ),
@@ -71,11 +70,11 @@ class RequestDetailScreen extends ConsumerWidget {
                     style: const TextStyle(fontSize: 13.5)),
               ],
               const Divider(height: 32),
-              Text('MATCHING CHARTS',
+              Text(context.l10n.rdMatchingCharts,
                   style: TextStyle(
                       fontSize: 10.5,
                       letterSpacing: 1.1,
-                      color: TEColors.inkSoft,
+                      color: KJColors.inkSoft,
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
               matches.when(
@@ -83,13 +82,10 @@ class RequestDetailScreen extends ConsumerWidget {
                     child: Padding(
                         padding: EdgeInsets.all(16),
                         child: CircularProgressIndicator())),
-                error: (e, _) => Text('Could not load matches: $e'),
+                error: (e, _) => Text(context.l10n.rdMatchesError('$e')),
                 data: (charts) => charts.isEmpty
-                    ? Text(
-                        'No matches yet. Contributors are notified when '
-                        'their charts match.',
-                        style: TextStyle(
-                            fontSize: 13, color: TEColors.inkSoft))
+                    ? Text(context.l10n.rdNoMatches,
+                        style: TextStyle(fontSize: 13, color: KJColors.inkSoft))
                     : Column(
                         children: [
                           for (final c in charts)
@@ -97,10 +93,11 @@ class RequestDetailScreen extends ConsumerWidget {
                               margin: const EdgeInsets.only(bottom: 8),
                               child: ListTile(
                                 title: Text(
-                                    'Chart ${c.mkCode} (anonymized)'),
+                                    context.l10n.hcChartAnonymized(c.mkCode)),
                                 subtitle: Text([
                                   if (c.birthYear != null)
-                                    'b. ${c.birthYear}',
+                                    context.l10n
+                                        .labelBornYear('${c.birthYear}'),
                                   if (c.locationGeneral.isNotEmpty)
                                     c.locationGeneral,
                                 ].join(' · ')),
@@ -108,31 +105,31 @@ class RequestDetailScreen extends ConsumerWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     PopupMenuButton<void>(
-                                      tooltip: 'More',
+                                      tooltip: context.l10n.rdMore,
                                       icon: Icon(Icons.more_vert,
-                                          size: 20, color: TEColors.inkSoft),
+                                          size: 20, color: KJColors.inkSoft),
                                       itemBuilder: (ctx) => [
                                         PopupMenuItem(
                                           onTap: () => _hideChart(
                                               context, ref, c.mkCode),
-                                          child: const Text(
-                                              'Hide from my view'),
+                                          child:
+                                              Text(context.l10n.rdHideFromView),
                                         ),
                                         PopupMenuItem(
                                           onTap: () => showReportChartSheet(
                                               context, ref, c.mkCode,
                                               onReported: () => ref.invalidate(
                                                   requestMatchesProvider)),
-                                          child: const Text('Report...'),
+                                          child: Text(context.l10n.rdReport),
                                         ),
                                       ],
                                     ),
                                     Icon(Icons.chevron_right,
-                                        size: 20, color: TEColors.inkSoft),
+                                        size: 20, color: KJColors.inkSoft),
                                   ],
                                 ),
-                                onTap: () => context.push(
-                                    '/mahakosh/chart/${c.mkCode}'),
+                                onTap: () =>
+                                    context.push('/mahakosh/chart/${c.mkCode}'),
                               ),
                             ),
                         ],
@@ -141,13 +138,12 @@ class RequestDetailScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               if (!request.isMine && request.status == 'live')
                 FilledButton(
-                  onPressed: () =>
-                      context.push('/research/$requestId/respond'),
-                  child: const Text('Respond with a chart'),
+                  onPressed: () => context.push('/research/$requestId/respond'),
+                  child: Text(context.l10n.respondWithChart),
                 ),
               TextButton(
                 onPressed: () => context.go('/mahakosh'),
-                child: const Text('Explore these patterns in Mahakosh'),
+                child: Text(context.l10n.rdExplore),
               ),
             ],
           );
@@ -164,14 +160,17 @@ Future<void> _hideChart(
     BuildContext context, WidgetRef ref, String mkCode) async {
   final repo = ref.read(mahakoshRepoProvider);
   if (repo == null) return;
+  // Captured before the first await — context must not be used across
+  // suspension points.
+  final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
   try {
     await repo.hideChart(mkCode);
     ref.invalidate(requestMatchesProvider);
     messenger.showSnackBar(SnackBar(
-      content: Text('Hidden Chart $mkCode from your view.'),
+      content: Text(l10n.rdHidden(mkCode)),
       action: SnackBarAction(
-        label: 'Undo',
+        label: l10n.rdUndo,
         onPressed: () async {
           await repo.unhideChart(mkCode);
           ref.invalidate(requestMatchesProvider);
@@ -179,7 +178,6 @@ Future<void> _hideChart(
       ),
     ));
   } catch (e) {
-    messenger
-        .showSnackBar(SnackBar(content: Text('Could not hide chart: $e')));
+    messenger.showSnackBar(SnackBar(content: Text(l10n.rdHideError('$e'))));
   }
 }

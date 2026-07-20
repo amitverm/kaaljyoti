@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
 
@@ -10,36 +11,47 @@ import 'common.dart';
 class PanchangModule extends AstroModule {
   const PanchangModule();
 
+  static String _title(AppLocalizations l10n) => l10n.modulePanchangTitle;
+
   @override
   ModuleMeta get meta => const ModuleMeta(
         id: 'panchang',
         title: 'Panchang',
+        localizedTitle: _title,
         icon: Icons.wb_sunny_outlined,
         category: 'Today',
       );
 
+  /// (limb label, value) rows — one source for the card and the PDF.
+  List<(String, String)> _rows(ModuleContext ctx, AppLocalizations l10n) {
+    final p = ctx.snapshot.panchang;
+    return [
+      (
+        l10n.labelTithi,
+        '${pakshaLabelForIndex(l10n, p.tithiIndex)} '
+            '${tithiLabelForIndex(l10n, p.tithiIndex)}'
+      ),
+      (l10n.labelVara, varaLabelForIndex(l10n, p.varaIndex)),
+      (l10n.labelNakshatra, '${p.nakshatra.label(l10n)} · ${p.pada}'),
+      (l10n.labelYoga, yogaLabelForIndex(l10n, p.yogaIndex)),
+      (l10n.labelKarana, karanaLabelForIndex(l10n, p.karanaIndex)),
+    ];
+  }
+
   @override
   Widget cardView(BuildContext context, ModuleContext ctx) {
-    final p = ctx.snapshot.panchang;
-    final rows = <(String, String)>[
-      ('Tithi', '${p.paksha} ${p.tithiName}'),
-      ('Vara', p.vara),
-      ('Nakshatra', '${p.nakshatra.displayName} · ${p.pada}'),
-      ('Yoga', p.yogaName),
-      ('Karana', p.karanaName),
-    ];
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final (label, value) in rows)
+        for (final (label, value) in _rows(ctx, l10n))
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(label,
-                    style: TextStyle(
-                        fontSize: 12.5, color: TEColors.inkSoft)),
+                    style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft)),
                 Text(value, style: const TextStyle(fontSize: 13)),
               ],
             ),
@@ -48,8 +60,8 @@ class PanchangModule extends AstroModule {
         // Disambiguates from the Today screen's live panchang, which
         // uses the user's current city.
         Text(
-          'At the birth moment & place',
-          style: TETheme.mono(size: 10.5, color: TEColors.inkSoft),
+          l10n.panchangAtBirthNote,
+          style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft),
         ),
       ],
     );
@@ -57,16 +69,21 @@ class PanchangModule extends AstroModule {
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
+    final l10n = ctx.l10n;
     final p = ctx.snapshot.panchang;
     return [
-      pdfSectionHeader('Panchang at Birth'),
+      pdfSectionHeader(l10n.panchangPdfHeader),
       pw.TableHelper.fromTextArray(
         data: [
-          ['Tithi', '${p.paksha} ${p.tithiName}'],
-          ['Vara', p.vara],
-          ['Nakshatra', '${p.nakshatra.displayName} · Pada ${p.pada}'],
-          ['Yoga', p.yogaName],
-          ['Karana', p.karanaName],
+          for (final (label, value) in _rows(ctx, l10n))
+            if (label == l10n.labelNakshatra)
+              // The PDF spells the pada out where the card keeps it terse.
+              [
+                label,
+                '${p.nakshatra.label(l10n)} · ${l10n.labelPada} ${p.pada}'
+              ]
+            else
+              [label, value],
         ],
         cellStyle: pdfBody(size: 9.5),
         border: null,

@@ -1,0 +1,2544 @@
+{
+  "@@locale": "hi",
+  "appTitle": "Kaal Jyoti",
+  "kundlisTitle": "कुंडलियाँ",
+  "newKundli": "नई कुंडली",
+  "birthDetailsTitle": "जन्म विवरण",
+  "prashnaTitle": "प्रश्न कुंडली",
+  "nameLabel": "नाम",
+  "dateOfBirth": "जन्म तिथि",
+  "timeLabel": "समय",
+  "placeOfBirth": "जन्म स्थान",
+  "castKundli": "कुंडली बनाएँ",
+  "prashnaHint": "या इसी क्षण के लिए प्रश्न कुंडली बनाएँ",
+  "trustStatement": "गणना डिवाइस पर ही होती है। जब तक आप सिंक चालू नहीं करते, आपकी कुंडली इस फ़ोन से बाहर नहीं जाती।",
+  "savedEncrypted": "{count} सहेजी गईं · इस डिवाइस पर एन्क्रिप्टेड",
+  "signInBanner": "अभी कुंडलियाँ केवल इस डिवाइस पर हैं। सिंक + महाकोश अनलॉक करने के लिए साइन इन करें।",
+  "signIn": "साइन इन करें",
+  "signOut": "साइन आउट करें",
+  "createAccount": "खाता बनाएँ",
+  "arrange": "व्यवस्थित करें",
+  "newView": "+ नया व्यू",
+  "onThisView": "इस व्यू पर",
+  "widgetLibrary": "विजेट लाइब्रेरी",
+  "emptyView": "यह व्यू खाली है — लाइब्रेरी से विजेट जोड़ें।",
+  "done": "हो गया",
+  "remove": "हटाएँ",
+  "duplicate": "प्रतिलिपि",
+  "create": "बनाएँ",
+  "rename": "नाम बदलें",
+  "keep": "रखें",
+  "discard": "छोड़ें",
+  "mcKp": "KP (कृष्णमूर्ति)",
+  "dmToggleLordPositions": "स्वामी स्थितियाँ",
+  "dmToggleSandhi": "संधि",
+  "dmToggleYogas": "योग",
+  "dmToggleAllSystems": "सभी प्रणालियाँ",
+  "dmElapsed": "{percent}% बीत चुका",
+  "bcReset": "रीसेट",
+  "bcTapHint": "किसी भाव से चार्ट देखने के लिए उस पर डबल-टैप या देर तक दबाएँ",
+  "bcTransitLive": "गोचर हरे रंग में, लाइव",
+  "bcTransitAsOf": "गोचर हरे रंग में, चुनी गई तिथि/समय के अनुसार (भूत, वर्तमान या भविष्य)",
+  "rsPickChart": "इस शोध अनुरोध के लिए टैग करने हेतु अपनी किसी महाकोश-साझा कुंडली को चुनें। अनुरोधकर्ता इसे अनाम रूप में देखता है।",
+  "rsNotShared": "अभी तक साझा नहीं — पहले कोई कुंडली साझा करें, फिर उत्तर दें:",
+  "rsTagging": "टैग हो रहा है…",
+  "rsTagChart": "कुंडली टैग करें",
+  "hcSignInPrompt": "छिपी कुंडलियाँ प्रबंधित करने के लिए साइन इन करें।",
+  "hcBackendMissing": "बैकएंड कॉन्फ़िगर होना आवश्यक है। supabase/README.md देखें।",
+  "hcNote": "छिपी कुंडलियाँ केवल आपके लिए छिपी हैं — बाकी सभी उन्हें सामान्य रूप से देखते हैं।",
+  "mdUnknownModule": "अज्ञात मॉड्यूल",
+  "mdCalcFailed": "गणना विफल: {e}",
+  "keDate": "दिनांक",
+  "keTime": "समय",
+  "klPrashnaName": "प्रश्न · {when}",
+  "klMahakoshTag": "महाकोश {code}",
+  "chartAsc": "लग्न",
+  "sbNoVedha": "कोई वेध नहीं",
+  "pdfDocTitle": "{name} — कुंडली",
+  "pdfCredit": "Kaal Jyoti से गणना की गई कुंडलियाँ — मुक्त एवं ओपन-सोर्स · kaaljyoti.com",
+  "rbEmpty": "अभी तक कोई शोध अनुरोध नहीं। पहला अनुरोध पोस्ट करें — उस पैटर्न का वर्णन करें जिसका आप अध्ययन करना चाहते हैं।",
+  "rbOpenCount": "{count, plural, =1{1 खुला अनुरोध · पैटर्न शोध} other{{count} खुले अनुरोध · पैटर्न शोध}}",
+  "rbYours": "आपके",
+  "rbOpenRequests": "खुले अनुरोध",
+  "arTitle": "व्यवस्थित करें",
+  "arOnThisView": "इस व्यू पर",
+  "arEmpty": "खाली — नीचे लाइब्रेरी से विजेट जोड़ें।",
+  "arLibrary": "विजेट लाइब्रेरी",
+  "arSearchWidgets": "विजेट खोजें…",
+  "arAlreadyOnView": "{category} · पहले से व्यू पर — एक और प्रति जोड़ता है",
+  "mcToday": "आज",
+  "mcChartGrahas": "चार्ट व ग्रह",
+  "mcDivisional": "वर्ग चार्ट",
+  "mcTiming": "समय व दशा",
+  "mcJaimini": "जैमिनि",
+  "mcStrength": "बल व दोष",
+  "mcChakra": "चक्र",
+  "mnAccountFallback": "खाता",
+  "mnVersion": "Kaal Jyoti v{version} ({build})",
+  "mnFoss": "मुक्त एवं ओपन-सोर्स सॉफ़्टवेयर",
+  "mnAuthorCredit": "निर्माता — आचार्य अमित वर्मा",
+  "mnLicenseLine": "GNU AGPL v3 के अंतर्गत जारी",
+  "mnSourceCode": "स्रोत कोड",
+  "mnEphemerisCredit": "ग्रह गणनाएँ Swiss Ephemeris द्वारा संचालित",
+  "mnNoWarranty": "कोई वारंटी नहीं — विवरण हेतु लाइसेंस देखें",
+  "vtBlank": "खाली",
+  "vtBlankDesc": "खाली शुरू करें और स्वयं विजेट जोड़ें",
+  "vtOverview": "सारांश",
+  "vtOverviewDesc": "चार्ट, दशा, पंचांग, स्थितियाँ — संपूर्ण चित्र",
+  "vtDivisional": "वर्ग-केंद्रित",
+  "vtDivisionalDesc": "D1 के साथ D9, D7, D10 और D12 वर्ग",
+  "vtDasha": "दशा",
+  "vtDashaDesc": "सभी दशा प्रणालियाँ — घटनाएँ, गोचर और समय सहित",
+  "vtJaimini": "जैमिनि",
+  "vtJaiminiDesc": "कारक, पद, राशि दृष्टियाँ, और चर दशा",
+  "vtKp": "KP",
+  "vtKpDesc": "कृष्णमूर्ति पद्धति — कस्प, ग्रह, कारकत्व",
+  "vtStrength": "शक्ति व बल",
+  "vtStrengthDesc": "षड्बल, भाव बल और अष्टकवर्ग शक्ति",
+  "vtChakras": "चक्र",
+  "vtChakrasDesc": "कोटा, सर्वतोभद्र और सुदर्शन चक्र",
+  "ntSignInPrompt": "शोध सूचनाएँ प्राप्त करने के लिए साइन इन करें।",
+  "ntBackendMissing": "बैकएंड कॉन्फ़िगर होने और आपके साइन इन करने पर सूचनाएँ आती हैं।",
+  "ntRequestMatchNew": "आपके शोध अनुरोध के लिए नए मिलान",
+  "ntYourChartMatched": "आपकी कुंडली एक शोध अनुरोध से मेल खाई",
+  "ntRequestApproved": "आपका शोध अनुरोध प्रकाशित है",
+  "ntRequestRejected": "आपका शोध अनुरोध स्वीकृत नहीं हुआ",
+  "ntReportActioned": "आपके द्वारा रिपोर्ट की गई कुंडली हटा दी गई",
+  "ntReportDismissed": "आपके द्वारा रिपोर्ट की गई कुंडली की समीक्षा हुई",
+  "ntCommentReply": "{name} ने आपकी टिप्पणी का उत्तर दिया",
+  "ntChartComment": "आपकी कुंडली {code} पर नई टिप्पणी",
+  "ntCommentHeld": "आपकी टिप्पणी समीक्षा तक छिपी है",
+  "ntCommentRemoved": "आपकी टिप्पणी मॉडरेटरों द्वारा हटा दी गई",
+  "ntCommentRestored": "आपकी टिप्पणी की समीक्षा हुई और पुनर्स्थापित की गई",
+  "ntGeneric": "सूचना",
+  "ntSomeone": "कोई",
+  "dsPlaceholderDeleted": "टिप्पणी लेखक द्वारा हटाई गई",
+  "dsPlaceholderRemoved": "टिप्पणी मॉडरेटरों द्वारा हटाई गई",
+  "dsPlaceholderHeld": "आपकी टिप्पणी की शिकायत हुई है और हमारी टीम की समीक्षा तक छिपी है",
+  "dsAuthorDeleted": "हटाया गया खाता",
+  "dsAuthorAnonymous": "अनाम",
+  "dsBlockSubtitle": "उनकी सभी टिप्पणियाँ आपकी दृष्टि से छिपा देता है और इस टिप्पणी की हमारे मॉडरेटरों को शिकायत करता है। उन्हें सूचित नहीं किया जाएगा।",
+  "dsSignInPrompt": "सामुदायिक कुंडलियों पर चर्चा पढ़ने और भाग लेने के लिए साइन इन करें।",
+  "dsEdited": "संपादित",
+  "dsOriginalUnavailable": "मूल टिप्पणी उपलब्ध नहीं",
+  "dsEditingBanner": "अपनी टिप्पणी संपादित कर रहे हैं",
+  "dsReplyingBanner": "{name} को उत्तर: {body}",
+  "dsPublicHint": "सार्वजनिक — नाम या पहचान-योग्य विवरण न लिखें।",
+  "kevAge": "आयु {years}",
+  "kevAgeUnknown": "आयु —",
+  "kevDeleteEvent": "घटना हटाएँ",
+  "kevInvalidAge": "वर्षों में मान्य आयु दर्ज करें।",
+  "kevPickDate": "इस घटना के लिए दिनांक चुनें।",
+  "kevSaving": "सहेजा जा रहा है…",
+  "kevSaveChanges": "परिवर्तन सहेजें",
+  "kevAddEvent": "घटना जोड़ें",
+  "kevWhen": "कब",
+  "kevPrecisionExact": "सटीक दिनांक",
+  "kevPrecisionMonth": "माह",
+  "kevPrecisionYear": "वर्ष",
+  "kevPrecisionAge": "आयु",
+  "siError": "साइन-इन विफल। कृपया पुनः प्रयास करें या ईमेल कोड का उपयोग करें।",
+  "siErrorRateLimit": "बहुत अधिक प्रयास — कृपया एक मिनट प्रतीक्षा करें और पुनः प्रयास करें।",
+  "siErrorBadCode": "यह कोड मेल नहीं खाया या समाप्त हो गया। नया अनुरोध करें।",
+  "siErrorGeneric": "कुछ गड़बड़ हो गई। ईमेल पता जाँचें और पुनः प्रयास करें।",
+  "siBackendMissing": "खातों के लिए बैकएंड कॉन्फ़िगर होना चाहिए (SUPABASE_URL / SUPABASE_ANON_KEY)। ऐप इसके बिना पूरी तरह ऑफ़लाइन काम करता है — केवल सिंक और महाकोश ही सीमित हैं।",
+  "siAccountUnlocks": "खाता क्रॉस-डिवाइस सिंक और महाकोश सक्षम करता है — कुंडली बनाने के लिए इसकी कभी आवश्यकता नहीं।",
+  "siCodeSentTo": "{email} पर भेजा गया — स्पैम भी जाँचें",
+  "siWorking": "हो रहा है…",
+  "siVerifySignIn": "सत्यापित करें और साइन इन करें",
+  "siSendCode": "कोड भेजें",
+  "siNoPassword": "किसी पासवर्ड की आवश्यकता नहीं — पहली बार साइन-इन करने पर आपका खाता स्वतः बन जाता है।",
+  "msBrowse": "ब्राउज़ करें",
+  "msBookmarks": "बुकमार्क",
+  "msCommunityCharts": "सामुदायिक कुंडलियाँ",
+  "msCommunityChartsCount": "सामुदायिक कुंडलियाँ · {count} योगदान की गईं",
+  "msNoCharts": "अभी तक कोई कुंडली योगदान नहीं की गई — पहले बनें: किसी कुंडली को उसकी संपादन स्क्रीन से साझा करें।",
+  "msNoBookmarks": "अभी तक कोई बुकमार्क नहीं। किसी भी कुंडली पर बुकमार्क आइकन दबाकर उसे यहाँ त्वरित पहुँच के लिए रखें।",
+  "msBookmark": "बुकमार्क",
+  "msClearFiltersBrowse": "फ़िल्टर साफ़ करें और ब्राउज़ करें",
+  "msSearchCharts": "कुंडलियाँ खोजें",
+  "msTypePlanetInHouse": "ग्रह भाव में",
+  "msTypePlanetInSign": "ग्रह राशि में",
+  "msTypePlanetInNakshatra": "ग्रह नक्षत्र में",
+  "msTypeYogaPresent": "योग उपस्थित",
+  "msTypeLifeEvent": "जीवन-घटना टैग",
+  "msTypeBirthRange": "जन्म तिथि",
+  "peTitle": "निर्यात / प्रिंट",
+  "peExportFailed": "निर्यात विफल: {e}",
+  "peOwnKundlisOnly": "PDF निर्यात केवल आपकी अपनी कुंडलियों के लिए उपलब्ध है। सामुदायिक कुंडलियाँ अनाम रहती हैं — उनका जन्म समय कभी निर्यात नहीं होता।",
+  "peModulesSection": "इस निर्यात में मॉड्यूल",
+  "peSavedReportNote": "इस कुंडली के लिए आपकी सहेजी रिपोर्ट — डैशबोर्ड से अलग रखी गई।",
+  "peFirstExportNote": "पहला निर्यात आपके डैशबोर्ड से शुरू होता है; उसके बाद रिपोर्ट अलग से याद रखी जाती है।",
+  "peReset": "रीसेट",
+  "peConfigureBlock": "इस ब्लॉक को कॉन्फ़िगर करें",
+  "peDuplicateBlock": "इस ब्लॉक की प्रतिलिपि बनाएँ",
+  "peOptionsSection": "विकल्प",
+  "pePaper": "कागज़",
+  "peCoverPage": "कवर पृष्ठ",
+  "peBranding": "प्रैक्टिशनर ब्रांडिंग (वैकल्पिक)",
+  "peBrandingHelper": "कवर और फुटर पर दिखाया जाता है — जैसे आपका नाम और संपर्क, ताकि रिपोर्ट आपकी ओर से प्रतीत हो",
+  "peGenerating": "बन रहा है…",
+  "peGenerateShare": "बनाएँ और साझा करें",
+  "pePrint": "प्रिंट",
+  "mkcAge": "आयु {years}",
+  "mkcTitle": "कुंडली {code}",
+  "mkcDiscussion": "चर्चा",
+  "mkcBookmark": "बुकमार्क",
+  "mkcRemoveBookmark": "बुकमार्क हटाएँ",
+  "mkcBookmarkError": "बुकमार्क अपडेट नहीं हो सका: {e}",
+  "mkcLoadError": "यह कुंडली लोड नहीं हो सकी: {e}",
+  "mkcAnonymized": "अनाम",
+  "mkcBirthTimeHidden": "जन्म समय छिपा है",
+  "mkcBeFirst": "इस कुंडली पर अपना विश्लेषण साझा करने वाले पहले बनें",
+  "mkcComments": "{count, plural, =1{1 टिप्पणी} other{{count} टिप्पणियाँ}}",
+  "mkcLifeEvents": "जीवन-घटनाक्रम",
+  "mkcHealth": "स्वास्थ्य",
+  "mkcLegacyNotice": "जन्म विवरण शामिल किए जाने से पहले साझा की गई — केवल कुंडली ही उपलब्ध है। योगदानकर्ता पूर्ण गणना सक्षम करने हेतु पुनः साझा कर सकते हैं।",
+  "stTitle": "सेटिंग्स",
+  "stSectionDateFormat": "दिनांक प्रारूप",
+  "stDateFormatNote": "जहाँ भी दिनांक दिखते हैं, वहाँ लागू होता है। शब्दों में लिखे प्रारूप दिन/माह की उलझन से बचाते हैं; अंकों वाले प्रारूप अधिक संक्षिप्त होते हैं।",
+  "stDefaultAyanamsa": "डिफ़ॉल्ट अयनांश",
+  "stAyanamsaSubtitle": "{name} — प्रत्येक कुंडली में बदला जा सकता है",
+  "stDefaultChartStyle": "डिफ़ॉल्ट चार्ट शैली",
+  "stSectionChartText": "चार्ट पाठ प्रारूप",
+  "stChartTextNote": "चार्ट के भीतर ग्रह, अंश और राशियाँ कैसे दिखें। बदलाव हर चार्ट पर तुरंत लागू होते हैं।",
+  "stPlanetSize": "ग्रह का आकार",
+  "stDegreesMarksSize": "अंश व चिह्नों का आकार",
+  "stBoldPlanetNames": "ग्रह नाम मोटे अक्षरों में",
+  "stDegreeDetail": "अंश विवरण",
+  "stDegreeMinutes": "कला — 23°41'",
+  "stDegreeWhole": "पूर्ण — 23°",
+  "stSmallestSize": "न्यूनतम स्वीकार्य आकार",
+  "stSmallestSizeNote": "भीड़भाड़ वाले भाव में पाठ सिकुड़कर समा जाता है, पर अपने सामान्य आकार के इस अंश से छोटा कभी नहीं होता।",
+  "stSignLabelSize": "राशि लेबल का आकार",
+  "stTextAreaInHouse": "भाव के भीतर पाठ क्षेत्र",
+  "stResetDefaults": "डिफ़ॉल्ट पर लौटाएँ",
+  "stTextSize": "पाठ का आकार",
+  "stTheme": "थीम",
+  "stThemeClassic": "क्लासिक",
+  "stThemeHighContrast": "उच्च कंट्रास्ट",
+  "stThemeDark": "गहरा",
+  "stTypography": "अक्षर-शैली",
+  "stTypeEditorial": "एडिटोरियल",
+  "stTypePlain": "सादा",
+  "stTypographyNoteEditorial": "एडिटोरियल — शीर्षकों में Marcellus, तथा मुख्य पाठ व आँकड़ों में IBM Plex। क्लासिक रूप।",
+  "stTypographyNotePlain": "सादा — सर्वत्र IBM Plex, कोई सेरिफ़ नहीं। बड़े पाठ आकार में अधिक स्वच्छ और सुपाठ्य।",
+  "dbArrangeWidgets": "विजेट व्यवस्थित करें",
+  "dbLifeEvents": "जीवन-घटनाक्रम",
+  "dbExportPrint": "निर्यात / प्रिंट",
+  "dbKundli": "कुंडली",
+  "dbViewsError": "व्यू लोड नहीं हो सके: {e}",
+  "dbNoViews": "कोई डैशबोर्ड व्यू नहीं।",
+  "dbCalcFailed": "गणना विफल: {e}",
+  "dbNewView": "+ नया व्यू",
+  "dbPrashnaUnsaved": "इस क्षण के लिए बनाई गई — सहेजी नहीं गई",
+  "dbKeepPrashna": "इस प्रश्न कुंडली को रखें",
+  "dbPrashnaNameHint": "नाम (जैसे पूछा गया प्रश्न)",
+  "dbRenameView": "व्यू का नाम बदलें",
+  "dbDeleteView": "व्यू हटाएँ",
+  "dbOnlyViewCannotDelete": "एकमात्र व्यू को हटाया नहीं जा सकता",
+  "dbDeleteViewTitle": "\"{name}\" हटाएँ?",
+  "dbDeleteViewBody": "इसकी विजेट व्यवस्था हट जाएगी। विजेट स्वयं प्रभावित नहीं होंगे।",
+  "dbNewViewFromTemplate": "टेम्पलेट से नया व्यू",
+  "dbNameThisView": "इस व्यू को नाम दें",
+  "dbWidgetsError": "विजेट लोड नहीं हो सके: {e}",
+  "dbViewEmpty": "यह व्यू खाली है।",
+  "dbAddStarterWidgets": "शुरुआती विजेट जोड़ें",
+  "dbChooseWidgets": "मैं स्वयं विजेट चुनूँगा/चुनूँगी",
+  "dbMoveToEnd": "अंत में ले जाएँ",
+  "dbAddEditWidgets": "विजेट जोड़ें / संपादित करें",
+  "save": "सहेजें",
+  "cancel": "रद्द करें",
+  "delete": "हटाएँ",
+  "deleteKundli": "कुंडली हटाएँ",
+  "recalcWarning": "जन्म विवरण बदलने पर इस कुंडली के सभी विजेट फिर से गणना किए जाते हैं।",
+  "cloudSync": "क्लाउड सिंक",
+  "deviceOnly": "केवल डिवाइस",
+  "synced": "सिंक किया गया",
+  "notShared": "साझा नहीं किया",
+  "share": "साझा करें…",
+  "withdraw": "वापस लें",
+  "exportPrint": "निर्यात / प्रिंट",
+  "generateShare": "बनाएँ और साझा करें",
+  "print": "प्रिंट करें",
+  "coverPage": "कवर पृष्ठ",
+  "mahakoshTitle": "महाकोश",
+  "researchTitle": "शोध",
+  "combinationQuery": "संयोजन क्वेरी",
+  "addFilter": "फ़िल्टर जोड़ें",
+  "searchCharts": "कुंडलियाँ खोजें",
+  "chartsMatch": "{count} कुंडलियाँ मेल खाती हैं",
+  "shareToMahakosh": "महाकोश में साझा करें",
+  "publishToMahakosh": "महाकोश में प्रकाशित करें",
+  "consentMain": "मैं इस डेटा को शोध के लिए साझा करने की सहमति देता/देती हूँ",
+  "consentThirdParty": "मैं पुष्टि करता/करती हूँ कि इस व्यक्ति की जन्म जानकारी शोध के लिए साझा करने की उनकी सहमति मेरे पास है",
+  "consentHealth": "मैं विशेष रूप से स्वास्थ्य-संबंधी जानकारी शोध के लिए साझा करने की सहमति देता/देती हूँ। यह संवेदनशील व्यक्तिगत डेटा है और इसे सामान्य सहमति से अलग माना जाता है।",
+  "myOwn": "मेरी अपनी",
+  "someoneElses": "किसी और की",
+  "addLifeEvents": "जीवन की घटनाएँ जोड़ें (वैकल्पिक)",
+  "healthRelatedIncluded": "स्वास्थ्य-संबंधी घटना शामिल है",
+  "notificationsTitle": "सूचनाएँ",
+  "profileTitle": "प्रोफ़ाइल",
+  "defaultAyanamsa": "डिफ़ॉल्ट अयनांश",
+  "defaultChartStyle": "डिफ़ॉल्ट कुंडली शैली",
+  "openRequests": "{count} खुले अनुरोध · पैटर्न शोध",
+  "yours": "आपके",
+  "respondWithChart": "कुंडली के साथ उत्तर दें",
+  "submitForReview": "समीक्षा के लिए सबमिट करें",
+  "planetSun": "सूर्य",
+  "planetMoon": "चंद्र",
+  "planetMars": "मंगल",
+  "planetMercury": "बुध",
+  "planetJupiter": "गुरु",
+  "planetVenus": "शुक्र",
+  "planetSaturn": "शनि",
+  "planetRahu": "राहु",
+  "planetKetu": "केतु",
+  "planetAbbrSun": "सू",
+  "planetAbbrMoon": "चं",
+  "planetAbbrMars": "मं",
+  "planetAbbrMercury": "बु",
+  "planetAbbrJupiter": "गु",
+  "planetAbbrVenus": "शु",
+  "planetAbbrSaturn": "श",
+  "planetAbbrRahu": "रा",
+  "planetAbbrKetu": "के",
+  "signAries": "मेष",
+  "signTaurus": "वृषभ",
+  "signGemini": "मिथुन",
+  "signCancer": "कर्क",
+  "signLeo": "सिंह",
+  "signVirgo": "कन्या",
+  "signLibra": "तुला",
+  "signScorpio": "वृश्चिक",
+  "signSagittarius": "धनु",
+  "signCapricorn": "मकर",
+  "signAquarius": "कुंभ",
+  "signPisces": "मीन",
+  "signSanskritAries": "मेष",
+  "signSanskritTaurus": "वृषभ",
+  "signSanskritGemini": "मिथुन",
+  "signSanskritCancer": "कर्क",
+  "signSanskritLeo": "सिंह",
+  "signSanskritVirgo": "कन्या",
+  "signSanskritLibra": "तुला",
+  "signSanskritScorpio": "वृश्चिक",
+  "signSanskritSagittarius": "धनु",
+  "signSanskritCapricorn": "मकर",
+  "signSanskritAquarius": "कुंभ",
+  "signSanskritPisces": "मीन",
+  "signNameFull": "{sanskrit}",
+  "@signNameFull": {
+    "placeholders": {
+      "sanskrit": {
+        "type": "String"
+      },
+      "western": {
+        "type": "String"
+      }
+    }
+  },
+  "nakshatraAshwini": "अश्विनी",
+  "nakshatraBharani": "भरणी",
+  "nakshatraKrittika": "कृत्तिका",
+  "nakshatraRohini": "रोहिणी",
+  "nakshatraMrigashira": "मृगशिरा",
+  "nakshatraArdra": "आर्द्रा",
+  "nakshatraPunarvasu": "पुनर्वसु",
+  "nakshatraPushya": "पुष्य",
+  "nakshatraAshlesha": "आश्लेषा",
+  "nakshatraMagha": "मघा",
+  "nakshatraPurvaPhalguni": "पूर्वा फाल्गुनी",
+  "nakshatraUttaraPhalguni": "उत्तरा फाल्गुनी",
+  "nakshatraHasta": "हस्त",
+  "nakshatraChitra": "चित्रा",
+  "nakshatraSwati": "स्वाति",
+  "nakshatraVishakha": "विशाखा",
+  "nakshatraAnuradha": "अनुराधा",
+  "nakshatraJyeshtha": "ज्येष्ठा",
+  "nakshatraMula": "मूल",
+  "nakshatraPurvaAshadha": "पूर्वाषाढ़ा",
+  "nakshatraUttaraAshadha": "उत्तराषाढ़ा",
+  "nakshatraAbhijit": "अभिजित",
+  "nakshatraShravana": "श्रवण",
+  "nakshatraDhanishta": "धनिष्ठा",
+  "nakshatraShatabhisha": "शतभिषा",
+  "nakshatraPurvaBhadrapada": "पूर्वा भाद्रपद",
+  "nakshatraUttaraBhadrapada": "उत्तरा भाद्रपद",
+  "nakshatraRevati": "रेवती",
+  "nakshatraAbbrAshwini": "अश्व",
+  "nakshatraAbbrBharani": "भर",
+  "nakshatraAbbrKrittika": "कृत",
+  "nakshatraAbbrRohini": "रोह",
+  "nakshatraAbbrMrigashira": "मृग",
+  "nakshatraAbbrArdra": "आर्द",
+  "nakshatraAbbrPunarvasu": "पुन",
+  "nakshatraAbbrPushya": "पुष",
+  "nakshatraAbbrAshlesha": "आश्ल",
+  "nakshatraAbbrMagha": "मघा",
+  "nakshatraAbbrPurvaPhalguni": "पूफा",
+  "nakshatraAbbrUttaraPhalguni": "उफा",
+  "nakshatraAbbrHasta": "हस्त",
+  "nakshatraAbbrChitra": "चित्र",
+  "nakshatraAbbrSwati": "स्वा",
+  "nakshatraAbbrVishakha": "विशा",
+  "nakshatraAbbrAnuradha": "अनु",
+  "nakshatraAbbrJyeshtha": "ज्ये",
+  "nakshatraAbbrMula": "मूल",
+  "nakshatraAbbrPurvaAshadha": "पूषा",
+  "nakshatraAbbrUttaraAshadha": "उषा",
+  "nakshatraAbbrAbhijit": "अभि",
+  "nakshatraAbbrShravana": "श्रव",
+  "nakshatraAbbrDhanishta": "धनि",
+  "nakshatraAbbrShatabhisha": "शत",
+  "nakshatraAbbrPurvaBhadrapada": "पूभा",
+  "nakshatraAbbrUttaraBhadrapada": "उभा",
+  "nakshatraAbbrRevati": "रेव",
+  "tithiPratipada": "प्रतिपदा",
+  "tithiDwitiya": "द्वितीया",
+  "tithiTritiya": "तृतीया",
+  "tithiChaturthi": "चतुर्थी",
+  "tithiPanchami": "पंचमी",
+  "tithiShashthi": "षष्ठी",
+  "tithiSaptami": "सप्तमी",
+  "tithiAshtami": "अष्टमी",
+  "tithiNavami": "नवमी",
+  "tithiDashami": "दशमी",
+  "tithiEkadashi": "एकादशी",
+  "tithiDwadashi": "द्वादशी",
+  "tithiTrayodashi": "त्रयोदशी",
+  "tithiChaturdashi": "चतुर्दशी",
+  "tithiPurnima": "पूर्णिमा",
+  "tithiAmavasya": "अमावस्या",
+  "pakshaShukla": "शुक्ल",
+  "pakshaKrishna": "कृष्ण",
+  "yogaVishkambha": "विष्कम्भ",
+  "yogaPriti": "प्रीति",
+  "yogaAyushman": "आयुष्मान",
+  "yogaSaubhagya": "सौभाग्य",
+  "yogaShobhana": "शोभन",
+  "yogaAtiganda": "अतिगण्ड",
+  "yogaSukarma": "सुकर्मा",
+  "yogaDhriti": "धृति",
+  "yogaShula": "शूल",
+  "yogaGanda": "गण्ड",
+  "yogaVriddhi": "वृद्धि",
+  "yogaDhruva": "ध्रुव",
+  "yogaVyaghata": "व्याघात",
+  "yogaHarshana": "हर्षण",
+  "yogaVajra": "वज्र",
+  "yogaSiddhi": "सिद्धि",
+  "yogaVyatipata": "व्यतीपात",
+  "yogaVariyan": "वरीयान",
+  "yogaParigha": "परिघ",
+  "yogaShiva": "शिव",
+  "yogaSiddha": "सिद्ध",
+  "yogaSadhya": "साध्य",
+  "yogaShubha": "शुभ",
+  "yogaShukla": "शुक्ल",
+  "yogaBrahma": "ब्रह्म",
+  "yogaIndra": "इन्द्र",
+  "yogaVaidhriti": "वैधृति",
+  "karanaBava": "बव",
+  "karanaBalava": "बालव",
+  "karanaKaulava": "कौलव",
+  "karanaTaitila": "तैतिल",
+  "karanaGara": "गर",
+  "karanaVanija": "वणिज",
+  "karanaVishti": "विष्टि",
+  "karanaShakuni": "शकुनि",
+  "karanaChatushpada": "चतुष्पद",
+  "karanaNaga": "नाग",
+  "karanaKimstughna": "किंस्तुघ्न",
+  "varaSomavara": "सोमवार",
+  "varaMangalavara": "मंगलवार",
+  "varaBudhavara": "बुधवार",
+  "varaGuruvara": "गुरुवार",
+  "varaShukravara": "शुक्रवार",
+  "varaShanivara": "शनिवार",
+  "varaRavivara": "रविवार",
+  "dashaSystemVimshottari": "विंशोत्तरी",
+  "dashaSystemYogini": "योगिनी",
+  "dashaSystemJaimini": "जैमिनी चर",
+  "dashaSystemVimshottariSubtitle": "नक्षत्र-आधारित · 120 वर्ष का चक्र · 9 स्वामी",
+  "dashaSystemYoginiSubtitle": "नक्षत्र-आधारित · 36 वर्ष का चक्र · 8 योगिनियाँ",
+  "dashaSystemJaiminiSubtitle": "राशि-आधारित · स्वामी की स्थिति से राशि अवधियाँ",
+  "dashaLevelMaha": "महादशा",
+  "dashaLevelAntar": "अन्तर्दशा",
+  "dashaLevelPratyantar": "प्रत्यन्तर्दशा",
+  "dashaLevelSookshma": "सूक्ष्म दशा",
+  "dashaLevelPran": "प्राण दशा",
+  "dashaLevelMahaPlural": "महादशाएँ",
+  "dashaLevelAntarPlural": "अन्तर्दशाएँ",
+  "dashaLevelPratyantarPlural": "प्रत्यन्तर्दशाएँ",
+  "dashaLevelSookshmaPlural": "सूक्ष्म दशाएँ",
+  "dashaLevelPranPlural": "प्राण दशाएँ",
+  "yoginiMangala": "मंगला",
+  "yoginiPingala": "पिंगला",
+  "yoginiDhanya": "धान्या",
+  "yoginiBhramari": "भ्रामरी",
+  "yoginiBhadrika": "भद्रिका",
+  "yoginiUlka": "उल्का",
+  "yoginiSiddha": "सिद्धा",
+  "yoginiSankata": "संकटा",
+  "maitriAtiMitra": "अति मित्र",
+  "maitriMitra": "मित्र",
+  "maitriSama": "सम",
+  "maitriSatru": "शत्रु",
+  "maitriAtiSatru": "अति शत्रु",
+  "maitriAtiMitraGloss": "परम मित्र",
+  "maitriMitraGloss": "मित्र",
+  "maitriSamaGloss": "तटस्थ",
+  "maitriSatruGloss": "शत्रु",
+  "maitriAtiSatruGloss": "परम शत्रु",
+  "maitriAtiMitraAbbr": "अमि",
+  "maitriMitraAbbr": "मि",
+  "maitriSamaAbbr": "सम",
+  "maitriSatruAbbr": "श",
+  "maitriAtiSatruAbbr": "अश",
+  "relFriend": "मित्र",
+  "relNeutral": "सम",
+  "relEnemy": "शत्रु",
+  "relFriendAbbr": "मि",
+  "relNeutralAbbr": "स",
+  "relEnemyAbbr": "श",
+  "labelTithi": "तिथि",
+  "labelVara": "वार",
+  "labelNakshatra": "नक्षत्र",
+  "labelYoga": "योग",
+  "labelKarana": "करण",
+  "labelPada": "पद",
+  "modulePanchangTitle": "पंचांग",
+  "panchangAtBirthNote": "जन्म के क्षण और स्थान पर",
+  "panchangPdfHeader": "जन्म-कालीन पंचांग",
+  "modulePanchadhaMaitriTitle": "पंचधा मैत्री",
+  "moduleAshtakavargaTitle": "अष्टकवर्ग",
+  "moduleBhavaBalaTitle": "भाव बल",
+  "moduleBirthChartTitle": "जन्म कुंडली",
+  "moduleDashaPeriodsTitle": "दशा अवधियाँ",
+  "moduleDivisionalChartTitle": "वर्ग कुंडली",
+  "moduleJaiminiAspectsTitle": "जैमिनी दृष्टियाँ",
+  "moduleJaiminiKarakasTitle": "जैमिनी कारक",
+  "moduleJaiminiLagnaTitle": "जैमिनी लग्न",
+  "moduleJaiminiPadasTitle": "जैमिनी पद",
+  "moduleKpCuspsTitle": "KP · भाव संधियाँ",
+  "moduleKpPlanetsTitle": "KP · ग्रह",
+  "moduleKpRulingPlanetsTitle": "KP · शासक ग्रह",
+  "moduleKpSignificatorsTitle": "KP · कारक",
+  "moduleKotaChakraTitle": "कोट चक्र",
+  "moduleMoonNakshatraTitle": "चंद्र और नक्षत्र",
+  "modulePlanetaryPositionsTitle": "ग्रह स्थितियाँ",
+  "moduleSadeSatiTitle": "साढ़े साती",
+  "moduleSarvatobhadraTitle": "सर्वतोभद्र चक्र",
+  "moduleShadbalaTitle": "षड्बल",
+  "moduleSpecialLagnasTitle": "विशेष लग्न",
+  "moduleSudarshanaTitle": "सुदर्शन चक्र",
+  "moduleTransitTitle": "गोचर",
+  "moduleUpcomingEventsTitle": "आगामी घटनाएँ",
+  "moduleChalitTitle": "भाव चलित",
+  "ccBlurb": "संधि-सीमित भाव: राशि के अंत में स्थित ग्रह अगले भाव में जा सकता है। राशि कुंडली से तुलना करें।",
+  "cfgHouseSystem": "भाव पद्धति",
+  "ccSripati": "श्रीपति",
+  "ccPlacidus": "प्लैसिडस",
+  "ccEqual": "समभाव (लग्न से)",
+  "cfgRotateTo": "इस भाव से देखें",
+  "cfgCuspDegrees": "मध्य व संधि अंश",
+  "ccMadhyaCol": "मध्य",
+  "ccSandhiCol": "आरंभ (संधि)",
+  "ccCaption": "भाव संधि से संधि तक, मध्य के चारों ओर",
+  "mcVarshphal": "वर्षफल",
+  "moduleVarshphalDivisionalTitle": "वर्षफल वर्ग कुंडली",
+  "moduleVarshphalMaitriTitle": "ताजिक मैत्री",
+  "tmBlurb": "वर्ष कुंडली में स्थिति-आधारित संबंध: 5/9 प्रत्यक्ष मित्र, 3/11 गुप्त मित्र, 1/7 प्रत्यक्ष शत्रु, 4/10 गुप्त शत्रु।",
+  "tmAbbrDF": "मि",
+  "tmAbbrHF": "गु.मि",
+  "tmAbbrDE": "श",
+  "tmAbbrHE": "गु.श",
+  "tmAbbrME": "उ.श",
+  "tmDirectFriends": "प्रत्यक्ष मित्र",
+  "tmHiddenFriends": "गुप्त मित्र",
+  "tmDirectEnemies": "प्रत्यक्ष शत्रु",
+  "tmHiddenEnemies": "गुप्त शत्रु",
+  "tmMutualEnemies": "परस्पर शत्रु",
+  "moduleVarshphalPanchaBalaTitle": "पंचवर्गीय बल",
+  "moduleHarshaBalaTitle": "हर्ष बल",
+  "pvBlurb": "पाँच स्रोतों से ताजिक बल; विश्व बल = योग ÷ 4 (अधिकतम 20)। वर्षेश का चयन इसी बल से होता है।",
+  "pvGriha": "गृह",
+  "pvUchcha": "उच्च",
+  "pvHudda": "हुद्दा",
+  "pvDrekkana": "द्रेष्का.",
+  "pvNavamsha": "नवांश",
+  "pvVishwaBala": "वि.ब.",
+  "pvTotal": "योग",
+  "hbBlurb": "चार कारक, प्रत्येक पाँच इकाई: स्थान, स्व/उच्च, लिंग-अनुकूल भाव, दिन/रात्रि।",
+  "hbFirst": "स्थान",
+  "hbSecond": "स्व/उच्च",
+  "hbThird": "लिंग",
+  "hbFourth": "दिन/रात्रि",
+  "hbNirbala": "निर्बल",
+  "hbAlpabali": "अल्पबली",
+  "hbMadhyaBali": "मध्य बली",
+  "hbPoornaBali": "पूर्ण बली",
+  "hbExtraordinary": "अति बली",
+  "vpDay": "दिन",
+  "vpNight": "रात्रि",
+  "vpYearLordLine": "वर्षेश: {planet}",
+  "@vpYearLordLine": {"placeholders": {"planet": {"type": "String"}}},
+  "vpBearersHeader": "पंचाधिकारी",
+  "vpAspectsLagna": "लग्न पर दृष्टि",
+  "vpNoAspect": "दृष्टि नहीं",
+  "obMunthaPati": "मुंथा पति",
+  "obJanmaLagnaPati": "जन्म लग्न पति",
+  "obVarshaLagnaPati": "वर्ष लग्न पति",
+  "obTriRashiPati": "त्रिराशि पति",
+  "obDinaRatriPati": "दिन-रात्रि पति",
+  "moduleVarshphalDashaTitle": "वर्ष दशा",
+  "vdMudda": "मुद्दा",
+  "vdYogini": "योगिनी",
+  "vdPatyayini": "पत्यायिनी",
+  "vdDays": "{d}दि",
+  "@vdDays": {"placeholders": {"d": {"type": "String"}}},
+  "moduleVarshphalSahamTitle": "सहम",
+  "shSaham": "सहम",
+  "shLord": "स्वामी",
+  "shChartSource": "कुंडली",
+  "shChartVarsha": "वर्ष कुंडली",
+  "shChartNatal": "जन्म कुंडली",
+  "shMoreFooter": "+{n} और — सभी के लिए विजेट खोलें",
+  "@shMoreFooter": {"placeholders": {"n": {"type": "String"}}},
+  "sahamPunya": "पुण्य",
+  "sahamGuru": "गुरु",
+  "sahamVidya": "विद्या",
+  "sahamYasha": "यश",
+  "sahamMitra": "मित्र",
+  "sahamMahatmya": "माहात्म्य",
+  "sahamAsha": "आशा",
+  "sahamSamartha": "सामर्थ्य",
+  "sahamBhratri": "भ्रातृ",
+  "sahamGaurava": "गौरव",
+  "sahamPitri": "पितृ",
+  "sahamRaja": "राज",
+  "sahamMatri": "मातृ",
+  "sahamPutra": "पुत्र",
+  "sahamJeeva": "जीव",
+  "sahamRoga": "रोग",
+  "sahamKarma": "कर्म",
+  "sahamManmatha": "मन्मथ",
+  "sahamKali": "कलि",
+  "sahamKshama": "क्षमा",
+  "sahamShastra": "शास्त्र",
+  "sahamBandhu": "बंधु",
+  "sahamMrityu": "मृत्यु",
+  "sahamDeshantara": "देशांतर",
+  "sahamArtha": "अर्थ",
+  "sahamParadara": "परदारा",
+  "sahamAnyakarma": "अन्य कर्म",
+  "sahamVanika": "वणिक",
+  "sahamKaryasiddhi": "कार्यसिद्धि",
+  "sahamVivaha": "विवाह",
+  "sahamPrasava": "प्रसव",
+  "sahamSantaapa": "संताप",
+  "sahamShraddha": "श्रद्धा",
+  "sahamPreeti": "प्रीति",
+  "sahamJadya": "जाड्य",
+  "sahamVyapara": "व्यापार",
+  "sahamPaneeyapaata": "पानीय पात",
+  "sahamShatru": "शत्रु",
+  "sahamJalapatha": "जलपथ",
+  "sahamBandhana": "बंधन",
+  "sahamLabha": "लाभ",
+  "moduleTripatakiTitle": "त्रिपताकी चक्र",
+  "tpBlurb": "जन्म ग्रह त्रिपताकी पर प्रगत (चंद्र 9 से, सूर्य-वर्ग 4 से, मंगल व राहु-केतु 6 से, राहु-केतु उल्टे क्रम में); हर बिंदु पर तीन रेखाएँ मिलती हैं — उनके दूसरे छोर के ग्रह वेध करते हैं।",
+  "tpCurrentYear": "चालू वर्ष {y}",
+  "@tpCurrentYear": {"placeholders": {"y": {"type": "String"}}},
+  "tpVedhaToMoon": "चंद्र पर वेध",
+  "tpVedhaToLagna": "लग्न पर वेध",
+  "tpVedhaTo": "{planet} पर वेध",
+  "@tpVedhaTo": {"placeholders": {"planet": {"type": "String"}}},
+  "moduleVarshphalMaasaTitle": "मास प्रवेश",
+  "vmMonthN": "मास {m}",
+  "@vmMonthN": {"placeholders": {"m": {"type": "String"}}},
+  "vmPraveshLine": "मास प्रवेश: {ts}",
+  "@vmPraveshLine": {"placeholders": {"ts": {"type": "String"}}},
+  "vmMonthLordLine": "मासेश: {planet}",
+  "@vmMonthLordLine": {"placeholders": {"planet": {"type": "String"}}},
+  "obMaasaLagnaPati": "मास लग्न पति",
+  "vdLagnaAbbr": "ल",
+  "moduleVarshphalYogaTitle": "ताजिक योग",
+  "tyBlurb": "सभी ग्रह-युग्मों पर सोलह ताजिक योगों की जाँच — मध्यम दीप्तांश के भीतर इत्थशाल, तेज़ ग्रह आगे निकलने पर ईशराफ, नक्त/यमया, कम्बूल और उसके भेद; बाधक योग चिह्नित। केवल योग-रचना; फलादेश नहीं।",
+  "tyLagnesha": "लग्नेश",
+  "tyKaryesha": "कार्येश",
+  "tyKaryeshaHouse": "कार्येश भाव",
+  "tyHouseN": "भाव {n}",
+  "@tyHouseN": {"placeholders": {"n": {"type": "String"}}},
+  "tyVia": "{planet} द्वारा",
+  "@tyVia": {"placeholders": {"planet": {"type": "String"}}},
+  "tyNone": "इस वर्ष लग्नेश या कार्येश से जुड़ा कोई योग नहीं।",
+  "tyMoreInDetail": "अन्य युग्मों में +{n} और — पूरी सूची के लिए कार्ड खोलें।",
+  "@tyMoreInDetail": {"placeholders": {"n": {"type": "String"}}},
+  "tyIkabala": "इकबाल",
+  "tyIkabalaPartial": "इकबाल (आंशिक)",
+  "tyInduvara": "इन्दुवार",
+  "tyInduvaraPartial": "इन्दुवार (आंशिक)",
+  "tyVartamana": "वर्तमान इत्थशाल",
+  "tyPoorna": "पूर्ण इत्थशाल",
+  "tyBhavishyat": "भविष्यत् इत्थशाल",
+  "tyRashyanta": "राश्यन्त इत्थशाल",
+  "tyIshrafa": "ईशराफ",
+  "tyNakta": "नक्त",
+  "tyYamaya": "यमया",
+  "tyManau": "मणऊ",
+  "tyKamboola": "कम्बूल",
+  "tyGairiKamboola": "गैरि-कम्बूल",
+  "tyKhallasara": "खल्लासर",
+  "tyRudda": "रुद्द",
+  "tyDuhphali": "दुःफालि-कुत्थ",
+  "tyDutthottha": "दुत्थोत्थ-दविर",
+  "tyTambira": "तम्बीर",
+  "tyKuttha": "कुत्थ",
+  "tyDurpaha": "दुरफ",
+  "tyTagSlowRetro": "मन्द ग्रह वक्री (प्रबल)",
+  "tyTagContiguous": "राशि-सीमा के पार",
+  "tyTagMoonState": "चन्द्र {d}",
+  "@tyTagMoonState": {"placeholders": {"d": {"type": "String"}}},
+  "tyTagPartnerState": "सहभागी {d}",
+  "@tyTagPartnerState": {"placeholders": {"d": {"type": "String"}}},
+  "tyTagCombust": "अस्त",
+  "tyTagDebilitated": "नीच",
+  "tyTagTrik": "६/८/१२ में",
+  "tyTagEnemySign": "शत्रु राशि में",
+  "tyDispExcellent": "उत्तम",
+  "tyDispGood": "शुभ",
+  "tyDispMediocre": "मध्यम",
+  "tyDispInferior": "अधम",
+  "vtVarshphal": "वर्षफल",
+  "vtVarshphalDesc": "वर्ष कुंडली — वर्ग, दशा, बल, सहम और त्रिपताकी सहित पूरा ताजिक वार्षिक दृश्य, जन्म कुंडली के साथ।",
+  "moduleVarshphalTitle": "वर्षफल कुंडली",
+  "vpYearLine": "वर्ष {n} · {year}",
+  "@vpYearLine": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "vpPraveshLine": "वर्ष प्रवेश: {ts}",
+  "@vpPraveshLine": {
+    "placeholders": {
+      "ts": {
+        "type": "String"
+      }
+    }
+  },
+  "vpMunthaLine": "मुंथा: {sign} ({house})",
+  "@vpMunthaLine": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "house": {
+        "type": "String"
+      }
+    }
+  },
+  "vpPrevYear": "पिछला वर्ष",
+  "vpNextYear": "अगला वर्ष",
+  "vpError": "वर्ष कुंडली की गणना नहीं हो सकी: {e}",
+  "@vpError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "vpPdfHeader": "वर्षफल — वर्ष {n} ({year})",
+  "@vpPdfHeader": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "moduleYogasTitle": "योग और दोष",
+  "maitriCardBlurb": "पंचधा संबंध — प्रत्येक पंक्ति के ग्रह का स्तंभ के ग्रह के प्रति (नैसर्गिक + तात्कालिक मिलाकर)।",
+  "maitriFromTo": "से \\ प्रति",
+  "maitriPdfLegendPrefix": "पंक्ति के ग्रह का स्तंभ के ग्रह से संयुक्त संबंध।",
+  "maitriModeCompound": "संयुक्त",
+  "maitriModeNatural": "नैसर्गिक",
+  "maitriModeTemporary": "तात्कालिक",
+  "maitriDirectionalNote": "हर कोष्ठक को पंक्ति के ग्रह की दृष्टि से स्तंभ के ग्रह के प्रति पढ़ें — ये संबंध दिशा-निर्भर हैं, इसलिए ग्रिड सममित नहीं है।",
+  "maitriBlurbCompound": "पंचधा (पाँच-स्तरीय) संबंध: नैसर्गिक मैत्री और तात्कालिक मैत्री का संयोग, अति मित्र … अति शत्रु पैमाने पर। ग्रह अपने संयुक्त मित्र की राशि में सर्वोत्तम फल देता है।",
+  "maitriBlurbNatural": "नैसर्गिक संबंध — स्थिर शास्त्रीय तालिका, हर कुंडली के लिए एक समान।",
+  "maitriBlurbTemporary": "तात्कालिक संबंध — कुंडली-विशेष: किसी ग्रह से दूसरी/तीसरी/चौथी/दसवीं/ग्यारहवीं/बारहवीं राशि में स्थित ग्रह उसका तात्कालिक मित्र है, अन्यथा शत्रु।",
+  "maitriLegendFriend": "मित्र",
+  "maitriLegendNeutral": "सम",
+  "maitriLegendEnemy": "शत्रु",
+  "hide": "छिपाएँ",
+  "show": "दिखाएँ",
+  "labelGraha": "ग्रह",
+  "labelSign": "राशि",
+  "labelDegree": "अंश",
+  "labelAscendant": "लग्न",
+  "labelChartStyle": "कुंडली शैली",
+  "styleDefault": "डिफ़ॉल्ट",
+  "styleNorthIndian": "उत्तर भारतीय",
+  "styleSouthIndian": "दक्षिण भारतीय",
+  "styleCircular": "वृत्ताकार",
+  "ayanamsaCaption": "{name} अयनांश",
+  "@ayanamsaCaption": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transitLive": "लाइव",
+  "transitChangeDateTime": "तिथि/समय बदलें",
+  "transitGoLive": "लाइव पर लौटें",
+  "cfgPlanetDegrees": "ग्रह अंश",
+  "cfgJaiminiKarakas": "जैमिनी कारक (सप्त)",
+  "cfgJaiminiPadas": "जैमिनी पद (1P–12P)",
+  "cfgInduLagna": "इन्दु लग्न चिह्न (IL)",
+  "cfgDignityCombustion": "ग्रह अवस्था और अस्त",
+  "cfgTransitOverlay": "वर्तमान गोचर ओवरले",
+  "cfgSavPoints": "SAV बिन्दु",
+  "cfgActiveFilterDasha": "सक्रिय फ़िल्टर दशा",
+  "cfgDivisionalChart": "वर्ग कुंडली",
+  "cfgChart": "चार्ट",
+  "cfgDashaSystem": "दशा प्रणाली",
+  "cfgWindow": "अवधि",
+  "cfgFineLevels": "सूक्ष्म स्तर (सूक्ष्म/प्राण)",
+  "cfgLordPositions": "स्वामी स्थितियाँ",
+  "cfgSandhiAlerts": "संधि सूचनाएँ",
+  "cfgYogaActivation": "योग सक्रियण",
+  "cfgSystemComparison": "प्रणाली तुलना",
+  "windowMonths": "{count} माह",
+  "@windowMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savFull": "सर्वाष्टकवर्ग (SAV)",
+  "bavOf": "{graha} BAV",
+  "@bavOf": {
+    "placeholders": {
+      "graha": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryFrom": "{label} से",
+  "@summaryFrom": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "labelLagna": "लग्न",
+  "houseN": "भाव {n}",
+  "@houseN": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "vargaNameD1": "राशि",
+  "vargaNameD2": "होरा",
+  "vargaNameD3": "द्रेष्काण",
+  "vargaNameD4": "चतुर्थांश",
+  "vargaNameD7": "सप्तांश",
+  "vargaNameD9": "नवांश",
+  "vargaNameD10": "दशांश",
+  "vargaNameD12": "द्वादशांश",
+  "vargaNameD16": "षोडशांश",
+  "vargaNameD20": "विंशांश",
+  "vargaNameD24": "चतुर्विंशांश",
+  "vargaNameD27": "भांश",
+  "vargaNameD30": "त्रिंशांश",
+  "vargaNameD40": "खवेदांश",
+  "vargaNameD45": "अक्षवेदांश",
+  "vargaNameD60": "षष्ट्यंश",
+  "vargaThemeD1": "जन्म कुंडली",
+  "vargaThemeD2": "धन",
+  "vargaThemeD3": "सहोदर और साहस",
+  "vargaThemeD4": "संपत्ति और भाग्य",
+  "vargaThemeD7": "संतान",
+  "vargaThemeD9": "विवाह और धर्म",
+  "vargaThemeD10": "आजीविका",
+  "vargaThemeD12": "माता-पिता",
+  "vargaThemeD16": "वाहन और सुख",
+  "vargaThemeD20": "आध्यात्मिक जीवन",
+  "vargaThemeD24": "शिक्षा",
+  "vargaThemeD27": "बल और दुर्बलताएँ",
+  "vargaThemeD30": "विपत्तियाँ",
+  "vargaThemeD40": "मातृ विरासत",
+  "vargaThemeD45": "पितृ विरासत",
+  "vargaThemeD60": "पूर्व कर्म",
+  "vargaLagnaLine": "{code} लग्न {sign}",
+  "@vargaLagnaLine": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "moonInSign": "चंद्र {sign} में",
+  "@moonInSign": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "labelChandra": "चंद्र",
+  "labelSurya": "सूर्य",
+  "sudarshanaInnerOuter": "भीतर → बाहर: लग्न ({lagna}) · चंद्र ({moon}) · सूर्य ({sun})।",
+  "@sudarshanaInnerOuter": {
+    "placeholders": {
+      "lagna": {
+        "type": "String"
+      },
+      "moon": {
+        "type": "String"
+      },
+      "sun": {
+        "type": "String"
+      }
+    }
+  },
+  "sudarshanaChartHouses": "{name} चक्र के भाव",
+  "@sudarshanaChartHouses": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sarvatobhadraPdfHeader": "सर्वतोभद्र चक्र — जन्म बिंदुओं पर वेध",
+  "sudarshanaBlurb": "हर भाव को एक साथ तीन संदर्भों से परखा जाता है — लग्न, चंद्र और सूर्य। तीनों से बलवान भाव विश्वसनीय फल देता है; तीनों से पीड़ित हो तो उसके कारकत्व कष्ट पाते हैं।",
+  "sudarshanaSectorNote": "प्रत्येक खंड = तीनों कुंडलियों में वही भाव।",
+  "labelHouse": "भाव",
+  "kotaRingStambha": "स्तंभ",
+  "kotaRingMadhya": "मध्य",
+  "kotaRingPrakara": "प्राकार",
+  "kotaRingBahya": "बाह्य",
+  "sbcBlurb": "स्थिर 9×9 ग्रिड। प्रत्येक गोचरशील ग्रह अपने नक्षत्र से तीन वेध रेखाएँ (आड़ी + दोनों विकर्ण) बेधता है। गर्म रंग: पाप वेध; हरा: शुभ; गहरा रंग: आपके जन्म बिंदु। सामान्य गति पर आड़ी रेखा सबसे प्रबल, तेज़ गति पर अग्र विकर्ण (सूर्य/चंद्र सदा), वक्री होने पर पश्च विकर्ण (राहु/केतु सदा)।",
+  "sbcNatalAnchor": "जन्म बिंदु",
+  "sbcVedhaFrom": "वेध (गोचर से)",
+  "sbcJanmaNakshatra": "जन्म नक्षत्र ({abbr})",
+  "@sbcJanmaNakshatra": {
+    "placeholders": {
+      "abbr": {
+        "type": "String"
+      }
+    }
+  },
+  "sbcJanmaRashi": "जन्म राशि ({sign})",
+  "@sbcJanmaRashi": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "sbcLagnaAnchor": "लग्न ({sign})",
+  "@sbcLagnaAnchor": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "sbcJanmaTithiGroup": "जन्म तिथि समूह",
+  "sbcJanmaVara": "जन्म वार",
+  "sbcTransitLive": "गोचर लाइव · जन्म ग्रह स्याही में, गोचर हरे में",
+  "sbcMaleficMark": "पा",
+  "sbcBeneficMark": "शु",
+  "signAbbrAries": "मेष",
+  "signAbbrTaurus": "वृष",
+  "signAbbrGemini": "मिथ",
+  "signAbbrCancer": "कर्क",
+  "signAbbrLeo": "सिंह",
+  "signAbbrVirgo": "कन्या",
+  "signAbbrLibra": "तुला",
+  "signAbbrScorpio": "वृश्च",
+  "signAbbrSagittarius": "धनु",
+  "signAbbrCapricorn": "मकर",
+  "signAbbrAquarius": "कुंभ",
+  "signAbbrPisces": "मीन",
+  "kotaBlurb": "किला: जन्म नक्षत्र से 28 नक्षत्र, चार परकोटों में। प्रवेश मार्गों से स्तंभ की ओर बढ़ते पाप ग्रह किले को घेरते हैं; भीतर स्थित शुभ ग्रह उसकी रक्षा करते हैं।",
+  "kotaSummary": "जन्म {nak} · कोट स्वामी {swami} · कोट पाल {pala}",
+  "@kotaSummary": {
+    "placeholders": {
+      "nak": {
+        "type": "String"
+      },
+      "swami": {
+        "type": "String"
+      },
+      "pala": {
+        "type": "String"
+      }
+    }
+  },
+  "kotaTransitAsOf": "चुने गए समय के अनुसार गोचर",
+  "kotaTransitLive": "गोचर लाइव",
+  "kotaAlertMalefic": "{graha} (पाप) {ring} में · {nakshatra}",
+  "@kotaAlertMalefic": {
+    "placeholders": {
+      "graha": {
+        "type": "String"
+      },
+      "ring": {
+        "type": "String"
+      },
+      "nakshatra": {
+        "type": "String"
+      }
+    }
+  },
+  "kotaAlertBenefic": "{graha} (शुभ) {ring} की रक्षा करता है · {nakshatra}",
+  "@kotaAlertBenefic": {
+    "placeholders": {
+      "graha": {
+        "type": "String"
+      },
+      "ring": {
+        "type": "String"
+      },
+      "nakshatra": {
+        "type": "String"
+      }
+    }
+  },
+  "kotaRing": "घेरा",
+  "kotaPath": "मार्ग",
+  "kotaEntry": "प्रवेश",
+  "kotaExit": "निकास",
+  "karakaAtmakaraka": "आत्मकारक",
+  "karakaAmatyakaraka": "अमात्यकारक",
+  "karakaBhratrukaraka": "भ्रातृकारक",
+  "karakaMatrukaraka": "मातृकारक",
+  "karakaPitrukaraka": "पितृकारक",
+  "karakaGnatikaraka": "ज्ञातिकारक",
+  "karakaDarakaraka": "दारकारक",
+  "karakaSignifiesAtma": "स्व, आत्म-उद्देश्य",
+  "karakaSignifiesAmatya": "आजीविका, मंत्रणा",
+  "karakaSignifiesBhratru": "सहोदर, साहस",
+  "karakaSignifiesMatru": "माता, गृह",
+  "karakaSignifiesPitru": "पिता, गुरु",
+  "karakaSignifiesGnati": "संबंधी, बाधाएँ",
+  "karakaSignifiesDara": "जीवनसाथी, साझेदारियाँ",
+  "saptaKarakasHeading": "सप्त कारक",
+  "saptaKarakasBlurb": "राशि के भीतर अंशों से क्रमबद्ध, सर्वाधिक पहले — शास्त्रीय 7-कारक पद्धति (सूर्य–शनि; राहु/केतु नहीं)।",
+  "karakaPdfHeader": "जैमिनी कारक (सप्त)",
+  "labelKaraka": "कारक",
+  "labelSignifies": "कारकत्व",
+  "karakamshaHeading": "कारकांश लग्न",
+  "jlNavamshaLine": "आत्मकारक {planet} की नवांश राशि",
+  "@jlNavamshaLine": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      }
+    }
+  },
+  "jlBlurb": "जैमिनी पद्धति का विशेष लग्न, राशि और नवांश लग्नों के साथ: आत्मकारक (आत्मा के कारक) की नवांश राशि — जन्म कुंडली से अलग, धर्म/जीवन-उद्देश्य के अध्ययन में प्रयुक्त।",
+  "jlAtmakarakaLabel": "आत्मकारक: ",
+  "jlNoOccupants": "इस राशि में अन्य कोई राशि-कुंडली ग्रह नहीं है।",
+  "jlOccupants": "{sign} में स्थित अन्य राशि-कुंडली ग्रह: {list}",
+  "@jlOccupants": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "jlPdfHeader": "जैमिनी लग्न (कारकांश)",
+  "jlPdfLine": "कारकांश: {sign} (आत्मकारक: {planet})",
+  "@jlPdfLine": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "planet": {
+        "type": "String"
+      }
+    }
+  },
+  "jaHeading": "जैमिनी राशि दृष्टि",
+  "jaBlurb": "राशि-आधारित दृष्टियाँ: चर राशियाँ स्थिर राशियों पर दृष्टि डालती हैं (ठीक अगली को छोड़कर); स्थिर राशियाँ चर राशियों पर (ठीक पिछली को छोड़कर); द्विस्वभाव राशियाँ परस्पर।",
+  "jaNoDrishti": "इस कुंडली में ग्रहों के बीच कोई राशि दृष्टि नहीं।",
+  "jaGrahaPairs": "ग्रह युग्म",
+  "jaNone": "इस कुंडली में नहीं।",
+  "jaSignAspects": "राशि दृष्टियाँ",
+  "jaPdfHeader": "जैमिनी दृष्टियाँ (राशि दृष्टि)",
+  "jpArudhaLagnaLabel": "आरूढ़ लग्न (1P)",
+  "jpArudhaLagnaLine": "आरूढ़ लग्न (1P) {sign}",
+  "@jpArudhaLagnaLine": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "jpHeading": "जैमिनी आरूढ़ पद",
+  "jpBlurb": "प्रत्येक भाव का एक — वह भाव कैसा \"दिखता\" है, उसकी वास्तविक स्थिति से अलग। 1P (आरूढ़ लग्न) सर्वाधिक प्रयुक्त है। के.एन. राव की गणना, 1/7 भाव अपवादों के बिना।",
+  "jpPadasOccupants": "पद और स्थित ग्रह",
+  "labelOccupants": "स्थित ग्रह",
+  "slBhava": "भाव लग्न",
+  "slHora": "होरा लग्न",
+  "slGhati": "घटी लग्न",
+  "slIndu": "इन्दु लग्न",
+  "slSree": "श्री लग्न",
+  "slBhavaMeaning": "शारीरिक स्व और सामान्य फल",
+  "slHoraMeaning": "धन और आर्थिक समृद्धि",
+  "slGhatiMeaning": "शक्ति, अधिकार और प्रतिष्ठा",
+  "slInduMeaning": "धन और भाग्य (चंद्र से)",
+  "slSreeMeaning": "समृद्धि और कृपा (लक्ष्मी बिंदु)",
+  "slFromSunrise": "जन्म स्थान पर जन्म-पूर्व सूर्योदय से",
+  "slBlurb": "सहायक लग्न। BL/HL/GL जन्म-पूर्व सूर्योदय पर सूर्य की स्थिति से चलते हैं; इन्दु लग्न और चंद्र से नवम भावेशों की कलाएँ गिनता है; श्री चंद्र के नक्षत्र-अंश को लग्न से प्रक्षेपित करता है।",
+  "slReferenceNote": "संदर्भ हेतु राशि लग्न {sign} {degree}। सभी मान जन्म स्थान के जन्म-पूर्व सूर्योदय से — आपका वर्तमान शहर \"आज\" स्क्रीन पर लागू होता है।",
+  "@slReferenceNote": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "degree": {
+        "type": "String"
+      }
+    }
+  },
+  "labelBornYear": "ज. {year}",
+  "labelCode": "कोड",
+  "labelPosition": "स्थिति",
+  "avSarv": "सर्वाष्टकवर्ग",
+  "avBhinnaOf": "{planet} भिन्नाष्टकवर्ग",
+  "@avBhinnaOf": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      }
+    }
+  },
+  "avBindusCount": "{n} बिन्दु",
+  "@avBindusCount": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "avPdfNote": "प्रति राशि बिन्दु; SAV सातों ग्रहों के BAV का योग है (कुल 337)।",
+  "avBlurb": "प्रति राशि शुभ अंक (बिन्दु)। SAV सातों ग्रह-चक्रों का योग है; ग्रह अपने BAV की अधिक-बिन्दु राशि में गोचर करते समय बेहतर फल देता है।",
+  "avStrongWeak": "प्रबलतम: {strongSign} ({strongN}) · दुर्बलतम: {weakSign} ({weakN})",
+  "@avStrongWeak": {
+    "placeholders": {
+      "strongSign": {
+        "type": "String"
+      },
+      "strongN": {
+        "type": "String"
+      },
+      "weakSign": {
+        "type": "String"
+      },
+      "weakN": {
+        "type": "String"
+      }
+    }
+  },
+  "labelTotal": "योग",
+  "transitPdfAsOf": "निर्यात के समय की आकाशीय स्थितियाँ: {time}",
+  "@transitPdfAsOf": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "transitSavNote": "प्रति राशि SAV बिन्दु (सर्वाष्टकवर्ग)",
+  "transitGeocentricNote": "ग्रह स्थितियाँ भूकेन्द्रित हैं — हर स्थान से समान",
+  "transitPositionsHeading": "गोचर स्थितियाँ",
+  "transitInLagnaHouses": "{sign} लग्न भावों में गोचरशील ग्रह",
+  "@transitInLagnaHouses": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "transitLiveWord": "लाइव",
+  "bcPdfHeader": "जन्म कुंडली (राशि / D1)",
+  "bcLagnaLine": "लग्न: {sign} {degree}",
+  "@bcLagnaLine": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "degree": {
+        "type": "String"
+      }
+    }
+  },
+  "bcLagnaShort": "लग्न {sign} · {degree}",
+  "@bcLagnaShort": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "degree": {
+        "type": "String"
+      }
+    }
+  },
+  "bcViewingFrom": "{ref} से दृश्य",
+  "@bcViewingFrom": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "bcDignityLegend": "↑ उच्च · ↓ नीच · ○ स्वराशि · • अस्त",
+  "plusNew": "+ नई",
+  "klEmpty": "अभी कोई कुंडली नहीं। पहली बनाएँ — पूरी गणना इसी डिवाइस पर।",
+  "klRestoreNudge": "पहले Kaal Jyoti इस्तेमाल किया है? अपनी सिंक की गई कुंडलियाँ वापस पाने के लिए साइन इन करें।",
+  "klLongPressPrashna": "प्रश्न कुंडली के लिए + नई को देर तक दबाएँ",
+  "klCastingPrashna": "इस क्षण की प्रश्न कुंडली बन रही है…",
+  "klLocationDisabled": "इस ऐप के लिए लोकेशन बंद है — Settings में चालू करें, या स्थान हाथ से भरें।",
+  "klLocationUnavailable": "लोकेशन उपलब्ध नहीं — स्थान हाथ से भरें।",
+  "klLoadError": "कुंडलियाँ लोड नहीं हो सकीं: {e}",
+  "@klLoadError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "tagPrashna": "प्रश्न",
+  "relationClient": "ग्राहक",
+  "relationSelf": "स्वयं",
+  "relationSpouse": "जीवनसाथी",
+  "relationFamily": "परिवार",
+  "relationFriend": "मित्र",
+  "relationOther": "अन्य",
+  "dmLevelShortMaha": "महा",
+  "dmLevelShortAntar": "अन्तर",
+  "dmLevelShortPratyantar": "प्रत्यन्तर",
+  "dmLevelShortSookshma": "सूक्ष्म",
+  "dmLevelShortPran": "प्राण",
+  "dmUnitYears": "{n}व",
+  "@dmUnitYears": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "dmUnitMonths": "{n}मा",
+  "@dmUnitMonths": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "dmUnitDays": "{n}दि",
+  "@dmUnitDays": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "dmUnitHours": "{n}घं",
+  "@dmUnitHours": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "dmUnitMinutes": "{n}मि",
+  "@dmUnitMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "dmAge": "आयु {span}",
+  "@dmAge": {
+    "placeholders": {
+      "span": {
+        "type": "String"
+      }
+    }
+  },
+  "dmSandhiEndsIn": "संधि · {len} में समाप्त",
+  "@dmSandhiEndsIn": {
+    "placeholders": {
+      "len": {
+        "type": "String"
+      }
+    }
+  },
+  "dmSandhiBegan": "संधि · {len} पहले आरंभ",
+  "@dmSandhiBegan": {
+    "placeholders": {
+      "len": {
+        "type": "String"
+      }
+    }
+  },
+  "dmLordOf": "स्वामी: {houses}",
+  "@dmLordOf": {
+    "placeholders": {
+      "houses": {
+        "type": "String"
+      }
+    }
+  },
+  "dmLordIn": "स्वामी {lord} {sign} में",
+  "@dmLordIn": {
+    "placeholders": {
+      "lord": {
+        "type": "String"
+      },
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "dmOutsideRange": "गणित दशा सीमा से बाहर।",
+  "dmActivatesYoga": "{lord} {yoga} सक्रिय करता है",
+  "@dmActivatesYoga": {
+    "placeholders": {
+      "lord": {
+        "type": "String"
+      },
+      "yoga": {
+        "type": "String"
+      }
+    }
+  },
+  "dmOutsideRangeDate": "इस तिथि के लिए गणित दशा सीमा से बाहर।",
+  "dmActiveChain": "सक्रिय शृंखला",
+  "dmWithin": "{lord} {level} के भीतर · {range}",
+  "@dmWithin": {
+    "placeholders": {
+      "lord": {
+        "type": "String"
+      },
+      "level": {
+        "type": "String"
+      },
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "dmAllSystems": "सभी प्रणालियाँ · MD › AD › PD › SD › PrD",
+  "dmChainOnDate": "किसी तिथि की शृंखला",
+  "dmNowButton": "अभी",
+  "dmNowAt": "अभी · {time}",
+  "@dmNowAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dmCurrent": "वर्तमान",
+  "dmActivatesList": "सक्रिय: {list}",
+  "@dmActivatesList": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "dmPdfActiveChain": "सक्रिय शृंखला · {time}",
+  "@dmPdfActiveChain": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dmPdfHeaderWithSystem": "दशा अवधियाँ — {system}",
+  "@dmPdfHeaderWithSystem": {
+    "placeholders": {
+      "system": {
+        "type": "String"
+      }
+    }
+  },
+  "dmPdfAntardashasOf": "{lord} महादशा की अन्तर्दशाएँ",
+  "@dmPdfAntardashasOf": {
+    "placeholders": {
+      "lord": {
+        "type": "String"
+      }
+    }
+  },
+  "dmColLevel": "स्तर",
+  "dmColLord": "स्वामी",
+  "dmColFrom": "से",
+  "dmColTo": "तक",
+  "dmColLength": "अवधि",
+  "ueDashaEnds": "{tag} {lord} समाप्त",
+  "@ueDashaEnds": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      },
+      "lord": {
+        "type": "String"
+      }
+    }
+  },
+  "ueDashaEndsBegins": "{tag} {lord} समाप्त → {next} आरंभ",
+  "@ueDashaEndsBegins": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      },
+      "lord": {
+        "type": "String"
+      },
+      "next": {
+        "type": "String"
+      }
+    }
+  },
+  "ueSadeSatiBegins": "साढ़े साती {phase} आरंभ",
+  "@ueSadeSatiBegins": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      }
+    }
+  },
+  "ueSadeSatiEnds": "साढ़े साती {phase} समाप्त",
+  "@ueSadeSatiEnds": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      }
+    }
+  },
+  "ueSourceDasha": "दशा",
+  "ueSourceTransit": "गोचर",
+  "ueSourceSadeSati": "साढ़े साती",
+  "ueTransitIngress": "{planet} का {sign} में प्रवेश",
+  "@ueTransitIngress": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "ueTransitConjunct": "{planet} की जन्म {point} से युति",
+  "@ueTransitConjunct": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "point": {
+        "type": "String"
+      }
+    }
+  },
+  "ueTransitDrishti": "जन्म {point} पर {planet} की {n}वीं दृष्टि",
+  "@ueTransitDrishti": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "n": {
+        "type": "String"
+      },
+      "point": {
+        "type": "String"
+      }
+    }
+  },
+  "ueFilterTransits": "गोचर",
+  "ueNoEventsWindow": "आगामी अवधि में कोई घटना नहीं।",
+  "ueNoEventsFilter": "इस फ़िल्टर से कोई घटना मेल नहीं खाती।",
+  "ueTodayDivider": "आज · {date}",
+  "@ueTodayDivider": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ueScanTransitError": "गोचर स्कैन नहीं हो सका: {e}",
+  "@ueScanTransitError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "ueScanSadeSatiError": "साढ़े साती स्कैन नहीं हो सकी: {e}",
+  "@ueScanSadeSatiError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "uePdfHeader": "आगामी घटनाएँ — अगले {months} माह",
+  "@uePdfHeader": {
+    "placeholders": {
+      "months": {
+        "type": "String"
+      }
+    }
+  },
+  "ueColDate": "तिथि",
+  "ueColSource": "स्रोत",
+  "ueColEvent": "घटना",
+  "ymCatRaj": "राज",
+  "ymCatDhana": "धन",
+  "ymCatVipreetRaj": "विपरीत राज",
+  "ymCatParivartana": "परिवर्तन",
+  "ymCatMahapurusha": "महापुरुष",
+  "ymCatChandra": "चंद्र",
+  "ymCatDosha": "दोष",
+  "ymCatOther": "अन्य",
+  "ymFilterAll": "सभी",
+  "ymFilterMd": "महादशा",
+  "ymFilterMdAd": "MD + AD",
+  "ymMoreFooter": "+{n} और — सभी के लिए विजेट खोलें",
+  "@ymMoreFooter": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "ymNoYogas": "कोई प्रमुख योग नहीं मिला।",
+  "ymNoneForMd": "चालू महादशा में कोई सक्रिय नहीं।",
+  "ymNoneForMdAd": "चालू MD + AD में कोई परिपक्व नहीं।",
+  "ynGajaKesari": "गजकेसरी योग",
+  "ynDurudhara": "दुरुधरा योग",
+  "ynSunapha": "सुनफा योग",
+  "ynAnapha": "अनफा योग",
+  "ynKemadruma": "केमद्रुम योग",
+  "ynUbhayachari": "उभयचरी योग",
+  "ynVesi": "वेशि योग",
+  "ynVasi": "वाशि योग",
+  "ynAdhi": "अधि योग",
+  "ynAmala": "अमला योग",
+  "ynShakata": "शकट योग",
+  "ynBudhaAditya": "बुधादित्य योग",
+  "ynChandraMangala": "चंद्र-मंगल योग",
+  "ynRaj": "राज योग",
+  "ynYogakaraka": "योगकारक",
+  "ynDhana": "धन योग",
+  "ynNeechaBhanga": "नीच भंग",
+  "ynLakshmi": "लक्ष्मी योग",
+  "ynSaraswati": "सरस्वती योग",
+  "ynParvata": "पर्वत योग",
+  "ynKahala": "काहल योग",
+  "ynRajju": "रज्जु योग",
+  "ynMusala": "मूसल योग",
+  "ynNala": "नल योग",
+  "ynMangalDosha": "मंगल दोष",
+  "ynGuruChandal": "गुरु-चांडाल दोष",
+  "ynVish": "विष योग",
+  "ynAngarak": "अंगारक दोष",
+  "ynGrahan": "ग्रहण दोष",
+  "ynKaalSarp": "काल सर्प दोष",
+  "ynKaalSarpPartial": "आंशिक काल सर्प",
+  "ynParivartanaDainya": "दैन्य परिवर्तन",
+  "ynParivartanaKhala": "खल परिवर्तन",
+  "ynParivartanaMaha": "महा परिवर्तन",
+  "ynHarsha": "हर्ष योग",
+  "ynSarala": "सरल योग",
+  "ynVimala": "विमल योग",
+  "ynRuchaka": "रुचक योग",
+  "ynBhadra": "भद्र योग",
+  "ynHamsa": "हंस योग",
+  "ynMalavya": "मालव्य योग",
+  "ynShasha": "शश योग",
+  "ymNowLine": "अभी: {maha} MD",
+  "@ymNowLine": {
+    "placeholders": {
+      "maha": {
+        "type": "String"
+      }
+    }
+  },
+  "ymNowLineAntar": "अभी: {maha} MD · {antar} AD",
+  "@ymNowLineAntar": {
+    "placeholders": {
+      "maha": {
+        "type": "String"
+      },
+      "antar": {
+        "type": "String"
+      }
+    }
+  },
+  "ymDetailBlurb": "योग अपने भागीदार ग्रहों की दशाओं में फलित होता है — चालू दशा स्वामियों से फ़िल्टर करके देखें कि कौन-से संयोग अभी सक्रिय हैं।",
+  "weekdayMonday": "सोमवार",
+  "weekdayTuesday": "मंगलवार",
+  "weekdayWednesday": "बुधवार",
+  "weekdayThursday": "गुरुवार",
+  "weekdayFriday": "शुक्रवार",
+  "weekdaySaturday": "शनिवार",
+  "weekdaySunday": "रविवार",
+  "masaChaitra": "चैत्र",
+  "masaVaishakha": "वैशाख",
+  "masaJyeshtha": "ज्येष्ठ",
+  "masaAshadha": "आषाढ़",
+  "masaShravana": "श्रावण",
+  "masaBhadrapada": "भाद्रपद",
+  "masaAshwina": "आश्विन",
+  "masaKartika": "कार्तिक",
+  "masaMargashirsha": "मार्गशीर्ष",
+  "masaPausha": "पौष",
+  "masaMagha": "माघ",
+  "masaPhalguna": "फाल्गुन",
+  "masaAdhik": "अधिक {month}",
+  "@masaAdhik": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "masaPurnimanta": "पूर्णिमान्त",
+  "masaAmanta": "अमान्त",
+  "tdTitle": "आज",
+  "tdCalcFailed": "गणना विफल: {e}",
+  "@tdCalcFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "tdPlaceNudge": "समय {place} के लिए हैं — सटीक सूर्योदय और मुहूर्त के लिए अपना शहर चुनें।",
+  "@tdPlaceNudge": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "tdDateLine": "{weekday} · {date}",
+  "@tdDateLine": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "labelMaasa": "मास",
+  "labelPaksha": "पक्ष",
+  "tdMaasaValue": "{month} · वि.सं. {year}  ({system} ⇄)",
+  "@tdMaasaValue": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      },
+      "system": {
+        "type": "String"
+      }
+    }
+  },
+  "tdNakshatraValue": "{nakshatra} (पद {pada})",
+  "@tdNakshatraValue": {
+    "placeholders": {
+      "nakshatra": {
+        "type": "String"
+      },
+      "pada": {
+        "type": "String"
+      }
+    }
+  },
+  "tdSunriseSunset": "सूर्योदय / सूर्यास्त",
+  "tdTill": " · {time} तक",
+  "@tdTill": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tdTillTomorrow": " · कल {time} तक",
+  "@tdTillTomorrow": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tdTimingsCard": "समय",
+  "tdTransitNow": "गोचर अभी",
+  "tdDisplaySection": "प्रदर्शन",
+  "tdPanchangLocation": "पंचांग स्थान",
+  "tdUseCurrentLocation": "वर्तमान स्थान का उपयोग करें",
+  "tdLocating": "स्थान खोजा जा रहा है…",
+  "tdLocateFailed": "स्थान नहीं मिल सका — अनुमति जाँचें, या नीचे खोजें",
+  "tdSearchCity": "शहर खोजें…",
+  "mhBrahmaMuhurta": "ब्रह्म मुहूर्त",
+  "mhAbhijitMuhurta": "अभिजित मुहूर्त",
+  "mhAbhijitAvoidWednesday": " (बचें — बुधवार)",
+  "mhRahuKaal": "राहु काल",
+  "mhYamaganda": "यमगण्ड",
+  "mhGulikaKaal": "गुलिक काल",
+  "mhDishaShool": "दिशा शूल",
+  "mhDishaShoolValue": "{direction} — इस दिशा में प्रस्थान से बचें",
+  "@mhDishaShoolValue": {
+    "placeholders": {
+      "direction": {
+        "type": "String"
+      }
+    }
+  },
+  "mhTitle": "मुहूर्त",
+  "mhWindowsCard": "अवधियाँ",
+  "mhChoghadiyaCard": "चौघड़िया",
+  "mhHoraCard": "होरा",
+  "mhPersonalizeCard": "वैयक्तिकरण",
+  "mhDay": "दिन",
+  "mhNight": "रात्रि",
+  "mhChooseKundli": "कुंडली चुनें…",
+  "mhNone": "कोई नहीं",
+  "mhComputeError": "गणना नहीं हो सकी: {e}",
+  "@mhComputeError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "mhTaraBala": "तारा बल",
+  "mhChandraBala": "चंद्र बल",
+  "mhFavorableSuffix": " · अनुकूल",
+  "mhUnfavorableSuffix": " · प्रतिकूल",
+  "mhFavorable": "अनुकूल",
+  "mhNeutral": "तटस्थ",
+  "mhUnfavorable": "प्रतिकूल",
+  "choghadiyaUdveg": "उद्वेग",
+  "choghadiyaChar": "चर",
+  "choghadiyaLabh": "लाभ",
+  "choghadiyaAmrit": "अमृत",
+  "choghadiyaKaal": "काल",
+  "choghadiyaShubh": "शुभ",
+  "choghadiyaRog": "रोग",
+  "taraJanma": "जन्म",
+  "taraSampat": "सम्पत्",
+  "taraVipat": "विपत्",
+  "taraKshema": "क्षेम",
+  "taraPratyari": "प्रत्यरि",
+  "taraSadhaka": "साधक",
+  "taraVadha": "वध",
+  "taraMitra": "मित्र",
+  "taraAtiMitra": "अति-मित्र",
+  "dirEast": "पूर्व",
+  "dirNorth": "उत्तर",
+  "dirSouth": "दक्षिण",
+  "dirWest": "पश्चिम",
+  "languageTitle": "भाषा",
+  "languageSystemDefault": "सिस्टम डिफ़ॉल्ट",
+  "languageSectionNote": "पूरे ऐप पर तुरंत लागू होता है। संस्कृत शब्द (तिथि, नक्षत्र, ग्रहों के नाम …) हर भाषा में ज्योतिष शब्दावली में ही रहते हैं।",
+  "sbCouldNotCompute": "गणना नहीं हो सकी: {error}",
+  "sbSthana": "स्थान",
+  "sbDig": "दिग्",
+  "sbKala": "काल",
+  "sbCheshta": "चेष्टा",
+  "sbNaisargika": "नैसर्गिक",
+  "sbDrik": "दृक्",
+  "sbRupas": "रूपा",
+  "sbReqd": "अपेक्षित",
+  "sbRatioHeader": "SB%",
+  "sbPdfNote": "षष्टियांश (विरूपा); रूपा = योग/60। मुद्रित संदर्भ तालिका से सत्यापित नहीं — shadbala.dart का doc comment देखें।",
+  "sbTickCaption": "खड़ी रेखा = शास्त्रीय अपेक्षित न्यूनतम",
+  "sbBarValue": "{rupas}R · SB% {ratio}",
+  "bbFromLord": "भावाधिपति से",
+  "bbDrishti": "दृष्टि",
+  "bbPlanetsIn": "स्थित ग्रह",
+  "bbDayNight": "दिन-रात्रि",
+  "bbPdfNote": "षष्टियांश (विरूपा); रूपा = योग/60, ऋणात्मक भी हो सकता है। भावाधिपति/दृष्टि घटकों पर वही सत्यापन-संबंधी सावधानियाँ लागू हैं जो shadbala.dart और bhava_bala.dart के doc comments में हैं — मुद्रित संदर्भ से अभी संख्यात्मक रूप से सत्यापित नहीं।",
+  "bbCardCaption": "भाव बल — इसे ऊपर ग्रहों के अपने षड्बल से भ्रमित न करें",
+  "bbHouseShort": "भाव {n}",
+  "bbBarValue": "{sign} · {rupas}R",
+  "ssPhaseRising": "आरोही",
+  "ssPhasePeak": "शिखर",
+  "ssPhaseSetting": "अवरोही",
+  "ssPhaseSmallPanoti": "लघु पनौती",
+  "ssDurYearsMonths": "{y}व {m}मा",
+  "ssDurYears": "{y}व",
+  "ssDurMonths": "{m}मा",
+  "ssDurDays": "{d}दि",
+  "ssAge": "आयु {span}",
+  "ssApproxYears": "≈{n} वर्ष",
+  "ssApproxYearsHalf": "≈{n}½ वर्ष",
+  "ssSeverity": "{sa} BAV {bav}/8 · SAV {sav} · {band}",
+  "ssBandEased": "सौम्य",
+  "ssBandModerate": "मध्यम",
+  "ssBandHarsh": "कठोर",
+  "ssStatusInPhase": "साढ़े साती चल रही है — {phase} चरण, समाप्ति {date} · {sev}",
+  "ssStatusNext": "अगली साढ़े साती {date} से आरंभ (आयु {age}) · {sev}",
+  "ssStatusNone": "गणना की गई जीवन-अवधि में कोई साढ़े साती नहीं मिली।",
+  "ssCycleHeading": "चक्र {n}",
+  "ssSmallPanotiHeading": "लघु पनौती (चौथी/आठवीं ढैया)",
+  "ssSmallPanotiHeadingUpper": "लघु पनौती (चौथी/आठवीं ढैया)",
+  "ssColCycle": "चक्र",
+  "ssColPhase": "चरण",
+  "ssColStart": "आरंभ",
+  "ssColEnd": "समाप्ति",
+  "ssColDuration": "अवधि",
+  "ssColAge": "आयु",
+  "ssColSeverity": "गंभीरता",
+  "ssPdfRetroFootnote": "* वक्री गति के बाद पुनः प्रवेश (संयुक्त अवधि दर्शाई गई है; अलग-अलग उप-अंतरालों के लिए ऐप देखें)।",
+  "ssRetroReentry": "↳ वक्री पुनः प्रवेश: {start} – {end} ({len})",
+  "ssTooltipRetroNote": "(वक्री पुनः प्रवेश सहित)",
+  "ssComputeError": "गणना नहीं हो सकी: {error}",
+  "kpAyanamsaHint": "अयनांश: {name} — KP विश्लेषण में परंपरागत रूप से कृष्णमूर्ति अयनांश का उपयोग होता है (कुंडली में बदला जा सकता है)।",
+  "kpHeadCusp": "भाव संधि",
+  "kpHeadHouseAbbr": "भाव",
+  "kpHeadChainCompact": "राशि·नक्ष·उप",
+  "kpHeadChainFull": "राशि·नक्षत्र·उप·उप-उप",
+  "kpHeadSignifiesHouses": "किन भावों का कारक",
+  "kpCuspsCardCaption": "प्लैसिडस भाव संधियाँ — राशि · नक्षत्र · उप स्वामी",
+  "kpCuspsSectionTitle": "भाव संधियाँ (प्लैसिडस)",
+  "kpCuspsDetailCaption": "KP असमान प्लैसिडस भावों का उपयोग करता है: कोई विषय उसी भाव संधि का माना जाता है जिसकी सीमा में वह पड़ता है। भाव संधि का उप स्वामी KP में यह तय करने वाला निर्णायक कारक है कि किसी भाव के विषय फलित होंगे या नहीं।",
+  "kpPdfCuspsHeader": "KP — भाव संधियाँ (प्लैसिडस)",
+  "kpPlanetsCardCaption": "राशि · नक्षत्र · उप स्वामी; भाव प्लैसिडस संधियों से",
+  "kpPlanetsSectionTitle": "ग्रह उप स्वामी",
+  "kpPlanetsDetailCaption": "ग्रह अपने नक्षत्र स्वामी के फल देता है; उसका उप स्वामी तय करता है कि वे फल अनुकूल होंगे या नहीं। 'भाव' वह प्लैसिडस संधि-सीमा वाला भाव है जिसमें ग्रह स्थित है (यह उसके पूर्ण-राशि भाव से भिन्न हो सकता है)।",
+  "kpPdfPlanetsHeader": "KP — ग्रह उप स्वामी",
+  "kpSignificatorsLegend": "A — स्थित ग्रहों के नक्षत्र में · B — स्थित ग्रह · C — स्वामी के नक्षत्र में · D — स्वामी",
+  "kpSignificatorsLegendDetail": "A — स्थित ग्रहों के नक्षत्र में · B — स्थित ग्रह · C — स्वामी के नक्षत्र में · D — स्वामी (A सबसे प्रबल)",
+  "kpHouseSignificatorsTitle": "भाव कारक",
+  "kpPlanetSignificationsTitle": "ग्रह कारकत्व",
+  "kpSignificationsCaption": "विपरीत दृष्टि: प्रत्येक ग्रह जिन-जिन भावों का प्रतिनिधित्व करता है। कोई घटना तब फलित होती है जब उसके दशा स्वामी संबंधित भावों के कारक हों।",
+  "kpPdfSignificatorsHeader": "KP — भाव कारक (A / B / C / D)",
+  "kpHeadAStarOfOccupants": "A — स्थित ग्रहों के नक्षत्र में",
+  "kpHeadBOccupants": "B — स्थित ग्रह",
+  "kpHeadCStarOfOwner": "C — स्वामी के नक्षत्र में",
+  "kpHeadDOwner": "D — स्वामी",
+  "kpPdfSignificationsHeader": "KP — ग्रह कारकत्व",
+  "kpRulingPlanetsNowTitle": "शासक ग्रह · अभी",
+  "kpRulingPlanetsCaption": "KP प्रश्न शास्त्र (होरारी): जिस क्षण प्रश्न का विचार किया जाता है उस क्षण पर शासन करने वाले स्वामी। घटनाएँ प्रायः तब फलित होती हैं जब शासक ग्रह संबंधित भावों के कारकों से मेल खाते हैं। ताज़ा करने के लिए यह दृश्य फिर से खोलें।",
+  "kpRulingPlanetsUnavailable": "शासक ग्रह उपलब्ध नहीं (गणनाएँ अभी तैयार नहीं)।",
+  "kpDayLord": "वार स्वामी",
+  "kpLagnaChainLabel": "लग्न राशि·नक्ष·उप",
+  "kpMoonChainLabel": "चंद्र राशि·नक्ष·उप",
+  "kpDistinctRp": "विशिष्ट RP",
+  "kpRulingPlanetsFootnote": "अभी, {place} पर। वार स्वामी नागरिक सप्ताह-दिन के अनुसार है।",
+  "kpBirthPlaceFallback": "जन्म स्थान",
+  "tdRisingLine": "{sign} {degree} उदित · {time} पर",
+  "@tdRisingLine": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "degree": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "beQuestionChartNote": "इसी क्षण के लिए बनाई गई प्रश्न कुंडली।",
+  "bePlaceHelper": "टाइप करना शुरू करें — अक्षांश/देशांतर और समय-क्षेत्र स्वतः आ जाएँगे",
+  "beUseCurrentLocation": "वर्तमान स्थान का उपयोग करें",
+  "beSectionRelation": "संबंध",
+  "beSectionNoteOptional": "टिप्पणी (वैकल्पिक)",
+  "beNoteHint": "यह कौन हैं? जैसे \"रमेश की बेटी — मिलान\"",
+  "beAdvanced": "उन्नत",
+  "beAyanamsaSubtitle": "अयनांश · {name}",
+  "@beAyanamsaSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "beSectionAyanamsa": "अयनांश",
+  "beMore": "और…",
+  "beMoreWith": "और… ({name})",
+  "@beMoreWith": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "beSectionCloudSync": "क्लाउड सिंक",
+  "beSyncTitle": "इस कुंडली का बैकअप और सिंक करें",
+  "beSyncSubtitle": "आपके सभी डिवाइस पर उपलब्ध। कुंडली विवरण में कभी भी बदलें।",
+  "beCasting": "बन रही है…",
+  "dfDay": "दिन",
+  "dfMonth": "माह",
+  "dfYear": "वर्ष",
+  "dfPickFromCalendar": "कैलेंडर से चुनें",
+  "beManualEntry": "स्थान स्वयं दर्ज करें",
+  "beLatitudeLabel": "अक्षांश",
+  "beLongitudeLabel": "देशांतर",
+  "beTimezoneLabel": "समय क्षेत्र",
+  "beManualInvalid": "स्थान का नाम, अक्षांश (−90 से 90), देशांतर (−180 से 180) जाँचें, और सुझावों में से समय क्षेत्र चुनें।",
+  "beSaveFailed": "कुंडली नहीं बन सकी: {e}",
+  "@beSaveFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "beRequiredFields": "नाम, तिथि, समय और स्थान — सभी आवश्यक हैं।",
+  "beLocationDisabled": "इस ऐप के लिए लोकेशन बंद है — Settings में चालू करें।",
+  "beLocationUnavailable": "लोकेशन उपलब्ध नहीं — स्थान हाथ से लिखें।",
+  "beLocationFailed": "आपका स्थान नहीं मिल सका — स्थान हाथ से लिखें।",
+  "keDeleteTitle": "यह कुंडली हटाएँ?",
+  "keDeleteBody": "इससे कुंडली और उसके डैशबोर्ड लेआउट इस डिवाइस से हट जाएँगे। इसे पूर्ववत नहीं किया जा सकता।",
+  "keUpdateEventsTitle": "महाकोश की घटनाएँ अपडेट करें?",
+  "keUpdateEventsEmpty": "इससे साझा कुंडली से सभी जीवन घटनाएँ हट जाएँगी।",
+  "keUpdateEventsBody": "{count, plural, =1{इससे साझा कुंडली की जीवन घटनाएँ इस कुंडली की 1 घटना से बदल जाएँगी। कुंडली का कोड वही रहेगा।} other{इससे साझा कुंडली की जीवन घटनाएँ इस कुंडली की {count} घटनाओं से बदल जाएँगी। कुंडली का कोड वही रहेगा।}}\n\nघटनाओं के शीर्षक और टिप्पणियाँ शोधकर्ताओं को दिखाई देंगी — जाँच लें कि उनमें कोई नाम या पहचान-योग्य विवरण न हो।",
+  "@keUpdateEventsBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "keUpdate": "अपडेट करें",
+  "keEventsUpdated": "{count, plural, =1{महाकोश कुंडली अपडेट हुई · 1 घटना} other{महाकोश कुंडली अपडेट हुई · {count} घटनाएँ}}",
+  "@keEventsUpdated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "keUpdateEventsError": "घटनाएँ अपडेट नहीं हो सकीं: {e}",
+  "keSaveFailed": "परिवर्तन सहेजे नहीं जा सके: {e}",
+  "@keSaveFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "@keUpdateEventsError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "keTitle": "कुंडली विवरण",
+  "keNoteLabel": "टिप्पणी (वैकल्पिक)",
+  "keChange": "बदलें…",
+  "keOverride": "बदलाव करें…",
+  "keAyanamsaOverride": "अयनांश बदलाव",
+  "keAyanamsaUsingDefault": "ऐप डिफ़ॉल्ट ({name}) — Profile में सेट करें",
+  "@keAyanamsaUsingDefault": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "keAyanamsaThisKundli": "इस कुंडली के लिए: {name}",
+  "@keAyanamsaThisKundli": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "keSyncSignInPrompt": "इस कुंडली को सभी डिवाइस पर सिंक करने के लिए साइन इन करें",
+  "keSyncingToAccount": "आपके खाते में सिंक हो रही है",
+  "keSyncFailed": "सिंक विफल: {e}",
+  "@keSyncFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "keSharedToMahakosh": "महाकोश में साझा · {code} (अनाम)",
+  "@keSharedToMahakosh": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "keMahakoshEvents": "महाकोश घटनाएँ",
+  "keMahakoshEventsSubtitle": "इस कुंडली की वर्तमान जीवन घटनाएँ साझा कुंडली में भेजें",
+  "keUseAppDefault": "ऐप डिफ़ॉल्ट का उपयोग करें",
+  "languageEndonym": "हिन्दी",
+  "mnTitle": "मेन्यू",
+  "mnMuhurtaSubtitle": "चौघड़िया, होरा, राहु काल और शुभ समय",
+  "mnAshtakoota": "अष्टकूट गुण मिलान",
+  "mnAshtakootaSubtitle": "विवाह मेलापक — 36 अंकों का कूट मिलान",
+  "mnSettings": "सेटिंग्स",
+  "mnSettingsSubtitle": "तिथि प्रारूप, डिफ़ॉल्ट अयनांश और कुंडली शैली, रूप-रंग",
+  "mnNotificationsSubtitle": "शोध उत्तर और अपडेट",
+  "mnHiddenCharts": "छिपाई गई कुंडलियाँ",
+  "mnModerationQueue": "मॉडरेशन सूची",
+  "mnModerationSubtitle": "लंबित शोध अनुरोध और कुंडली रिपोर्ट",
+  "mnLicenses": "ओपन-सोर्स लाइसेंस",
+  "mnLicensesSubtitle": "इस ऐप में उपयोग की गई लाइब्रेरियों के लाइसेंस",
+  "mnSoon": "जल्द",
+  "mnSignedOut": "साइन आउट — कुंडलियाँ इसी डिवाइस पर रहती हैं।",
+  "mnSyncEnabled": "सिंक + महाकोश सक्रिय",
+  "mnSyncNow": "अभी सिंक करें",
+  "mnSynced": "सिंक हुआ ({count} लाई गईं)।",
+  "@mnSynced": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "mnDeleteAccount": "खाता हटाएँ…",
+  "mnDeleteAccountTitle": "खाता हटाएँ?",
+  "mnDeleteAccountBody": "इससे आपका खाता स्थायी रूप से हट जाता है: सिंक की गई कुंडली प्रतियाँ, सूचनाएँ और आपकी साइन-इन पहचान। इस डिवाइस पर संग्रहीत कुंडलियाँ प्रभावित नहीं होतीं।\n\nचर्चाओं में आपकी टिप्पणियाँ बनी रहती हैं, जो हटाए गए खाते की ओर से दिखती हैं। जिन्हें आप रखना नहीं चाहते, उन्हें खाता हटाने से पहले हटा दें।\n\nमहाकोश में आपके द्वारा साझा की गई कुंडलियाँ शोध संग्रह में अनाम रूप से बनी रहती हैं। किसी को संग्रह से हटाने के लिए, खाता हटाने से पहले उसकी कुंडली की संपादन स्क्रीन पर जाकर उसे वापस लें — उसके बाद उसे आप तक नहीं जोड़ा जा सकता।\n\nइसे पूर्ववत नहीं किया जा सकता।",
+  "mnDeleteForever": "हमेशा के लिए हटाएँ",
+  "mnAccountDeleted": "आपका खाता हटा दिया गया है।",
+  "mnDeleteAccountError": "खाता नहीं हटाया जा सका: {detail}",
+  "@mnDeleteAccountError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "siTitle": "साइन इन",
+  "siContinueGoogle": "Google से जारी रखें",
+  "siContinueApple": "Apple से जारी रखें",
+  "siOrEmailCode": "या ईमेल कोड का उपयोग करें",
+  "siEmail": "ईमेल",
+  "siOneTimeCode": "एक-बार का कोड",
+  "siDifferentEmail": "दूसरा ईमेल / कोड फिर भेजें",
+  "siAgreePrefix": "जारी रखने पर आप ",
+  "siAgreeAnd": " और ",
+  "siAgreeSuffix": " से सहमत होते हैं।",
+  "siTermsOfUse": "उपयोग की शर्तों",
+  "siPrivacyPolicy": "गोपनीयता नीति",
+  "nfEmpty": "अभी कुछ नहीं। शोध मिलानों की सूचना यहाँ मिलेगी।",
+  "uiCouldNotLoad": "लोड नहीं हो सका: {e}",
+  "@uiCouldNotLoad": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "rcTitle": "कुंडली {code} की शिकायत करें",
+  "rcBlurb": "कुंडली हमारी टीम की समीक्षा के लिए भेजी जाती है और तुरंत आपकी दृष्टि से छिपा दी जाती है। योगदानकर्ता को कभी नहीं बताया जाता कि शिकायत किसने की।",
+  "rcReported": "कुंडली {code} की शिकायत दर्ज हुई और वह आपकी दृष्टि से छिपा दी गई — हमारी टीम इसकी समीक्षा करेगी।",
+  "rcReportError": "कुंडली की शिकायत नहीं की जा सकी: {e}",
+  "rcDetails": "अतिरिक्त विवरण (वैकल्पिक)",
+  "rcSubmit": "शिकायत भेजें",
+  "hcEmpty": "कुछ भी छिपाया नहीं गया। महाकोश से आप जो कुंडलियाँ छिपाते हैं — खोज, ब्राउज़, या कुंडली के अपने \"...\" मेन्यू से — वे यहाँ दिखती हैं ताकि आप कभी भी पूर्ववत कर सकें।",
+  "hcChartAnonymized": "कुंडली {code} (अनाम)",
+  "@hcChartAnonymized": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "hcHiddenOn": "{date} को छिपाई",
+  "hcUnhide": "फिर दिखाएँ",
+  "hcUnhideError": "फिर नहीं दिखाया जा सका: {e}",
+  "@hcUnhideError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "rbRequest": "+ अनुरोध",
+  "rbBackendMissing": "शोध बोर्ड के लिए बैकएंड कॉन्फ़िगर होना आवश्यक है। supabase/README.md देखें।",
+  "rbSignInPrompt": "शोध अनुरोध देखने और पोस्ट करने के लिए साइन इन करें।",
+  "rbLoadError": "बोर्ड लोड नहीं हो सका: {e}",
+  "@rbLoadError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "rsTitle": "कुंडली के साथ उत्तर दें",
+  "rsTagged": "कुंडली इस अनुरोध से जोड़ी गई।",
+  "rsError": "उत्तर नहीं दिया जा सका: {e}",
+  "@rsError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "rsNoSharedCharts": "आपने अभी तक कोई कुंडली साझा नहीं की है।",
+  "rsSharedToMahakosh": "महाकोश में साझा",
+  "uiGenericError": "त्रुटि: {e}",
+  "@uiGenericError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "akTitle": "अष्टकूट गुण मिलान",
+  "akBride": "वधू",
+  "akGroom": "वर",
+  "akChoose": "चुनें…",
+  "akScore": "अंक",
+  "akKootaVarna": "वर्ण",
+  "akKootaVashya": "वश्य",
+  "akKootaTara": "तारा",
+  "akKootaYoni": "योनि",
+  "akKootaGrahaMaitri": "ग्रह मैत्री",
+  "akKootaGana": "गण",
+  "akKootaBhakoot": "भकूट",
+  "akKootaNadi": "नाड़ी",
+  "akVerdictNotRecommended": "अनुशंसित नहीं",
+  "akVerdictAverage": "सामान्य",
+  "akVerdictGood": "अच्छा",
+  "akVerdictExcellent": "उत्तम",
+  "akPdfScore": "{total} / {max} — {verdict}",
+  "akChooseBoth": "मिलान देखने के लिए वधू और वर दोनों कुंडलियाँ चुनें।",
+  "akMangalMismatchScreen": "असमानता — शास्त्रीय रूप से मिलान को स्वीकार या अस्वीकार करने से पहले और जाँच की जाती है (परस्पर निवारण, शमनकारी बल)।",
+  "muMuhurtaLocation": "मुहूर्त स्थान",
+  "muUseCurrentLocation": "वर्तमान स्थान उपयोग करें",
+  "muLocationError": "स्थान प्राप्त नहीं हुआ — अनुमति जाँचें, या नीचे खोजें",
+  "muLocating": "स्थान खोजा जा रहा है…",
+  "muSearchCity": "शहर खोजें…",
+  "akColKoota": "कूट",
+  "akColPoints": "अंक",
+  "akColMax": "अधिकतम",
+  "akColNotes": "टिप्पणी",
+  "akMangalDoshaFull": "मंगल दोष (कुज दोष)",
+  "akMangalLine": "वधू: {bride}   वर: {groom}",
+  "akPresent": "है",
+  "akNotPresent": "नहीं है",
+  "akMangalMismatch": "असमानता — एक कुंडली में मंगल दोष है और दूसरी में नहीं; शास्त्रीय रूप से मिलान को स्वीकार या अस्वीकार करने से पहले इसकी और जाँच की जाती है (परस्पर निवारण नियम, शमनकारी बल, इत्यादि)।",
+  "akPdfDisclaimer": "लग्न और चंद्र दोनों से 1/2/4/7/8/12 में मंगल की जाँच करता है। अष्टकूट तालिकाएँ guna_milan.dart के दस्तावेज़ अनुसार — किसी मुद्रित संदर्भ से सत्यापित नहीं; परामर्श हेतु उपयोग से पहले क्रॉस-चेक करें।",
+  "akKootaBreakdown": "कूट विश्लेषण",
+  "akMangalDosha": "मंगल दोष",
+  "akExportPdf": "PDF निर्यात करें",
+  "akBrideError": "वधू की कुंडली की गणना नहीं हो सकी: {e}",
+  "@akBrideError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "akGroomError": "वर की कुंडली की गणना नहीं हो सकी: {e}",
+  "@akGroomError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "cbTitle": "महाकोश में साझा करें",
+  "cbBackendMissing": "महाकोश के लिए बैकएंड कॉन्फ़िगर होना आवश्यक है। supabase/README.md देखें।",
+  "cbSignInPrompt": "सामुदायिक शोध में कुंडलियाँ योगदान करने के लिए साइन इन करें।",
+  "cbAnonName": "नाम हटा दिया गया है — कभी संग्रहीत या प्रदर्शित नहीं होगा",
+  "cbAnonBirth": "जन्म तिथि और स्थान शोधकर्ताओं को दिखाए जाते हैं",
+  "cbAnonTime": "सटीक जन्म समय गणना के लिए उपयोग होता है, पर कभी प्रदर्शित नहीं होगा",
+  "cbAnonEvents": "आपके जोड़े गए जीवन-घटनाक्रम शोधकर्ताओं को दिखते हैं",
+  "cbThirdPartyConsent": "मैं पुष्टि करता/करती हूँ कि इस व्यक्ति का जन्म-विवरण शोध हेतु साझा करने की मुझे उनकी सहमति प्राप्त है",
+  "cbEventPrivacyWarning": "घटना का विवरण अनाम कुंडली पर शोधकर्ताओं को दिखता है — इसमें नाम, संपर्क विवरण, अस्पताल या अन्य स्थान, या ऐसा कुछ भी न लिखें जिससे किसी वास्तविक व्यक्ति की पहचान हो सके।",
+  "cbMainConsent": "मैं इस कुंडली और ऊपर दिए गए जीवन-घटनाक्रम — जिनमें स्वास्थ्य से जुड़े घटनाक्रम भी शामिल हैं — को सामुदायिक शोध हेतु साझा करने की सहमति देता/देती हूँ",
+  "cbDate": "दिनांक…",
+  "cbPublishing": "प्रकाशित हो रहा है…",
+  "cbPublish": "महाकोश में प्रकाशित करें",
+  "cbWithdrawNote": "आप इस कुंडली को कभी भी महाकोश से वापस ले सकते हैं।",
+  "cbContributed": "कुंडली महाकोश · सामुदायिक शोध में योगदान की गई ({code})",
+  "cbHeading": "यह कुंडली साझा की जाएगी",
+  "cbSubheading": "शोध समुदाय के साथ अनाम रूप से।",
+  "cbThisIs": "यह है:",
+  "cbLifeEvents": "जीवन घटनाएँ",
+  "cbEventsEmptyHint": "तिथि और वर्ग सहित घटनाएँ कुंडली को पैटर्न शोध के लिए उपयोगी बनाती हैं (जैसे विवाह · 2014, आजीविका परिवर्तन · 2019)।",
+  "cbEventsPulledHint": "इस कुंडली की जीवन घटनाओं से ली गईं। इस प्रस्तुति के लिए नीचे और जोड़ें; स्थायी रूप से प्रबंधित करने के लिए कुंडली की जीवन घटनाएँ स्क्रीन देखें।",
+  "cbHealthRelatedEvent": "स्वास्थ्य-संबंधी घटना",
+  "cbTagHint": "जैसे अंग प्रत्यारोपण",
+  "cbNotesHint": "शोधकर्ताओं के लिए टिप्पणियाँ",
+  "cbHealthRelated": "स्वास्थ्य-संबंधी",
+  "cbAddEvent": "घटना जोड़ें",
+  "cbError": "योगदान नहीं किया जा सका: {e}",
+  "@cbError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "evTitle": "जीवन घटनाएँ",
+  "evAddEvent": "घटना जोड़ें",
+  "evEditEvent": "घटना संपादित करें",
+  "evLoadError": "घटनाएँ लोड नहीं हो सकीं: {e}",
+  "@evLoadError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "evEmpty": "अभी कोई घटना दर्ज नहीं। विवाह, जन्म, आजीविका परिवर्तन और अन्य महत्वपूर्ण पड़ाव जोड़ें — ये भविष्यवाणी सत्यापन को सशक्त करते हैं और महाकोश में साझा किए जा सकते हैं।",
+  "evDeleteTitle": "यह घटना हटाएँ?",
+  "evDeleteBody": "\"{label}\" इस कुंडली से हटा दी जाएगी।",
+  "@evDeleteBody": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "evCategory": "वर्ग",
+  "evAgeInYears": "आयु (वर्षों में)",
+  "evAgeHint": "जैसे 27",
+  "evPickDate": "तिथि चुनें",
+  "evTitleOptional": "शीर्षक (वैकल्पिक)",
+  "evTitleHint": "इस घटना के लिए संक्षिप्त शीर्षक",
+  "evNotesOptional": "टिप्पणियाँ (वैकल्पिक)",
+  "evPrivacyHint": "यदि यह कुंडली कभी महाकोश में साझा की गई, तो घटनाओं के शीर्षक और टिप्पणियाँ शोधकर्ताओं को दिखेंगी — नाम या अन्य पहचान-योग्य विवरण न लिखें।",
+  "evCatMarriage": "विवाह",
+  "evCatChildbirth": "संतान जन्म",
+  "evCatRelationship": "संबंध",
+  "evCatCareer": "आजीविका",
+  "evCatEducation": "शिक्षा",
+  "evCatHealth": "स्वास्थ्य",
+  "evCatRelocation": "स्थान परिवर्तन",
+  "evCatBereavement": "शोक",
+  "evCatAccident": "दुर्घटना",
+  "evCatFinancial": "आर्थिक",
+  "evCatSpiritual": "आध्यात्मिक",
+  "evCatOther": "अन्य",
+  "rdTitle": "शोध अनुरोध",
+  "rdNotFound": "अनुरोध नहीं मिला।",
+  "rdMatchingCharts": "मेल खाती कुंडलियाँ",
+  "rdMatchesError": "मिलान लोड नहीं हो सके: {e}",
+  "@rdMatchesError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "rdStatusInReview": "समीक्षा में",
+  "rdStatusLive": "प्रकाशित",
+  "rdStatusNotApproved": "स्वीकृत नहीं",
+  "rdNoMatches": "अभी कोई मिलान नहीं। योगदानकर्ताओं को सूचित किया जाता है जब उनकी कुंडलियाँ मेल खाती हैं।",
+  "rdMore": "अधिक",
+  "rdHideFromView": "मेरी दृष्टि से छिपाएँ",
+  "rdReport": "रिपोर्ट करें...",
+  "rdExplore": "इन पैटर्न को महाकोश में देखें",
+  "rdHidden": "कुंडली {code} आपकी दृष्टि से छिपाई गई।",
+  "@rdHidden": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "rdUndo": "पूर्ववत करें",
+  "rdHideError": "कुंडली छिपाई नहीं जा सकी: {e}",
+  "@rdHideError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "nrTitle": "नया शोध अनुरोध",
+  "nrSubmitted": "अनुरोध भेजा गया — त्वरित समीक्षा के बाद यह प्रकाशित होगा।",
+  "nrSubmitting": "भेजा जा रहा है…",
+  "nrSubmit": "समीक्षा हेतु भेजें",
+  "nrModerationNote": "प्रकाशित होने से पहले अनुरोधों की समीक्षा की जाती है — मुख्यतः यह पकड़ने के लिए कि कहीं किसी विशिष्ट ज्ञात व्यक्ति की पहचान का प्रयास तो नहीं हो रहा, बजाय वास्तविक पैटर्न-शोध के।",
+  "nrTitleLabel": "शीर्षक",
+  "nrTitleHint": "जैसे विवाह के समय सप्तम भाव में मंगल + राहु दशा",
+  "nrPurpose": "उद्देश्य",
+  "nrPurposeHint": "आप किस पैटर्न पर शोध कर रहे हैं, और क्यों?",
+  "nrPrivacyHint": "शीर्षक और उद्देश्य सार्वजनिक रूप से दिखते हैं — नाम, संपर्क विवरण, या कुछ भी ऐसा न लिखें जिससे किसी वास्तविक व्यक्ति की पहचान हो सके।",
+  "nrCriteriaSection": "मानदंड (संरचित — वास्तविक क्वेरी के रूप में चलते हैं)",
+  "nrAddCriterion": "मानदंड जोड़ें",
+  "nrPlanet": "ग्रह",
+  "nrHouseFromLagna": "भाव (लग्न से)",
+  "nrHouseN": "{n}H",
+  "@nrHouseN": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "nrAdd": "जोड़ें",
+  "msBackendMissing": "महाकोश के लिए बैकएंड कॉन्फ़िगर होना आवश्यक है (SUPABASE_URL / SUPABASE_ANON_KEY)। supabase/README.md देखें।",
+  "msSignInPrompt": "सामुदायिक शोध संग्रह में खोजने के लिए साइन इन करें।",
+  "msSearchFailed": "खोज विफल: {e}",
+  "@msSearchFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "msFilterCharts": "कुंडलियाँ फ़िल्टर करें",
+  "msFiltersCount": "फ़िल्टर ({count})",
+  "@msFiltersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "msClear": "हटाएँ",
+  "msClearAll": "सभी हटाएँ",
+  "msBookmarked": "बुकमार्क किए गए · {count}",
+  "@msBookmarked": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "msBookmarksError": "बुकमार्क लोड नहीं हो सके: {e}",
+  "@msBookmarksError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "msBookmarkError": "बुकमार्क अपडेट नहीं हो सका: {e}",
+  "@msBookmarkError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "msChartCode": "कुंडली {code}",
+  "@msChartCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "msNoLongerAvailable": "महाकोश पर अब उपलब्ध नहीं",
+  "msRemoveBookmark": "बुकमार्क हटाएँ",
+  "msMore": "और",
+  "msHideFromView": "मेरी दृष्टि से छिपाएँ",
+  "msCombineWith": "इसके साथ जोड़ें",
+  "msAddFilterTitle": "फ़िल्टर जोड़ें",
+  "msSign": "राशि",
+  "msYogaCode": "योग कोड",
+  "msEventTag": "घटना टैग",
+  "msBornBetween": "जन्म इस अवधि में (कोई एक छोर वैकल्पिक)",
+  "msFromDate": "आरंभ तिथि",
+  "msToDate": "अंतिम तिथि",
+  "msLongPressClear": "हटाने के लिए बटन को देर तक दबाएँ।",
+  "msSetDateBound": "कम से कम एक तिथि सीमा दें।",
+  "msNot": "नहीं ",
+  "fltPlanetInSign": "{planet} राशि {n} में",
+  "@fltPlanetInSign": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "fltPlanetInHouse": "{planet} {n}H में",
+  "@fltPlanetInHouse": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "fltPlanetInNakshatra": "{planet} नक्षत्र {n} में",
+  "@fltPlanetInNakshatra": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "fltYoga": "योग: {code}",
+  "@fltYoga": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "fltEvent": "घटना: {tag}",
+  "@fltEvent": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "fltBorn": "जन्म {parts}",
+  "@fltBorn": {
+    "placeholders": {
+      "parts": {
+        "type": "String"
+      }
+    }
+  },
+  "dsTitle": "चर्चा · {code}",
+  "@dsTitle": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "dsPostError": "पोस्ट नहीं हो सका: {e}",
+  "@dsPostError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dsChooseDisplayName": "प्रदर्शित नाम चुनें",
+  "dsDisplayNameHint": "आपकी टिप्पणियों और शोध पोस्ट के साथ सार्वजनिक रूप से दिखता है। असली नाम देना आवश्यक नहीं।",
+  "dsDisplayName": "प्रदर्शित नाम",
+  "dsEdit": "संपादित करें",
+  "dsReply": "उत्तर दें",
+  "dsReportEllipsis": "रिपोर्ट करें…",
+  "dsBlockUser": "{name} को ब्लॉक करें",
+  "@dsBlockUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dsDeleteTitle": "टिप्पणी हटाएँ?",
+  "dsDeleteBody": "टिप्पणी सभी के लिए हटा दी जाएगी। उस पर आई प्रत्युत्तर बनी रहेंगी, जो हटाई गई टिप्पणी को उद्धृत करेंगी।",
+  "dsReported": "टिप्पणी की शिकायत दर्ज हुई — हमारी टीम इसकी समीक्षा करेगी। आप लेखक को ब्लॉक करके उनकी टिप्पणियाँ छिपा भी सकते हैं।",
+  "dsDeleteError": "हटाया नहीं जा सका: {e}",
+  "@dsDeleteError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dsReportError": "रिपोर्ट नहीं की जा सकी: {e}",
+  "@dsReportError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dsBlocked": "{name} ब्लॉक किए गए — उनकी टिप्पणियाँ आपकी दृष्टि से छिपी हैं और हमारे मॉडरेटरों को सूचित कर दिया गया है।",
+  "@dsBlocked": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dsBlockError": "ब्लॉक नहीं किया जा सका: {e}",
+  "@dsBlockError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dsUndo": "पूर्ववत करें",
+  "dsLoadError": "चर्चा लोड नहीं हो सकी: {e}",
+  "@dsLoadError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dsEmpty": "अभी कोई टिप्पणी नहीं — इस कुंडली पर अपना विश्लेषण साझा करें।",
+  "dsComposerHint": "अपना विश्लेषण साझा करें…",
+  "dsReportComment": "टिप्पणी की रिपोर्ट करें",
+  "dsReportQuote": "“{body}” — {name}",
+  "@dsReportQuote": {
+    "placeholders": {
+      "body": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dsReportBlurb": "टिप्पणी हमारी टीम की समीक्षा के लिए भेजी जाती है। लेखक को कभी नहीं बताया जाता कि रिपोर्ट किसने की।",
+  "dsReportDetails": "अतिरिक्त विवरण (वैकल्पिक)",
+  "dsSubmitReport": "रिपोर्ट भेजें",
+  "reportDeanonymization": "किसी वास्तविक, नामित व्यक्ति की पहचान हो सकती है",
+  "reportHealthPrivacy": "संवेदनशील स्वास्थ्य जानकारी सार्वजनिक नहीं होनी चाहिए",
+  "reportHarassment": "उत्पीड़क, घृणापूर्ण, या अपमानजनक सामग्री",
+  "reportSpam": "स्पैम या नकली/परीक्षण डेटा",
+  "reportOther": "कुछ और",
+  "navToday": "आज",
+  "navHome": "होम",
+  "navMahakosh": "महाकोश",
+  "navResearch": "शोध",
+  "mnSectionTools": "उपकरण",
+  "mnSectionAccount": "खाता",
+  "mnSectionMahakosh": "महाकोश",
+  "mnSectionAdmin": "एडमिन",
+  "mnSectionAbout": "परिचय",
+  "mnHiddenChartsSubtitle": "महाकोश में अपनी दृष्टि से छिपाई गई कुंडलियाँ"
+}

@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../core/theme/theme.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 import 'request_detail_screen.dart';
 
 class RespondScreen extends ConsumerStatefulWidget {
@@ -34,14 +35,14 @@ class _RespondScreenState extends ConsumerState<RespondScreen> {
       );
       ref.invalidate(requestMatchesProvider(widget.requestId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Chart tagged against this request.')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(context.l10n.rsTagged)));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not respond: $e')));
+            .showSnackBar(SnackBar(content: Text(context.l10n.rsError('$e'))));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -53,26 +54,23 @@ class _RespondScreenState extends ConsumerState<RespondScreen> {
     final kundlis = ref.watch(kundlisProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Respond with a Chart')),
+      appBar: AppBar(title: Text(context.l10n.rsTitle)),
       body: kundlis.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(message: 'Error: $e'),
+        error: (e, _) => EmptyState(message: context.l10n.uiGenericError('$e')),
         data: (list) {
-          final shared =
-              list.where((k) => k.isSharedToMahakosh).toList();
-          final unshared =
-              list.where((k) => !k.isSharedToMahakosh).toList();
+          final shared = list.where((k) => k.isSharedToMahakosh).toList();
+          final unshared = list.where((k) => !k.isSharedToMahakosh).toList();
           return ListView(
             padding: formPadding(context),
             children: [
               Text(
-                'Pick one of your Mahakosh-shared charts to tag against '
-                'this research request. The requester sees it anonymized.',
-                style: TextStyle(fontSize: 13.5, color: TEColors.inkSoft),
+                context.l10n.rsPickChart,
+                style: TextStyle(fontSize: 13.5, color: KJColors.inkSoft),
               ),
               const SizedBox(height: 14),
               if (shared.isEmpty)
-                const Text('You have no shared charts yet.',
+                Text(context.l10n.rsNoSharedCharts,
                     style: TextStyle(fontSize: 13)),
               for (final k in shared)
                 Card(
@@ -80,20 +78,18 @@ class _RespondScreenState extends ConsumerState<RespondScreen> {
                   child: RadioListTile<String>(
                     value: k.mahakoshCode!,
                     groupValue: _selectedMkCode,
-                    activeColor: TEColors.maroon,
+                    activeColor: KJColors.maroon,
                     title: Text('${k.name} · ${k.mahakoshCode}'),
-                    subtitle: const Text('Shared to Mahakosh',
+                    subtitle: Text(context.l10n.rsSharedToMahakosh,
                         style: TextStyle(fontSize: 11.5)),
-                    onChanged: (v) =>
-                        setState(() => _selectedMkCode = v),
+                    onChanged: (v) => setState(() => _selectedMkCode = v),
                   ),
                 ),
               if (unshared.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
-                  'Not shared yet — share a kundli first, then respond:',
-                  style:
-                      TextStyle(fontSize: 12.5, color: TEColors.inkSoft),
+                  context.l10n.rsNotShared,
+                  style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft),
                 ),
                 for (final k in unshared)
                   Card(
@@ -103,7 +99,7 @@ class _RespondScreenState extends ConsumerState<RespondScreen> {
                       trailing: TextButton(
                         onPressed: () =>
                             context.push('/kundli/${k.id}/contribute'),
-                        child: const Text('Share…'),
+                        child: Text(context.l10n.share),
                       ),
                     ),
                   ),
@@ -112,7 +108,9 @@ class _RespondScreenState extends ConsumerState<RespondScreen> {
               FilledButton(
                 onPressed:
                     _selectedMkCode == null || _submitting ? null : _submit,
-                child: Text(_submitting ? 'Tagging…' : 'Tag chart'),
+                child: Text(_submitting
+                    ? context.l10n.rsTagging
+                    : context.l10n.rsTagChart),
               ),
             ],
           );

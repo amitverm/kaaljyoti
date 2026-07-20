@@ -408,8 +408,13 @@ double nathonnataBala(Planet planet, BirthData birth) {
   final unnataGhatis = fromMidnight * 2.5; // 12h * 2.5 ghati/h = 30 ghatis max
   final nataGhatis = 30 - unnataGhatis;
   return switch (planet) {
-    Planet.moon || Planet.mars || Planet.saturn => (2 * nataGhatis).clamp(0, 60),
-    Planet.sun || Planet.jupiter || Planet.venus =>
+    Planet.moon ||
+    Planet.mars ||
+    Planet.saturn =>
+      (2 * nataGhatis).clamp(0, 60),
+    Planet.sun ||
+    Planet.jupiter ||
+    Planet.venus =>
       (2 * unnataGhatis).clamp(0, 60),
     _ => 0,
   };
@@ -508,12 +513,9 @@ Planet _aharganaLord(int index) => _aharganaLordOrder[index % 7];
 
 double varshaBala(Planet planet, Planet varshaLord) =>
     planet == varshaLord ? 15 : 0;
-double masaBala(Planet planet, Planet masaLord) =>
-    planet == masaLord ? 30 : 0;
-double dinaBala(Planet planet, Planet dinaLord) =>
-    planet == dinaLord ? 45 : 0;
-double horaBala(Planet planet, Planet horaLord) =>
-    planet == horaLord ? 60 : 0;
+double masaBala(Planet planet, Planet masaLord) => planet == masaLord ? 30 : 0;
+double dinaBala(Planet planet, Planet dinaLord) => planet == dinaLord ? 45 : 0;
+double horaBala(Planet planet, Planet horaLord) => planet == horaLord ? 60 : 0;
 
 /// Ayana (equinoctial) Bala — declination ("kranti") based.
 /// [tropicalLongitude] = sidereal longitude + ayanamsa (Ayana Bala is
@@ -532,8 +534,7 @@ double ayanaBala(Planet planet, double tropicalLongitude) {
   const eps = 23.87;
   const epsRad = eps * math.pi / 180;
   final lamRad = _norm360(tropicalLongitude) * math.pi / 180;
-  final decl =
-      math.asin(math.sin(epsRad) * math.sin(lamRad)) * 180 / math.pi;
+  final decl = math.asin(math.sin(epsRad) * math.sin(lamRad)) * 180 / math.pi;
   // Mercury gains from BOTH ayanas — its declination counts positive
   // whether north or south (classical rule; confirmed blind by the
   // 1969 reference chart, where Mercury sits at southern declination
@@ -761,10 +762,9 @@ double signedSputaDrishtiOn(
   Planet? exclude,
 }) {
   final mercuryWithMalefic = const {Planet.sun, Planet.mars, Planet.saturn}
-      .any((m) =>
-          positions[m]!.sign == positions[Planet.mercury]!.sign);
-  final moonNearSun = angularDistance(positions[Planet.moon]!.longitude,
-          positions[Planet.sun]!.longitude) <
+      .any((m) => positions[m]!.sign == positions[Planet.mercury]!.sign);
+  final moonNearSun = angularDistance(
+          positions[Planet.moon]!.longitude, positions[Planet.sun]!.longitude) <
       30;
   var total = 0.0;
   for (final p in kShadbalaPlanets) {
@@ -852,8 +852,12 @@ List<ShadbalaResult> computeShadbalaSync(AstroSnapshot snapshot) {
   final sunPos = snapshot.positions[Planet.sun]!;
   final moonPos = snapshot.positions[Planet.moon]!;
   final moonIsShukla = snapshot.panchang.paksha == 'Shukla';
-  final mercuryWithMalefic = const {Planet.sun, Planet.mars, Planet.saturn}
-      .any((m) => snapshot.positions[m]!.sign == snapshot.positions[Planet.mercury]!.sign);
+  final mercuryWithMalefic = const {
+    Planet.sun,
+    Planet.mars,
+    Planet.saturn
+  }.any((m) =>
+      snapshot.positions[m]!.sign == snapshot.positions[Planet.mercury]!.sign);
 
   // --- Sunrise / sunset bracketing the birth instant (Tribhaga & Hora),
   // mirroring daily_panchang.dart's "sunrise at/before now, sunset
@@ -895,10 +899,16 @@ List<ShadbalaResult> computeShadbalaSync(AstroSnapshot snapshot) {
   // muhurta.dart; duplicated here as a small fixed table rather than
   // importing a screen-layer file from the core engine).
   const horaCycle = [
-    Planet.sun, Planet.venus, Planet.mercury, Planet.moon,
-    Planet.saturn, Planet.jupiter, Planet.mars,
+    Planet.sun,
+    Planet.venus,
+    Planet.mercury,
+    Planet.moon,
+    Planet.saturn,
+    Planet.jupiter,
+    Planet.mars,
   ];
-  final horaStartIdx = horaCycle.indexOf(_kWeekdayLordShadbala[sunrise.weekday]!);
+  final horaStartIdx =
+      horaCycle.indexOf(_kWeekdayLordShadbala[sunrise.weekday]!);
   final Planet horaLord;
   if (isDay) {
     final dayLen = sunset.difference(sunrise).inSeconds / 12;
@@ -942,8 +952,10 @@ List<ShadbalaResult> computeShadbalaSync(AstroSnapshot snapshot) {
   // --- Sun's Cheshta stand-in (Ayana Bala) & Moon's (Paksha Bala),
   // computed once and reused for both their own Kala Bala AND as the
   // Cheshta Bala inputs below.
-  final sunAyana = ayanaBala(Planet.sun, sunPos.longitude + snapshot.ayanamsaValue);
-  final moonPaksha = pakshaBala(Planet.moon, sunPos.longitude, moonPos.longitude,
+  final sunAyana =
+      ayanaBala(Planet.sun, sunPos.longitude + snapshot.ayanamsaValue);
+  final moonPaksha = pakshaBala(
+      Planet.moon, sunPos.longitude, moonPos.longitude,
       mercuryWithMalefic: mercuryWithMalefic);
 
   // --- Dig Bala reference points: the TRUE Ascendant/Midheaven

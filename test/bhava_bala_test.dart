@@ -23,7 +23,20 @@ const _sb = {
 };
 
 // PL9 Bhava Bala rows, houses 1..12.
-const _fixFromLord = [487, 385, 445, 424, 320, 391, 391, 320, 424, 445, 385, 362];
+const _fixFromLord = [
+  487,
+  385,
+  445,
+  424,
+  320,
+  391,
+  391,
+  320,
+  424,
+  445,
+  385,
+  362
+];
 const _fixDig = [30, 50, 40, 30, 20, 20, 0, 20, 50, 60, 40, 10];
 const _fixDrishti = [-23, -49, -51, -26, 7, 33, 36, 9, 30, 39, 18, -34];
 const _fixPlanetsIn = [0, 60, 0, 0, -60, 0, -60, 60, 0, 0, -60, 0];
@@ -74,8 +87,7 @@ void main() {
 
   test('day-night row matches PL9 exactly (prishtodaya @ night)', () {
     for (var i = 0; i < 12; i++) {
-      expect(rows[i].dayNight, _fixDayNight[i].toDouble(),
-          reason: 'H${i + 1}');
+      expect(rows[i].dayNight, _fixDayNight[i].toDouble(), reason: 'H${i + 1}');
     }
   });
 

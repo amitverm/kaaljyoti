@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import 'chart_style.dart';
 import 'north_chart_painter.dart';
 import 'pinch_zoom.dart';
@@ -19,9 +20,9 @@ import 'pinch_zoom.dart';
 Color _scoreInk(int score, {required bool isSav}) {
   final strong = isSav ? 30 : 5;
   final weak = isSav ? 22 : 2;
-  if (score >= strong) return TEColors.forest;
-  if (score <= weak) return TEColors.maroon;
-  return TEColors.ink;
+  if (score >= strong) return KJColors.forest;
+  if (score <= weak) return KJColors.maroon;
+  return KJColors.ink;
 }
 
 /// Square bindu chart in the requested [style].
@@ -48,8 +49,10 @@ class BinduChartView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final CustomPainter painter = style == ChartStyle.south
-        ? _SouthBinduPainter(scores: scores, lagna: lagna, isSav: isSav)
-        : _NorthBinduPainter(scores: scores, lagna: lagna, isSav: isSav);
+        ? _SouthBinduPainter(
+            l10n: context.l10n, scores: scores, lagna: lagna, isSav: isSav)
+        : _NorthBinduPainter(
+            l10n: context.l10n, scores: scores, lagna: lagna, isSav: isSav);
     final chart = PinchZoom(child: CustomPaint(painter: painter));
     final side = size;
     return side != null
@@ -60,10 +63,15 @@ class BinduChartView extends StatelessWidget {
 
 class _NorthBinduPainter extends CustomPainter {
   _NorthBinduPainter({
+    required this.l10n,
     required this.scores,
     required this.lagna,
     required this.isSav,
   });
+
+  /// Localized strings for the rashi tokens — a painter has no
+  /// BuildContext at paint time, so the host widget injects it.
+  final AppLocalizations l10n;
 
   final List<int> scores;
   final ZodiacSign lagna;
@@ -88,9 +96,9 @@ class _NorthBinduPainter extends CustomPainter {
       final signTp = TextPainter(
         text: TextSpan(
           text: '$signNumber',
-          style: TETheme.mono(
+          style: KJTheme.mono(
             size: signSize,
-            color: n == 1 ? TEColors.maroon : TEColors.inkSoft,
+            color: n == 1 ? KJColors.maroon : KJColors.inkSoft,
             weight: n == 1 ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
@@ -101,7 +109,7 @@ class _NorthBinduPainter extends CustomPainter {
       final countTp = TextPainter(
         text: TextSpan(
           text: '$score',
-          style: TETheme.mono(
+          style: KJTheme.mono(
             size: countSize,
             color: _scoreInk(score, isSav: isSav),
             weight: FontWeight.w600,
@@ -116,22 +124,28 @@ class _NorthBinduPainter extends CustomPainter {
   void _paintCentered(Canvas canvas, TextPainter tp, Offset center) =>
       tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
 
-  final TEPalette _palette = TEColors.current;
+  final KJPalette _palette = KJColors.current;
 
   @override
   bool shouldRepaint(covariant _NorthBinduPainter oldDelegate) =>
       oldDelegate.scores != scores ||
       oldDelegate.lagna != lagna ||
       oldDelegate.isSav != isSav ||
+      oldDelegate.l10n != l10n ||
       oldDelegate._palette != _palette;
 }
 
 class _SouthBinduPainter extends CustomPainter {
   _SouthBinduPainter({
+    required this.l10n,
     required this.scores,
     required this.lagna,
     required this.isSav,
   });
+
+  /// Localized strings for the rashi tokens — a painter has no
+  /// BuildContext at paint time, so the host widget injects it.
+  final AppLocalizations l10n;
 
   final List<int> scores;
   final ZodiacSign lagna;
@@ -164,17 +178,17 @@ class _SouthBinduPainter extends CustomPainter {
     Rect cellRect(int row, int col) => Rect.fromLTWH(
         rect.left + col * cellW, rect.top + row * cellH, cellW, cellH);
 
-    canvas.drawRect(Offset.zero & size, Paint()..color = TEColors.paper);
+    canvas.drawRect(Offset.zero & size, Paint()..color = KJColors.paper);
 
     final (lagnaRow, lagnaCol) = _cells[lagna]!;
     final lagnaCell = cellRect(lagnaRow, lagnaCol);
     canvas.drawRect(
       lagnaCell,
-      Paint()..color = TEColors.maroon.withValues(alpha: 0.08),
+      Paint()..color = KJColors.maroon.withValues(alpha: 0.08),
     );
 
     final line = Paint()
-      ..color = TEColors.ink
+      ..color = KJColors.ink
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeW
       ..strokeJoin = StrokeJoin.miter;
@@ -188,7 +202,7 @@ class _SouthBinduPainter extends CustomPainter {
       Offset(lagnaCell.left + diagLen, lagnaCell.top),
       Offset(lagnaCell.left, lagnaCell.top + diagLen),
       Paint()
-        ..color = TEColors.maroon
+        ..color = KJColors.maroon
         ..strokeWidth = strokeW * 1.2
         ..strokeCap = StrokeCap.round,
     );
@@ -204,10 +218,10 @@ class _SouthBinduPainter extends CustomPainter {
 
       final signTp = TextPainter(
         text: TextSpan(
-          text: sign.western.substring(0, 3),
-          style: TETheme.mono(
+          text: sign.abbrLabel(l10n),
+          style: KJTheme.mono(
             size: signSize,
-            color: sign == lagna ? TEColors.maroon : TEColors.inkSoft,
+            color: sign == lagna ? KJColors.maroon : KJColors.inkSoft,
             weight: sign == lagna ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
@@ -219,7 +233,7 @@ class _SouthBinduPainter extends CustomPainter {
       final countTp = TextPainter(
         text: TextSpan(
           text: '$score',
-          style: TETheme.mono(
+          style: KJTheme.mono(
             size: countSize,
             color: _scoreInk(score, isSav: isSav),
             weight: FontWeight.w600,
@@ -227,17 +241,18 @@ class _SouthBinduPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      countTp.paint(canvas,
-          cell.center - Offset(countTp.width / 2, countTp.height / 2));
+      countTp.paint(
+          canvas, cell.center - Offset(countTp.width / 2, countTp.height / 2));
     }
   }
 
-  final TEPalette _palette = TEColors.current;
+  final KJPalette _palette = KJColors.current;
 
   @override
   bool shouldRepaint(covariant _SouthBinduPainter oldDelegate) =>
       oldDelegate.scores != scores ||
       oldDelegate.lagna != lagna ||
       oldDelegate.isSav != isSav ||
+      oldDelegate.l10n != l10n ||
       oldDelegate._palette != _palette;
 }

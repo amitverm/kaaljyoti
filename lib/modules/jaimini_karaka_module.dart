@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../core/astro/jaimini_karaka.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
+
+String _jaiminiKarakasTitle(AppLocalizations l10n) =>
+    l10n.moduleJaiminiKarakasTitle;
 
 /// Dedicated Sapta Karaka card — previously only available buried
 /// inside the Birth Chart module's "Jaimini karakas" toggle (which
@@ -19,6 +23,7 @@ class JaiminiKarakaModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'jaimini_karaka',
         title: 'Jaimini Karakas',
+        localizedTitle: _jaiminiKarakasTitle,
         icon: Icons.auto_awesome_outlined,
         category: 'Jaimini',
         defaultSpan: CardSpan.half,
@@ -34,6 +39,7 @@ class JaiminiKarakaModule extends AstroModule {
 
   @override
   Widget cardView(BuildContext context, ModuleContext ctx) {
+    final l10n = context.l10n;
     final ranked = _ranked(ctx.snapshot);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,14 +52,14 @@ class JaiminiKarakaModule extends AstroModule {
                 SizedBox(
                   width: 34,
                   child: Text(entry.key.code,
-                      style: TETheme.mono(
+                      style: KJTheme.mono(
                           size: 12.5,
-                          color: TEColors.maroon,
+                          color: KJColors.maroon,
                           weight: FontWeight.w600)),
                 ),
                 Expanded(
                   flex: 3,
-                  child: Text(entry.value.planet.displayName,
+                  child: Text(entry.value.planet.label(l10n),
                       style: TextStyle(
                           fontSize: 13.5,
                           color: planetInk(entry.value.planet),
@@ -62,8 +68,8 @@ class JaiminiKarakaModule extends AstroModule {
                 Expanded(
                   flex: 3,
                   child: Text(
-                    '${entry.value.sign.western} ${formatDegreeInSign(entry.value.degreesInSign)}',
-                    style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+                    '${entry.value.sign.label(l10n)} ${formatDegreeInSign(entry.value.degreesInSign)}',
+                    style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
                   ),
                 ),
               ],
@@ -75,18 +81,18 @@ class JaiminiKarakaModule extends AstroModule {
 
   @override
   Widget detailView(BuildContext context, ModuleContext ctx) {
+    final l10n = context.l10n;
     final ranked = _ranked(ctx.snapshot);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Sapta Karakas', style: TETheme.serif(size: 18)),
+          Text(l10n.saptaKarakasHeading, style: KJTheme.serif(size: 18)),
           const SizedBox(height: 4),
           Text(
-            'Ranked by degree within sign, highest first — the classical'
-            ' 7-karaka scheme (Sun–Saturn; no Rahu/Ketu).',
-            style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+            l10n.saptaKarakasBlurb,
+            style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 16),
           for (final entry in ranked.entries)
@@ -101,14 +107,14 @@ class JaiminiKarakaModule extends AstroModule {
                       height: 40,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: TEColors.paperAlt,
+                        color: KJColors.paperAlt,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: TEColors.hairline),
+                        border: Border.all(color: KJColors.hairline),
                       ),
                       child: Text(entry.key.code,
-                          style: TETheme.mono(
+                          style: KJTheme.mono(
                               size: 12.5,
-                              color: TEColors.maroon,
+                              color: KJColors.maroon,
                               weight: FontWeight.w600)),
                     ),
                     const SizedBox(width: 12),
@@ -121,26 +127,24 @@ class JaiminiKarakaModule extends AstroModule {
                               style: const TextStyle(
                                   fontSize: 14, fontWeight: FontWeight.w600),
                               children: [
+                                TextSpan(text: '${entry.key.label(l10n)} · '),
                                 TextSpan(
-                                    text: '${entry.key.displayName} · '),
-                                TextSpan(
-                                  text: entry.value.planet.displayName,
+                                  text: entry.value.planet.label(l10n),
                                   style: TextStyle(
-                                      color:
-                                          planetInk(entry.value.planet)),
+                                      color: planetInk(entry.value.planet)),
                                 ),
                               ],
                             ),
                           ),
-                          Text(entry.key.signifies,
-                              style: TETheme.mono(
-                                  size: 11, color: TEColors.inkSoft)),
+                          Text(entry.key.signifiesLabel(l10n),
+                              style: KJTheme.mono(
+                                  size: 11, color: KJColors.inkSoft)),
                         ],
                       ),
                     ),
                     Text(
-                      '${entry.value.sign.western} ${formatDegreeInSign(entry.value.degreesInSign)}',
-                      style: TETheme.mono(size: 12, color: TEColors.inkSoft),
+                      '${entry.value.sign.label(l10n)} ${formatDegreeInSign(entry.value.degreesInSign)}',
+                      style: KJTheme.mono(size: 12, color: KJColors.inkSoft),
                     ),
                   ],
                 ),
@@ -153,19 +157,26 @@ class JaiminiKarakaModule extends AstroModule {
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
+    final l10n = ctx.l10n;
     final ranked = _ranked(ctx.snapshot);
     return [
-      pdfSectionHeader('Jaimini Karakas (Sapta)'),
+      pdfSectionHeader(l10n.karakaPdfHeader),
       pw.TableHelper.fromTextArray(
-        headers: ['Karaka', 'Graha', 'Sign', 'Degree', 'Signifies'],
+        headers: [
+          l10n.labelKaraka,
+          l10n.labelGraha,
+          l10n.labelSign,
+          l10n.labelDegree,
+          l10n.labelSignifies,
+        ],
         data: [
           for (final entry in ranked.entries)
             [
-              '${entry.key.code} · ${entry.key.displayName}',
-              entry.value.planet.displayName,
-              entry.value.sign.western,
+              '${entry.key.code} · ${entry.key.label(l10n)}',
+              entry.value.planet.label(l10n),
+              entry.value.sign.label(l10n),
               formatDegreeInSign(entry.value.degreesInSign),
-              entry.key.signifies,
+              entry.key.signifiesLabel(l10n),
             ],
         ],
         headerStyle: pdfLabel(),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import 'chart_tuning.dart';
 import 'planet_token.dart';
 
@@ -31,6 +32,7 @@ int? circularSectorHit(Size size, Offset pos) {
 /// the true ascendant's sector, independent of the wheel's rotation.
 class CircularChartPainter extends CustomPainter {
   CircularChartPainter({
+    required this.l10n,
     required this.placements,
     required this.lagna,
     this.retrograde = const {},
@@ -45,6 +47,10 @@ class CircularChartPainter extends CustomPainter {
     this.showNakshatras = true,
     // Repaint live when the chart text settings change.
   }) : super(repaint: chartTuning);
+
+  /// Localized strings for the graha/rashi tokens. A painter has no
+  /// BuildContext at paint time, so the host widget injects it.
+  final AppLocalizations l10n;
 
   final Map<ZodiacSign, List<Planet>> placements;
   final ZodiacSign lagna;
@@ -80,8 +86,8 @@ class CircularChartPainter extends CustomPainter {
     final bandInner = showNakshatras ? r * 0.77 : r * 0.82;
     final trueAsc = trueAscendantSign ?? lagna;
 
-    Offset at(double angle, double radius) => center +
-        Offset(math.cos(angle) * radius, math.sin(angle) * radius);
+    Offset at(double angle, double radius) =>
+        center + Offset(math.cos(angle) * radius, math.sin(angle) * radius);
 
     // Canvas angles increase clockwise on screen, so a counter-clockwise
     // sign progression means each successive sector spans a smaller angle.
@@ -90,7 +96,7 @@ class CircularChartPainter extends CustomPainter {
     double sectorMid(int k) => math.pi - (k + 0.5) * math.pi / 6;
 
     // Ground.
-    canvas.drawRect(Offset.zero & size, Paint()..color = TEColors.paper);
+    canvas.drawRect(Offset.zero & size, Paint()..color = KJColors.paper);
 
     // Ascendant sector tint (full wedge, hub to rim) — follows the
     // TRUE ascendant, not the "view from" rotation anchor.
@@ -106,18 +112,18 @@ class CircularChartPainter extends CustomPainter {
       ..close();
     canvas.drawPath(
       ascWedge,
-      Paint()..color = TEColors.maroon.withValues(alpha: 0.08),
+      Paint()..color = KJColors.maroon.withValues(alpha: 0.08),
     );
 
     // Rim, ring-band boundary, and radial dividers.
     final line = Paint()
-      ..color = TEColors.ink
+      ..color = KJColors.ink
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeW;
     canvas.drawCircle(center, r, line);
     canvas.drawCircle(center, bandInner, line);
     final divider = Paint()
-      ..color = TEColors.ink
+      ..color = KJColors.ink
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeW * 0.7;
     // Sector dividers stop at the nakshatra band (when shown) so sign
@@ -140,7 +146,7 @@ class CircularChartPainter extends CustomPainter {
       }
 
       final tick = Paint()
-        ..color = TEColors.ink.withValues(alpha: 0.5)
+        ..color = KJColors.ink.withValues(alpha: 0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeW * 0.6;
       final nakSize = base * 0.017;
@@ -154,10 +160,10 @@ class CircularChartPainter extends CustomPainter {
         if (drawLabels) {
           final nak = Nakshatra.values[n];
           final tp = _layout(
-            nak.abbr,
-            TETheme.mono(
+            nak.abbrLabel(l10n),
+            KJTheme.mono(
               size: nakSize,
-              color: TEColors.inkSoft.withValues(alpha: 0.85),
+              color: KJColors.inkSoft.withValues(alpha: 0.85),
             ),
             r,
           );
@@ -181,10 +187,10 @@ class CircularChartPainter extends CustomPainter {
 
       // Sign name, horizontal, centered in the ring band at the mid-angle.
       final signTp = _layout(
-        sign.western,
-        TETheme.mono(
+        sign.label(l10n),
+        KJTheme.mono(
           size: signSize,
-          color: k == ascK ? TEColors.maroon : TEColors.inkSoft,
+          color: k == ascK ? KJColors.maroon : KJColors.inkSoft,
           weight: k == ascK ? FontWeight.w600 : FontWeight.w400,
         ),
         r,
@@ -197,12 +203,13 @@ class CircularChartPainter extends CustomPainter {
       final planets = placements[sign] ?? const <Planet>[];
       for (var i = 0; i < planets.length; i++) {
         final p = planets[i];
-        final token =
-            tokens[p] ?? PlanetToken(planet: p, retrograde: retrograde[p] ?? false);
+        final token = tokens[p] ??
+            PlanetToken(planet: p, retrograde: retrograde[p] ?? false);
         final radius = planetRadii[i % 3] * r;
         final angle = mid + (i ~/ 3) * 0.11;
         final tp = singleTokenPainter(
           token,
+          l10n: l10n,
           fontSize: planetSize,
           showDegrees: showDegrees,
           showKarakas: showKarakas,
@@ -217,9 +224,9 @@ class CircularChartPainter extends CustomPainter {
       if (padas.isNotEmpty) {
         final padaTp = _layout(
           padas.join(' '),
-          TETheme.mono(
+          KJTheme.mono(
             size: base * 0.022,
-            color: TEColors.inkSoft.withValues(alpha: 0.65),
+            color: KJColors.inkSoft.withValues(alpha: 0.65),
           ),
           r,
         );
@@ -236,7 +243,8 @@ class CircularChartPainter extends CustomPainter {
           retrograde: transitRetrograde[p] ?? false,
         );
         final angle = mid + (i - (transitPlanets.length - 1) / 2) * 0.09;
-        final tp = singleTokenPainter(tToken, fontSize: planetSize, isTransit: true)
+        final tp = singleTokenPainter(tToken,
+            l10n: l10n, fontSize: planetSize, isTransit: true)
           ..layout(maxWidth: r);
         // Hugs the rim of the sign band (0.9·r when the nakshatra ring
         // is off, matching the classic layout).
@@ -249,9 +257,9 @@ class CircularChartPainter extends CustomPainter {
     final deg = ascendantDegree;
     final asTp = _layout(
       deg != null ? 'As ${formatDegreeInSign(deg)}' : 'As',
-      TETheme.mono(
+      KJTheme.mono(
         size: base * 0.026,
-        color: TEColors.maroon,
+        color: KJColors.maroon,
         weight: FontWeight.w600,
       ),
       r,
@@ -271,7 +279,7 @@ class CircularChartPainter extends CustomPainter {
 
   // Captured at construction: paint output depends on the active
   // palette, so a palette change must trigger a repaint.
-  final TEPalette _palette = TEColors.current;
+  final KJPalette _palette = KJColors.current;
 
   @override
   bool shouldRepaint(covariant CircularChartPainter oldDelegate) =>
@@ -287,5 +295,6 @@ class CircularChartPainter extends CustomPainter {
       oldDelegate.transitRetrograde != transitRetrograde ||
       oldDelegate.padaLabels != padaLabels ||
       oldDelegate.showNakshatras != showNakshatras ||
+      oldDelegate.l10n != l10n ||
       oldDelegate._palette != _palette;
 }

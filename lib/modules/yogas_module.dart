@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../core/astro/dasha/dasha.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
+
+String _yogasTitle(AppLocalizations l10n) => l10n.moduleYogasTitle;
 
 /// Yogas & Doshas — rule-engine results grouped by category, with a
 /// dasha filter: All / active in the current Mahadasha / ripe in
@@ -21,18 +24,19 @@ class YogasModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'yogas',
         title: 'Yogas & Doshas',
+        localizedTitle: _yogasTitle,
         icon: Icons.auto_awesome_outlined,
         category: 'Strength & Doshas',
       );
 
   @override
-  List<ModuleConfigChoice> configChoices() => const [
+  List<ModuleConfigChoice> configChoices(AppLocalizations l10n) => [
         ModuleConfigChoice(
           key: 'dasha_basis',
-          label: 'Active filter dasha',
+          label: l10n.cfgActiveFilterDasha,
           options: [
-            ('vimshottari', 'Vimshottari'),
-            ('chara', 'Jaimini Chara'),
+            ('vimshottari', l10n.dashaSystemVimshottari),
+            ('chara', l10n.dashaSystemJaimini),
           ],
         ),
       ];
@@ -50,22 +54,28 @@ class YogasModule extends AstroModule {
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
-    final grouped = _groupByCategory(ctx.snapshot.yogas);
+    final l10n = ctx.l10n;
+    final visible = visibleYogas(ctx.snapshot.yogas);
+    final grouped = _groupByCategory(visible);
     return [
-      pdfSectionHeader('Yogas & Doshas'),
-      if (ctx.snapshot.yogas.isEmpty)
-        pw.Text('No major yogas detected.', style: pdfBody())
+      pdfSectionHeader(l10n.moduleYogasTitle),
+      if (visible.isEmpty)
+        pw.Text(l10n.ymNoYogas, style: pdfBody())
       else
         for (final e in grouped.entries) ...[
           pw.Padding(
             padding: const pw.EdgeInsets.only(top: 4, bottom: 2),
-            child: pw.Text(e.key.toUpperCase(), style: pdfLabel()),
+            child: pw.Text(_categoryLabel(l10n, e.key).toUpperCase(),
+                style: pdfLabel()),
           ),
           for (final y in e.value)
             pw.Padding(
               padding: const pw.EdgeInsets.only(bottom: 3),
               child: pw.Text(
-                '${y.name}${y.detail != null ? ' — ${y.detail}' : ''}',
+                // TODO(l10n): details are still composed in English by
+                // the rule engine (see yogaName in astro_l10n.dart).
+                '${yogaName(l10n, y)}'
+                '${y.detail != null ? ' — ${y.detail}' : ''}',
                 style: pdfBody(size: 9.5),
               ),
             ),
@@ -75,8 +85,14 @@ class YogasModule extends AstroModule {
 }
 
 const _categoryOrder = [
-  'Raj', 'Dhana', 'Vipreet Raj', 'Parivartana', 'Mahapurusha', 'Chandra',
-  'Other', 'Dosha',
+  'Raj',
+  'Dhana',
+  'Vipreet Raj',
+  'Parivartana',
+  'Mahapurusha',
+  'Chandra',
+  'Other',
+  'Dosha',
 ];
 
 Map<String, List<DetectedYoga>> _groupByCategory(List<DetectedYoga> yogas) {
@@ -91,13 +107,32 @@ Map<String, List<DetectedYoga>> _groupByCategory(List<DetectedYoga> yogas) {
   return map;
 }
 
-enum _Filter {
-  all('All'),
-  md('Mahadasha'),
-  mdAd('MD + AD');
+/// Display label for a rule-engine category code. The raw string keeps
+/// driving grouping/order ([_categoryOrder]); only presentation is
+/// localized. Unknown categories fall back to the raw code.
+String _categoryLabel(AppLocalizations l10n, String category) =>
+    switch (category) {
+      'Raj' => l10n.ymCatRaj,
+      'Dhana' => l10n.ymCatDhana,
+      'Vipreet Raj' => l10n.ymCatVipreetRaj,
+      'Parivartana' => l10n.ymCatParivartana,
+      'Mahapurusha' => l10n.ymCatMahapurusha,
+      'Chandra' => l10n.ymCatChandra,
+      'Dosha' => l10n.ymCatDosha,
+      'Other' => l10n.ymCatOther,
+      _ => category,
+    };
 
-  const _Filter(this.label);
-  final String label;
+enum _Filter {
+  all,
+  md,
+  mdAd;
+
+  String label(AppLocalizations l10n) => switch (this) {
+        _Filter.all => l10n.ymFilterAll,
+        _Filter.md => l10n.ymFilterMd,
+        _Filter.mdAd => l10n.ymFilterMdAd,
+      };
 }
 
 /// How many yoga rows the dashboard CARD shows before "+N more".
@@ -127,8 +162,8 @@ class _YogasBodyState extends State<_YogasBody> {
   late _Filter _filter =
       widget.detail ? (_detailFilter ?? _Filter.all) : _Filter.all;
 
-  void _persistBasis(String value) =>
-      widget.ctx.onConfigChanged?.call({...widget.ctx.config, 'dasha_basis': value});
+  void _persistBasis(String value) => widget.ctx.onConfigChanged
+      ?.call({...widget.ctx.config, 'dasha_basis': value});
 
   DashaPeriod? _maha;
   DashaPeriod? _antar;
@@ -143,8 +178,7 @@ class _YogasBodyState extends State<_YogasBody> {
     final sign = period.sign;
     if (sign != null) {
       return y.participants.any((p) =>
-          sign.lord == p ||
-          widget.ctx.snapshot.positions[p]!.sign == sign);
+          sign.lord == p || widget.ctx.snapshot.positions[p]!.sign == sign);
     }
     return false;
   }
@@ -155,11 +189,11 @@ class _YogasBodyState extends State<_YogasBody> {
 
   @override
   Widget build(BuildContext context) {
-    final yogas = widget.ctx.snapshot.yogas;
+    final l10n = context.l10n;
+    final yogas = visibleYogas(widget.ctx.snapshot.yogas);
     final basis =
         _basis == 'chara' ? DashaSystem.jaimini : DashaSystem.vimshottari;
-    final (maha, antar, _) =
-        widget.ctx.dasha(basis).activeAt(DateTime.now());
+    final (maha, antar, _) = widget.ctx.dasha(basis).activeAt(DateTime.now());
     _maha = maha;
     _antar = antar;
 
@@ -181,11 +215,9 @@ class _YogasBodyState extends State<_YogasBody> {
           Padding(
             padding: const EdgeInsets.only(top: 8, bottom: 2),
             child: Text(
-              e.key.toUpperCase(),
-              style: TETheme.mono(
-                  size: 10.5,
-                  color: TEColors.inkSoft,
-                  weight: FontWeight.w700),
+              _categoryLabel(l10n, e.key).toUpperCase(),
+              style: KJTheme.mono(
+                  size: 10.5, color: KJColors.inkSoft, weight: FontWeight.w600),
             ),
           ),
           for (final y in e.value) _row(y),
@@ -203,7 +235,7 @@ class _YogasBodyState extends State<_YogasBody> {
       final capped = [for (final e in indexed.take(_cardCap)) e.value];
       final more = flat.length - capped.length;
       body = [for (final y in capped) _row(y, showCategory: true)];
-      if (more > 0) footer = '+$more more — open the widget for all';
+      if (more > 0) footer = l10n.ymMoreFooter('$more');
     }
 
     return Column(
@@ -213,10 +245,8 @@ class _YogasBodyState extends State<_YogasBody> {
           // No page title here — the detail screen's app bar already
           // shows 'Yogas & Doshas'.
           Text(
-            'A yoga fructifies in the periods of its participants —'
-            ' filter by the running dasha lords to see which'
-            ' combinations are live now.',
-            style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+            l10n.ymDetailBlurb,
+            style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 10),
           _basisSelector(),
@@ -227,11 +257,12 @@ class _YogasBodyState extends State<_YogasBody> {
           children: [
             for (final o in _Filter.values)
               ChoiceChip(
-                label: Text(o.label, style: const TextStyle(fontSize: 11.5)),
+                label:
+                    Text(o.label(l10n), style: const TextStyle(fontSize: 11.5)),
                 selected: _filter == o,
                 labelStyle: TextStyle(
                     fontSize: 11.5,
-                    color: _filter == o ? TEColors.paper : TEColors.ink),
+                    color: _filter == o ? KJColors.paper : KJColors.ink),
                 visualDensity: VisualDensity.compact,
                 onSelected: (_) => setState(() {
                   _filter = o;
@@ -242,20 +273,23 @@ class _YogasBodyState extends State<_YogasBody> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Now: ${maha?.lordLabel ?? '—'} MD'
-          '${antar != null ? ' · ${antar.lordLabel} AD' : ''}',
-          style: TETheme.mono(size: 10.5, color: TEColors.inkSoft),
+          maha != null && antar != null
+              ? l10n.ymNowLineAntar(
+                  dashaLordLabel(l10n, maha), dashaLordLabel(l10n, antar))
+              : l10n.ymNowLine(maha == null ? '—' : dashaLordLabel(l10n, maha)),
+          style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft),
         ),
         const SizedBox(height: 6),
         if (filtered.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Text(
-              _filter == _Filter.all
-                  ? 'No major yogas detected.'
-                  : 'No yogas involve the running'
-                      ' ${_filter == _Filter.md ? 'Mahadasha lord' : 'MD and AD lords'}.',
-              style: TextStyle(fontSize: 13, color: TEColors.inkSoft),
+              switch (_filter) {
+                _Filter.all => l10n.ymNoYogas,
+                _Filter.md => l10n.ymNoneForMd,
+                _Filter.mdAd => l10n.ymNoneForMdAd,
+              },
+              style: TextStyle(fontSize: 13, color: KJColors.inkSoft),
             ),
           )
         else
@@ -265,10 +299,8 @@ class _YogasBodyState extends State<_YogasBody> {
             padding: const EdgeInsets.only(top: 6),
             child: Text(
               footer,
-              style: TETheme.mono(
-                  size: 10.5,
-                  color: TEColors.maroon,
-                  weight: FontWeight.w600),
+              style: KJTheme.mono(
+                  size: 10.5, color: KJColors.maroon, weight: FontWeight.w600),
             ),
           ),
       ],
@@ -277,31 +309,34 @@ class _YogasBodyState extends State<_YogasBody> {
 
   /// Detail-view control mirroring the card's 'Active filter dasha'
   /// config: which dasha lords drive the MD / MD+AD filters.
-  Widget _basisSelector() => Wrap(
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 8,
-        runSpacing: 4,
-        children: [
-          Text('Active filter dasha:',
-              style: TETheme.mono(size: 11, color: TEColors.inkSoft)),
-          for (final (val, label) in const [
-            ('vimshottari', 'Vimshottari'),
-            ('chara', 'Jaimini Chara'),
-          ])
-            ChoiceChip(
-              label: Text(label, style: const TextStyle(fontSize: 11.5)),
-              selected: _basis == val,
-              labelStyle: TextStyle(
-                  fontSize: 11.5,
-                  color: _basis == val ? TEColors.paper : TEColors.ink),
-              visualDensity: VisualDensity.compact,
-              onSelected: (_) => setState(() {
-                _basis = val;
-                _persistBasis(val);
-              }),
-            ),
-        ],
-      );
+  Widget _basisSelector() {
+    final l10n = context.l10n;
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
+      runSpacing: 4,
+      children: [
+        Text('${l10n.cfgActiveFilterDasha}:',
+            style: KJTheme.mono(size: 11, color: KJColors.inkSoft)),
+        for (final (val, label) in [
+          ('vimshottari', l10n.dashaSystemVimshottari),
+          ('chara', l10n.dashaSystemJaimini),
+        ])
+          ChoiceChip(
+            label: Text(label, style: const TextStyle(fontSize: 11.5)),
+            selected: _basis == val,
+            labelStyle: TextStyle(
+                fontSize: 11.5,
+                color: _basis == val ? KJColors.paper : KJColors.ink),
+            visualDensity: VisualDensity.compact,
+            onSelected: (_) => setState(() {
+              _basis = val;
+              _persistBasis(val);
+            }),
+          ),
+      ],
+    );
+  }
 
   Widget _row(DetectedYoga y, {bool showCategory = false}) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
@@ -311,30 +346,29 @@ class _YogasBodyState extends State<_YogasBody> {
             Row(
               children: [
                 Flexible(
-                  child: Text(y.name,
+                  child: Text(yogaName(context.l10n, y),
                       style: const TextStyle(
                           fontSize: 13.5, fontWeight: FontWeight.w600)),
                 ),
                 if (showCategory) ...[
                   const SizedBox(width: 6),
-                  Text(y.category,
-                      style:
-                          TETheme.mono(size: 9.5, color: TEColors.inkSoft)),
+                  Text(_categoryLabel(context.l10n, y.category),
+                      style: KJTheme.mono(size: 9.5, color: KJColors.inkSoft)),
                 ],
                 if (_activeMd(y)) ...[
                   const SizedBox(width: 6),
-                  _badge('MD', TEColors.maroon),
+                  _badge('MD', KJColors.maroon),
                 ],
                 if (_involves(_antar, y) &&
                     _antar?.lordLabel != _maha?.lordLabel) ...[
                   const SizedBox(width: 4),
-                  _badge('AD', TEColors.forest),
+                  _badge('AD', KJColors.forest),
                 ],
               ],
             ),
             if (y.detail != null)
               Text(y.detail!,
-                  style: TextStyle(fontSize: 12, color: TEColors.inkSoft)),
+                  style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
           ],
         ),
       );
@@ -346,7 +380,7 @@ class _YogasBodyState extends State<_YogasBody> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(text,
-            style: TETheme.mono(
-                size: 9.5, color: color, weight: FontWeight.w700)),
+            style:
+                KJTheme.mono(size: 9.5, color: color, weight: FontWeight.w600)),
       );
 }

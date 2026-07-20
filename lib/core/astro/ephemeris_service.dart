@@ -35,9 +35,8 @@ class EphemerisService {
     _initialized = true;
   }
 
-  SwephFlag get _baseFlags => (useSwissEph
-          ? SwephFlag.SEFLG_SWIEPH
-          : SwephFlag.SEFLG_MOSEPH) |
+  SwephFlag get _baseFlags =>
+      (useSwissEph ? SwephFlag.SEFLG_SWIEPH : SwephFlag.SEFLG_MOSEPH) |
       SwephFlag.SEFLG_SPEED |
       SwephFlag.SEFLG_SIDEREAL;
 
@@ -95,6 +94,18 @@ class EphemerisService {
     return out;
   }
 
+  /// Sidereal longitude of ONE graha — the hot path for transit scans,
+  /// which sample a single body thousands of times per window and were
+  /// paying for all nine per sample via [planetPositions] (Sentry
+  /// KAALJYOTI-PROD-4/5: multi-second main-thread hangs on dashboard
+  /// scroll). Ketu is Rahu + 180°, matching [planetPositions].
+  double planetLongitude(double jdUt, int ayanamsaId, Planet planet) {
+    _setSiderealMode(ayanamsaId);
+    final body = _bodies[planet == Planet.ketu ? Planet.rahu : planet]!;
+    final lon = Sweph.swe_calc_ut(jdUt, body, _baseFlags).longitude;
+    return _norm(planet == Planet.ketu ? lon + 180 : lon);
+  }
+
   /// Sidereal ascendant + 12 house cusps. Whole-sign is the Vedic
   /// default at the app layer; cusps here come from the requested
   /// system (default Placidus 'P') for future house-system options.
@@ -106,13 +117,24 @@ class EphemerisService {
     Hsys houseSystem = Hsys.P,
   }) {
     _setSiderealMode(ayanamsaId);
-    final h = Sweph.swe_houses_ex(
-        jdUt, _baseFlags, latitude, longitude, houseSystem);
+    final h =
+        Sweph.swe_houses_ex(jdUt, _baseFlags, latitude, longitude, houseSystem);
     final asc = _norm(h.ascmc[0]);
     final cusps = <double>[
       for (var i = 1; i <= 12; i++) _norm(h.cusps[i]),
     ];
     return (ascendant: asc, cusps: cusps);
+  }
+
+  /// Porphyry house cusps (sidereal) — the bhava madhyas of the
+  /// classical Sripati chalit (quadrants trisected between the angles;
+  /// the sandhi midpoints are derived in core/astro/chalit.dart, which
+  /// keeps the midpoint rule pure and unit-testable).
+  List<double> porphyryCusps(
+      double jdUt, double latitude, double longitude, int ayanamsaId) {
+    return housesAndAscendant(jdUt, latitude, longitude, ayanamsaId,
+            houseSystem: Hsys.O)
+        .cusps;
   }
 
   /// Julian day (UT) of the last sunrise at or before [jdUt] for the
@@ -182,8 +204,7 @@ class EphemerisService {
         ? null
         : sunEventAfter(riseJd, latitude, longitude, rise: false);
     if (riseJd == null || setJd == null) {
-      throw StateError(
-          'No sunrise/sunset for this day/place (circumpolar?).');
+      throw StateError('No sunrise/sunset for this day/place (circumpolar?).');
     }
     return (
       rise: dateTimeFromJdUt(riseJd).toLocal(),
@@ -205,10 +226,9 @@ class EphemerisService {
   /// Cheshta Kendra is a difference of two tropical quantities, so the
   /// ayanamsa cancels and must not be applied to only one side.
   Map<Planet, double> helioTropicalLongitudes(double jdUt) {
-    final flags = (useSwissEph
-            ? SwephFlag.SEFLG_SWIEPH
-            : SwephFlag.SEFLG_MOSEPH) |
-        SwephFlag.SEFLG_HELCTR;
+    final flags =
+        (useSwissEph ? SwephFlag.SEFLG_SWIEPH : SwephFlag.SEFLG_MOSEPH) |
+            SwephFlag.SEFLG_HELCTR;
     const five = [
       Planet.mars,
       Planet.mercury,
@@ -235,10 +255,10 @@ class EphemerisService {
   ({double sun, double moon}) sunMoonLongitudes(double jdUt, int ayanamsaId) {
     _setSiderealMode(ayanamsaId);
     return (
-      sun: _norm(Sweph.swe_calc_ut(jdUt, HeavenlyBody.SE_SUN, _baseFlags)
-          .longitude),
-      moon: _norm(Sweph.swe_calc_ut(jdUt, HeavenlyBody.SE_MOON, _baseFlags)
-          .longitude),
+      sun: _norm(
+          Sweph.swe_calc_ut(jdUt, HeavenlyBody.SE_SUN, _baseFlags).longitude),
+      moon: _norm(
+          Sweph.swe_calc_ut(jdUt, HeavenlyBody.SE_MOON, _baseFlags).longitude),
     );
   }
 

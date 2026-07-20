@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../charts/chart_view.dart';
 import '../core/astro/jaimini_pada.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
 import '../pdf/pdf_chart.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
+
+String _jaiminiPadasTitle(AppLocalizations l10n) =>
+    l10n.moduleJaiminiPadasTitle;
 
 /// Arudha Padas 1P–12P (1P = Arudha Lagna), K.N. Rao's method — see
 /// core/astro/jaimini_pada.dart for the calculation. Rendered as an
@@ -20,19 +24,24 @@ class JaiminiPadaModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'jaimini_pada',
         title: 'Jaimini Padas',
+        localizedTitle: _jaiminiPadasTitle,
         icon: Icons.grid_on_outlined,
         category: 'Jaimini',
         defaultSpan: CardSpan.full,
       );
 
   @override
-  List<ModuleConfigChoice> configChoices() => const [chartStyleChoice];
+  List<ModuleConfigChoice> configChoices(AppLocalizations l10n) =>
+      [chartStyleChoice(l10n)];
 
   /// Grahas sitting in a pada's sign — useful context alongside the
   /// bare sign (an Arudha with no occupants reads very differently
   /// from one crowded with planets).
   List<Planet> _occupants(AstroSnapshot s, ZodiacSign sign) =>
-      s.positions.values.where((p) => p.sign == sign).map((p) => p.planet).toList();
+      s.positions.values
+          .where((p) => p.sign == sign)
+          .map((p) => p.planet)
+          .toList();
 
   Widget _padaChart(ModuleContext ctx) {
     final s = ctx.snapshot;
@@ -55,8 +64,8 @@ class JaiminiPadaModule extends AstroModule {
         _padaChart(ctx),
         const SizedBox(height: 10),
         Text(
-          'Arudha Lagna (1P) ${al.sign.western}',
-          style: TETheme.mono(size: 12, color: TEColors.inkSoft),
+          context.l10n.jpArudhaLagnaLine(al.sign.label(context.l10n)),
+          style: KJTheme.mono(size: 12, color: KJColors.inkSoft),
         ),
       ],
     );
@@ -64,6 +73,7 @@ class JaiminiPadaModule extends AstroModule {
 
   @override
   Widget detailView(BuildContext context, ModuleContext ctx) {
+    final l10n = context.l10n;
     final s = ctx.snapshot;
     final padas = arudhaPadas(s);
     return SingleChildScrollView(
@@ -71,18 +81,16 @@ class JaiminiPadaModule extends AstroModule {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Jaimini Arudha Padas', style: TETheme.serif(size: 18)),
+          Text(l10n.jpHeading, style: KJTheme.serif(size: 18)),
           const SizedBox(height: 4),
           Text(
-            'One per house — how that house "appears", as distinct from'
-            ' its true placement. 1P (Arudha Lagna) is the most used.'
-            ' K.N. Rao\'s calculation, without the 1st/7th exceptions.',
-            style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+            l10n.jpBlurb,
+            style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 16),
           _padaChart(ctx),
           const SizedBox(height: 20),
-          Text('Padas & occupants', style: TETheme.serif(size: 16)),
+          Text(l10n.jpPadasOccupants, style: KJTheme.serif(size: 16)),
           const SizedBox(height: 8),
           for (final p in padas)
             Padding(
@@ -92,13 +100,13 @@ class JaiminiPadaModule extends AstroModule {
                 children: [
                   SizedBox(
                     width: 130,
-                    child: Text(p.label,
+                    child: Text(p.house == 1 ? l10n.jpArudhaLagnaLabel : p.code,
                         style: const TextStyle(
                             fontSize: 13.5, fontWeight: FontWeight.w600)),
                   ),
                   Expanded(
                     flex: 2,
-                    child: Text(p.sign.western,
+                    child: Text(p.sign.label(l10n),
                         style: const TextStyle(fontSize: 13.5)),
                   ),
                   Expanded(
@@ -107,9 +115,9 @@ class JaiminiPadaModule extends AstroModule {
                       _occupants(s, p.sign).isEmpty
                           ? '—'
                           : _occupants(s, p.sign)
-                              .map((pl) => pl.displayName)
+                              .map((pl) => pl.label(l10n))
                               .join(', '),
-                      style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+                      style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
                     ),
                   ),
                 ],
@@ -122,12 +130,14 @@ class JaiminiPadaModule extends AstroModule {
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
+    final l10n = ctx.l10n;
     final s = ctx.snapshot;
     final padas = arudhaPadas(s);
     return [
-      pdfSectionHeader('Jaimini Arudha Padas'),
+      pdfSectionHeader(l10n.jpHeading),
       pw.Center(
         child: pdfChart(
+          l10n: l10n,
           placements: const {},
           padaLabels: padaLabelsBySign(padas),
           lagna: s.lagnaSign,
@@ -138,13 +148,13 @@ class JaiminiPadaModule extends AstroModule {
       ),
       pw.SizedBox(height: 10),
       pw.TableHelper.fromTextArray(
-        headers: ['Pada', 'Sign', 'Occupants'],
+        headers: [l10n.labelPada, l10n.labelSign, l10n.labelOccupants],
         data: [
           for (final p in padas)
             [
-              p.label,
-              p.sign.western,
-              _occupants(s, p.sign).map((pl) => pl.displayName).join(', '),
+              p.house == 1 ? l10n.jpArudhaLagnaLabel : p.code,
+              p.sign.label(l10n),
+              _occupants(s, p.sign).map((pl) => pl.label(l10n)).join(', '),
             ],
         ],
         headerStyle: pdfLabel(),

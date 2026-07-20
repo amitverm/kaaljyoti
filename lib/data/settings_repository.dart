@@ -59,6 +59,9 @@ class SettingsRepository {
   static const _kTodayChartDegrees = 'today_chart_degrees';
   static const _kMasaSystem = 'today_masa_system';
   static const _kDateFormat = 'date_format_pref';
+  static const _kLanguage = 'app_language';
+  static const _kLastRoute = 'last_route';
+  static const _kLastRouteAt = 'last_route_at';
   static const _kChartTextBase = 'chart_text_base_scale';
   static const _kChartTextFloor = 'chart_text_min_font_scale';
   static const _kChartTextWeight = 'chart_text_weight'; // 400/500/600
@@ -83,11 +86,9 @@ class SettingsRepository {
         _ => d.weight,
       },
       degreeMinutes: prefs.getBool(_kChartTextDegMin) ?? d.degreeMinutes,
-      annotationScale:
-          prefs.getDouble(_kChartTextAnnot) ?? d.annotationScale,
+      annotationScale: prefs.getDouble(_kChartTextAnnot) ?? d.annotationScale,
       signScale: prefs.getDouble(_kChartTextSign) ?? d.signScale,
-      contentInflate:
-          prefs.getDouble(_kChartTextInflate) ?? d.contentInflate,
+      contentInflate: prefs.getDouble(_kChartTextInflate) ?? d.contentInflate,
     );
   }
 
@@ -110,6 +111,40 @@ class SettingsRepository {
   Future<void> setDateFormat(DateFormatPref pref) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kDateFormat, pref.name);
+  }
+
+  /// App language override — a language code ('en', 'hi') or 'system'
+  /// (default) to follow the device locale. Kept as a plain string so
+  /// adding a language never touches this file: the choices offered in
+  /// Settings come from AppLocalizations.supportedLocales.
+  Future<String> language() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLanguage) ?? 'system';
+  }
+
+  Future<void> setLanguage(String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kLanguage, code);
+  }
+
+  /// Last route + when it was recorded — the foreground state-loss fix.
+  /// Android/iOS kill the backgrounded process freely (the state-loss
+  /// bug: users came back to a fresh app on the Today screen); the app
+  /// root re-opens the saved route on cold start IF it was recorded
+  /// recently (a next-morning launch should land on Today as designed,
+  /// not on last week's kundli).
+  Future<({String route, DateTime at})?> lastRoute() async {
+    final prefs = await SharedPreferences.getInstance();
+    final route = prefs.getString(_kLastRoute);
+    final atMs = prefs.getInt(_kLastRouteAt);
+    if (route == null || atMs == null) return null;
+    return (route: route, at: DateTime.fromMillisecondsSinceEpoch(atMs));
+  }
+
+  Future<void> setLastRoute(String route) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kLastRoute, route);
+    await prefs.setInt(_kLastRouteAt, DateTime.now().millisecondsSinceEpoch);
   }
 
   Future<AppearanceSettings> appearance() async {

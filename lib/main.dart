@@ -52,5 +52,5 @@ Future<void> _run() async {
     await Supabase.initialize(url: kSupabaseUrl, anonKey: kSupabaseAnonKey);
   }
 
-  runApp(const ProviderScope(child: ThirdEyeApp()));
+  runApp(const ProviderScope(child: KaalJyotiApp()));
 }

@@ -27,7 +27,13 @@ const Map<ZodiacSign, int> _varnaRank = {
   ZodiacSign.taurus: 1, ZodiacSign.virgo: 1, ZodiacSign.capricorn: 1,
 };
 
-const List<String> kVarnaNames = ['', 'Shudra', 'Vaishya', 'Kshatriya', 'Brahmin'];
+const List<String> kVarnaNames = [
+  '',
+  'Shudra',
+  'Vaishya',
+  'Kshatriya',
+  'Brahmin'
+];
 
 String varnaNameOf(ZodiacSign sign) => kVarnaNames[_varnaRank[sign]!];
 
@@ -111,14 +117,36 @@ double taraKoota(Nakshatra brideNakshatra, Nakshatra groomNakshatra) =>
 // =============================================================================
 
 enum Yoni {
-  horse, elephant, sheep, serpent, dog, cat, rat, cow, buffalo, tiger,
-  deer, monkey, mongoose, lion;
+  horse,
+  elephant,
+  sheep,
+  serpent,
+  dog,
+  cat,
+  rat,
+  cow,
+  buffalo,
+  tiger,
+  deer,
+  monkey,
+  mongoose,
+  lion;
 
   String get label => switch (this) {
-        horse => 'Horse', elephant => 'Elephant', sheep => 'Sheep',
-        serpent => 'Serpent', dog => 'Dog', cat => 'Cat', rat => 'Rat',
-        cow => 'Cow', buffalo => 'Buffalo', tiger => 'Tiger', deer => 'Deer',
-        monkey => 'Monkey', mongoose => 'Mongoose', lion => 'Lion',
+        horse => 'Horse',
+        elephant => 'Elephant',
+        sheep => 'Sheep',
+        serpent => 'Serpent',
+        dog => 'Dog',
+        cat => 'Cat',
+        rat => 'Rat',
+        cow => 'Cow',
+        buffalo => 'Buffalo',
+        tiger => 'Tiger',
+        deer => 'Deer',
+        monkey => 'Monkey',
+        mongoose => 'Mongoose',
+        lion => 'Lion',
       };
 }
 
@@ -127,19 +155,32 @@ enum Yoni {
 /// 27-nakshatra scheme (matching the rest of the codebase) doesn't
 /// include, so Mongoose maps from only one nakshatra here.
 const Map<Nakshatra, Yoni> _yoniOfNakshatra = {
-  Nakshatra.ashwini: Yoni.horse, Nakshatra.shatabhisha: Yoni.horse,
-  Nakshatra.bharani: Yoni.elephant, Nakshatra.revati: Yoni.elephant,
-  Nakshatra.pushya: Yoni.sheep, Nakshatra.krittika: Yoni.sheep,
-  Nakshatra.rohini: Yoni.serpent, Nakshatra.mrigashira: Yoni.serpent,
-  Nakshatra.mula: Yoni.dog, Nakshatra.ardra: Yoni.dog,
-  Nakshatra.ashlesha: Yoni.cat, Nakshatra.punarvasu: Yoni.cat,
-  Nakshatra.magha: Yoni.rat, Nakshatra.purvaPhalguni: Yoni.rat,
-  Nakshatra.uttaraPhalguni: Yoni.cow, Nakshatra.uttaraBhadrapada: Yoni.cow,
-  Nakshatra.swati: Yoni.buffalo, Nakshatra.hasta: Yoni.buffalo,
-  Nakshatra.vishakha: Yoni.tiger, Nakshatra.chitra: Yoni.tiger,
-  Nakshatra.jyeshtha: Yoni.deer, Nakshatra.anuradha: Yoni.deer,
-  Nakshatra.purvaAshadha: Yoni.monkey, Nakshatra.shravana: Yoni.monkey,
-  Nakshatra.purvaBhadrapada: Yoni.lion, Nakshatra.dhanishta: Yoni.lion,
+  Nakshatra.ashwini: Yoni.horse,
+  Nakshatra.shatabhisha: Yoni.horse,
+  Nakshatra.bharani: Yoni.elephant,
+  Nakshatra.revati: Yoni.elephant,
+  Nakshatra.pushya: Yoni.sheep,
+  Nakshatra.krittika: Yoni.sheep,
+  Nakshatra.rohini: Yoni.serpent,
+  Nakshatra.mrigashira: Yoni.serpent,
+  Nakshatra.mula: Yoni.dog,
+  Nakshatra.ardra: Yoni.dog,
+  Nakshatra.ashlesha: Yoni.cat,
+  Nakshatra.punarvasu: Yoni.cat,
+  Nakshatra.magha: Yoni.rat,
+  Nakshatra.purvaPhalguni: Yoni.rat,
+  Nakshatra.uttaraPhalguni: Yoni.cow,
+  Nakshatra.uttaraBhadrapada: Yoni.cow,
+  Nakshatra.swati: Yoni.buffalo,
+  Nakshatra.hasta: Yoni.buffalo,
+  Nakshatra.vishakha: Yoni.tiger,
+  Nakshatra.chitra: Yoni.tiger,
+  Nakshatra.jyeshtha: Yoni.deer,
+  Nakshatra.anuradha: Yoni.deer,
+  Nakshatra.purvaAshadha: Yoni.monkey,
+  Nakshatra.shravana: Yoni.monkey,
+  Nakshatra.purvaBhadrapada: Yoni.lion,
+  Nakshatra.dhanishta: Yoni.lion,
   Nakshatra.uttaraAshadha: Yoni.mongoose,
 };
 
@@ -194,21 +235,32 @@ double grahaMaitriKoota(ZodiacSign brideMoonSign, ZodiacSign groomMoonSign) {
 enum Gana { deva, manushya, rakshasa }
 
 const Map<Nakshatra, Gana> _ganaOfNakshatra = {
-  Nakshatra.ashwini: Gana.deva, Nakshatra.mrigashira: Gana.deva,
-  Nakshatra.punarvasu: Gana.deva, Nakshatra.pushya: Gana.deva,
-  Nakshatra.hasta: Gana.deva, Nakshatra.swati: Gana.deva,
-  Nakshatra.anuradha: Gana.deva, Nakshatra.shravana: Gana.deva,
+  Nakshatra.ashwini: Gana.deva,
+  Nakshatra.mrigashira: Gana.deva,
+  Nakshatra.punarvasu: Gana.deva,
+  Nakshatra.pushya: Gana.deva,
+  Nakshatra.hasta: Gana.deva,
+  Nakshatra.swati: Gana.deva,
+  Nakshatra.anuradha: Gana.deva,
+  Nakshatra.shravana: Gana.deva,
   Nakshatra.revati: Gana.deva,
-  Nakshatra.bharani: Gana.manushya, Nakshatra.rohini: Gana.manushya,
-  Nakshatra.ardra: Gana.manushya, Nakshatra.purvaPhalguni: Gana.manushya,
+  Nakshatra.bharani: Gana.manushya,
+  Nakshatra.rohini: Gana.manushya,
+  Nakshatra.ardra: Gana.manushya,
+  Nakshatra.purvaPhalguni: Gana.manushya,
   Nakshatra.uttaraPhalguni: Gana.manushya,
-  Nakshatra.purvaAshadha: Gana.manushya, Nakshatra.uttaraAshadha: Gana.manushya,
+  Nakshatra.purvaAshadha: Gana.manushya,
+  Nakshatra.uttaraAshadha: Gana.manushya,
   Nakshatra.purvaBhadrapada: Gana.manushya,
   Nakshatra.uttaraBhadrapada: Gana.manushya,
-  Nakshatra.krittika: Gana.rakshasa, Nakshatra.ashlesha: Gana.rakshasa,
-  Nakshatra.magha: Gana.rakshasa, Nakshatra.chitra: Gana.rakshasa,
-  Nakshatra.vishakha: Gana.rakshasa, Nakshatra.jyeshtha: Gana.rakshasa,
-  Nakshatra.mula: Gana.rakshasa, Nakshatra.dhanishta: Gana.rakshasa,
+  Nakshatra.krittika: Gana.rakshasa,
+  Nakshatra.ashlesha: Gana.rakshasa,
+  Nakshatra.magha: Gana.rakshasa,
+  Nakshatra.chitra: Gana.rakshasa,
+  Nakshatra.vishakha: Gana.rakshasa,
+  Nakshatra.jyeshtha: Gana.rakshasa,
+  Nakshatra.mula: Gana.rakshasa,
+  Nakshatra.dhanishta: Gana.rakshasa,
   Nakshatra.shatabhisha: Gana.rakshasa,
 };
 
@@ -250,20 +302,32 @@ double bhakootKoota(ZodiacSign brideMoonSign, ZodiacSign groomMoonSign) {
 enum Nadi { adi, madhya, antya }
 
 const Map<Nakshatra, Nadi> _nadiOfNakshatra = {
-  Nakshatra.ashwini: Nadi.adi, Nakshatra.ardra: Nadi.adi,
-  Nakshatra.punarvasu: Nadi.adi, Nakshatra.uttaraPhalguni: Nadi.adi,
-  Nakshatra.hasta: Nadi.adi, Nakshatra.jyeshtha: Nadi.adi,
-  Nakshatra.mula: Nadi.adi, Nakshatra.shatabhisha: Nadi.adi,
+  Nakshatra.ashwini: Nadi.adi,
+  Nakshatra.ardra: Nadi.adi,
+  Nakshatra.punarvasu: Nadi.adi,
+  Nakshatra.uttaraPhalguni: Nadi.adi,
+  Nakshatra.hasta: Nadi.adi,
+  Nakshatra.jyeshtha: Nadi.adi,
+  Nakshatra.mula: Nadi.adi,
+  Nakshatra.shatabhisha: Nadi.adi,
   Nakshatra.purvaBhadrapada: Nadi.adi,
-  Nakshatra.bharani: Nadi.madhya, Nakshatra.mrigashira: Nadi.madhya,
-  Nakshatra.pushya: Nadi.madhya, Nakshatra.purvaPhalguni: Nadi.madhya,
-  Nakshatra.chitra: Nadi.madhya, Nakshatra.anuradha: Nadi.madhya,
-  Nakshatra.purvaAshadha: Nadi.madhya, Nakshatra.dhanishta: Nadi.madhya,
+  Nakshatra.bharani: Nadi.madhya,
+  Nakshatra.mrigashira: Nadi.madhya,
+  Nakshatra.pushya: Nadi.madhya,
+  Nakshatra.purvaPhalguni: Nadi.madhya,
+  Nakshatra.chitra: Nadi.madhya,
+  Nakshatra.anuradha: Nadi.madhya,
+  Nakshatra.purvaAshadha: Nadi.madhya,
+  Nakshatra.dhanishta: Nadi.madhya,
   Nakshatra.uttaraBhadrapada: Nadi.madhya,
-  Nakshatra.krittika: Nadi.antya, Nakshatra.rohini: Nadi.antya,
-  Nakshatra.ashlesha: Nadi.antya, Nakshatra.magha: Nadi.antya,
-  Nakshatra.swati: Nadi.antya, Nakshatra.vishakha: Nadi.antya,
-  Nakshatra.uttaraAshadha: Nadi.antya, Nakshatra.shravana: Nadi.antya,
+  Nakshatra.krittika: Nadi.antya,
+  Nakshatra.rohini: Nadi.antya,
+  Nakshatra.ashlesha: Nadi.antya,
+  Nakshatra.magha: Nadi.antya,
+  Nakshatra.swati: Nadi.antya,
+  Nakshatra.vishakha: Nadi.antya,
+  Nakshatra.uttaraAshadha: Nadi.antya,
+  Nakshatra.shravana: Nadi.antya,
   Nakshatra.revati: Nadi.antya,
 };
 
@@ -290,7 +354,8 @@ int _houseFromMoon(AstroSnapshot s, Planet p) {
 /// from-Moon half is computed fresh here.
 bool hasMangalDosha(AstroSnapshot s) {
   final fromLagna = s.yogas.any((y) => y.code == 'mangal_dosha');
-  final fromMoon = const {1, 2, 4, 7, 8, 12}.contains(_houseFromMoon(s, Planet.mars));
+  final fromMoon =
+      const {1, 2, 4, 7, 8, 12}.contains(_houseFromMoon(s, Planet.mars));
   return fromLagna || fromMoon;
 }
 
@@ -305,15 +370,26 @@ bool isMangalDoshaMitigated(AstroSnapshot s) {
 // Putting it together
 // =============================================================================
 
+/// The eight kootas of Ashtakoota Guna Milan, in their conventional
+/// order. Identity, not display text — the presentation layer maps these
+/// to localized names, so a rename here is a compile error rather than a
+/// screen that silently reverts to English.
+enum Koota { varna, vashya, tara, yoni, grahaMaitri, gana, bhakoot, nadi }
+
+/// Match-quality bands: <18 not recommended · 18–24 average · 25–32 good
+/// · 33–36 excellent. An enum because callers switch on it for more than
+/// display (the score dial picks its colour from the band).
+enum GunaVerdict { notRecommended, average, good, excellent }
+
 class KootaScore {
   const KootaScore({
-    required this.name,
+    required this.koota,
     required this.points,
     required this.maxPoints,
     this.note,
   });
 
-  final String name;
+  final Koota koota;
   final double points;
   final double maxPoints;
   final String? note;
@@ -335,11 +411,11 @@ class GunaMilanResult {
   double get total => kootas.fold(0.0, (a, k) => a + k.points);
 
   /// <18 not recommended · 18–24 average · 25–32 good · 33–36 excellent.
-  String get verdict => switch (total) {
-        < 18 => 'Not recommended',
-        < 25 => 'Average',
-        < 33 => 'Good',
-        _ => 'Excellent',
+  GunaVerdict get verdict => switch (total) {
+        < 18 => GunaVerdict.notRecommended,
+        < 25 => GunaVerdict.average,
+        < 33 => GunaVerdict.good,
+        _ => GunaVerdict.excellent,
       };
 
   bool get mangalDoshaMismatch => brideMangalDosha != groomMangalDosha;
@@ -355,45 +431,45 @@ GunaMilanResult computeGunaMilan(AstroSnapshot bride, AstroSnapshot groom) {
 
   final kootas = [
     KootaScore(
-      name: 'Varna',
+      koota: Koota.varna,
       points: varnaKoota(bSign, gSign),
       maxPoints: 1,
       note: '${varnaNameOf(bSign)} · ${varnaNameOf(gSign)}',
     ),
     KootaScore(
-      name: 'Vashya',
-      points: vashyaKoota(
-          bSign, bMoon.degreesInSign, gSign, gMoon.degreesInSign),
+      koota: Koota.vashya,
+      points:
+          vashyaKoota(bSign, bMoon.degreesInSign, gSign, gMoon.degreesInSign),
       maxPoints: 2,
     ),
     KootaScore(
-      name: 'Tara',
+      koota: Koota.tara,
       points: taraKoota(bNak, gNak),
       maxPoints: 3,
     ),
     KootaScore(
-      name: 'Yoni',
+      koota: Koota.yoni,
       points: yoniKoota(bNak, gNak),
       maxPoints: 4,
       note: '${yoniOf(bNak).label} · ${yoniOf(gNak).label}',
     ),
     KootaScore(
-      name: 'Graha Maitri',
+      koota: Koota.grahaMaitri,
       points: grahaMaitriKoota(bSign, gSign),
       maxPoints: 5,
     ),
     KootaScore(
-      name: 'Gana',
+      koota: Koota.gana,
       points: ganaKoota(bNak, gNak),
       maxPoints: 6,
     ),
     KootaScore(
-      name: 'Bhakoot',
+      koota: Koota.bhakoot,
       points: bhakootKoota(bSign, gSign),
       maxPoints: 7,
     ),
     KootaScore(
-      name: 'Nadi',
+      koota: Koota.nadi,
       points: nadiKoota(bNak, gNak),
       maxPoints: 8,
     ),

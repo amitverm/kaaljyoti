@@ -64,8 +64,7 @@ class KpLords {
       double offset, double total, int startIdx) {
     var acc = 0.0;
     for (var i = 0; i < 9; i++) {
-      final (lord, years) =
-          VimshottariCalculator.sequence[(startIdx + i) % 9];
+      final (lord, years) = VimshottariCalculator.sequence[(startIdx + i) % 9];
       final seg = total * (years / VimshottariCalculator.totalYears);
       if (offset < acc + seg || i == 8) return (lord, acc, seg);
       acc += seg;
@@ -76,7 +75,8 @@ class KpLords {
 
 /// One house cusp with its KP lord chain.
 class KpCusp {
-  const KpCusp({required this.house, required this.longitude, required this.lords});
+  const KpCusp(
+      {required this.house, required this.longitude, required this.lords});
   final int house; // 1–12
   final double longitude; // sidereal (Placidus cusp)
   final KpLords lords;

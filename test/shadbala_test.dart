@@ -96,12 +96,11 @@ AstroSnapshot buildFixtureSnapshot() => AstroSnapshot(
 
 void main() {
   final snap = buildFixtureSnapshot();
-  final meanSun =
-      meanSunTropicalLongitude((kFixtureJd - 2451545.0) / 36525.0);
+  final meanSun = meanSunTropicalLongitude((kFixtureJd - 2451545.0) / 36525.0);
   double lonOf(Planet p) => kFixtureLon[p]!;
-  double paksha(Planet p) => pakshaBala(
-      p, lonOf(Planet.sun), lonOf(Planet.moon),
-      mercuryWithMalefic: true);
+  double paksha(Planet p) =>
+      pakshaBala(p, lonOf(Planet.sun), lonOf(Planet.moon),
+          mercuryWithMalefic: true);
   double kalaOf(Planet p) =>
       nathonnataBala(p, snap.birth) +
       paksha(p) +
@@ -113,14 +112,15 @@ void main() {
       ayanaBala(p, lonOf(p) + kFixtureAyanamsa);
   double chestaOf(Planet p) => cheshtaBala(
         planet: p,
-        sunAyanaBala: ayanaBala(Planet.sun, lonOf(Planet.sun) + kFixtureAyanamsa),
+        sunAyanaBala:
+            ayanaBala(Planet.sun, lonOf(Planet.sun) + kFixtureAyanamsa),
         moonPakshaBala: paksha(Planet.moon),
         helioTropicalLongitude: kFixtureHelio[p],
         meanSunTropical: meanSun,
       );
 
-  void checkRow(String label, double Function(Planet) f, List<double> exp,
-      double tol) {
+  void checkRow(
+      String label, double Function(Planet) f, List<double> exp, double tol) {
     test('$label matches PL9 (±$tol)', () {
       for (var i = 0; i < _planets.length; i++) {
         expect(f(_planets[i]), closeTo(exp[i], tol),
@@ -131,8 +131,7 @@ void main() {
 
   group('sthana', () {
     checkRow('uchcha', (p) => uchchaBala(p, lonOf(p)), _fixUchcha, 0.05);
-    checkRow(
-        'saptavargaja', (p) => saptavargajaBala(p, snap), _fixSapta, 0.01);
+    checkRow('saptavargaja', (p) => saptavargajaBala(p, snap), _fixSapta, 0.01);
     checkRow(
         'ojayugma',
         (p) => ojayugmaBala(p, snap.positions[p]!.sign,
@@ -151,14 +150,14 @@ void main() {
 
   checkRow(
       'dig',
-      (p) => digBala(p, lonOf(p),
-          ascendant: kFixtureAsc, midheaven: kFixtureMc),
+      (p) =>
+          digBala(p, lonOf(p), ascendant: kFixtureAsc, midheaven: kFixtureMc),
       _fixDig,
       0.1);
 
   group('kala', () {
-    checkRow('nathonnata', (p) => nathonnataBala(p, snap.birth), _fixNato,
-        0.75);
+    checkRow(
+        'nathonnata', (p) => nathonnataBala(p, snap.birth), _fixNato, 0.75);
     checkRow('paksha', paksha, _fixPaksha, 0.05);
     checkRow('ayana', (p) => ayanaBala(p, lonOf(p) + kFixtureAyanamsa),
         _fixAyana, 0.5);
@@ -172,8 +171,7 @@ void main() {
     checkRow('total', kalaOf, _fixKala, 1.0);
   });
 
-  test('chesta matches PL9 (±3.0) — Mercury is a DOCUMENTED divergence',
-      () {
+  test('chesta matches PL9 (±3.0) — Mercury is a DOCUMENTED divergence', () {
     // Mercury: engine 36.41 vs PL9 47.64. Six of seven planets match
     // PL9 on BOTH reference charts with the true-helio-vs-mean-Sun
     // seeghra kendra; Mercury alone diverges here (it matched the 1981
@@ -196,26 +194,22 @@ void main() {
   // ±3: the 2005 Sun row carries the model's one documented residual
   // (−2.75) — every other planet on both reference charts sits within
   // ±1.8. See _drishtiSaturn/_drishtiMars calibration notes.
-  checkRow('drig', (p) => drikBala(p, snap, moonIsShukla: true), _fixDrig,
-      3.0);
+  checkRow('drig', (p) => drikBala(p, snap, moonIsShukla: true), _fixDrig, 3.0);
 
   test('assembled totals & ratios match PL9 (±4 / ±0.012)', () {
     for (var i = 0; i < _planets.length; i++) {
       final p = _planets[i];
       final total = sthanaBala(p, snap) +
-          digBala(p, lonOf(p),
-              ascendant: kFixtureAsc, midheaven: kFixtureMc) +
+          digBala(p, lonOf(p), ascendant: kFixtureAsc, midheaven: kFixtureMc) +
           kalaOf(p) +
           chestaOf(p) +
           kNaisargikaBala[p]! +
           drikBala(p, snap, moonIsShukla: true);
       // Mercury carries the documented chesta divergence (−11.23) —
       // its total is asserted against PL9 minus that known gap.
-      final expected = p == Planet.mercury
-          ? kFixtureTotals[i] - 11.23
-          : kFixtureTotals[i];
-      expect(total, closeTo(expected, 4.0),
-          reason: 'total ${p.displayName}');
+      final expected =
+          p == Planet.mercury ? kFixtureTotals[i] - 11.23 : kFixtureTotals[i];
+      expect(total, closeTo(expected, 4.0), reason: 'total ${p.displayName}');
       final req = kShadbalaRequiredMinimum[p]!;
       expect(total / req, closeTo(expected / req, 0.012),
           reason: 'ratio ${p.displayName}');

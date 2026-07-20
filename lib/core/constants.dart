@@ -10,6 +10,20 @@ const String kSourceRepoUrl = 'https://github.com/amitverm/kaaljyoti';
 /// The license the app is released under (Menu footer link).
 const String kLicenseUrl = 'https://www.gnu.org/licenses/agpl-3.0.html';
 
+/// Copyright holder line — Menu footer, license dialog, and the PDF
+/// export footer (there suffixed with the website).
+const String kCopyrightLine = '© 2026 Amit Verma';
+
+/// Author contact — the Menu footer credit links here. The app is
+/// fully free; this is how consulting/custom-work referrals reach the
+/// author.
+const String kAuthorLinkedInUrl = 'https://in.linkedin.com/in/amitverm';
+
+/// Public website — shown on exported PDFs next to the copyright and
+/// linked from the Menu footer.
+const String kWebsite = 'kaaljyoti.com';
+const String kWebsiteUrl = 'https://kaaljyoti.com';
+
 /// Legal pages, shown at sign-in (App Store Guideline 1.2 expects the
 /// terms to be presented before registering) and linked from the site.
 const String kTermsUrl = 'https://kaaljyoti.com/terms.html';
@@ -66,11 +80,9 @@ const String kFirebaseApiKeyIos =
     String.fromEnvironment('FIREBASE_API_KEY_IOS');
 const String kFirebaseApiKeyAndroid =
     String.fromEnvironment('FIREBASE_API_KEY_ANDROID');
-const String kFirebaseAppIdIos =
-    String.fromEnvironment('FIREBASE_APP_ID_IOS');
+const String kFirebaseAppIdIos = String.fromEnvironment('FIREBASE_APP_ID_IOS');
 const String kFirebaseAppIdAndroid =
     String.fromEnvironment('FIREBASE_APP_ID_ANDROID');
 const String kFirebaseSenderId =
     String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
-const String kFirebaseProjectId =
-    String.fromEnvironment('FIREBASE_PROJECT_ID');
+const String kFirebaseProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');

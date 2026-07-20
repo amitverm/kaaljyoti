@@ -85,8 +85,8 @@ AstroSnapshot _snap() => AstroSnapshot(
 void main() {
   final snap = _snap();
   double lo(Planet p) => _lon[p]!;
-  double pak(Planet p) => pakshaBala(p, lo(Planet.sun), lo(Planet.moon),
-      mercuryWithMalefic: true);
+  double pak(Planet p) =>
+      pakshaBala(p, lo(Planet.sun), lo(Planet.moon), mercuryWithMalefic: true);
   double kalaOf(Planet p) =>
       nathonnataBala(p, snap.birth) +
       pak(p) +
@@ -97,8 +97,8 @@ void main() {
       horaBala(p, Planet.saturn) +
       ayanaBala(p, lo(p) + _ayan);
 
-  void checkRow(String label, double Function(Planet) f, List<double> exp,
-      double tol) {
+  void checkRow(
+      String label, double Function(Planet) f, List<double> exp, double tol) {
     test('$label matches PL9 (±$tol)', () {
       for (var i = 0; i < _planets.length; i++) {
         expect(f(_planets[i]), closeTo(exp[i], tol),
@@ -109,11 +109,8 @@ void main() {
 
   checkRow('uchcha', (p) => uchchaBala(p, lo(p)), _uchcha, 0.05);
   checkRow('sthana', (p) => sthanaBala(p, snap), _sthana, 0.1);
-  checkRow(
-      'dig',
-      (p) => digBala(p, lo(p), ascendant: _asc, midheaven: _mc),
-      _dig,
-      0.1);
+  checkRow('dig', (p) => digBala(p, lo(p), ascendant: _asc, midheaven: _mc),
+      _dig, 0.1);
   checkRow('nathonnata', (p) => nathonnataBala(p, snap.birth), _nato, 0.75);
   checkRow('paksha', pak, _paksha, 0.05);
   // Mercury's ±0.5 here is the regression guard for the both-ayanas
@@ -137,8 +134,7 @@ void main() {
         meanSunTropical: meanSun,
       );
       final tol = p == Planet.mercury ? 17.0 : 6.0;
-      expect(got, closeTo(_chesta[i], tol),
-          reason: 'chesta ${p.displayName}');
+      expect(got, closeTo(_chesta[i], tol), reason: 'chesta ${p.displayName}');
     }
   });
 
@@ -177,8 +173,7 @@ void main() {
       }
     });
 
-    test('day-night matches PL9 exactly 12/12 (blind, incl. Pisces=0)',
-        () {
+    test('day-night matches PL9 exactly 12/12 (blind, incl. Pisces=0)', () {
       for (var i = 0; i < 12; i++) {
         expect(rows[i].dayNight, _bhDayNight[i].toDouble(),
             reason: 'H${i + 1}');

@@ -53,7 +53,11 @@ List<DetectedYoga> detectYogas({
   // and 12th from the Moon by the five tara-grahas (Sun and the nodes
   // are excluded classically).
   const taraGrahas = [
-    Planet.mars, Planet.mercury, Planet.jupiter, Planet.venus, Planet.saturn,
+    Planet.mars,
+    Planet.mercury,
+    Planet.jupiter,
+    Planet.venus,
+    Planet.saturn,
   ];
   final moonIdx = positions[Planet.moon]!.sign.index;
   final in2ndFromMoon =
@@ -143,8 +147,7 @@ List<DetectedYoga> detectYogas({
   // and 8th from the Moon.
   final adhiBenefics = f.yogaBenefics
       .where((p) =>
-          p != Planet.moon &&
-          const {6, 7, 8}.contains(f.houseFrom(moonIdx, p)))
+          p != Planet.moon && const {6, 7, 8}.contains(f.houseFrom(moonIdx, p)))
       .toList();
   if (adhiBenefics.length >= 2) {
     yogas.add(DetectedYoga(
@@ -183,8 +186,8 @@ List<DetectedYoga> detectYogas({
 
   // Shakata: Moon in 6/8/12 from Jupiter, unless the Moon holds a
   // kendra from the lagna.
-  final moonFromJu = f.houseFrom(positions[Planet.jupiter]!.sign.index,
-      Planet.moon);
+  final moonFromJu =
+      f.houseFrom(positions[Planet.jupiter]!.sign.index, Planet.moon);
   if (ChartFacts.dusthanas.contains(moonFromJu) &&
       !ChartFacts.kendras.contains(f.houseOf(Planet.moon))) {
     yogas.add(DetectedYoga(
@@ -268,16 +271,21 @@ List<DetectedYoga> detectYogas({
   // (with dual lordship, iterating house pairs would misattribute the
   // exchange to a sign neither planet is in).
   const classicalSeven = [
-    Planet.sun, Planet.moon, Planet.mars, Planet.mercury,
-    Planet.jupiter, Planet.venus, Planet.saturn,
+    Planet.sun,
+    Planet.moon,
+    Planet.mars,
+    Planet.mercury,
+    Planet.jupiter,
+    Planet.venus,
+    Planet.saturn,
   ];
   for (var a = 0; a < classicalSeven.length; a++) {
     for (var b = a + 1; b < classicalSeven.length; b++) {
       final pa = classicalSeven[a], pb = classicalSeven[b];
       if (!f.exchange(pa, pb)) continue;
       final i = f.houseOf(pa), j = f.houseOf(pb);
-      final dusthana = ChartFacts.dusthanas.contains(i) ||
-          ChartFacts.dusthanas.contains(j);
+      final dusthana =
+          ChartFacts.dusthanas.contains(i) || ChartFacts.dusthanas.contains(j);
       final khala = i == 3 || j == 3;
       final (code, name) = dusthana
           ? ('parivartana_dainya', 'Dainya Parivartana')
@@ -435,8 +443,7 @@ List<DetectedYoga> detectYogas({
   final fourthLord = f.lordOf(4);
   final lagnaLord = f.lordOf(1);
   if (fourthLord != ninthLord) {
-    final between = f.houseFrom(
-        positions[fourthLord]!.sign.index, ninthLord);
+    final between = f.houseFrom(positions[fourthLord]!.sign.index, ninthLord);
     final lagnaLordOk =
         dignityOf(positions[lagnaLord]!) != PlanetDignity.debilitated &&
             !ChartFacts.dusthanas.contains(f.houseOf(lagnaLord));
@@ -455,8 +462,13 @@ List<DetectedYoga> detectYogas({
   // Nabhasa ashraya: all seven classical grahas in movable / fixed /
   // dual signs.
   const seven = [
-    Planet.sun, Planet.moon, Planet.mars, Planet.mercury,
-    Planet.jupiter, Planet.venus, Planet.saturn,
+    Planet.sun,
+    Planet.moon,
+    Planet.mars,
+    Planet.mercury,
+    Planet.jupiter,
+    Planet.venus,
+    Planet.saturn,
   ];
   final allMovable = seven.every((p) => positions[p]!.sign.isMovable);
   final allFixed = seven.every((p) => positions[p]!.sign.isFixed);
@@ -498,10 +510,9 @@ List<DetectedYoga> detectYogas({
   // Conjunction doshas.
   if (positions[Planet.jupiter]!.sign == positions[Planet.rahu]!.sign ||
       positions[Planet.jupiter]!.sign == positions[Planet.ketu]!.sign) {
-    final node =
-        positions[Planet.jupiter]!.sign == positions[Planet.rahu]!.sign
-            ? Planet.rahu
-            : Planet.ketu;
+    final node = positions[Planet.jupiter]!.sign == positions[Planet.rahu]!.sign
+        ? Planet.rahu
+        : Planet.ketu;
     yogas.add(DetectedYoga(
       code: 'guru_chandal',
       name: 'Guru-Chandal Dosha',
@@ -567,8 +578,7 @@ List<DetectedYoga> detectYogas({
       participants: [Planet.rahu, Planet.ketu],
     ));
   } else if (outsideA.length == 1 || outsideB.length == 1) {
-    final escaper =
-        (outsideA.length == 1 ? outsideA : outsideB).first;
+    final escaper = (outsideA.length == 1 ? outsideA : outsideB).first;
     yogas.add(DetectedYoga(
       code: 'kaal_sarp_partial',
       name: 'Partial Kaal Sarp',

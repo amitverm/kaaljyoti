@@ -11,6 +11,8 @@ import 'package:go_router/go_router.dart';
 import '../core/theme/theme.dart';
 import '../core/theme/tokens.dart';
 import '../data/models.dart';
+import '../l10n/astro_l10n.dart';
+import '../widgetsystem/astro_module.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
 import '../widgetsystem/registry.dart';
@@ -35,11 +37,11 @@ class _ArrangeScreenState extends ConsumerState<ArrangeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Arrange'),
+        title: Text(context.l10n.arTitle),
         actions: [
           TextButton(
             onPressed: () => context.pop(),
-            child: const Text('Done'),
+            child: Text(context.l10n.done),
           ),
         ],
       ),
@@ -48,9 +50,11 @@ class _ArrangeScreenState extends ConsumerState<ArrangeScreen> {
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (placed) {
           final query = _search.trim().toLowerCase();
+          final l10n = context.l10n;
           final library = moduleRegistry.values
               .where((m) =>
                   query.isEmpty ||
+                  m.meta.titleFor(l10n).toLowerCase().contains(query) ||
                   m.meta.title.toLowerCase().contains(query) ||
                   m.meta.category.toLowerCase().contains(query))
               .toList();
@@ -60,13 +64,12 @@ class _ArrangeScreenState extends ConsumerState<ArrangeScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
-              _label('ON THIS VIEW'),
+              _label(context.l10n.arOnThisView),
               if (placed.isEmpty)
                 Padding(
                   padding: EdgeInsets.all(12),
-                  child: Text('Empty — add widgets from the library below.',
-                      style:
-                          TextStyle(fontSize: 13, color: TEColors.inkSoft)),
+                  child: Text(context.l10n.arEmpty,
+                      style: TextStyle(fontSize: 13, color: KJColors.inkSoft)),
                 ),
               ReorderableListView(
                 shrinkWrap: true,
@@ -87,10 +90,10 @@ class _ArrangeScreenState extends ConsumerState<ArrangeScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              _label('WIDGET LIBRARY'),
+              _label(context.l10n.arLibrary),
               TextField(
-                decoration: const InputDecoration(
-                  hintText: 'Search widgets…',
+                decoration: InputDecoration(
+                  hintText: context.l10n.arSearchWidgets,
                   prefixIcon: Icon(Icons.search, size: 20),
                   isDense: true,
                 ),
@@ -99,34 +102,36 @@ class _ArrangeScreenState extends ConsumerState<ArrangeScreen> {
               const SizedBox(height: 12),
               for (final category in categories) ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: TESpace.sm - 2),
-                  child: TESectionLabel(category),
+                  padding: const EdgeInsets.symmetric(vertical: KJSpace.sm - 2),
+                  child: KJSectionLabel(
+                      moduleCategoryLabel(context.l10n, category)),
                 ),
                 for (final m
                     in library.where((m) => m.meta.category == category))
                   Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
-                      leading: Icon(m.meta.icon,
-                          size: 20, color: TEColors.inkSoft),
-                      title: Text(m.meta.title),
+                      leading:
+                          Icon(m.meta.icon, size: 20, color: KJColors.inkSoft),
+                      title: Text(m.meta.titleFor(context.l10n)),
                       subtitle: Text(
                         placed.any((p) => p.widgetId == m.meta.id)
-                            ? '${m.meta.category} · already on view — adds another copy'
-                            : m.meta.category,
+                            ? context.l10n.arAlreadyOnView(moduleCategoryLabel(
+                                context.l10n, m.meta.category))
+                            : moduleCategoryLabel(
+                                context.l10n, m.meta.category),
                         style: const TextStyle(fontSize: 11.5),
                       ),
                       trailing: IconButton(
                         icon: Icon(Icons.add_circle_outline,
-                            color: TEColors.forest, size: 20),
+                            color: KJColors.forest, size: 20),
                         onPressed: () async {
                           await ref.read(dashboardRepoProvider).addWidget(
                                 widget.viewId,
                                 m.meta.id,
                                 span: m.meta.defaultSpan,
                               );
-                          ref.invalidate(
-                              viewWidgetsProvider(widget.viewId));
+                          ref.invalidate(viewWidgetsProvider(widget.viewId));
                         },
                       ),
                     ),
@@ -141,20 +146,15 @@ class _ArrangeScreenState extends ConsumerState<ArrangeScreen> {
 
   Widget _instanceTile(PlacedWidget p) {
     final module = moduleById(p.widgetId);
-    final summary = module?.configSummary(p.config);
     return Card(
       key: ValueKey(p.instanceId),
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading:
-            Icon(module?.meta.icon, size: 20, color: TEColors.inkSoft),
+        leading: Icon(module?.meta.icon, size: 20, color: KJColors.inkSoft),
         title: Text(module == null
             ? p.widgetId
-            : summary == null
-                ? module.meta.title
-                : '${module.meta.title} · $summary'),
-        subtitle: Text(p.span.label,
-            style: const TextStyle(fontSize: 11.5)),
+            : moduleInstanceTitle(module, p.config, context.l10n)),
+        subtitle: Text(p.span.label, style: const TextStyle(fontSize: 11.5)),
         onTap: module == null
             ? null
             : () => showWidgetMenu(context, ref, module, p),
@@ -162,9 +162,8 @@ class _ArrangeScreenState extends ConsumerState<ArrangeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(Icons.copy,
-                  size: 18, color: TEColors.inkSoft),
-              tooltip: 'Duplicate',
+              icon: Icon(Icons.copy, size: 18, color: KJColors.inkSoft),
+              tooltip: context.l10n.duplicate,
               onPressed: () async {
                 await ref.read(dashboardRepoProvider).duplicate(p);
                 ref.invalidate(viewWidgetsProvider(widget.viewId));
@@ -172,7 +171,7 @@ class _ArrangeScreenState extends ConsumerState<ArrangeScreen> {
             ),
             IconButton(
               icon: Icon(Icons.remove_circle_outline,
-                  color: TEColors.maroon, size: 20),
+                  color: KJColors.maroon, size: 20),
               onPressed: () async {
                 await ref
                     .read(dashboardRepoProvider)
@@ -192,7 +191,7 @@ class _ArrangeScreenState extends ConsumerState<ArrangeScreen> {
             style: TextStyle(
                 fontSize: 10.5,
                 letterSpacing: 1.1,
-                color: TEColors.inkSoft,
+                color: KJColors.inkSoft,
                 fontWeight: FontWeight.w600)),
       );
 }

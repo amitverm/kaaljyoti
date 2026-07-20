@@ -119,8 +119,7 @@ class AnonymizedChart {
     List<Map<String, dynamic>> eventRows,
   ) {
     final payload = (row['chart_payload'] as Map).cast<String, dynamic>();
-    final positions =
-        (payload['positions'] as Map).cast<String, dynamic>();
+    final positions = (payload['positions'] as Map).cast<String, dynamic>();
     return AnonymizedChart(
       mkCode: row['mk_code'] as String,
       birthYear: row['birth_year'] as int?,
@@ -314,25 +313,19 @@ class AtomicFilter extends FilterNode {
         if (timeTo != null) 'time_to': timeTo,
       };
 
-  String get label => switch (type) {
-        'planet_in_sign' => '$planet in sign ${sign! + 1}',
-        'planet_in_house' => '$planet in ${house}H',
-        'planet_in_nakshatra' => '$planet in nakshatra ${nakshatra! + 1}',
-        'yoga_present' => 'Yoga: $yogaCode',
-        'life_event' => 'Event: $tag',
-        'birth_range' => _birthRangeLabel,
-        _ => type,
-      };
-
-  String get _birthRangeLabel {
-    final parts = <String>[
-      if (dateFrom != null || dateTo != null)
-        '${dateFrom ?? '…'} → ${dateTo ?? '…'}',
-      if (timeFrom != null || timeTo != null)
-        '${timeFrom ?? '…'}–${timeTo ?? '…'}',
-    ];
-    return 'Born ${parts.join(' · ')}';
-  }
+  /// The birth date/time range as punctuation-only text (no leading
+  /// word), e.g. "1990 → 1995 · 06:00–12:00". The display label is
+  /// assembled in the presentation layer (mahakoshFilterLabel), which
+  /// wraps this in the localized "Born …" phrasing — so no English lives
+  /// here for it to un-bake. The other filter types are labelled purely
+  /// from their structured fields (planet/sign/house/…), needing no
+  /// string on the model at all.
+  String get birthRangeSpan => [
+        if (dateFrom != null || dateTo != null)
+          '${dateFrom ?? '…'} → ${dateTo ?? '…'}',
+        if (timeFrom != null || timeTo != null)
+          '${timeFrom ?? '…'}–${timeTo ?? '…'}',
+      ].join(' · ');
 }
 
 class ResearchRequest {
@@ -385,22 +378,9 @@ class AppNotification {
   final bool read;
   final DateTime createdAt;
 
-  String get title => switch (type) {
-        'request_match_new' => 'New matches for your research request',
-        'your_chart_matched' => 'Your chart matched a research request',
-        'request_approved' => 'Your research request is live',
-        'request_rejected' => 'Your research request was not approved',
-        'report_actioned' => 'A chart you reported was removed',
-        'report_dismissed' => 'A chart you reported was reviewed',
-        'comment_reply' =>
-          '${payload['author_name'] ?? 'Someone'} replied to your comment',
-        'chart_comment' =>
-          'New comment on your chart ${payload['mk_code'] ?? ''}',
-        'comment_held' => 'Your comment is hidden pending review',
-        'comment_removed' => 'Your comment was removed by moderators',
-        'comment_restored' => 'Your comment was reviewed and restored',
-        _ => 'Notification',
-      };
+  // The user-facing title lives in the presentation layer
+  // (notificationTitle in astro_l10n.dart) so it reads in the UI locale;
+  // this model stays pure data (type + payload).
 
   static AppNotification fromJson(Map<String, dynamic> j) => AppNotification(
         id: j['id'] as String,
@@ -444,16 +424,8 @@ class ChartComment {
 
   bool get isVisible => status == 'visible';
 
-  /// Placeholder text for non-visible rows. deleted/removed arrive with
-  /// the body wiped; a 'held' row is only ever returned for its own
-  /// author (RLS hides it from everyone else while under review).
-  String get placeholder => switch (status) {
-        'deleted' => 'Comment deleted by its author',
-        'removed' => 'Comment removed by moderators',
-        'held' => 'Your comment was reported and is hidden while our '
-            'team reviews it',
-        _ => '',
-      };
+  // Placeholder text for non-visible rows (deleted/removed/held) lives in
+  // the presentation layer (commentPlaceholder in astro_l10n.dart).
 
   static ChartComment fromJson(Map<String, dynamic> j, {String? myUserId}) =>
       ChartComment(
@@ -461,8 +433,10 @@ class ChartComment {
         authorId: j['author_id'] as String?,
         // A missing profile embed with a null author_id means the author
         // deleted their account (0024) — the comment stays, unlinked.
-        authorName: ((j['profiles'] as Map?)?['display_name'] as String?) ??
-            (j['author_id'] == null ? 'Deleted account' : 'Anonymous'),
+        // Left EMPTY (not an English fallback) so the presentation layer
+        // can localize the deleted/anonymous label — see commentAuthor in
+        // astro_l10n.dart. Real display names are never empty.
+        authorName: ((j['profiles'] as Map?)?['display_name'] as String?) ?? '',
         parentId: j['parent_id'] as String?,
         body: j['body'] as String,
         status: j['status'] as String,

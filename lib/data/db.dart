@@ -68,12 +68,10 @@ class AppDb {
           for (final row in old) {
             final widgetId = row['widget_id'] as String;
             final isNavamsa = widgetId == 'navamsa';
-            final isWide =
-                const {'birth_chart', 'dasha', 'planetary_positions'}
-                    .contains(widgetId);
+            final isWide = const {'birth_chart', 'dasha', 'planetary_positions'}
+                .contains(widgetId);
             await db.insert('view_widgets_v2', {
-              'instance_id':
-                  '${row['view_id']}_${widgetId}_${row['position']}',
+              'instance_id': '${row['view_id']}_${widgetId}_${row['position']}',
               'view_id': row['view_id'],
               'widget_id': isNavamsa ? 'divisional' : widgetId,
               'position': row['position'],

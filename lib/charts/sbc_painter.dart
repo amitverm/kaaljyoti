@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/astro/models.dart';
 import '../core/astro/sarvatobhadra.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 
 /// Sarvatobhadra Chakra — the fixed 9×9 grid. Natal anchor cells are
 /// tinted maroon; cells under malefic vedha get a warm tint, under
@@ -11,12 +12,17 @@ import '../core/theme/theme.dart';
 /// transit style.
 class SbcPainter extends CustomPainter {
   SbcPainter({
+    required this.l10n,
     required this.anchors,
     required this.maleficVedha,
     required this.beneficVedha,
     required this.natalByCell,
     required this.transitByCell,
   });
+
+  /// Localized strings for the graha/rashi tokens — a painter has no
+  /// BuildContext at paint time, so the host widget injects it.
+  final AppLocalizations l10n;
 
   /// Natal reference cells (janma nakshatra, rashi, lagna, tithi, vara).
   final Set<(int, int)> anchors;
@@ -34,7 +40,7 @@ class SbcPainter extends CustomPainter {
     final cell = base / 9;
     final strokeW = (base * 0.0035).clamp(0.7, 1.2).toDouble();
 
-    canvas.drawRect(Offset.zero & size, Paint()..color = TEColors.paper);
+    canvas.drawRect(Offset.zero & size, Paint()..color = KJColors.paper);
 
     Rect cellRect(int r, int c) =>
         Rect.fromLTWH(c * cell, r * cell, cell, cell);
@@ -46,22 +52,22 @@ class SbcPainter extends CustomPainter {
         final rect = cellRect(r, c);
         if (maleficVedha.contains(key)) {
           canvas.drawRect(
-              rect, Paint()..color = TEColors.maroon.withValues(alpha: 0.10));
+              rect, Paint()..color = KJColors.maroon.withValues(alpha: 0.10));
         }
         if (beneficVedha.contains(key)) {
           canvas.drawRect(
-              rect, Paint()..color = TEColors.forest.withValues(alpha: 0.10));
+              rect, Paint()..color = KJColors.forest.withValues(alpha: 0.10));
         }
         if (anchors.contains(key)) {
           canvas.drawRect(
-              rect, Paint()..color = TEColors.maroon.withValues(alpha: 0.14));
+              rect, Paint()..color = KJColors.maroon.withValues(alpha: 0.14));
         }
       }
     }
 
     // Grid.
     final line = Paint()
-      ..color = TEColors.inkSoft.withValues(alpha: 0.55)
+      ..color = KJColors.inkSoft.withValues(alpha: 0.55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeW;
     for (var i = 0; i <= 9; i++) {
@@ -71,7 +77,7 @@ class SbcPainter extends CustomPainter {
     canvas.drawRect(
       Rect.fromLTWH(0, 0, base, base),
       Paint()
-        ..color = TEColors.ink
+        ..color = KJColors.ink
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeW * 1.6,
     );
@@ -88,36 +94,37 @@ class SbcPainter extends CustomPainter {
         final isAnchor = anchors.contains(key);
 
         final labelColor = switch (sbcCell.type) {
-          SbcCellType.nakshatra => isAnchor ? TEColors.maroon : TEColors.ink,
-          SbcCellType.rashi => isAnchor ? TEColors.maroon : TEColors.ink,
+          SbcCellType.nakshatra => isAnchor ? KJColors.maroon : KJColors.ink,
+          SbcCellType.rashi => isAnchor ? KJColors.maroon : KJColors.ink,
           _ => isAnchor
-              ? TEColors.maroon
-              : TEColors.inkSoft.withValues(alpha: 0.8),
+              ? KJColors.maroon
+              : KJColors.inkSoft.withValues(alpha: 0.8),
         };
         final spans = <InlineSpan>[
           TextSpan(
-            text: sbcCell.display().replaceAll('·', '\n'),
-            style: TETheme.mono(
+            text: sbcCellLabel(l10n, sbcCell).replaceAll('·', '\n'),
+            style: KJTheme.mono(
               size: sbcCell.type == SbcCellType.tithiVara
                   ? labelSize * 0.82
                   : labelSize,
               color: labelColor,
-              weight: isAnchor ? FontWeight.w700 : FontWeight.w400,
+              weight: isAnchor ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
           if (natal.isNotEmpty)
             TextSpan(
-              text: '\n${natal.map((p) => p.abbr).join(' ')}',
-              style: TETheme.mono(
+              text: '\n${natal.map((p) => p.abbrLabel(l10n)).join(' ')}',
+              style: KJTheme.mono(
                   size: planetSize,
-                  color: TEColors.ink,
+                  color: KJColors.ink,
                   weight: FontWeight.w600),
             ),
           if (transit.isNotEmpty)
             TextSpan(
-              text: '\n${transit.map((p) => p.abbr.toLowerCase()).join(' ')}',
+              text:
+                  '\n${transit.map((p) => p.abbrLabel(l10n).toLowerCase()).join(' ')}',
               style:
-                  TETheme.mono(size: planetSize * 0.9, color: TEColors.transit)
+                  KJTheme.mono(size: planetSize * 0.9, color: KJColors.transit)
                       .copyWith(fontStyle: FontStyle.italic),
             ),
         ];
@@ -134,7 +141,7 @@ class SbcPainter extends CustomPainter {
     }
   }
 
-  final TEPalette _palette = TEColors.current;
+  final KJPalette _palette = KJColors.current;
 
   @override
   bool shouldRepaint(covariant SbcPainter oldDelegate) =>
@@ -143,5 +150,6 @@ class SbcPainter extends CustomPainter {
       oldDelegate.beneficVedha != beneficVedha ||
       oldDelegate.natalByCell != natalByCell ||
       oldDelegate.transitByCell != transitByCell ||
+      oldDelegate.l10n != l10n ||
       oldDelegate._palette != _palette;
 }

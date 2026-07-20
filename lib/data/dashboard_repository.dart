@@ -6,7 +6,11 @@ import 'db.dart';
 import 'models.dart';
 
 /// A widget entry used when seeding a view (from a template).
-typedef SeedWidget = ({String widgetId, CardSpan span, Map<String, dynamic> config});
+typedef SeedWidget = ({
+  String widgetId,
+  CardSpan span,
+  Map<String, dynamic> config
+});
 
 /// Persists named dashboard views and their widget-instance
 /// arrangements — the customizable dashboard is the product's primary
@@ -30,8 +34,7 @@ class DashboardRepository {
   /// Global views — seeded with the default Overview on first use.
   Future<List<DashboardView>> views() async {
     final db = await _db.database;
-    final rows =
-        await db.query('dashboard_views', orderBy: 'position ASC');
+    final rows = await db.query('dashboard_views', orderBy: 'position ASC');
     if (rows.isEmpty) {
       final view = await createView('Overview', seed: defaultOverview);
       return [view];
@@ -41,8 +44,8 @@ class DashboardRepository {
     // case or everything was removed), seed the starter set into the
     // first view — the first kundli should never open onto a blank
     // board.
-    final cnt = (await db.rawQuery(
-        'SELECT COUNT(*) AS c FROM view_widgets')).first['c'] as int;
+    final cnt = (await db.rawQuery('SELECT COUNT(*) AS c FROM view_widgets'))
+        .first['c'] as int;
     if (cnt == 0) await seedWidgets(views.first.id, defaultOverview);
     return views;
   }
@@ -115,8 +118,8 @@ class DashboardRepository {
         widgetId: r['widget_id'] as String,
         position: r['position'] as int,
         span: CardSpan.byName(r['span'] as String?),
-        config: (jsonDecode(r['config'] as String) as Map)
-            .cast<String, dynamic>(),
+        config:
+            (jsonDecode(r['config'] as String) as Map).cast<String, dynamic>(),
       );
 
   Future<PlacedWidget> addWidget(
@@ -162,8 +165,7 @@ class DashboardRepository {
     final all = await widgetsFor(source.viewId);
     final ids = all.map((p) => p.instanceId).toList()
       ..remove(copy.instanceId)
-      ..insert(
-          all.indexWhere((p) => p.instanceId == source.instanceId) + 1,
+      ..insert(all.indexWhere((p) => p.instanceId == source.instanceId) + 1,
           copy.instanceId);
     await reorder(source.viewId, ids);
     return copy;
@@ -195,8 +197,7 @@ class DashboardRepository {
         where: 'instance_id = ?', whereArgs: [instanceId]);
   }
 
-  Future<void> setConfig(
-      String instanceId, Map<String, dynamic> config) async {
+  Future<void> setConfig(String instanceId, Map<String, dynamic> config) async {
     final db = await _db.database;
     await db.update('view_widgets', {'config': jsonEncode(config)},
         where: 'instance_id = ?', whereArgs: [instanceId]);

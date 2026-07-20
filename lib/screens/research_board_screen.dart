@@ -11,6 +11,7 @@ import '../core/theme/theme.dart';
 import '../mahakosh/models.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 
 final researchBoardProvider = FutureProvider<List<ResearchRequest>>((ref) {
   final repo = ref.watch(researchRepoProvider);
@@ -27,10 +28,10 @@ class ResearchBoardScreen extends ConsumerWidget {
     final user = ref.watch(authUserProvider).value;
     final board = ref.watch(researchBoardProvider);
 
-    return TEScaffold(
-      section: TESection.research,
+    return KJScaffold(
+      section: KJSection.research,
       appBar: AppBar(
-        title: const Text('Research'),
+        title: Text(context.l10n.researchTitle),
         actions: [
           if (user != null)
             Padding(
@@ -40,61 +41,51 @@ class ResearchBoardScreen extends ConsumerWidget {
                 style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 18, vertical: 8)),
-                child: const Text('+ Request'),
+                child: Text(context.l10n.rbRequest),
               ),
             ),
         ],
       ),
       body: repo == null
-          ? const EmptyState(
-              message: 'The research board needs the backend configured. '
-                  'See supabase/README.md.')
+          ? EmptyState(message: context.l10n.rbBackendMissing)
           : user == null
               ? EmptyState(
-                  message:
-                      'Sign in to browse and post research requests.',
-                  actionLabel: 'Sign in',
+                  message: context.l10n.rbSignInPrompt,
+                  actionLabel: context.l10n.signIn,
                   onAction: () => context.push('/signin'),
                 )
               : board.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
                   error: (e, _) =>
-                      EmptyState(message: 'Could not load board: $e'),
+                      EmptyState(message: context.l10n.rbLoadError('$e')),
                   data: (requests) {
-                    final mine =
-                        requests.where((r) => r.isMine).toList();
+                    final mine = requests.where((r) => r.isMine).toList();
                     final open = requests
                         .where((r) => !r.isMine && r.status == 'live')
                         .toList();
                     if (requests.isEmpty) {
-                      return const EmptyState(
-                          message:
-                              'No research requests yet. Post the first '
-                              'one — describe a pattern you want to study.');
+                      return EmptyState(message: context.l10n.rbEmpty);
                     }
                     return RefreshIndicator(
                       onRefresh: () async =>
                           ref.invalidate(researchBoardProvider),
                       child: ListView(
-                        padding:
-                            const EdgeInsets.fromLTRB(16, 4, 16, 96),
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
                         children: [
                           Text(
-                            '${open.length} open requests · pattern research',
-                            style: TETheme.mono(
-                                size: 11.5, color: TEColors.inkSoft),
+                            context.l10n.rbOpenCount(open.length),
+                            style: KJTheme.mono(
+                                size: 11.5, color: KJColors.inkSoft),
                           ),
                           const SizedBox(height: 10),
                           if (mine.isNotEmpty) ...[
-                            _label('YOURS'),
-                            for (final r in mine)
-                              _RequestCard(request: r),
+                            _label(context.l10n.rbYours),
+                            for (final r in mine) _RequestCard(request: r),
                             const SizedBox(height: 14),
-                            _label('OPEN REQUESTS'),
+                            _label(context.l10n.rbOpenRequests),
                           ],
-                          for (final r in open)
-                            _RequestCard(request: r),
+                          for (final r in open) _RequestCard(request: r),
                         ],
                       ),
                     );
@@ -109,7 +100,7 @@ class ResearchBoardScreen extends ConsumerWidget {
             style: TextStyle(
                 fontSize: 10.5,
                 letterSpacing: 1.1,
-                color: TEColors.inkSoft,
+                color: KJColors.inkSoft,
                 fontWeight: FontWeight.w600)),
       );
 }
@@ -135,13 +126,12 @@ class _RequestCard extends StatelessWidget {
                   Expanded(
                       child: Text(request.title,
                           style: const TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w600))),
-                  TETag(
+                              fontSize: 14.5, fontWeight: FontWeight.w600))),
+                  KJTag(
                     switch (request.status) {
-                      'pending_review' => 'In review',
-                      'live' => 'Live',
-                      'rejected' => 'Not approved',
+                      'pending_review' => context.l10n.rdStatusInReview,
+                      'live' => context.l10n.rdStatusLive,
+                      'rejected' => context.l10n.rdStatusNotApproved,
                       _ => request.status,
                     },
                     maroon: request.status == 'live',
@@ -153,13 +143,12 @@ class _RequestCard extends StatelessWidget {
                 Text(request.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: 12.5, color: TEColors.inkSoft)),
+                    style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft)),
               ],
               const SizedBox(height: 6),
               Text(
-                TEDate.date(request.createdAt),
-                style: TETheme.mono(size: 10.5, color: TEColors.inkSoft),
+                KJDate.date(request.createdAt),
+                style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft),
               ),
             ],
           ),

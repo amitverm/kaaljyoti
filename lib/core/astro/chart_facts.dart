@@ -53,9 +53,7 @@ class ChartFacts {
 
   /// Parivartana: each sits in a sign the other lords.
   bool exchange(Planet a, Planet b) =>
-      a != b &&
-      positions[a]!.sign.lord == b &&
-      positions[b]!.sign.lord == a;
+      a != b && positions[a]!.sign.lord == b && positions[b]!.sign.lord == a;
 
   /// How two grahas are linked for yoga formation, strongest first —
   /// or null if unlinked. Exchange outranks conjunction outranks
@@ -81,9 +79,9 @@ class ChartFacts {
   /// Waxing = Moon ahead of the Sun by less than 180° (Shukla side).
   bool get moonWaxing =>
       ((positions[Planet.moon]!.longitude -
-                  positions[Planet.sun]!.longitude +
-                  360) %
-              360) <
+              positions[Planet.sun]!.longitude +
+              360) %
+          360) <
       180;
 
   /// Mercury turns malefic in classical usage when it shares a sign

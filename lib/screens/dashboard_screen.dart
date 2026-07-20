@@ -14,6 +14,7 @@ import '../core/date_format.dart';
 import '../core/theme/theme.dart';
 import '../data/dashboard_repository.dart';
 import '../data/models.dart';
+import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
 import '../widgetsystem/astro_module.dart';
@@ -41,31 +42,28 @@ class DashboardScreen extends ConsumerWidget {
                 Text(k?.name ?? ''),
                 if (k != null)
                   Text(
-                    TEDate.dateDotTime(k.toBirthData().localDateTime),
-                    style:
-                        TETheme.mono(size: 10.5, color: TEColors.inkSoft),
+                    KJDate.dateDotTime(k.toBirthData().localDateTime),
+                    style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft),
                   ),
               ],
             ),
           ),
           loading: () => const Text(''),
-          error: (_, __) => const Text('Kundli'),
+          error: (_, __) => Text(context.l10n.dbKundli),
         ),
         actions: [
           // Arrange is a screen-level setting — pinned in the header so
           // it stays reachable no matter how many view chips exist.
           Consumer(builder: (context, ref, _) {
-            final views =
-                ref.watch(dashboardViewsProvider).value;
+            final views = ref.watch(dashboardViewsProvider).value;
             final activeId = ref.watch(activeViewIdProvider) ??
                 (views == null || views.isEmpty ? null : views.first.id);
             return IconButton(
               icon: const Icon(Icons.tune),
-              tooltip: 'Arrange widgets',
+              tooltip: context.l10n.dbArrangeWidgets,
               onPressed: activeId == null
                   ? null
-                  : () =>
-                      context.push('/kundli/$kundliId/arrange/$activeId'),
+                  : () => context.push('/kundli/$kundliId/arrange/$activeId'),
             );
           }),
           // Life events belong to the native, not the (global) dashboard —
@@ -74,12 +72,12 @@ class DashboardScreen extends ConsumerWidget {
           if (!isMahakoshKundliId(kundliId))
             IconButton(
               icon: const Icon(Icons.event_note_outlined),
-              tooltip: 'Life events',
+              tooltip: context.l10n.dbLifeEvents,
               onPressed: () => context.push('/kundli/$kundliId/events'),
             ),
           IconButton(
             icon: const Icon(Icons.picture_as_pdf_outlined),
-            tooltip: 'Export / Print',
+            tooltip: context.l10n.dbExportPrint,
             onPressed: () => context.push('/kundli/$kundliId/export'),
           ),
         ],
@@ -88,7 +86,7 @@ class DashboardScreen extends ConsumerWidget {
       // landing screens only; back returns to the kundli list.
       body: viewsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(message: 'Could not load views: $e'),
+        error: (e, _) => EmptyState(message: context.l10n.dbViewsError('$e')),
         data: (views) {
           final activeId = ref.watch(activeViewIdProvider) ??
               (views.isEmpty ? null : views.first.id);
@@ -96,7 +94,7 @@ class DashboardScreen extends ConsumerWidget {
               ? (views.isEmpty ? null : views.first)
               : views.firstWhere((v) => v.id == activeId);
           if (activeView == null) {
-            return const EmptyState(message: 'No dashboard views.');
+            return EmptyState(message: context.l10n.dbNoViews);
           }
           return Column(
             children: [
@@ -109,7 +107,7 @@ class DashboardScreen extends ConsumerWidget {
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
                   error: (e, _) =>
-                      EmptyState(message: 'Calculation failed: $e'),
+                      EmptyState(message: context.l10n.dbCalcFailed('$e')),
                   data: (moduleCtx) =>
                       _WidgetGrid(view: activeView, moduleCtx: moduleCtx),
                 ),
@@ -134,22 +132,19 @@ class DashboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
                 // Long-press a view chip for rename/delete.
-                onLongPress: () =>
-                    _viewActions(context, ref, views, v),
+                onLongPress: () => _viewActions(context, ref, views, v),
                 child: ChoiceChip(
                   label: Text(v.name),
                   selected: v.id == active.id,
                   labelStyle: TextStyle(
-                      color: v.id == active.id
-                          ? TEColors.paper
-                          : TEColors.ink),
+                      color: v.id == active.id ? KJColors.paper : KJColors.ink),
                   onSelected: (_) =>
                       ref.read(activeViewIdProvider.notifier).state = v.id,
                 ),
               ),
             ),
           ActionChip(
-            label: const Text('+ New view'),
+            label: Text(context.l10n.dbNewView),
             onPressed: () => _newView(context, ref),
           ),
         ],
@@ -157,46 +152,44 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _ephemeralBanner(
-      BuildContext context, WidgetRef ref, Kundli kundli) {
+  Widget _ephemeralBanner(BuildContext context, WidgetRef ref, Kundli kundli) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: TEColors.maroon.withValues(alpha: 0.06),
+        color: KJColors.maroon.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: TEColors.maroon.withValues(alpha: 0.3)),
+        border: Border.all(color: KJColors.maroon.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              'Cast for this moment — not saved',
-              style: TextStyle(fontSize: 12.5, color: TEColors.maroon),
+              context.l10n.dbPrashnaUnsaved,
+              style: TextStyle(fontSize: 12.5, color: KJColors.maroon),
             ),
           ),
           TextButton(
             onPressed: () async {
-              final controller =
-                  TextEditingController(text: kundli.name);
+              final controller = TextEditingController(text: kundli.name);
               final name = await showDialog<String>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: const Text('Keep this Prashna kundli'),
+                  title: Text(context.l10n.dbKeepPrashna),
                   content: TextField(
                     controller: controller,
                     autofocus: true,
-                    decoration: const InputDecoration(
-                        labelText: 'Name (e.g. the question asked)'),
+                    decoration: InputDecoration(
+                        labelText: context.l10n.dbPrashnaNameHint),
                   ),
                   actions: [
                     TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel')),
+                        child: Text(ctx.l10n.cancel)),
                     TextButton(
                         onPressed: () =>
                             Navigator.pop(ctx, controller.text.trim()),
-                        child: const Text('Keep')),
+                        child: Text(ctx.l10n.keep)),
                   ],
                 ),
               );
@@ -208,7 +201,7 @@ class DashboardScreen extends ConsumerWidget {
               ref.invalidate(kundlisProvider);
               ref.invalidate(kundliByIdProvider(kundli.id));
             },
-            child: const Text('Keep'),
+            child: Text(context.l10n.keep),
           ),
           TextButton(
             onPressed: () async {
@@ -216,8 +209,8 @@ class DashboardScreen extends ConsumerWidget {
               ref.invalidate(kundlisProvider);
               if (context.mounted) context.go('/');
             },
-            child: Text('Discard',
-                style: TextStyle(color: TEColors.maroon)),
+            child: Text(context.l10n.discard,
+                style: TextStyle(color: KJColors.maroon)),
           ),
         ],
       ),
@@ -230,7 +223,7 @@ class DashboardScreen extends ConsumerWidget {
     final repo = ref.read(dashboardRepoProvider);
     await showModalBottomSheet(
       context: context,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       showDragHandle: true,
       builder: (ctx) => SafeArea(
         child: Column(
@@ -240,29 +233,28 @@ class DashboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text(view.name, style: TETheme.serif(size: 18)),
+                child: Text(view.name, style: KJTheme.serif(size: 18)),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.edit_outlined, size: 20),
-              title: const Text('Rename view'),
+              title: Text(context.l10n.dbRenameView),
               onTap: () async {
                 Navigator.pop(ctx);
                 final controller = TextEditingController(text: view.name);
                 final name = await showDialog<String>(
                   context: context,
                   builder: (dCtx) => AlertDialog(
-                    title: const Text('Rename view'),
-                    content:
-                        TextField(controller: controller, autofocus: true),
+                    title: Text(context.l10n.dbRenameView),
+                    content: TextField(controller: controller, autofocus: true),
                     actions: [
                       TextButton(
                           onPressed: () => Navigator.pop(dCtx),
-                          child: const Text('Cancel')),
+                          child: Text(dCtx.l10n.cancel)),
                       TextButton(
                           onPressed: () =>
                               Navigator.pop(dCtx, controller.text.trim()),
-                          child: const Text('Rename')),
+                          child: Text(ctx.l10n.rename)),
                     ],
                   ),
                 );
@@ -275,17 +267,15 @@ class DashboardScreen extends ConsumerWidget {
             ListTile(
               leading: Icon(Icons.delete_outline,
                   size: 20,
-                  color: views.length > 1
-                      ? TEColors.maroon
-                      : TEColors.inkSoft),
-              title: Text('Delete view',
+                  color: views.length > 1 ? KJColors.maroon : KJColors.inkSoft),
+              title: Text(context.l10n.dbDeleteView,
                   style: TextStyle(
                       color: views.length > 1
-                          ? TEColors.maroon
-                          : TEColors.inkSoft)),
+                          ? KJColors.maroon
+                          : KJColors.inkSoft)),
               subtitle: views.length > 1
                   ? null
-                  : const Text('The only view can\'t be deleted',
+                  : Text(context.l10n.dbOnlyViewCannotDelete,
                       style: TextStyle(fontSize: 11.5)),
               onTap: views.length <= 1
                   ? null
@@ -294,21 +284,16 @@ class DashboardScreen extends ConsumerWidget {
                       final ok = await showDialog<bool>(
                         context: context,
                         builder: (dCtx) => AlertDialog(
-                          title: Text('Delete "${view.name}"?'),
-                          content: const Text(
-                              'Its widget arrangement is removed. '
-                              'Widgets themselves are not affected.'),
+                          title: Text(dCtx.l10n.dbDeleteViewTitle(view.name)),
+                          content: Text(dCtx.l10n.dbDeleteViewBody),
                           actions: [
                             TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(dCtx, false),
-                                child: const Text('Cancel')),
+                                onPressed: () => Navigator.pop(dCtx, false),
+                                child: Text(dCtx.l10n.cancel)),
                             TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(dCtx, true),
-                                child: Text('Delete',
-                                    style: TextStyle(
-                                        color: TEColors.maroon))),
+                                onPressed: () => Navigator.pop(dCtx, true),
+                                child: Text(dCtx.l10n.delete,
+                                    style: TextStyle(color: KJColors.maroon))),
                           ],
                         ),
                       );
@@ -332,7 +317,7 @@ class DashboardScreen extends ConsumerWidget {
   Future<void> _newView(BuildContext context, WidgetRef ref) async {
     final template = await showModalBottomSheet<ViewTemplate>(
       context: context,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       isScrollControlled: true,
       builder: (ctx) => SafeArea(
         child: Column(
@@ -341,8 +326,8 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
-              child:
-                  Text('New view from template', style: TETheme.serif(size: 18)),
+              child: Text(context.l10n.dbNewViewFromTemplate,
+                  style: KJTheme.serif(size: 18)),
             ),
             // Scrolls when the template list is taller than the sheet's
             // capped height (small screens, large text) instead of
@@ -354,10 +339,9 @@ class DashboardScreen extends ConsumerWidget {
                 children: [
                   for (final t in viewTemplates)
                     ListTile(
-                      leading:
-                          Icon(t.icon, size: 20, color: TEColors.inkSoft),
-                      title: Text(t.name),
-                      subtitle: Text(t.description,
+                      leading: Icon(t.icon, size: 20, color: KJColors.inkSoft),
+                      title: Text(templateName(context.l10n, t.key)),
+                      subtitle: Text(templateDescription(context.l10n, t.key),
                           style: const TextStyle(fontSize: 12)),
                       onTap: () => Navigator.pop(ctx, t),
                     ),
@@ -370,19 +354,20 @@ class DashboardScreen extends ConsumerWidget {
     );
     if (template == null || !context.mounted) return;
 
-    final controller = TextEditingController(text: template.name);
+    final controller =
+        TextEditingController(text: templateName(context.l10n, template.key));
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Name this view'),
+        title: Text(ctx.l10n.dbNameThisView),
         content: TextField(controller: controller, autofocus: true),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
+              child: Text(ctx.l10n.cancel)),
           TextButton(
               onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-              child: const Text('Create')),
+              child: Text(ctx.l10n.create)),
         ],
       ),
     );
@@ -431,20 +416,21 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
     final placedAsync = ref.watch(viewWidgetsProvider(view.id));
     return placedAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => EmptyState(message: 'Could not load widgets: $e'),
+      error: (e, _) => EmptyState(message: context.l10n.dbWidgetsError('$e')),
       data: (placed) {
         if (placed.isEmpty) {
           return EmptyState(
-            message: 'This view is empty.',
-            actionLabel: 'Add starter widgets',
+            message: context.l10n.dbViewEmpty,
+            actionLabel: context.l10n.dbAddStarterWidgets,
             onAction: () async {
-              await ref.read(dashboardRepoProvider).seedWidgets(
-                  view.id, DashboardRepository.defaultOverview);
+              await ref
+                  .read(dashboardRepoProvider)
+                  .seedWidgets(view.id, DashboardRepository.defaultOverview);
               ref.invalidate(viewWidgetsProvider(view.id));
             },
-            secondaryLabel: 'Choose widgets myself',
-            onSecondary: () => context.push(
-                '/kundli/${moduleCtx.kundli.id}/arrange/${view.id}'),
+            secondaryLabel: context.l10n.dbChooseWidgets,
+            onSecondary: () => context
+                .push('/kundli/${moduleCtx.kundli.id}/arrange/${view.id}'),
           );
         }
         return LayoutBuilder(builder: (context, constraints) {
@@ -491,21 +477,18 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
                         if (i > 0) const SizedBox(width: 10),
                         Expanded(
                           flex: units(row[i].span),
-                          child: _draggableCard(
-                              context, ref, row[i], placed),
+                          child: _draggableCard(context, ref, row[i], placed),
                         ),
                       ],
                       // Empty remainder of an incomplete row: also a
                       // drop target — dropping here places the dragged
                       // widget right after this row's last card.
-                      if (row.fold<int>(
-                              0, (sum, p) => sum + units(p.span)) <
+                      if (row.fold<int>(0, (sum, p) => sum + units(p.span)) <
                           6) ...[
                         const SizedBox(width: 10),
                         Expanded(
                           flex: 6 -
-                              row.fold<int>(
-                                  0, (sum, p) => sum + units(p.span)),
+                              row.fold<int>(0, (sum, p) => sum + units(p.span)),
                           child: _emptySlotTarget(
                               ref, placed, row.last.instanceId),
                         ),
@@ -515,20 +498,17 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
                 ),
               // Drop zone at the end of the board: move to last.
               _emptySlotTarget(
-                  ref,
-                  placed,
-                  placed.isEmpty ? null : placed.last.instanceId,
-                  height: 56,
-                  label: 'Move to end'),
+                  ref, placed, placed.isEmpty ? null : placed.last.instanceId,
+                  height: 56, label: context.l10n.dbMoveToEnd),
               // Always-visible entry point to the widget library — the
               // header tune icon alone isn't discoverable for
               // non-technical users.
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: OutlinedButton.icon(
-                  icon: const Icon(Icons.dashboard_customize_outlined,
-                      size: 18),
-                  label: const Text('Add / edit widgets'),
+                  icon:
+                      const Icon(Icons.dashboard_customize_outlined, size: 18),
+                  label: Text(context.l10n.dbAddEditWidgets),
                   onPressed: () => context.push(
                       '/kundli/${moduleCtx.kundli.id}/arrange/${view.id}'),
                 ),
@@ -542,13 +522,11 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
 
   /// Moves [draggedId] to immediately AFTER [anchorId] (or to the very
   /// front when anchor is null). Shared by empty-slot drop targets.
-  Future<void> _moveAfter(
-      WidgetRef ref, List<PlacedWidget> all, String draggedId,
-      String? anchorId) async {
+  Future<void> _moveAfter(WidgetRef ref, List<PlacedWidget> all,
+      String draggedId, String? anchorId) async {
     final ids = all.map((p) => p.instanceId).toList();
     if (!ids.remove(draggedId)) return;
-    final insertAt =
-        anchorId == null ? 0 : ids.indexOf(anchorId) + 1;
+    final insertAt = anchorId == null ? 0 : ids.indexOf(anchorId) + 1;
     ids.insert(insertAt.clamp(0, ids.length), draggedId);
     await ref.read(dashboardRepoProvider).reorder(view.id, ids);
     ref.invalidate(viewWidgetsProvider(view.id));
@@ -572,17 +550,16 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: candidates.isNotEmpty
-              ? TEColors.maroon.withValues(alpha: 0.06)
+              ? KJColors.maroon.withValues(alpha: 0.06)
               : Colors.transparent,
           border: candidates.isNotEmpty
-              ? Border.all(color: TEColors.maroon, width: 1.5)
+              ? Border.all(color: KJColors.maroon, width: 1.5)
               : null,
         ),
         child: candidates.isNotEmpty && label != null
             ? Center(
                 child: Text(label,
-                    style:
-                        TextStyle(fontSize: 12.5, color: TEColors.maroon)))
+                    style: TextStyle(fontSize: 12.5, color: KJColors.maroon)))
             : null,
       ),
     );
@@ -591,8 +568,8 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
   /// Long-press the card HEADER to drag-rearrange (the body stays free
   /// for chart gestures — double-tap / long-press view-from, etc.);
   /// drop on any other card to move the dragged widget there.
-  Widget _draggableCard(BuildContext context, WidgetRef ref,
-      PlacedWidget pwd, List<PlacedWidget> all) {
+  Widget _draggableCard(BuildContext context, WidgetRef ref, PlacedWidget pwd,
+      List<PlacedWidget> all) {
     // Plain copy for the drag feedback image.
     final feedbackCard = _card(context, ref, pwd);
     final card = _card(
@@ -626,14 +603,14 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
           ref.invalidate(viewWidgetsProvider(view.id));
         },
         builder: (context, candidates, _) => Container(
-          decoration: candidates.isNotEmpty
-              ? BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: TEColors.maroon, width: 1.5),
-                )
-              : null,
-          child: card,
-        ));
+              decoration: candidates.isNotEmpty
+                  ? BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: KJColors.maroon, width: 1.5),
+                    )
+                  : null,
+              child: card,
+            ));
   }
 
   Widget _card(BuildContext context, WidgetRef ref, PlacedWidget pwd,
@@ -641,11 +618,8 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
     final module = moduleById(pwd.widgetId);
     if (module == null) return const SizedBox();
     final ctx = moduleCtx.withConfig(pwd.config);
-    final summary = module.configSummary(pwd.config);
     return ModuleCard(
-      title: summary == null
-          ? module.meta.title
-          : '${module.meta.title} · $summary',
+      title: moduleInstanceTitle(module, pwd.config, context.l10n),
       onDetail: module.meta.hasDetailView
           ? () => context.push(
               '/kundli/${moduleCtx.kundli.id}/module/${module.meta.id}'
@@ -683,7 +657,7 @@ Future<void> showWidgetMenu(
   var config = Map<String, dynamic>.of(pwd.config);
   await showModalBottomSheet(
     context: context,
-    backgroundColor: TEColors.paper,
+    backgroundColor: KJColors.paper,
     isScrollControlled: true,
     showDragHandle: true,
     constraints: BoxConstraints(
@@ -691,7 +665,7 @@ Future<void> showWidgetMenu(
     ),
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setSheetState) {
-        Widget sectionLabel(String t) => TESectionLabel(t);
+        Widget sectionLabel(String t) => KJSectionLabel(t);
 
         return SafeArea(
           child: Column(
@@ -704,8 +678,8 @@ Future<void> showWidgetMenu(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(module.meta.title,
-                          style: TETheme.serif(size: 18)),
+                      Text(module.meta.titleFor(ctx.l10n),
+                          style: KJTheme.serif(size: 18)),
                       const SizedBox(height: 14),
                       sectionLabel('SIZE'),
                       const SizedBox(height: 8),
@@ -719,12 +693,11 @@ Future<void> showWidgetMenu(
                               labelStyle: TextStyle(
                                   fontSize: 12.5,
                                   color: pwd.span == s
-                                      ? TEColors.paper
-                                      : TEColors.ink),
+                                      ? KJColors.paper
+                                      : KJColors.ink),
                               onSelected: (_) async {
                                 await repo.setSpan(pwd.instanceId, s);
-                                ref.invalidate(
-                                    viewWidgetsProvider(pwd.viewId));
+                                ref.invalidate(viewWidgetsProvider(pwd.viewId));
                                 if (ctx.mounted) Navigator.pop(ctx);
                               },
                             ),
@@ -732,7 +705,7 @@ Future<void> showWidgetMenu(
                       ),
                       // Multi-value choices (e.g. Chart Style) keep their
                       // own labelled section of single-select chips.
-                      for (final choice in module.configChoices())
+                      for (final choice in module.configChoices(ctx.l10n))
                         if (!choice.isBinaryToggle) ...[
                           const SizedBox(height: 16),
                           sectionLabel(choice.label.toUpperCase()),
@@ -744,8 +717,7 @@ Future<void> showWidgetMenu(
                               for (final (value, label) in choice.options)
                                 ChoiceChip(
                                   label: Text(label,
-                                      style:
-                                          const TextStyle(fontSize: 12.5)),
+                                      style: const TextStyle(fontSize: 12.5)),
                                   selected: (config[choice.key] ??
                                           choice.effectiveDefault) ==
                                       value,
@@ -754,13 +726,10 @@ Future<void> showWidgetMenu(
                                       color: (config[choice.key] ??
                                                   choice.effectiveDefault) ==
                                               value
-                                          ? TEColors.paper
-                                          : TEColors.ink),
+                                          ? KJColors.paper
+                                          : KJColors.ink),
                                   onSelected: (_) async {
-                                    config = {
-                                      ...config,
-                                      choice.key: value
-                                    };
+                                    config = {...config, choice.key: value};
                                     await repo.setConfig(
                                         pwd.instanceId, config);
                                     ref.invalidate(
@@ -773,8 +742,9 @@ Future<void> showWidgetMenu(
                         ],
                       // Binary on/off choices collapse into one grouped
                       // section of selectable pills — selected = shown.
-                      if (module.configChoices().any((c) => c.isBinaryToggle))
-                        ...[
+                      if (module
+                          .configChoices(ctx.l10n)
+                          .any((c) => c.isBinaryToggle)) ...[
                         const SizedBox(height: 16),
                         sectionLabel('DISPLAY'),
                         const SizedBox(height: 8),
@@ -782,28 +752,28 @@ Future<void> showWidgetMenu(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            for (final choice in module.configChoices())
+                            for (final choice in module.configChoices(ctx.l10n))
                               if (choice.isBinaryToggle)
                                 FilterChip(
                                   label: Text(choice.label,
-                                      style:
-                                          const TextStyle(fontSize: 12.5)),
+                                      style: const TextStyle(fontSize: 12.5)),
                                   selected: (config[choice.key] ??
                                           choice.effectiveDefault) ==
                                       choice.onValue,
-                                  checkmarkColor: TEColors.paper,
+                                  checkmarkColor: KJColors.paper,
                                   labelStyle: TextStyle(
                                       fontSize: 12.5,
                                       color: (config[choice.key] ??
                                                   choice.effectiveDefault) ==
                                               choice.onValue
-                                          ? TEColors.paper
-                                          : TEColors.ink),
+                                          ? KJColors.paper
+                                          : KJColors.ink),
                                   onSelected: (sel) async {
                                     config = {
                                       ...config,
-                                      choice.key:
-                                          sel ? choice.onValue! : choice.offValue!
+                                      choice.key: sel
+                                          ? choice.onValue!
+                                          : choice.offValue!
                                     };
                                     await repo.setConfig(
                                         pwd.instanceId, config);
@@ -820,27 +790,23 @@ Future<void> showWidgetMenu(
                         children: [
                           OutlinedButton.icon(
                             icon: const Icon(Icons.copy, size: 16),
-                            label: const Text('Duplicate'),
+                            label: Text(context.l10n.duplicate),
                             onPressed: () async {
                               await repo.duplicate(pwd);
-                              ref.invalidate(
-                                  viewWidgetsProvider(pwd.viewId));
+                              ref.invalidate(viewWidgetsProvider(pwd.viewId));
                               if (ctx.mounted) Navigator.pop(ctx);
                             },
                           ),
                           const SizedBox(width: 10),
                           OutlinedButton.icon(
-                            icon: const Icon(Icons.delete_outline,
-                                size: 16),
+                            icon: const Icon(Icons.delete_outline, size: 16),
                             style: OutlinedButton.styleFrom(
-                                foregroundColor: TEColors.maroon,
-                                side:
-                                    BorderSide(color: TEColors.maroon)),
-                            label: const Text('Remove'),
+                                foregroundColor: KJColors.maroon,
+                                side: BorderSide(color: KJColors.maroon)),
+                            label: Text(context.l10n.remove),
                             onPressed: () async {
                               await repo.removeInstance(pwd.instanceId);
-                              ref.invalidate(
-                                  viewWidgetsProvider(pwd.viewId));
+                              ref.invalidate(viewWidgetsProvider(pwd.viewId));
                               if (ctx.mounted) Navigator.pop(ctx);
                             },
                           ),
@@ -857,7 +823,7 @@ Future<void> showWidgetMenu(
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Done'),
+                    child: Text(context.l10n.done),
                   ),
                 ),
               ),

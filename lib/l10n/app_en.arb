@@ -1,6 +1,5 @@
 {
   "@@locale": "en",
-
   "appTitle": "Kaal Jyoti",
   "@appTitle": {
     "description": "TERMINOLOGY POLICY (brief §2.4): Sanskrit-derived astrological terms — nakshatra names, graha/planet names in context, dasha system names, tithi/yoga/karana names, 'kundli', 'lagna', 'ayanamsa', 'Mahakosh' — are FIXED across all languages and must NOT be translated. UI copy (buttons, labels, explanations) IS translated. New languages: add app_<code>.arb beside this file; no code changes required."
@@ -19,7 +18,9 @@
   "savedEncrypted": "{count} saved · encrypted on this device",
   "@savedEncrypted": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "signInBanner": "Kundlis are device-only right now. Sign in to unlock sync + Mahakosh.",
@@ -35,6 +36,442 @@
   "save": "Save",
   "cancel": "Cancel",
   "delete": "Delete",
+  "remove": "Remove",
+  "duplicate": "Duplicate",
+  "create": "Create",
+  "rename": "Rename",
+  "keep": "Keep",
+  "discard": "Discard",
+  "mcKp": "KP (Krishnamurti)",
+  "dmToggleLordPositions": "Lord positions",
+  "dmToggleSandhi": "Sandhi",
+  "dmToggleYogas": "Yogas",
+  "dmToggleAllSystems": "All systems",
+  "dmElapsed": "{percent}% elapsed",
+  "@dmElapsed": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "bcReset": "Reset",
+  "bcTapHint": "Double-tap or long-press a house to view the chart from it",
+  "bcTransitLive": "Transit shown in green, live",
+  "bcTransitAsOf": "Transit shown in green, as of the chosen date/time (past, present, or future)",
+  "rsPickChart": "Pick one of your Mahakosh-shared charts to tag against this research request. The requester sees it anonymized.",
+  "rsNotShared": "Not shared yet — share a kundli first, then respond:",
+  "rsTagging": "Tagging…",
+  "rsTagChart": "Tag chart",
+  "hcSignInPrompt": "Sign in to manage hidden charts.",
+  "hcBackendMissing": "Needs the backend configured. See supabase/README.md.",
+  "@hcBackendMissing": {
+    "description": "'supabase/README.md' is a file path — keep it verbatim."
+  },
+  "hcNote": "Hidden charts are only hidden for you — everyone else still sees them normally.",
+  "mdUnknownModule": "Unknown module",
+  "mdCalcFailed": "Calculation failed: {e}",
+  "@mdCalcFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "keDate": "Date",
+  "keTime": "Time",
+  "klPrashnaName": "Prashna · {when}",
+  "@klPrashnaName": {
+    "description": "Auto-generated name for a Prashna (horary) chart. 'Prashna' is a Sanskrit term — transliterate (Hindi: प्रश्न). {when} is a localized date-time.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "klMahakoshTag": "Mahakosh {code}",
+  "@klMahakoshTag": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "chartAsc": "Asc",
+  "@chartAsc": {
+    "description": "Chart abbreviation for Ascendant/Lagna, drawn in the chart. 2–4 chars in the local script."
+  },
+  "sbNoVedha": "no vedha",
+  "pdfDocTitle": "{name} — Kundli",
+  "@pdfDocTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfCredit": "Charts computed with Kaal Jyoti — free & open source · kaaljyoti.com",
+  "@pdfCredit": {
+    "description": "PDF footer credit. 'Kaal Jyoti' and the domain stay Latin; translate 'Charts computed with' and 'free & open source'."
+  },
+  "rbEmpty": "No research requests yet. Post the first one — describe a pattern you want to study.",
+  "rbOpenCount": "{count, plural, =1{1 open request · pattern research} other{{count} open requests · pattern research}}",
+  "@rbOpenCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rbYours": "YOURS",
+  "rbOpenRequests": "OPEN REQUESTS",
+  "arTitle": "Arrange",
+  "arOnThisView": "ON THIS VIEW",
+  "arEmpty": "Empty — add widgets from the library below.",
+  "arLibrary": "WIDGET LIBRARY",
+  "arSearchWidgets": "Search widgets…",
+  "arAlreadyOnView": "{category} · already on view — adds another copy",
+  "@arAlreadyOnView": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "mcToday": "Today",
+  "mcChartGrahas": "Chart & Grahas",
+  "mcDivisional": "Divisional Charts",
+  "mcTiming": "Timing & Dashas",
+  "mcJaimini": "Jaimini",
+  "mcStrength": "Strength & Doshas",
+  "mcChakra": "Chakra",
+  "@mcToday": {
+    "description": "Widget-library category headings (mc*). Jaimini, Graha, Dasha, Chakra, Dosha are Sanskrit terms — transliterate, don't translate."
+  },
+  "mnAccountFallback": "Account",
+  "mnVersion": "Kaal Jyoti v{version} ({build})",
+  "@mnVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+  "mnFoss": "Free & open source software",
+  "mnAuthorCredit": "Made by Acharya Amit Verma",
+  "@mnAuthorCredit": {
+    "description": "About-screen footer credit; tapping opens the author's LinkedIn. 'Acharya Amit Verma' is a proper name — transliterate, don't translate."
+  },
+  "mnLicenseLine": "Released under the GNU AGPL v3",
+  "mnSourceCode": "Source code",
+  "mnEphemerisCredit": "Planetary calculations powered by the Swiss Ephemeris",
+  "mnNoWarranty": "No warranty — see license for details",
+  "@mnLicenseLine": {
+    "description": "About-screen footer. 'GNU AGPL v3', 'Swiss Ephemeris' and 'Kaal Jyoti' are proper names — keep them; translate the surrounding words."
+  },
+  "vtBlank": "Blank",
+  "vtBlankDesc": "Start empty and add widgets yourself",
+  "vtOverview": "Overview",
+  "vtOverviewDesc": "Chart, dasha, panchang, positions — the full picture",
+  "vtDivisional": "Divisional Focus",
+  "vtDivisionalDesc": "D1 with the D9, D7, D10 and D12 vargas",
+  "vtDasha": "Dasha",
+  "vtDashaDesc": "All dasha systems with events, transit and timing",
+  "vtJaimini": "Jaimini",
+  "vtJaiminiDesc": "Karakas, Padas, Rashi aspects, and Chara dasha",
+  "vtKp": "KP",
+  "vtKpDesc": "Krishnamurti Paddhati — cusps, planets, significators",
+  "vtStrength": "Strength & Balas",
+  "vtStrengthDesc": "Shadbala, Bhava Bala and Ashtakavarga strength",
+  "vtChakras": "Chakras",
+  "vtChakrasDesc": "Kota, Sarvatobhadra and Sudarshana chakras",
+  "@vtDasha": {
+    "description": "Dashboard view-template names (vt*) and descriptions (vt*Desc). Dasha, Jaimini, KP (Krishnamurti Paddhati), Bala, Chakra, and the varga/D-number tokens are Sanskrit/technical terms — transliterate, don't translate."
+  },
+  "ntSignInPrompt": "Sign in to receive research notifications.",
+  "ntBackendMissing": "Notifications arrive once the backend is configured and you are signed in.",
+  "ntRequestMatchNew": "New matches for your research request",
+  "ntYourChartMatched": "Your chart matched a research request",
+  "ntRequestApproved": "Your research request is live",
+  "ntRequestRejected": "Your research request was not approved",
+  "ntReportActioned": "A chart you reported was removed",
+  "ntReportDismissed": "A chart you reported was reviewed",
+  "ntCommentReply": "{name} replied to your comment",
+  "@ntCommentReply": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ntChartComment": "New comment on your chart {code}",
+  "@ntChartComment": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "ntCommentHeld": "Your comment is hidden pending review",
+  "ntCommentRemoved": "Your comment was removed by moderators",
+  "ntCommentRestored": "Your comment was reviewed and restored",
+  "ntGeneric": "Notification",
+  "ntSomeone": "Someone",
+  "dsPlaceholderDeleted": "Comment deleted by its author",
+  "dsPlaceholderRemoved": "Comment removed by moderators",
+  "dsPlaceholderHeld": "Your comment was reported and is hidden while our team reviews it",
+  "dsAuthorDeleted": "Deleted account",
+  "dsAuthorAnonymous": "Anonymous",
+  "dsBlockSubtitle": "Hides all their comments from your view and reports this comment to our moderators. They won't be notified.",
+  "dsSignInPrompt": "Sign in to read and join the discussion on community charts.",
+  "dsEdited": "edited",
+  "dsOriginalUnavailable": "Original comment unavailable",
+  "dsEditingBanner": "Editing your comment",
+  "dsReplyingBanner": "Replying to {name}: {body}",
+  "@dsReplyingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "body": {
+        "type": "String"
+      }
+    }
+  },
+  "dsPublicHint": "Public — avoid names or identifying details.",
+  "kevAge": "Age {years}",
+  "@kevAge": {
+    "placeholders": {
+      "years": {
+        "type": "String"
+      }
+    }
+  },
+  "kevAgeUnknown": "Age —",
+  "kevDeleteEvent": "Delete event",
+  "kevInvalidAge": "Enter a valid age in years.",
+  "kevPickDate": "Pick a date for this event.",
+  "kevSaving": "Saving…",
+  "kevSaveChanges": "Save changes",
+  "kevAddEvent": "Add event",
+  "kevWhen": "WHEN",
+  "kevPrecisionExact": "Exact date",
+  "kevPrecisionMonth": "Month",
+  "kevPrecisionYear": "Year",
+  "kevPrecisionAge": "Age",
+  "siError": "Sign-in failed. Please try again or use the email code.",
+  "siErrorRateLimit": "Too many attempts — please wait a minute and try again.",
+  "siErrorBadCode": "That code didn't match or has expired. Request a new one.",
+  "siErrorGeneric": "Something went wrong. Check the email address and try again.",
+  "siBackendMissing": "Accounts need the backend configured (SUPABASE_URL / SUPABASE_ANON_KEY). The app works fully offline without one — sync and Mahakosh are the only features gated.",
+  "@siBackendMissing": {
+    "description": "SUPABASE_URL and SUPABASE_ANON_KEY are environment-variable names — keep them exactly, do not translate."
+  },
+  "siAccountUnlocks": "An account unlocks cross-device sync and Mahakosh — chart casting never requires one.",
+  "siCodeSentTo": "Sent to {email} — check spam too",
+  "@siCodeSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "siWorking": "Working…",
+  "siVerifySignIn": "Verify & sign in",
+  "siSendCode": "Send code",
+  "siNoPassword": "No password needed — first sign-in creates your account automatically.",
+  "msBrowse": "Browse",
+  "msBookmarks": "Bookmarks",
+  "msCommunityCharts": "COMMUNITY CHARTS",
+  "msCommunityChartsCount": "COMMUNITY CHARTS · {count} contributed",
+  "@msCommunityChartsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "msNoCharts": "No charts contributed yet — be the first: share a kundli from its Edit screen.",
+  "msNoBookmarks": "No bookmarks yet. Tap the bookmark icon on any chart to keep it here for quick access.",
+  "msBookmark": "Bookmark",
+  "msClearFiltersBrowse": "Clear filters & browse",
+  "msSearchCharts": "Search charts",
+  "msTypePlanetInHouse": "Planet in house",
+  "msTypePlanetInSign": "Planet in sign",
+  "msTypePlanetInNakshatra": "Planet in nakshatra",
+  "msTypeYogaPresent": "Yoga present",
+  "msTypeLifeEvent": "Life event tag",
+  "msTypeBirthRange": "Birth date",
+  "peTitle": "Export / Print",
+  "peExportFailed": "Export failed: {e}",
+  "@peExportFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "peOwnKundlisOnly": "PDF export is available for your own kundlis only. Community charts stay anonymized — their birth time is never exported.",
+  "peModulesSection": "MODULES IN THIS EXPORT",
+  "peSavedReportNote": "Your saved report for this kundli — kept separate from the dashboard.",
+  "peFirstExportNote": "First export starts from your dashboard; after that the report is remembered separately.",
+  "peReset": "Reset",
+  "peConfigureBlock": "Configure this block",
+  "peDuplicateBlock": "Duplicate this block",
+  "peOptionsSection": "OPTIONS",
+  "pePaper": "Paper",
+  "peCoverPage": "Cover page",
+  "peBranding": "Practitioner branding (optional)",
+  "peBrandingHelper": "Shown on the cover and footer — e.g. your name and contact, so the report reads as coming from you",
+  "peGenerating": "Generating…",
+  "peGenerateShare": "Generate & share",
+  "pePrint": "Print",
+  "mkcAge": "Age {years}",
+  "@mkcAge": {
+    "placeholders": {
+      "years": {
+        "type": "String"
+      }
+    }
+  },
+  "mkcTitle": "Chart {code}",
+  "@mkcTitle": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "mkcDiscussion": "Discussion",
+  "mkcBookmark": "Bookmark",
+  "mkcRemoveBookmark": "Remove bookmark",
+  "mkcBookmarkError": "Could not update bookmark: {e}",
+  "@mkcBookmarkError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "mkcLoadError": "Could not load this chart: {e}",
+  "@mkcLoadError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "mkcAnonymized": "Anonymized",
+  "mkcBirthTimeHidden": "birth time hidden",
+  "mkcBeFirst": "Be the first to share a reading of this chart",
+  "mkcComments": "{count, plural, =1{1 comment} other{{count} comments}}",
+  "@mkcComments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mkcLifeEvents": "LIFE EVENTS",
+  "mkcHealth": "Health",
+  "mkcLegacyNotice": "Shared before birth details were included — only the chart itself is available. The contributor can re-share to enable full calculations.",
+  "stTitle": "Settings",
+  "stSectionDateFormat": "DATE FORMAT",
+  "stDateFormatNote": "Applies everywhere dates appear. Spelled-out formats avoid any day/month confusion; numeric formats are more compact.",
+  "stDefaultAyanamsa": "Default ayanamsa",
+  "stAyanamsaSubtitle": "{name} — overridable per kundli",
+  "@stAyanamsaSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stDefaultChartStyle": "Default chart style",
+  "stSectionChartText": "CHART TEXT FORMAT",
+  "stChartTextNote": "How planets, degrees and signs render inside the charts. Changes apply to every chart immediately.",
+  "stPlanetSize": "Planet size",
+  "stDegreesMarksSize": "Degrees & marks size",
+  "stBoldPlanetNames": "Bold planet names",
+  "stDegreeDetail": "Degree detail",
+  "stDegreeMinutes": "Minutes — 23°41'",
+  "stDegreeWhole": "Whole — 23°",
+  "@stDegreeMinutes": {
+    "description": "Degree-precision options. The ° and ' symbols and the sample numbers are universal notation — keep them; translate only the leading word."
+  },
+  "stSmallestSize": "Smallest allowed size",
+  "stSmallestSizeNote": "In a crowded house the text shrinks to fit, but never below this fraction of its normal size.",
+  "stSignLabelSize": "Sign label size",
+  "stTextAreaInHouse": "Text area within house",
+  "stResetDefaults": "Reset to defaults",
+  "stTextSize": "Text size",
+  "stTheme": "Theme",
+  "stThemeClassic": "Classic",
+  "stThemeHighContrast": "High contrast",
+  "stThemeDark": "Dark",
+  "stTypography": "Typography",
+  "stTypeEditorial": "Editorial",
+  "stTypePlain": "Plain",
+  "stTypographyNoteEditorial": "Editorial — Marcellus display headings with IBM Plex for body and data. The classic look.",
+  "stTypographyNotePlain": "Plain — IBM Plex throughout, no serif. Cleaner and more legible at large text sizes.",
+  "@stTypographyNoteEditorial": {
+    "description": "Shown under the Typography chips; only the selected one appears. 'Marcellus' and 'IBM Plex' are typeface names — never translate them. The leading word must match stTypeEditorial / stTypePlain."
+  },
+  "dbArrangeWidgets": "Arrange widgets",
+  "dbLifeEvents": "Life events",
+  "dbExportPrint": "Export / Print",
+  "dbKundli": "Kundli",
+  "dbViewsError": "Could not load views: {e}",
+  "@dbViewsError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dbNoViews": "No dashboard views.",
+  "dbCalcFailed": "Calculation failed: {e}",
+  "@dbCalcFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dbNewView": "+ New view",
+  "dbPrashnaUnsaved": "Cast for this moment — not saved",
+  "dbKeepPrashna": "Keep this Prashna kundli",
+  "dbPrashnaNameHint": "Name (e.g. the question asked)",
+  "dbRenameView": "Rename view",
+  "dbDeleteView": "Delete view",
+  "dbOnlyViewCannotDelete": "The only view can't be deleted",
+  "dbDeleteViewTitle": "Delete \"{name}\"?",
+  "@dbDeleteViewTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dbDeleteViewBody": "Its widget arrangement is removed. Widgets themselves are not affected.",
+  "dbNewViewFromTemplate": "New view from template",
+  "dbNameThisView": "Name this view",
+  "dbWidgetsError": "Could not load widgets: {e}",
+  "@dbWidgetsError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dbViewEmpty": "This view is empty.",
+  "dbAddStarterWidgets": "Add starter widgets",
+  "dbChooseWidgets": "Choose widgets myself",
+  "dbMoveToEnd": "Move to end",
+  "dbAddEditWidgets": "Add / edit widgets",
   "deleteKundli": "Delete kundli",
   "recalcWarning": "Changing birth details recalculates every widget for this kundli.",
   "cloudSync": "Cloud sync",
@@ -55,7 +492,9 @@
   "chartsMatch": "{count} charts match",
   "@chartsMatch": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "shareToMahakosh": "Share to Mahakosh",
@@ -74,10 +513,2653 @@
   "openRequests": "{count} open requests · pattern research",
   "@openRequests": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "yours": "YOURS",
   "respondWithChart": "Respond with a chart",
-  "submitForReview": "Submit for review"
+  "submitForReview": "Submit for review",
+  "planetSun": "Sun",
+  "@planetSun": {
+    "description": "GRAHA NAMES (this key through planetKetu, and the planetAbbr* family). Translators: English uses the Western planet names; other languages should use the jyotish graha names in the local script (hi: सूर्य, चंद्र, मंगल …). Per the terminology policy on @appTitle these are transliterations of fixed terms, never generic translations."
+  },
+  "planetMoon": "Moon",
+  "planetMars": "Mars",
+  "planetMercury": "Mercury",
+  "planetJupiter": "Jupiter",
+  "planetVenus": "Venus",
+  "planetSaturn": "Saturn",
+  "planetRahu": "Rahu",
+  "planetKetu": "Ketu",
+  "planetAbbrSun": "Su",
+  "@planetAbbrSun": {
+    "description": "Two-letter graha tokens used in grids and tables. Keep them SHORT (2–3 chars) and unambiguous within the set; use the local script's conventional jyotish abbreviations (hi: सू, चं, मं …)."
+  },
+  "planetAbbrMoon": "Mo",
+  "planetAbbrMars": "Ma",
+  "planetAbbrMercury": "Me",
+  "planetAbbrJupiter": "Ju",
+  "planetAbbrVenus": "Ve",
+  "planetAbbrSaturn": "Sa",
+  "planetAbbrRahu": "Ra",
+  "planetAbbrKetu": "Ke",
+  "signAries": "Aries",
+  "@signAries": {
+    "description": "RASHI DISPLAY NAMES (through signPisces). English shows the Western zodiac names; languages whose users know the rashis natively should use the Sanskrit rashi names in local script (hi: मेष, वृषभ …)."
+  },
+  "signTaurus": "Taurus",
+  "signGemini": "Gemini",
+  "signCancer": "Cancer",
+  "signLeo": "Leo",
+  "signVirgo": "Virgo",
+  "signLibra": "Libra",
+  "signScorpio": "Scorpio",
+  "signSagittarius": "Sagittarius",
+  "signCapricorn": "Capricorn",
+  "signAquarius": "Aquarius",
+  "signPisces": "Pisces",
+  "signSanskritAries": "Mesha",
+  "@signSanskritAries": {
+    "description": "Sanskrit rashi names (through signSanskritPisces) — transliterate into the local script, never translate (hi: मेष). Shown by signNameFull alongside the display name where both help."
+  },
+  "signSanskritTaurus": "Vrishabha",
+  "signSanskritGemini": "Mithuna",
+  "signSanskritCancer": "Karka",
+  "signSanskritLeo": "Simha",
+  "signSanskritVirgo": "Kanya",
+  "signSanskritLibra": "Tula",
+  "signSanskritScorpio": "Vrischika",
+  "signSanskritSagittarius": "Dhanu",
+  "signSanskritCapricorn": "Makara",
+  "signSanskritAquarius": "Kumbha",
+  "signSanskritPisces": "Meena",
+  "signNameFull": "{sanskrit} ({western})",
+  "@signNameFull": {
+    "description": "How a rashi is written when both forms are available. English pairs them — 'Mesha (Aries)'. In a language where display name and Sanskrit name are identical (hi: both मेष), use just '{sanskrit}' so the name doesn't repeat.",
+    "placeholders": {
+      "sanskrit": {
+        "type": "String"
+      },
+      "western": {
+        "type": "String"
+      }
+    }
+  },
+  "nakshatraAshwini": "Ashwini",
+  "@nakshatraAshwini": {
+    "description": "NAKSHATRA NAMES, 28 including Abhijit (through nakshatraRevati). Fixed terms — transliterate into the local script (hi: अश्विनी, भरणी …), never translate."
+  },
+  "nakshatraBharani": "Bharani",
+  "nakshatraKrittika": "Krittika",
+  "nakshatraRohini": "Rohini",
+  "nakshatraMrigashira": "Mrigashira",
+  "nakshatraArdra": "Ardra",
+  "nakshatraPunarvasu": "Punarvasu",
+  "nakshatraPushya": "Pushya",
+  "nakshatraAshlesha": "Ashlesha",
+  "nakshatraMagha": "Magha",
+  "nakshatraPurvaPhalguni": "Purva Phalguni",
+  "nakshatraUttaraPhalguni": "Uttara Phalguni",
+  "nakshatraHasta": "Hasta",
+  "nakshatraChitra": "Chitra",
+  "nakshatraSwati": "Swati",
+  "nakshatraVishakha": "Vishakha",
+  "nakshatraAnuradha": "Anuradha",
+  "nakshatraJyeshtha": "Jyeshtha",
+  "nakshatraMula": "Mula",
+  "nakshatraPurvaAshadha": "Purva Ashadha",
+  "nakshatraUttaraAshadha": "Uttara Ashadha",
+  "nakshatraAbhijit": "Abhijit",
+  "nakshatraShravana": "Shravana",
+  "nakshatraDhanishta": "Dhanishta",
+  "nakshatraShatabhisha": "Shatabhisha",
+  "nakshatraPurvaBhadrapada": "Purva Bhadrapada",
+  "nakshatraUttaraBhadrapada": "Uttara Bhadrapada",
+  "nakshatraRevati": "Revati",
+  "nakshatraAbbrAshwini": "Ash",
+  "@nakshatraAbbrAshwini": {
+    "description": "Short nakshatra tokens for chart labels and dense tables (through nakshatraAbbrRevati). Keep to 2–4 chars in the local script."
+  },
+  "nakshatraAbbrBharani": "Bha",
+  "nakshatraAbbrKrittika": "Kri",
+  "nakshatraAbbrRohini": "Roh",
+  "nakshatraAbbrMrigashira": "Mri",
+  "nakshatraAbbrArdra": "Ard",
+  "nakshatraAbbrPunarvasu": "Pun",
+  "nakshatraAbbrPushya": "Pus",
+  "nakshatraAbbrAshlesha": "Asl",
+  "nakshatraAbbrMagha": "Mag",
+  "nakshatraAbbrPurvaPhalguni": "PPh",
+  "nakshatraAbbrUttaraPhalguni": "UPh",
+  "nakshatraAbbrHasta": "Has",
+  "nakshatraAbbrChitra": "Chi",
+  "nakshatraAbbrSwati": "Swa",
+  "nakshatraAbbrVishakha": "Vis",
+  "nakshatraAbbrAnuradha": "Anu",
+  "nakshatraAbbrJyeshtha": "Jye",
+  "nakshatraAbbrMula": "Mul",
+  "nakshatraAbbrPurvaAshadha": "PSh",
+  "nakshatraAbbrUttaraAshadha": "USh",
+  "nakshatraAbbrAbhijit": "Abh",
+  "nakshatraAbbrShravana": "Shr",
+  "nakshatraAbbrDhanishta": "Dha",
+  "nakshatraAbbrShatabhisha": "Sat",
+  "nakshatraAbbrPurvaBhadrapada": "PBh",
+  "nakshatraAbbrUttaraBhadrapada": "UBh",
+  "nakshatraAbbrRevati": "Rev",
+  "tithiPratipada": "Pratipada",
+  "@tithiPratipada": {
+    "description": "TITHI NAMES (through tithiAmavasya) and the two paksha* keys. Fixed panchang terms — transliterate into the local script (hi: प्रतिपदा …), never translate."
+  },
+  "tithiDwitiya": "Dwitiya",
+  "tithiTritiya": "Tritiya",
+  "tithiChaturthi": "Chaturthi",
+  "tithiPanchami": "Panchami",
+  "tithiShashthi": "Shashthi",
+  "tithiSaptami": "Saptami",
+  "tithiAshtami": "Ashtami",
+  "tithiNavami": "Navami",
+  "tithiDashami": "Dashami",
+  "tithiEkadashi": "Ekadashi",
+  "tithiDwadashi": "Dwadashi",
+  "tithiTrayodashi": "Trayodashi",
+  "tithiChaturdashi": "Chaturdashi",
+  "tithiPurnima": "Purnima",
+  "tithiAmavasya": "Amavasya",
+  "pakshaShukla": "Shukla",
+  "pakshaKrishna": "Krishna",
+  "yogaVishkambha": "Vishkambha",
+  "@yogaVishkambha": {
+    "description": "The 27 panchang YOGA NAMES (through yogaVaidhriti). Fixed terms — transliterate, never translate (hi: विष्कम्भ …)."
+  },
+  "yogaPriti": "Priti",
+  "yogaAyushman": "Ayushman",
+  "yogaSaubhagya": "Saubhagya",
+  "yogaShobhana": "Shobhana",
+  "yogaAtiganda": "Atiganda",
+  "yogaSukarma": "Sukarma",
+  "yogaDhriti": "Dhriti",
+  "yogaShula": "Shula",
+  "yogaGanda": "Ganda",
+  "yogaVriddhi": "Vriddhi",
+  "yogaDhruva": "Dhruva",
+  "yogaVyaghata": "Vyaghata",
+  "yogaHarshana": "Harshana",
+  "yogaVajra": "Vajra",
+  "yogaSiddhi": "Siddhi",
+  "yogaVyatipata": "Vyatipata",
+  "yogaVariyan": "Variyan",
+  "yogaParigha": "Parigha",
+  "yogaShiva": "Shiva",
+  "yogaSiddha": "Siddha",
+  "yogaSadhya": "Sadhya",
+  "yogaShubha": "Shubha",
+  "yogaShukla": "Shukla",
+  "yogaBrahma": "Brahma",
+  "yogaIndra": "Indra",
+  "yogaVaidhriti": "Vaidhriti",
+  "karanaBava": "Bava",
+  "@karanaBava": {
+    "description": "The 11 KARANA NAMES (through karanaKimstughna). Fixed terms — transliterate, never translate (hi: बव, बालव …)."
+  },
+  "karanaBalava": "Balava",
+  "karanaKaulava": "Kaulava",
+  "karanaTaitila": "Taitila",
+  "karanaGara": "Gara",
+  "karanaVanija": "Vanija",
+  "karanaVishti": "Vishti",
+  "karanaShakuni": "Shakuni",
+  "karanaChatushpada": "Chatushpada",
+  "karanaNaga": "Naga",
+  "karanaKimstughna": "Kimstughna",
+  "varaSomavara": "Somavara",
+  "@varaSomavara": {
+    "description": "VARA (weekday) names, Somavara through Ravivara. Use the everyday weekday word in the local script (hi: सोमवार …)."
+  },
+  "varaMangalavara": "Mangalavara",
+  "varaBudhavara": "Budhavara",
+  "varaGuruvara": "Guruvara",
+  "varaShukravara": "Shukravara",
+  "varaShanivara": "Shanivara",
+  "varaRavivara": "Ravivara",
+  "dashaSystemVimshottari": "Vimshottari",
+  "@dashaSystemVimshottari": {
+    "description": "DASHA SYSTEM names (3), their subtitles, level names (5 + plurals) and the 8 Yogini lords. System/level/Yogini names are fixed terms — transliterate. The *Subtitle keys are ordinary UI copy — translate them normally."
+  },
+  "dashaSystemYogini": "Yogini",
+  "dashaSystemJaimini": "Jaimini Chara",
+  "dashaSystemVimshottariSubtitle": "Nakshatra-based · 120-year cycle · 9 lords",
+  "dashaSystemYoginiSubtitle": "Nakshatra-based · 36-year cycle · 8 Yoginis",
+  "dashaSystemJaiminiSubtitle": "Sign-based · rashi periods from lord placement",
+  "dashaLevelMaha": "Mahadasha",
+  "dashaLevelAntar": "Antardasha",
+  "dashaLevelPratyantar": "Pratyantardasha",
+  "dashaLevelSookshma": "Sookshma dasha",
+  "dashaLevelPran": "Pran dasha",
+  "dashaLevelMahaPlural": "Mahadashas",
+  "dashaLevelAntarPlural": "Antardashas",
+  "dashaLevelPratyantarPlural": "Pratyantardashas",
+  "dashaLevelSookshmaPlural": "Sookshma dashas",
+  "dashaLevelPranPlural": "Pran dashas",
+  "yoginiMangala": "Mangala",
+  "yoginiPingala": "Pingala",
+  "yoginiDhanya": "Dhanya",
+  "yoginiBhramari": "Bhramari",
+  "yoginiBhadrika": "Bhadrika",
+  "yoginiUlka": "Ulka",
+  "yoginiSiddha": "Siddha",
+  "yoginiSankata": "Sankata",
+  "maitriAtiMitra": "Ati Mitra",
+  "@maitriAtiMitra": {
+    "description": "PANCHADHA MAITRI tiers (5), each with a plain-language *Gloss and a 1–2 char *Abbr grid token, plus the rel* friend/neutral/enemy words. Tier names are fixed terms — transliterate; glosses are ordinary copy — translate."
+  },
+  "maitriMitra": "Mitra",
+  "maitriSama": "Sama",
+  "maitriSatru": "Satru",
+  "maitriAtiSatru": "Ati Satru",
+  "maitriAtiMitraGloss": "Great friend",
+  "maitriMitraGloss": "Friend",
+  "maitriSamaGloss": "Neutral",
+  "maitriSatruGloss": "Enemy",
+  "maitriAtiSatruGloss": "Great enemy",
+  "maitriAtiMitraAbbr": "AM",
+  "maitriMitraAbbr": "Mi",
+  "maitriSamaAbbr": "Sm",
+  "maitriSatruAbbr": "St",
+  "maitriAtiSatruAbbr": "AS",
+  "relFriend": "Friend",
+  "relNeutral": "Neutral",
+  "relEnemy": "Enemy",
+  "relFriendAbbr": "F",
+  "relNeutralAbbr": "N",
+  "relEnemyAbbr": "E",
+  "labelTithi": "Tithi",
+  "@labelTithi": {
+    "description": "PANCHANG LIMB LABELS (through labelPada) — the row labels naming each limb. Fixed terms — transliterate (hi: तिथि, वार …)."
+  },
+  "labelVara": "Vara",
+  "labelNakshatra": "Nakshatra",
+  "labelYoga": "Yoga",
+  "labelKarana": "Karana",
+  "labelPada": "Pada",
+  "modulePanchangTitle": "Panchang",
+  "@modulePanchangTitle": {
+    "description": "MODULE TITLES (the module*Title family) — widget-card and app-bar names of dashboard modules. Sanskrit titles transliterate; English-word titles translate normally."
+  },
+  "panchangAtBirthNote": "At the birth moment & place",
+  "panchangPdfHeader": "Panchang at Birth",
+  "modulePanchadhaMaitriTitle": "Panchadha Maitri",
+  "moduleAshtakavargaTitle": "Ashtakavarga",
+  "moduleBhavaBalaTitle": "Bhava Bala",
+  "moduleBirthChartTitle": "Birth Chart",
+  "moduleDashaPeriodsTitle": "Dasha Periods",
+  "moduleDivisionalChartTitle": "Divisional Chart",
+  "moduleJaiminiAspectsTitle": "Jaimini Aspects",
+  "moduleJaiminiKarakasTitle": "Jaimini Karakas",
+  "moduleJaiminiLagnaTitle": "Jaimini Lagna",
+  "moduleJaiminiPadasTitle": "Jaimini Padas",
+  "moduleKpCuspsTitle": "KP · Cusps",
+  "moduleKpPlanetsTitle": "KP · Planets",
+  "moduleKpRulingPlanetsTitle": "KP · Ruling Planets",
+  "moduleKpSignificatorsTitle": "KP · Significators",
+  "moduleKotaChakraTitle": "Kota Chakra",
+  "moduleMoonNakshatraTitle": "Moon & Nakshatra",
+  "modulePlanetaryPositionsTitle": "Planetary Positions",
+  "moduleSadeSatiTitle": "Sade Sati",
+  "moduleSarvatobhadraTitle": "Sarvatobhadra Chakra",
+  "moduleShadbalaTitle": "Shadbala",
+  "moduleSpecialLagnasTitle": "Special Lagnas",
+  "moduleSudarshanaTitle": "Sudarshana Chakra",
+  "moduleTransitTitle": "Transit",
+  "moduleUpcomingEventsTitle": "Upcoming Events",
+  "moduleChalitTitle": "Bhava Chalit",
+  "ccBlurb": "Cusp-bounded houses: a planet late in a sign may occupy the next bhava. Compare with the whole-sign rashi chart.",
+  "cfgHouseSystem": "House system",
+  "ccSripati": "Sripati",
+  "ccPlacidus": "Placidus",
+  "ccEqual": "Equal (from Lagna)",
+  "cfgRotateTo": "Rotate to house",
+  "cfgCuspDegrees": "Madhya & sandhi degrees",
+  "ccMadhyaCol": "Madhya",
+  "ccSandhiCol": "From (sandhi)",
+  "ccCaption": "houses run sandhi to sandhi around each madhya",
+  "mcVarshphal": "Varshphal",
+  "moduleVarshphalDivisionalTitle": "Varshphal Divisional",
+  "moduleVarshphalMaitriTitle": "Tajika Maitri",
+  "tmBlurb": "Positional relations in the varsha chart: 5/9 open friends, 3/11 secret friends, 1/7 open enemies, 4/10 secret enemies.",
+  "tmAbbrDF": "DF",
+  "@tmAbbrDF": {
+    "description": "MAITRI LEGEND abbreviations (tmAbbrDF…tmAbbrME) for the compact card: direct friend, hidden friend, direct enemy, hidden enemy, mutual enemy. Keep to 1-4 chars — five groups share one row."
+  },
+  "tmAbbrHF": "HF",
+  "tmAbbrDE": "DE",
+  "tmAbbrHE": "HE",
+  "tmAbbrME": "ME",
+  "tmDirectFriends": "Direct friends",
+  "tmHiddenFriends": "Hidden friends",
+  "tmDirectEnemies": "Direct enemies",
+  "tmHiddenEnemies": "Hidden enemies",
+  "tmMutualEnemies": "Mutual enemies",
+  "moduleVarshphalPanchaBalaTitle": "Panch Vargiya Bala",
+  "moduleHarshaBalaTitle": "Harsha Bala",
+  "pvBlurb": "Five-fold Tajika strength; Vishwa Bala = total ÷ 4 (max 20). The Varshesha is elected on this strength.",
+  "pvGriha": "Griha",
+  "pvUchcha": "Uchcha",
+  "pvHudda": "Hudda",
+  "pvDrekkana": "Drek.",
+  "pvNavamsha": "Nav.",
+  "pvVishwaBala": "V.B.",
+  "pvTotal": "Total",
+  "hbBlurb": "Four factors, five units each: position, own/exaltation, gender-matching house, day/night.",
+  "hbFirst": "Position",
+  "hbSecond": "Own/Ex",
+  "hbThird": "Gender",
+  "hbFourth": "Day/Nt",
+  "hbNirbala": "Nirbala",
+  "hbAlpabali": "Alpabali",
+  "hbMadhyaBali": "Madhya Bali",
+  "hbPoornaBali": "Poorna Bali",
+  "hbExtraordinary": "Extraordinary",
+  "vpDay": "day",
+  "vpNight": "night",
+  "vpYearLordLine": "Varshesha: {planet}",
+  "@vpYearLordLine": {"placeholders": {"planet": {"type": "String"}}},
+  "vpBearersHeader": "Office-bearers (Panchadhikaris)",
+  "vpAspectsLagna": "aspects lagna",
+  "vpNoAspect": "no aspect",
+  "obMunthaPati": "Muntha Pati",
+  "obJanmaLagnaPati": "Janma Lagna Pati",
+  "obVarshaLagnaPati": "Varsha Lagna Pati",
+  "obTriRashiPati": "Tri-Rashi Pati",
+  "obDinaRatriPati": "Dina-Ratri Pati",
+  "moduleVarshphalDashaTitle": "Varsha Dasha",
+  "vdMudda": "Mudda",
+  "vdYogini": "Yogini",
+  "vdPatyayini": "Patyayini",
+  "vdDays": "{d}d",
+  "@vdDays": {"placeholders": {"d": {"type": "String"}}},
+  "moduleVarshphalSahamTitle": "Sahams",
+  "shSaham": "Saham",
+  "shLord": "Lord",
+  "shChartSource": "Chart",
+  "shChartVarsha": "Varsha chart",
+  "shChartNatal": "Birth chart",
+  "shMoreFooter": "+{n} more — open the widget for all",
+  "@shMoreFooter": {"placeholders": {"n": {"type": "String"}}},
+  "sahamPunya": "Punya",
+  "sahamGuru": "Guru",
+  "sahamVidya": "Vidya",
+  "sahamYasha": "Yasha",
+  "sahamMitra": "Mitra",
+  "sahamMahatmya": "Mahatmya",
+  "sahamAsha": "Asha",
+  "sahamSamartha": "Samartha",
+  "sahamBhratri": "Bhratri",
+  "sahamGaurava": "Gaurava",
+  "sahamPitri": "Pitri",
+  "sahamRaja": "Raja",
+  "sahamMatri": "Matri",
+  "sahamPutra": "Putra",
+  "sahamJeeva": "Jeeva",
+  "sahamRoga": "Roga",
+  "sahamKarma": "Karma",
+  "sahamManmatha": "Manmatha",
+  "sahamKali": "Kali",
+  "sahamKshama": "Kshama",
+  "sahamShastra": "Shastra",
+  "sahamBandhu": "Bandhu",
+  "sahamMrityu": "Mrityu",
+  "sahamDeshantara": "Deshantara",
+  "sahamArtha": "Artha",
+  "sahamParadara": "Paradara",
+  "sahamAnyakarma": "Anya-Karma",
+  "sahamVanika": "Vanika",
+  "sahamKaryasiddhi": "Karya-Siddhi",
+  "sahamVivaha": "Vivaha",
+  "sahamPrasava": "Prasava",
+  "sahamSantaapa": "Santaapa",
+  "sahamShraddha": "Shraddha",
+  "sahamPreeti": "Preeti",
+  "sahamJadya": "Jadya",
+  "sahamVyapara": "Vyapara",
+  "sahamPaneeyapaata": "Paneeya-Paata",
+  "sahamShatru": "Shatru",
+  "sahamJalapatha": "Jalapatha",
+  "sahamBandhana": "Bandhana",
+  "sahamLabha": "Labha",
+  "moduleTripatakiTitle": "Tri-Pataki Chakra",
+  "tpBlurb": "Natal planets progressed onto the three-flag chakra (Moon by 9, Sun-class by 4, Mars and the nodes by 6, nodes in reverse); three lines meet at every point — planets at their far ends cause vedha.",
+  "tpCurrentYear": "running year {y}",
+  "@tpCurrentYear": {"placeholders": {"y": {"type": "String"}}},
+  "tpVedhaToMoon": "Vedha to Moon",
+  "tpVedhaToLagna": "Vedha to Lagna",
+  "tpVedhaTo": "Vedha to {planet}",
+  "@tpVedhaTo": {"placeholders": {"planet": {"type": "String"}}},
+  "moduleVarshphalMaasaTitle": "Maasa Pravesha",
+  "vmMonthN": "month {m}",
+  "@vmMonthN": {"placeholders": {"m": {"type": "String"}}},
+  "vmPraveshLine": "Maasa Pravesha: {ts}",
+  "@vmPraveshLine": {"placeholders": {"ts": {"type": "String"}}},
+  "vmMonthLordLine": "Maasesha: {planet}",
+  "@vmMonthLordLine": {"placeholders": {"planet": {"type": "String"}}},
+  "obMaasaLagnaPati": "Maasa Lagna Pati",
+  "vdLagnaAbbr": "Lg",
+  "@vdLagnaAbbr": {
+    "description": "Abbreviation for Lagna as a Patyayini dasha lord on the varsha timeline strip. 1-2 chars."
+  },
+  "moduleVarshphalYogaTitle": "Tajika Yogas",
+  "tyBlurb": "The sixteen Tajika yogas scanned across all planet pairs — Ithasala within the mean deeptamsha, Ishrafa when the faster planet pulls ahead, Nakta/Yamaya transfers, Kamboola and its variants, with the afflicting yogas flagged. Formations only; no verdicts.",
+  "@tyBlurb": {
+    "description": "TAJIKA YOGAS widget (ty* through tyDispInferior). Yoga names are proper Tajika terms — transliterate, never translate."
+  },
+  "tyLagnesha": "Lagnesha",
+  "tyKaryesha": "Karyesha",
+  "tyKaryeshaHouse": "Karyesha house",
+  "tyHouseN": "house {n}",
+  "@tyHouseN": {"placeholders": {"n": {"type": "String"}}},
+  "tyVia": "via {planet}",
+  "@tyVia": {"placeholders": {"planet": {"type": "String"}}},
+  "tyNone": "No yoga involving the lagnesha or karyesha this varsha.",
+  "tyMoreInDetail": "+{n} more between other pairs — open the card for the full scan.",
+  "@tyMoreInDetail": {"placeholders": {"n": {"type": "String"}}},
+  "tyIkabala": "Ikabala",
+  "tyIkabalaPartial": "Ikabala (partial)",
+  "tyInduvara": "Induvara",
+  "tyInduvaraPartial": "Induvara (partial)",
+  "tyVartamana": "Vartamana Ithasala",
+  "tyPoorna": "Poorna Ithasala",
+  "tyBhavishyat": "Bhavishyat Ithasala",
+  "tyRashyanta": "Rashyanta Ithasala",
+  "tyIshrafa": "Ishrafa",
+  "tyNakta": "Nakta",
+  "tyYamaya": "Yamaya",
+  "tyManau": "Manau",
+  "tyKamboola": "Kamboola",
+  "tyGairiKamboola": "Gairi-Kamboola",
+  "tyKhallasara": "Khallasara",
+  "tyRudda": "Rudda",
+  "tyDuhphali": "Duhphali-Kuttha",
+  "tyDutthottha": "Dutthottha-Davira",
+  "tyTambira": "Tambira",
+  "tyKuttha": "Kuttha",
+  "tyDurpaha": "Durpaha",
+  "tyTagSlowRetro": "slow-mover retrograde (intensified)",
+  "tyTagContiguous": "across the sign boundary",
+  "tyTagMoonState": "Moon {d}",
+  "@tyTagMoonState": {"placeholders": {"d": {"type": "String"}}},
+  "tyTagPartnerState": "partner {d}",
+  "@tyTagPartnerState": {"placeholders": {"d": {"type": "String"}}},
+  "tyTagCombust": "combust",
+  "tyTagDebilitated": "debilitated",
+  "tyTagTrik": "in 6/8/12",
+  "tyTagEnemySign": "in an enemy's sign",
+  "tyDispExcellent": "excellent",
+  "tyDispGood": "good",
+  "tyDispMediocre": "mediocre",
+  "tyDispInferior": "inferior",
+  "vtVarshphal": "Varshphal",
+  "vtVarshphalDesc": "The annual chart with its divisionals, dashas, strengths, sahams and chakra — the whole Tajika year view, alongside the birth chart.",
+  "moduleVarshphalTitle": "Varshphal Chart",
+  "vpYearLine": "Varsha {n} · {year}",
+  "@vpYearLine": {
+    "description": "Varshphal year header. {n} = varsha number (completed years), {year} = Gregorian year of the varsha pravesh.",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "vpPraveshLine": "Varsha Pravesh: {ts}",
+  "@vpPraveshLine": {
+    "description": "{ts} is the solar-return instant in birth-place local time.",
+    "placeholders": {
+      "ts": {
+        "type": "String"
+      }
+    }
+  },
+  "vpMunthaLine": "Muntha: {sign} ({house})",
+  "@vpMunthaLine": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "house": {
+        "type": "String"
+      }
+    }
+  },
+  "vpPrevYear": "Previous varsha",
+  "vpNextYear": "Next varsha",
+  "vpError": "Could not compute the varsha chart: {e}",
+  "@vpError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "vpPdfHeader": "Varshphal — Varsha {n} ({year})",
+  "@vpPdfHeader": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "moduleYogasTitle": "Yogas & Doshas",
+  "maitriCardBlurb": "Fivefold relationship — each row graha toward the column graha (natural + temporary combined).",
+  "maitriFromTo": "From \\ To",
+  "@maitriFromTo": {
+    "description": "Corner header of the 7×7 maitri grid: rows are the regarding graha, columns the regarded one. Keep it visually short."
+  },
+  "maitriPdfLegendPrefix": "Row graha's compound relationship to the column graha.",
+  "maitriModeCompound": "Compound",
+  "maitriModeNatural": "Natural",
+  "maitriModeTemporary": "Temporary",
+  "maitriDirectionalNote": "Read a cell as the ROW graha's view of the COLUMN graha — these relationships are directional, so the grid is not symmetric.",
+  "maitriBlurbCompound": "The Panchadha (fivefold) relationship: the natural friendship blended with the temporary one, on the Ati Mitra … Ati Satru scale. A graha fares best in a sign owned by its compound friend.",
+  "maitriBlurbNatural": "Naisargika (natural) relationship — the fixed classical table, the same for every chart.",
+  "maitriBlurbTemporary": "Tatkalika (temporary) relationship — chart-specific: a graha in the 2nd/3rd/4th/10th/11th/12th sign from another is its temporary friend, otherwise its enemy.",
+  "maitriLegendFriend": "Friend (Mitra)",
+  "maitriLegendNeutral": "Neutral (Sama)",
+  "maitriLegendEnemy": "Enemy (Satru)",
+  "hide": "Hide",
+  "show": "Show",
+  "labelGraha": "Graha",
+  "labelSign": "Sign",
+  "labelDegree": "Degree",
+  "labelAscendant": "Ascendant",
+  "labelChartStyle": "Chart style",
+  "styleDefault": "Default",
+  "styleNorthIndian": "North Indian",
+  "styleSouthIndian": "South Indian",
+  "styleCircular": "Circular",
+  "ayanamsaCaption": "{name} ayanamsa",
+  "@ayanamsaCaption": {
+    "description": "Caption under chart headers; {name} is the ayanamsa system's proper name (Lahiri, Raman …) which is never translated.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transitLive": "Live",
+  "transitChangeDateTime": "Change date/time",
+  "transitGoLive": "Go live",
+  "cfgPlanetDegrees": "Planet degrees",
+  "@cfgPlanetDegrees": {
+    "description": "MODULE CONFIG LABELS (cfg* family) — per-widget settings shown in the '···' sheet and Arrange. Ordinary UI copy: translate; embedded fixed terms (Jaimini, Indu Lagna, SAV, Sookshma …) transliterate."
+  },
+  "cfgJaiminiKarakas": "Jaimini karakas (Sapta)",
+  "cfgJaiminiPadas": "Jaimini padas (1P–12P)",
+  "cfgInduLagna": "Indu Lagna mark (IL)",
+  "cfgDignityCombustion": "Dignity & combustion",
+  "cfgTransitOverlay": "Current transit overlay",
+  "cfgSavPoints": "SAV points",
+  "cfgActiveFilterDasha": "Active filter dasha",
+  "cfgDivisionalChart": "Divisional chart",
+  "cfgChart": "Chart",
+  "cfgDashaSystem": "Dasha system",
+  "cfgWindow": "Window",
+  "cfgFineLevels": "Fine levels (Sookshma/Pran)",
+  "cfgLordPositions": "Lord positions",
+  "cfgSandhiAlerts": "Sandhi alerts",
+  "cfgYogaActivation": "Yoga activation",
+  "cfgSystemComparison": "System comparison",
+  "windowMonths": "{count} months",
+  "@windowMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savFull": "Sarvashtakavarga (SAV)",
+  "bavOf": "{graha} BAV",
+  "@bavOf": {
+    "placeholders": {
+      "graha": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryFrom": "From {label}",
+  "@summaryFrom": {
+    "description": "Config summary when a chart is viewed from a reference point other than the Lagna, e.g. 'From Moon', 'From House 9'.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "labelLagna": "Lagna",
+  "houseN": "House {n}",
+  "@houseN": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "vargaNameD1": "Rashi",
+  "@vargaNameD1": {
+    "description": "VARGA (divisional chart) Sanskrit names (through vargaNameD60) — fixed terms, transliterate (hi: राशि, होरा, नवांश …). The vargaTheme* keys are their plain-language themes — translate those."
+  },
+  "vargaNameD2": "Hora",
+  "vargaNameD3": "Drekkana",
+  "vargaNameD4": "Chaturthamsa",
+  "vargaNameD7": "Saptamsa",
+  "vargaNameD9": "Navamsa",
+  "vargaNameD10": "Dashamsa",
+  "vargaNameD12": "Dwadashamsa",
+  "vargaNameD16": "Shodashamsa",
+  "vargaNameD20": "Vimshamsa",
+  "vargaNameD24": "Chaturvimshamsa",
+  "vargaNameD27": "Bhamsa",
+  "vargaNameD30": "Trimshamsa",
+  "vargaNameD40": "Khavedamsa",
+  "vargaNameD45": "Akshavedamsa",
+  "vargaNameD60": "Shashtiamsa",
+  "vargaThemeD1": "birth chart",
+  "vargaThemeD2": "wealth",
+  "vargaThemeD3": "siblings & courage",
+  "vargaThemeD4": "property & fortune",
+  "vargaThemeD7": "children",
+  "vargaThemeD9": "marriage & dharma",
+  "vargaThemeD10": "career",
+  "vargaThemeD12": "parents",
+  "vargaThemeD16": "vehicles & comforts",
+  "vargaThemeD20": "spiritual life",
+  "vargaThemeD24": "education",
+  "vargaThemeD27": "strengths & weaknesses",
+  "vargaThemeD30": "misfortunes",
+  "vargaThemeD40": "maternal legacy",
+  "vargaThemeD45": "paternal legacy",
+  "vargaThemeD60": "past karma",
+  "vargaLagnaLine": "{code} Lagna {sign}",
+  "@vargaLagnaLine": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "moonInSign": "Moon in {sign}",
+  "@moonInSign": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "labelChandra": "Chandra",
+  "labelSurya": "Surya",
+  "sudarshanaInnerOuter": "Inner → outer: Lagna ({lagna}) · Chandra ({moon}) · Surya ({sun}).",
+  "@sudarshanaInnerOuter": {
+    "placeholders": {
+      "lagna": {
+        "type": "String"
+      },
+      "moon": {
+        "type": "String"
+      },
+      "sun": {
+        "type": "String"
+      }
+    }
+  },
+  "sudarshanaChartHouses": "{name} chart houses",
+  "@sudarshanaChartHouses": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sarvatobhadraPdfHeader": "Sarvatobhadra Chakra — vedhas on natal anchors",
+  "sudarshanaBlurb": "Every bhava judged from three references at once — the Lagna, the Moon and the Sun. A house strong from all three gives dependable results; afflicted from all three, its significations suffer.",
+  "sudarshanaSectorNote": "Each sector = the same house in all three charts.",
+  "labelHouse": "House",
+  "kotaRingStambha": "Stambha",
+  "kotaRingMadhya": "Madhya",
+  "kotaRingPrakara": "Prakara",
+  "kotaRingBahya": "Bahya",
+  "sbcBlurb": "Fixed 9×9 grid. Each transiting graha pierces three vedha lines (across + both diagonals) from its nakshatra. Warm tint: malefic vedha; green: benefic; deep tint: your natal anchors. Across is strongest at normal speed, the forward diagonal when fast (always Sun/Moon), the rear when retrograde (always Rahu/Ketu).",
+  "sbcNatalAnchor": "Natal anchor",
+  "sbcVedhaFrom": "Vedha from (transit)",
+  "sbcJanmaNakshatra": "Janma nakshatra ({abbr})",
+  "@sbcJanmaNakshatra": {
+    "placeholders": {
+      "abbr": {
+        "type": "String"
+      }
+    }
+  },
+  "sbcJanmaRashi": "Janma rashi ({sign})",
+  "@sbcJanmaRashi": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "sbcLagnaAnchor": "Lagna ({sign})",
+  "@sbcLagnaAnchor": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "sbcJanmaTithiGroup": "Janma tithi group",
+  "sbcJanmaVara": "Janma vara",
+  "sbcTransitLive": "Transit live · natal planets in ink, transit in green",
+  "sbcMaleficMark": "M",
+  "sbcBeneficMark": "B",
+  "signAbbrAries": "Ar",
+  "@signAbbrAries": {
+    "description": "Short rashi tokens for dense tables (through signAbbrPisces). 2–4 chars in the local script; never slice the full name programmatically."
+  },
+  "signAbbrTaurus": "Ta",
+  "signAbbrGemini": "Ge",
+  "signAbbrCancer": "Cn",
+  "signAbbrLeo": "Le",
+  "signAbbrVirgo": "Vi",
+  "signAbbrLibra": "Li",
+  "signAbbrScorpio": "Sc",
+  "signAbbrSagittarius": "Sg",
+  "signAbbrCapricorn": "Cp",
+  "signAbbrAquarius": "Aq",
+  "signAbbrPisces": "Pi",
+  "kotaBlurb": "The fort: 28 nakshatras from the Janma nakshatra in four enclosures. Malefics advancing along the entry paths toward Stambha besiege the fort; benefics within defend it.",
+  "kotaSummary": "Janma {nak} · Kota Swami {swami} · Kota Pala {pala}",
+  "@kotaSummary": {
+    "placeholders": {
+      "nak": {
+        "type": "String"
+      },
+      "swami": {
+        "type": "String"
+      },
+      "pala": {
+        "type": "String"
+      }
+    }
+  },
+  "kotaTransitAsOf": "Transit as of chosen time",
+  "kotaTransitLive": "transit live",
+  "kotaAlertMalefic": "{graha} (malefic) in {ring} · {nakshatra}",
+  "@kotaAlertMalefic": {
+    "description": "Kota Chakra alert lines for transiting grahas inside the fort's inner rings.",
+    "placeholders": {
+      "graha": {
+        "type": "String"
+      },
+      "ring": {
+        "type": "String"
+      },
+      "nakshatra": {
+        "type": "String"
+      }
+    }
+  },
+  "kotaAlertBenefic": "{graha} (benefic) guards {ring} · {nakshatra}",
+  "@kotaAlertBenefic": {
+    "placeholders": {
+      "graha": {
+        "type": "String"
+      },
+      "ring": {
+        "type": "String"
+      },
+      "nakshatra": {
+        "type": "String"
+      }
+    }
+  },
+  "kotaRing": "Ring",
+  "kotaPath": "Path",
+  "kotaEntry": "Entry",
+  "kotaExit": "Exit",
+  "karakaAtmakaraka": "Atmakaraka",
+  "@karakaAtmakaraka": {
+    "description": "JAIMINI KARAKA names (7, through karakaDarakaraka) — fixed terms, transliterate (hi: आत्मकारक …). The karakaSignifies* keys are their plain-language roles — translate those."
+  },
+  "karakaAmatyakaraka": "Amatyakaraka",
+  "karakaBhratrukaraka": "Bhratrukaraka",
+  "karakaMatrukaraka": "Matrukaraka",
+  "karakaPitrukaraka": "Pitrukaraka",
+  "karakaGnatikaraka": "Gnatikaraka",
+  "karakaDarakaraka": "Darakaraka",
+  "karakaSignifiesAtma": "self, soul purpose",
+  "karakaSignifiesAmatya": "career, counsel",
+  "karakaSignifiesBhratru": "siblings, courage",
+  "karakaSignifiesMatru": "mother, home",
+  "karakaSignifiesPitru": "father, guru",
+  "karakaSignifiesGnati": "relatives, obstacles",
+  "karakaSignifiesDara": "spouse, partnerships",
+  "saptaKarakasHeading": "Sapta Karakas",
+  "saptaKarakasBlurb": "Ranked by degree within sign, highest first — the classical 7-karaka scheme (Sun–Saturn; no Rahu/Ketu).",
+  "karakaPdfHeader": "Jaimini Karakas (Sapta)",
+  "labelKaraka": "Karaka",
+  "labelSignifies": "Signifies",
+  "karakamshaHeading": "Karakamsha Lagna",
+  "jlNavamshaLine": "Atmakaraka {planet}'s Navamsha sign",
+  "@jlNavamshaLine": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      }
+    }
+  },
+  "jlBlurb": "The Jaimini system's special ascendant, alongside the Rashi and Navamsha lagnas: the Navamsha sign of the Atmakaraka (soul significator), used for dharma / life-purpose readings distinct from the birth chart.",
+  "jlAtmakarakaLabel": "Atmakaraka: ",
+  "jlNoOccupants": "No other rashi-chart grahas share this sign.",
+  "jlOccupants": "Rashi-chart grahas also in {sign}: {list}",
+  "@jlOccupants": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "jlPdfHeader": "Jaimini Lagna (Karakamsha)",
+  "jlPdfLine": "Karakamsha: {sign} (Atmakaraka: {planet})",
+  "@jlPdfLine": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "planet": {
+        "type": "String"
+      }
+    }
+  },
+  "jaHeading": "Jaimini Rashi Drishti",
+  "jaBlurb": "Sign-based aspects: movable signs aspect fixed signs (except the one right after); fixed signs aspect movable signs (except the one right before); dual signs aspect each other.",
+  "jaNoDrishti": "No Rashi Drishti between grahas in this chart.",
+  "jaGrahaPairs": "Graha pairs",
+  "jaNone": "None in this chart.",
+  "jaSignAspects": "Sign aspects",
+  "jaPdfHeader": "Jaimini Aspects (Rashi Drishti)",
+  "jpArudhaLagnaLabel": "Arudha Lagna (1P)",
+  "jpArudhaLagnaLine": "Arudha Lagna (1P) {sign}",
+  "@jpArudhaLagnaLine": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "jpHeading": "Jaimini Arudha Padas",
+  "jpBlurb": "One per house — how that house \"appears\", as distinct from its true placement. 1P (Arudha Lagna) is the most used. K.N. Rao's calculation, without the 1st/7th exceptions.",
+  "jpPadasOccupants": "Padas & occupants",
+  "labelOccupants": "Occupants",
+  "slBhava": "Bhava Lagna",
+  "@slBhava": {
+    "description": "SPECIAL LAGNA names (5, through slSree) — fixed terms, transliterate. The sl*Meaning keys are plain-language roles — translate."
+  },
+  "slHora": "Hora Lagna",
+  "slGhati": "Ghati Lagna",
+  "slIndu": "Indu Lagna",
+  "slSree": "Sree Lagna",
+  "slBhavaMeaning": "Physical self & general results",
+  "slHoraMeaning": "Wealth & financial prosperity",
+  "slGhatiMeaning": "Power, authority & status",
+  "slInduMeaning": "Wealth & fortune (from Moon)",
+  "slSreeMeaning": "Prosperity & grace (Lakshmi point)",
+  "slFromSunrise": "From the birth sunrise at the birth place",
+  "slBlurb": "Auxiliary ascendants. BL/HL/GL run from the Sun's position at the sunrise preceding birth; Indu counts kalas of the 9th lords from Lagna and Moon; Sree projects the Moon's nakshatra fraction from the Lagna.",
+  "slReferenceNote": "Rashi Lagna {sign} {degree} for reference. All values use the birth sunrise at the BIRTH place — the Today screen is where your current city applies.",
+  "@slReferenceNote": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "degree": {
+        "type": "String"
+      }
+    }
+  },
+  "labelBornYear": "b. {year}",
+  "@labelBornYear": {
+    "description": "Compact birth-year marker on anonymized chart rows, e.g. \"b. 1990\". Keep it short — it sits in a dot-separated subtitle.",
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "labelCode":"Code",
+  "labelPosition": "Position",
+  "avSarv": "Sarvashtakavarga",
+  "avBhinnaOf": "{planet} Bhinnashtakavarga",
+  "@avBhinnaOf": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      }
+    }
+  },
+  "avBindusCount": "{n} bindus",
+  "@avBindusCount": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "avPdfNote": "Bindus per sign; SAV is the sum of the seven graha BAVs (grand total 337).",
+  "avBlurb": "Benefic points (bindus) per sign. SAV sums the seven graha charts; a graha transiting a high-bindu sign of its own BAV gives better results.",
+  "avStrongWeak": "Strongest: {strongSign} ({strongN}) · Weakest: {weakSign} ({weakN})",
+  "@avStrongWeak": {
+    "placeholders": {
+      "strongSign": {
+        "type": "String"
+      },
+      "strongN": {
+        "type": "String"
+      },
+      "weakSign": {
+        "type": "String"
+      },
+      "weakN": {
+        "type": "String"
+      }
+    }
+  },
+  "labelTotal": "Total",
+  "transitPdfAsOf": "Sky positions as of export time: {time}",
+  "@transitPdfAsOf": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "transitSavNote": "SAV bindus per sign (Sarvashtakavarga)",
+  "transitGeocentricNote": "Graha positions are geocentric — identical from any place",
+  "transitPositionsHeading": "Transit Positions",
+  "transitInLagnaHouses": "Transiting grahas in the {sign} lagna houses",
+  "@transitInLagnaHouses": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "transitLiveWord": "live",
+  "bcPdfHeader": "Birth Chart (Rashi / D1)",
+  "bcLagnaLine": "Lagna: {sign} {degree}",
+  "@bcLagnaLine": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "degree": {
+        "type": "String"
+      }
+    }
+  },
+  "bcLagnaShort": "Lagna {sign} · {degree}",
+  "@bcLagnaShort": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "degree": {
+        "type": "String"
+      }
+    }
+  },
+  "bcViewingFrom": "Viewing from {ref}",
+  "@bcViewingFrom": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "bcDignityLegend": "↑ exalted · ↓ debilitated · ○ own sign · • combust",
+  "plusNew": "+ New",
+  "klEmpty": "No kundlis yet. Cast the first one — computed entirely on this device.",
+  "klRestoreNudge": "Already used Kaal Jyoti before? Sign in to restore your synced kundlis.",
+  "klLongPressPrashna": "Long-press + New for a Prashna kundli",
+  "klCastingPrashna": "Casting Prashna for this moment…",
+  "klLocationDisabled": "Location is disabled for this app — enable it in Settings, or enter the place manually.",
+  "klLocationUnavailable": "Location unavailable — enter the place manually.",
+  "klLoadError": "Could not load kundlis: {e}",
+  "@klLoadError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "tagPrashna": "Prashna",
+  "relationClient": "Client",
+  "@relationClient": {
+    "description": "RELATION TAGS (through relationOther) — displayed on kundli cards and the birth form chips. The stored value stays English; only display is localized."
+  },
+  "relationSelf": "Self",
+  "relationSpouse": "Spouse",
+  "relationFamily": "Family",
+  "relationFriend": "Friend",
+  "relationOther": "Other",
+  "dmLevelShortMaha": "Maha",
+  "dmLevelShortAntar": "Antar",
+  "dmLevelShortPratyantar": "Pratyantar",
+  "dmLevelShortSookshma": "Sookshma",
+  "dmLevelShortPran": "Pran",
+  "dmUnitYears": "{n}y",
+  "@dmUnitYears": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "dmUnitMonths": "{n}m",
+  "@dmUnitMonths": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "dmUnitDays": "{n}d",
+  "@dmUnitDays": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "dmUnitHours": "{n}h",
+  "@dmUnitHours": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "dmUnitMinutes": "{n}m",
+  "@dmUnitMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "dmAge": "age {span}",
+  "@dmAge": {
+    "placeholders": {
+      "span": {
+        "type": "String"
+      }
+    }
+  },
+  "dmSandhiEndsIn": "sandhi · ends in {len}",
+  "@dmSandhiEndsIn": {
+    "placeholders": {
+      "len": {
+        "type": "String"
+      }
+    }
+  },
+  "dmSandhiBegan": "sandhi · began {len} ago",
+  "@dmSandhiBegan": {
+    "placeholders": {
+      "len": {
+        "type": "String"
+      }
+    }
+  },
+  "dmLordOf": "lord of {houses}",
+  "@dmLordOf": {
+    "placeholders": {
+      "houses": {
+        "type": "String"
+      }
+    }
+  },
+  "dmLordIn": "lord {lord} in {sign}",
+  "@dmLordIn": {
+    "placeholders": {
+      "lord": {
+        "type": "String"
+      },
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "dmOutsideRange": "Outside computed dasha range.",
+  "dmActivatesYoga": "{lord} activates {yoga}",
+  "@dmActivatesYoga": {
+    "placeholders": {
+      "lord": {
+        "type": "String"
+      },
+      "yoga": {
+        "type": "String"
+      }
+    }
+  },
+  "dmOutsideRangeDate": "Outside computed dasha range for this date.",
+  "dmActiveChain": "ACTIVE CHAIN",
+  "dmWithin": "within {lord} {level} · {range}",
+  "@dmWithin": {
+    "placeholders": {
+      "lord": {
+        "type": "String"
+      },
+      "level": {
+        "type": "String"
+      },
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "dmAllSystems": "ALL SYSTEMS · MD › AD › PD › SD › PrD",
+  "dmChainOnDate": "Chain on a date",
+  "dmNowButton": "Now",
+  "dmNowAt": "Now · {time}",
+  "@dmNowAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dmCurrent": "CURRENT",
+  "dmActivatesList": "activates: {list}",
+  "@dmActivatesList": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "dmPdfActiveChain": "Active chain · {time}",
+  "@dmPdfActiveChain": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dmPdfHeaderWithSystem": "Dasha Periods — {system}",
+  "@dmPdfHeaderWithSystem": {
+    "placeholders": {
+      "system": {
+        "type": "String"
+      }
+    }
+  },
+  "dmPdfAntardashasOf": "Antardashas of {lord} Mahadasha",
+  "@dmPdfAntardashasOf": {
+    "placeholders": {
+      "lord": {
+        "type": "String"
+      }
+    }
+  },
+  "dmColLevel": "Level",
+  "dmColLord": "Lord",
+  "dmColFrom": "From",
+  "dmColTo": "To",
+  "dmColLength": "Length",
+  "ueDashaEnds": "{tag} {lord} ends",
+  "@ueDashaEnds": {
+    "description": "UPCOMING EVENTS feed lines. {tag} is a level code (MD/AD/PD/SD/PrD — keep as-is in every language).",
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      },
+      "lord": {
+        "type": "String"
+      }
+    }
+  },
+  "ueDashaEndsBegins": "{tag} {lord} ends → {next} begins",
+  "@ueDashaEndsBegins": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      },
+      "lord": {
+        "type": "String"
+      },
+      "next": {
+        "type": "String"
+      }
+    }
+  },
+  "ueSadeSatiBegins": "Sade Sati {phase} begins",
+  "@ueSadeSatiBegins": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      }
+    }
+  },
+  "ueSadeSatiEnds": "Sade Sati {phase} ends",
+  "@ueSadeSatiEnds": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      }
+    }
+  },
+  "ueSourceDasha": "Dasha",
+  "ueSourceTransit": "Transit",
+  "ueSourceSadeSati": "Sade Sati",
+  "ueTransitIngress": "{planet} enters {sign}",
+  "@ueTransitIngress": {
+    "description": "Gochar feed lines (transitEventLabel in astro_l10n.dart). {planet} is the localized graha, {sign} the localized rashi via signNameFull. Keep {planet} FIRST where the language allows — the feed row colours a leading planet name.",
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "sign": {
+        "type": "String"
+      }
+    }
+  },
+  "ueTransitConjunct": "{planet} conjunct natal {point}",
+  "@ueTransitConjunct": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "point": {
+        "type": "String"
+      }
+    }
+  },
+  "ueTransitDrishti": "{planet} {n}th drishti on natal {point}",
+  "@ueTransitDrishti": {
+    "description": "{n} is the drishti house number (3/4/5/7/8/9/10); render its ordinal per language.",
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "n": {
+        "type": "String"
+      },
+      "point": {
+        "type": "String"
+      }
+    }
+  },
+  "ueFilterTransits": "Transits",
+  "ueNoEventsWindow": "No events in the coming window.",
+  "ueNoEventsFilter": "No events match this filter.",
+  "ueTodayDivider": "TODAY · {date}",
+  "@ueTodayDivider": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ueScanTransitError": "Could not scan transits: {e}",
+  "@ueScanTransitError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "ueScanSadeSatiError": "Could not scan Sade Sati: {e}",
+  "@ueScanSadeSatiError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "uePdfHeader": "Upcoming Events — next {months} months",
+  "@uePdfHeader": {
+    "placeholders": {
+      "months": {
+        "type": "String"
+      }
+    }
+  },
+  "ueColDate": "Date",
+  "ueColSource": "Source",
+  "ueColEvent": "Event",
+  "ymCatRaj": "Raj",
+  "ymCatDhana": "Dhana",
+  "ymCatVipreetRaj": "Vipreet Raj",
+  "ymCatParivartana": "Parivartana",
+  "ymCatMahapurusha": "Mahapurusha",
+  "ymCatChandra": "Chandra",
+  "ymCatDosha": "Dosha",
+  "ymCatOther": "Other",
+  "ymFilterAll": "All",
+  "ymFilterMd": "Mahadasha",
+  "ymFilterMdAd": "MD + AD",
+  "ymMoreFooter": "+{n} more — open the widget for all",
+  "@ymMoreFooter": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "ymNoYogas": "No major yogas detected.",
+  "ymNoneForMd": "None active in the running Mahadasha.",
+  "ymNoneForMdAd": "None ripe in the running MD + AD.",
+  "ynGajaKesari": "Gaja-Kesari Yoga",
+  "@ynGajaKesari": {
+    "description": "yn* = yoga names, keyed by the rule engine's STABLE codes (yogaNameForCode in astro_l10n.dart). One entry per code in core/astro/yogas.dart; a code with no entry falls back to the engine's English name, so contributor-added yogas degrade gracefully."
+  },
+  "ynDurudhara": "Durudhara Yoga",
+  "ynSunapha": "Sunapha Yoga",
+  "ynAnapha": "Anapha Yoga",
+  "ynKemadruma": "Kemadruma Yoga",
+  "ynUbhayachari": "Ubhayachari Yoga",
+  "ynVesi": "Vesi Yoga",
+  "ynVasi": "Vasi Yoga",
+  "ynAdhi": "Adhi Yoga",
+  "ynAmala": "Amala Yoga",
+  "ynShakata": "Shakata Yoga",
+  "ynBudhaAditya": "Budha-Aditya Yoga",
+  "ynChandraMangala": "Chandra-Mangala Yoga",
+  "ynRaj": "Raj Yoga",
+  "ynYogakaraka": "Yogakaraka",
+  "ynDhana": "Dhana Yoga",
+  "ynNeechaBhanga": "Neecha Bhanga",
+  "ynLakshmi": "Lakshmi Yoga",
+  "ynSaraswati": "Saraswati Yoga",
+  "ynParvata": "Parvata Yoga",
+  "ynKahala": "Kahala Yoga",
+  "ynRajju": "Rajju Yoga",
+  "ynMusala": "Musala Yoga",
+  "ynNala": "Nala Yoga",
+  "ynMangalDosha": "Mangal Dosha",
+  "ynGuruChandal": "Guru-Chandal Dosha",
+  "ynVish": "Vish Yoga",
+  "ynAngarak": "Angarak Dosha",
+  "ynGrahan": "Grahan Dosha",
+  "ynKaalSarp": "Kaal Sarp Dosha",
+  "ynKaalSarpPartial": "Partial Kaal Sarp",
+  "ynParivartanaDainya": "Dainya Parivartana",
+  "ynParivartanaKhala": "Khala Parivartana",
+  "ynParivartanaMaha": "Maha Parivartana",
+  "ynHarsha": "Harsha Yoga",
+  "ynSarala": "Sarala Yoga",
+  "ynVimala": "Vimala Yoga",
+  "ynRuchaka": "Ruchaka Yoga",
+  "ynBhadra": "Bhadra Yoga",
+  "ynHamsa": "Hamsa Yoga",
+  "ynMalavya": "Malavya Yoga",
+  "ynShasha": "Shasha Yoga",
+  "ymNowLine": "Now: {maha} MD",
+  "@ymNowLine": {
+    "placeholders": {
+      "maha": {
+        "type": "String"
+      }
+    }
+  },
+  "ymNowLineAntar": "Now: {maha} MD · {antar} AD",
+  "@ymNowLineAntar": {
+    "placeholders": {
+      "maha": {
+        "type": "String"
+      },
+      "antar": {
+        "type": "String"
+      }
+    }
+  },
+  "ymDetailBlurb": "A yoga fructifies in the periods of its participants — filter by the running dasha lords to see which combinations are live now.",
+  "weekdayMonday": "Monday",
+  "@weekdayMonday": {
+    "description": "CIVIL WEEKDAY names (through weekdaySunday) for the Today screen's date line. Distinct from the vara* keys, which are the Sanskrit panchang limb names used inside kundli contexts — in many languages both render the same word, which is fine."
+  },
+  "weekdayTuesday": "Tuesday",
+  "weekdayWednesday": "Wednesday",
+  "weekdayThursday": "Thursday",
+  "weekdayFriday": "Friday",
+  "weekdaySaturday": "Saturday",
+  "weekdaySunday": "Sunday",
+  "masaChaitra": "Chaitra",
+  "@masaChaitra": {
+    "description": "LUNAR MONTH (maasa) names, Chaitra … Phalguna — fixed terms, transliterate (hi: चैत्र …)."
+  },
+  "masaVaishakha": "Vaishakha",
+  "masaJyeshtha": "Jyeshtha",
+  "masaAshadha": "Ashadha",
+  "masaShravana": "Shravana",
+  "masaBhadrapada": "Bhadrapada",
+  "masaAshwina": "Ashwina",
+  "masaKartika": "Kartika",
+  "masaMargashirsha": "Margashirsha",
+  "masaPausha": "Pausha",
+  "masaMagha": "Magha",
+  "masaPhalguna": "Phalguna",
+  "masaAdhik": "Adhik {month}",
+  "@masaAdhik": {
+    "description": "An adhik (extra/leap) lunar month. 'Adhik' is a fixed term — transliterate (hi: अधिक).",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "masaPurnimanta": "Purnimanta",
+  "masaAmanta": "Amanta",
+  "tdTitle": "Today",
+  "tdCalcFailed": "Calculation failed: {e}",
+  "@tdCalcFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "tdPlaceNudge": "Timings are for {place} — tap to set your city for accurate sunrise & muhurta.",
+  "@tdPlaceNudge": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "tdDateLine": "{weekday} · {date}",
+  "@tdDateLine": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "labelMaasa": "Maasa",
+  "labelPaksha": "Paksha",
+  "tdMaasaValue": "{month} · V.S. {year}  ({system} ⇄)",
+  "@tdMaasaValue": {
+    "description": "Maasa row on Today. 'V.S.' is the Vikram Samvat era abbreviation — use the local convention (hi: वि.सं.). The ⇄ marks that tapping switches the naming system.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      },
+      "system": {
+        "type": "String"
+      }
+    }
+  },
+  "tdNakshatraValue": "{nakshatra} (pada {pada})",
+  "@tdNakshatraValue": {
+    "placeholders": {
+      "nakshatra": {
+        "type": "String"
+      },
+      "pada": {
+        "type": "String"
+      }
+    }
+  },
+  "tdSunriseSunset": "Sunrise / Sunset",
+  "tdTill": " · till {time}",
+  "@tdTill": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tdTillTomorrow": " · till tomorrow {time}",
+  "@tdTillTomorrow": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tdTimingsCard": "Timings",
+  "tdTransitNow": "Transit now",
+  "tdDisplaySection": "Display",
+  "tdPanchangLocation": "Panchang location",
+  "tdUseCurrentLocation": "Use current location",
+  "tdLocating": "Locating…",
+  "tdLocateFailed": "Could not get location — check permission, or search below",
+  "tdSearchCity": "Search city…",
+  "mhBrahmaMuhurta": "Brahma Muhurta",
+  "@mhBrahmaMuhurta": {
+    "description": "MUHURTA / KAAL names — fixed terms, transliterate (hi: ब्रह्म मुहूर्त, राहु काल …)."
+  },
+  "mhAbhijitMuhurta": "Abhijit Muhurta",
+  "mhAbhijitAvoidWednesday": " (avoid — Wednesday)",
+  "mhRahuKaal": "Rahu Kaal",
+  "mhYamaganda": "Yamaganda",
+  "mhGulikaKaal": "Gulika Kaal",
+  "mhDishaShool": "Disha Shool",
+  "mhDishaShoolValue": "{direction} — avoid setting out this way",
+  "@mhDishaShoolValue": {
+    "placeholders": {
+      "direction": {
+        "type": "String"
+      }
+    }
+  },
+  "mhTitle": "Muhurta",
+  "mhWindowsCard": "Windows",
+  "mhChoghadiyaCard": "Choghadiya",
+  "mhHoraCard": "Hora",
+  "mhPersonalizeCard": "Personalize",
+  "mhDay": "DAY",
+  "mhNight": "NIGHT",
+  "mhChooseKundli": "Choose a kundli…",
+  "mhNone": "None",
+  "mhComputeError": "Could not compute: {e}",
+  "@mhComputeError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "mhTaraBala": "Tara bala",
+  "mhChandraBala": "Chandra bala",
+  "mhFavorableSuffix": " · favorable",
+  "mhUnfavorableSuffix": " · unfavorable",
+  "mhFavorable": "Favorable",
+  "mhNeutral": "Neutral",
+  "mhUnfavorable": "Unfavorable",
+  "choghadiyaUdveg": "Udveg",
+  "@choghadiyaUdveg": {
+    "description": "CHOGHADIYA slot names (7, through choghadiyaRog) — fixed terms, transliterate (hi: उद्वेग, चर, लाभ, अमृत, काल, शुभ, रोग)."
+  },
+  "choghadiyaChar": "Char",
+  "choghadiyaLabh": "Labh",
+  "choghadiyaAmrit": "Amrit",
+  "choghadiyaKaal": "Kaal",
+  "choghadiyaShubh": "Shubh",
+  "choghadiyaRog": "Rog",
+  "taraJanma": "Janma",
+  "@taraJanma": {
+    "description": "TARA BALA names (9, through taraAtiMitra) — fixed terms, transliterate."
+  },
+  "taraSampat": "Sampat",
+  "taraVipat": "Vipat",
+  "taraKshema": "Kshema",
+  "taraPratyari": "Pratyari",
+  "taraSadhaka": "Sadhaka",
+  "taraVadha": "Vadha",
+  "taraMitra": "Mitra",
+  "taraAtiMitra": "Ati-Mitra",
+  "dirEast": "East",
+  "@dirEast": {
+    "description": "COMPASS DIRECTIONS used by Disha Shool (through dirWest)."
+  },
+  "dirNorth": "North",
+  "dirSouth": "South",
+  "dirWest": "West",
+  "languageTitle": "Language",
+  "languageSystemDefault": "System default",
+  "@languageSystemDefault": {
+    "description": "The Settings ▸ Language option that follows the phone's language. The concrete language options themselves (English, हिन्दी, …) are endonyms — never translated, no ARB keys."
+  },
+  "languageSectionNote": "Applies to the whole app immediately. Sanskrit terms (tithi, nakshatra, graha names …) stay in jyotish vocabulary in every language.",
+  "sbCouldNotCompute": "Could not compute: {error}",
+  "@sbCouldNotCompute": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sbSthana": "Sthana",
+  "sbDig": "Dig",
+  "sbKala": "Kala",
+  "sbCheshta": "Cheshta",
+  "sbNaisargika": "Naisargika",
+  "sbDrik": "Drik",
+  "sbRupas": "Rupas",
+  "sbReqd": "Reqd",
+  "sbRatioHeader": "SB%",
+  "sbPdfNote": "Shashtiamsas (Virupas); Rupas = total/60. Not validated against a printed reference chart — see shadbala.dart doc comment.",
+  "sbTickCaption": "Tick = classical required minimum",
+  "sbBarValue": "{rupas}R · SB% {ratio}",
+  "@sbBarValue": {
+    "placeholders": {
+      "rupas": {
+        "type": "String"
+      },
+      "ratio": {
+        "type": "String"
+      }
+    }
+  },
+  "bbFromLord": "From Lord",
+  "bbDrishti": "Drishti",
+  "bbPlanetsIn": "Planets-in",
+  "bbDayNight": "Day-Night",
+  "bbPdfNote": "Shashtiamsas (Virupas); Rupas = total/60, can be negative. Bhavadhipati/Drishti components carry the same validation caveats as shadbala.dart and bhava_bala.dart doc comments — not yet numerically validated against a printed reference.",
+  "bbCardCaption": "Bhava (house) strength — not to be confused with the planets' own Shadbala above",
+  "bbHouseShort": "H{n}",
+  "@bbHouseShort": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "bbBarValue": "{sign} · {rupas}R",
+  "@bbBarValue": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "rupas": {
+        "type": "String"
+      }
+    }
+  },
+  "ssPhaseRising": "Rising",
+  "ssPhasePeak": "Peak",
+  "ssPhaseSetting": "Setting",
+  "ssPhaseSmallPanoti": "Small Panoti",
+  "ssDurYearsMonths": "{y}y {m}m",
+  "@ssDurYearsMonths": {
+    "placeholders": {
+      "y": {
+        "type": "String"
+      },
+      "m": {
+        "type": "String"
+      }
+    }
+  },
+  "ssDurYears": "{y}y",
+  "@ssDurYears": {
+    "placeholders": {
+      "y": {
+        "type": "String"
+      }
+    }
+  },
+  "ssDurMonths": "{m}m",
+  "@ssDurMonths": {
+    "placeholders": {
+      "m": {
+        "type": "String"
+      }
+    }
+  },
+  "ssDurDays": "{d}d",
+  "@ssDurDays": {
+    "placeholders": {
+      "d": {
+        "type": "String"
+      }
+    }
+  },
+  "ssAge": "age {span}",
+  "@ssAge": {
+    "placeholders": {
+      "span": {
+        "type": "String"
+      }
+    }
+  },
+  "ssApproxYears": "≈{n} years",
+  "@ssApproxYears": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "ssApproxYearsHalf": "≈{n}½ years",
+  "@ssApproxYearsHalf": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "ssSeverity": "{sa} BAV {bav}/8 · SAV {sav} · {band}",
+  "@ssSeverity": {
+    "placeholders": {
+      "sa": {
+        "type": "String"
+      },
+      "bav": {
+        "type": "String"
+      },
+      "sav": {
+        "type": "String"
+      },
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "ssBandEased": "eased",
+  "ssBandModerate": "moderate",
+  "ssBandHarsh": "harsh",
+  "ssStatusInPhase": "In Sade Sati — {phase} phase, ends {date} · {sev}",
+  "@ssStatusInPhase": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "sev": {
+        "type": "String"
+      }
+    }
+  },
+  "ssStatusNext": "Next Sade Sati begins {date} (age {age}) · {sev}",
+  "@ssStatusNext": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "age": {
+        "type": "String"
+      },
+      "sev": {
+        "type": "String"
+      }
+    }
+  },
+  "ssStatusNone": "No Sade Sati found in the computed lifetime.",
+  "ssCycleHeading": "CYCLE {n}",
+  "@ssCycleHeading": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "ssSmallPanotiHeading": "Small Panoti (4th/8th dhaiya)",
+  "ssSmallPanotiHeadingUpper": "SMALL PANOTI (4th/8th dhaiya)",
+  "ssColCycle": "Cycle",
+  "ssColPhase": "Phase",
+  "ssColStart": "Start",
+  "ssColEnd": "End",
+  "ssColDuration": "Duration",
+  "ssColAge": "Age",
+  "ssColSeverity": "Severity",
+  "ssPdfRetroFootnote": "* re-entered after a retrograde dip (merged span shown; see the app for the individual sub-intervals).",
+  "ssRetroReentry": "↳ retrograde re-entry: {start} – {end} ({len})",
+  "@ssRetroReentry": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "len": {
+        "type": "String"
+      }
+    }
+  },
+  "ssTooltipRetroNote": "(includes a retrograde re-entry)",
+  "ssComputeError": "Could not compute: {error}",
+  "@ssComputeError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "kpAyanamsaHint": "Ayanamsa: {name} — KP analysis traditionally uses the Krishnamurti ayanamsa (editable on the kundli).",
+  "@kpAyanamsaHint": {
+    "description": "Hint shown on KP cards when the chart's ayanamsa is not Krishnamurti; {name} is the ayanamsa system's proper name (Lahiri, Raman …) which is never translated.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kpHeadCusp": "Cusp",
+  "kpHeadHouseAbbr": "Hse",
+  "kpHeadChainCompact": "Sgn·Str·Sub",
+  "kpHeadChainFull": "Sign·Star·Sub·SS",
+  "kpHeadSignifiesHouses": "Signifies houses",
+  "kpCuspsCardCaption": "Placidus cusps — Sign · Star · Sub lords",
+  "kpCuspsSectionTitle": "House Cusps (Placidus)",
+  "kpCuspsDetailCaption": "KP uses unequal Placidus houses: a matter belongs to the cusp whose span it falls in. The cusp SUB LORD is KP's deciding factor for whether a house's matters fructify.",
+  "kpPdfCuspsHeader": "KP — House Cusps (Placidus)",
+  "kpPlanetsCardCaption": "Sign · Star · Sub lords; houses via Placidus cusps",
+  "kpPlanetsSectionTitle": "Planet Sub Lords",
+  "kpPlanetsDetailCaption": "A planet gives the results of its STAR lord; its SUB lord decides whether those results are favourable. Hse is the Placidus cusp-span house the planet occupies (can differ from its whole-sign house).",
+  "kpPdfPlanetsHeader": "KP — Planet Sub Lords",
+  "kpSignificatorsLegend": "A — in star of occupants · B — occupants · C — in star of owner · D — owner",
+  "kpSignificatorsLegendDetail": "A — in star of occupants · B — occupants · C — in star of owner · D — owner (A is strongest)",
+  "kpHouseSignificatorsTitle": "House Significators",
+  "kpPlanetSignificationsTitle": "Planet Significations",
+  "kpSignificationsCaption": "The reverse view: every house each planet speaks for. An event fructifies when its dasha lords signify the relevant houses.",
+  "kpPdfSignificatorsHeader": "KP — House Significators (A / B / C / D)",
+  "kpHeadAStarOfOccupants": "A — star of occupants",
+  "kpHeadBOccupants": "B — occupants",
+  "kpHeadCStarOfOwner": "C — star of owner",
+  "kpHeadDOwner": "D — owner",
+  "kpPdfSignificationsHeader": "KP — Planet Significations",
+  "kpRulingPlanetsNowTitle": "Ruling Planets · now",
+  "kpRulingPlanetsCaption": "KP horary: the lords ruling the moment a question is judged. Events tend to fructify when the ruling planets overlap the significators of the relevant houses. Reopen this view to refresh.",
+  "kpRulingPlanetsUnavailable": "Ruling planets unavailable (calculations not ready).",
+  "kpDayLord": "Day lord",
+  "kpLagnaChainLabel": "Lagna Sgn·Str·Sub",
+  "kpMoonChainLabel": "Moon Sgn·Str·Sub",
+  "kpDistinctRp": "Distinct RP",
+  "kpRulingPlanetsFootnote": "Now, at {place}. Day lord follows the civil weekday.",
+  "@kpRulingPlanetsFootnote": {
+    "description": "Footnote under the KP ruling-planets rows; {place} is the kundli's place name or the localized 'the birth place' fallback.",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "kpBirthPlaceFallback": "the birth place",
+  "tdRisingLine": "Rising {sign} {degree} · as of {time}",
+  "@tdRisingLine": {
+    "placeholders": {
+      "sign": {
+        "type": "String"
+      },
+      "degree": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "beQuestionChartNote": "A question chart cast for this exact moment.",
+  "bePlaceHelper": "Start typing — lat/long & timezone resolve automatically",
+  "beUseCurrentLocation": "Use current location",
+  "beSectionRelation": "RELATION",
+  "beSectionNoteOptional": "NOTE (OPTIONAL)",
+  "beNoteHint": "Who is this? e.g. \"Ramesh's daughter — match\"",
+  "beAdvanced": "Advanced",
+  "beAyanamsaSubtitle": "Ayanamsa · {name}",
+  "@beAyanamsaSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "beSectionAyanamsa": "AYANAMSA",
+  "beMore": "More…",
+  "beMoreWith": "More… ({name})",
+  "@beMoreWith": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "beSectionCloudSync": "CLOUD SYNC",
+  "beSyncTitle": "Back up & sync this kundli",
+  "beSyncSubtitle": "Available on all your devices. Change anytime in Kundli Details.",
+  "beCasting": "Casting…",
+  "dfDay": "Day",
+  "dfMonth": "Month",
+  "dfYear": "Year",
+  "dfPickFromCalendar": "Pick from calendar",
+  "beManualEntry": "Enter place manually",
+  "beLatitudeLabel": "Latitude",
+  "beLongitudeLabel": "Longitude",
+  "beTimezoneLabel": "Timezone",
+  "beManualInvalid": "Check the place name, latitude (−90 to 90), longitude (−180 to 180), and pick a timezone from the suggestions.",
+  "beSaveFailed": "Could not create the kundli: {e}",
+  "@beSaveFailed": {
+    "description": "Shown when chart creation throws (e.g. an unknown timezone from the geocoder). {e} is the raw error.",
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "beRequiredFields":"Name, date, time and place are all required.",
+  "beLocationDisabled": "Location is disabled for this app — enable it in Settings.",
+  "beLocationUnavailable": "Location unavailable — type the place instead.",
+  "beLocationFailed": "Could not get your location — type the place.",
+  "keDeleteTitle": "Delete this kundli?",
+  "keDeleteBody": "This removes the kundli and its dashboard layouts from this device. This cannot be undone.",
+  "keUpdateEventsTitle": "Update Mahakosh events?",
+  "keUpdateEventsEmpty": "This removes all life events from the shared chart.",
+  "keUpdateEventsBody": "{count, plural, =1{This replaces the shared chart's life events with the 1 event on this kundli. The chart keeps the same code.} other{This replaces the shared chart's life events with the {count} events on this kundli. The chart keeps the same code.}}\n\nEvent titles and notes become visible to researchers — check they contain no names or other identifying details.",
+  "@keUpdateEventsBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "keUpdate": "Update",
+  "keEventsUpdated": "{count, plural, =1{Mahakosh chart updated · 1 event} other{Mahakosh chart updated · {count} events}}",
+  "@keEventsUpdated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "keUpdateEventsError": "Could not update events: {e}",
+  "keSaveFailed": "Could not save changes: {e}",
+  "@keSaveFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "@keUpdateEventsError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "keTitle": "Kundli Details",
+  "keNoteLabel": "Note (optional)",
+  "keChange": "Change…",
+  "keOverride": "Override…",
+  "keAyanamsaOverride": "Ayanamsa override",
+  "keAyanamsaUsingDefault": "Using app default ({name}) — set in Profile",
+  "@keAyanamsaUsingDefault": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "keAyanamsaThisKundli": "This kundli: {name}",
+  "@keAyanamsaThisKundli": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "keSyncSignInPrompt": "Sign in to sync this kundli across devices",
+  "keSyncingToAccount": "Syncing to your account",
+  "keSyncFailed": "Sync failed: {e}",
+  "@keSyncFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "keSharedToMahakosh": "Shared to Mahakosh · {code} (anonymized)",
+  "@keSharedToMahakosh": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "keMahakoshEvents": "Mahakosh events",
+  "keMahakoshEventsSubtitle": "Push this kundli's current life events to the shared chart",
+  "keUseAppDefault": "Use app default",
+  "languageEndonym": "English",
+  "@languageEndonym": {
+    "description": "This language's own name, written IN this language (an endonym) — e.g. 'English' in app_en.arb, 'हिन्दी' in app_hi.arb, 'தமிழ்' in app_ta.arb. Settings ▸ Language reads it from each locale's own file, so adding app_<code>.arb makes the language appear in the picker automatically. NEVER translate other languages' names here — only your own."
+  },
+  "mnTitle": "Menu",
+  "mnMuhurtaSubtitle": "Choghadiya, Hora, Rahu Kaal & auspicious timings",
+  "mnAshtakoota": "Ashtakoota Guna Milan",
+  "mnAshtakootaSubtitle": "Marriage compatibility — 36-point koota match",
+  "mnSettings": "Settings",
+  "mnSettingsSubtitle": "Date format, default ayanamsa & chart style, appearance",
+  "mnNotificationsSubtitle": "Research replies & updates",
+  "mnHiddenCharts": "Hidden charts",
+  "mnModerationQueue": "Moderation queue",
+  "mnModerationSubtitle": "Pending research requests & chart reports",
+  "mnLicenses": "Open-source licenses",
+  "mnLicensesSubtitle": "Licenses of the libraries this app is built on",
+  "mnSoon": "soon",
+  "mnSignedOut": "Signed out — kundlis stay on this device.",
+  "mnSyncEnabled": "Sync + Mahakosh enabled",
+  "mnSyncNow": "Sync now",
+  "mnSynced": "Synced ({count} pulled).",
+  "@mnSynced": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "mnDeleteAccount": "Delete account…",
+  "mnDeleteAccountTitle": "Delete account?",
+  "mnDeleteAccountBody": "This permanently deletes your account: synced kundli copies, notifications and your sign-in identity. Kundlis stored on this device are not affected.\n\nYour comments in discussions remain, shown as from a deleted account. Delete any comments you don't want to keep before deleting your account.\n\nCharts you shared with Mahakosh stay in the research pool, anonymized. To remove one from the pool, withdraw it on its kundli's edit screen BEFORE deleting your account — afterwards it can no longer be traced back to you.\n\nThis cannot be undone.",
+  "@mnDeleteAccountBody": {
+    "description": "LEGAL-SENSITIVE: must stay consistent with kaaljyoti.com/delete-account.html. Translate carefully and completely — do not soften or omit any clause."
+  },
+  "mnDeleteForever": "Delete forever",
+  "mnAccountDeleted": "Your account has been deleted.",
+  "mnDeleteAccountError": "Could not delete account: {detail}",
+  "@mnDeleteAccountError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "siTitle": "Sign In",
+  "siContinueGoogle": "Continue with Google",
+  "siContinueApple": "Continue with Apple",
+  "siOrEmailCode": "or use an email code",
+  "siEmail": "Email",
+  "siOneTimeCode": "One-time code",
+  "siDifferentEmail": "Different email / resend code",
+  "siAgreePrefix": "By continuing you agree to the ",
+  "@siAgreePrefix": {
+    "description": "LEGAL: this sentence is assembled from 4 parts around two tappable links — siAgreePrefix + [Terms of Use] + siAgreeAnd + [Privacy Policy] + siAgreeSuffix. Keep it grammatical when reassembled in this order; if your language needs a different word order, put the wording in the prefix/and/suffix pieces accordingly."
+  },
+  "siAgreeAnd": " and ",
+  "siAgreeSuffix": ".",
+  "siTermsOfUse": "Terms of Use",
+  "siPrivacyPolicy": "Privacy Policy",
+  "nfEmpty": "Nothing yet. You'll hear about research matches here.",
+  "uiCouldNotLoad": "Could not load: {e}",
+  "@uiCouldNotLoad": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "hcEmpty": "Nothing hidden. Charts you hide from Mahakosh — search, browse, or a chart's own \"...\" menu — show up here so you can undo it any time.",
+  "hcChartAnonymized": "Chart {code} (anonymized)",
+  "@hcChartAnonymized": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "rcTitle": "Report Chart {code}",
+  "@rcTitle": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "rcBlurb": "Sends the chart for review by our team and hides it from your own view right away. The contributor is never told who reported it.",
+  "rcReported": "Chart {code} reported and hidden from your view — our team will review it.",
+  "@rcReported": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "rcReportError": "Could not report chart: {e}",
+  "@rcReportError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "rcDetails": "Additional details (optional)",
+  "rcSubmit": "Submit report",
+  "hcHiddenOn": "hidden {date}",
+  "@hcHiddenOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "hcUnhide": "Unhide",
+  "hcUnhideError": "Could not unhide: {e}",
+  "@hcUnhideError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "rbRequest": "+ Request",
+  "rbBackendMissing": "The research board needs the backend configured. See supabase/README.md.",
+  "rbSignInPrompt": "Sign in to browse and post research requests.",
+  "rbLoadError": "Could not load board: {e}",
+  "@rbLoadError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "rsTitle": "Respond with a Chart",
+  "rsTagged": "Chart tagged against this request.",
+  "rsError": "Could not respond: {e}",
+  "@rsError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "rsNoSharedCharts": "You have no shared charts yet.",
+  "rsSharedToMahakosh": "Shared to Mahakosh",
+  "uiGenericError": "Error: {e}",
+  "@uiGenericError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "akTitle": "Ashtakoota Guna Milan",
+  "akBride": "Bride",
+  "akGroom": "Groom",
+  "akChoose": "Choose…",
+  "akScore": "Score",
+  "akKootaVarna": "Varna",
+  "akKootaVashya": "Vashya",
+  "akKootaTara": "Tara",
+  "akKootaYoni": "Yoni",
+  "akKootaGrahaMaitri": "Graha Maitri",
+  "akKootaGana": "Gana",
+  "akKootaBhakoot": "Bhakoot",
+  "akKootaNadi": "Nadi",
+  "@akKootaVarna": {
+    "description": "The eight koota names of Ashtakoota Guna Milan (akKootaVarna through akKootaNadi). Sanskrit terms — transliterate into the local script, don't translate the meaning (Hindi: वर्ण, वश्य, तारा…)."
+  },
+  "akVerdictNotRecommended": "Not recommended",
+  "akVerdictAverage": "Average",
+  "akVerdictGood": "Good",
+  "akVerdictExcellent": "Excellent",
+  "@akVerdictNotRecommended": {
+    "description": "Match verdict bands (akVerdict*): <18 not recommended, 18–24 average, 25–32 good, 33–36 excellent. Ordinary words — translate these."
+  },
+  "akPdfScore": "{total} / {max} — {verdict}",
+  "@akPdfScore": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      },
+      "verdict": {
+        "type": "String"
+      }
+    }
+  },
+  "akChooseBoth": "Choose both a bride and a groom kundli to see the match.",
+  "akMangalMismatchScreen": "Mismatch — classically checked further (mutual cancellation, mitigating dignity) before ruling the match in or out.",
+  "muMuhurtaLocation": "Muhurta location",
+  "muUseCurrentLocation": "Use current location",
+  "muLocationError": "Could not get location — check permission, or search below",
+  "muLocating": "Locating…",
+  "muSearchCity": "Search city…",
+  "akColKoota": "Koota",
+  "akColPoints": "Points",
+  "akColMax": "Max",
+  "akColNotes": "Notes",
+  "akMangalDoshaFull": "Mangal Dosha (Kuja Dosha)",
+  "akMangalLine": "Bride: {bride}   Groom: {groom}",
+  "@akMangalLine": {
+    "placeholders": {
+      "bride": {
+        "type": "String"
+      },
+      "groom": {
+        "type": "String"
+      }
+    }
+  },
+  "akPresent": "Present",
+  "akNotPresent": "Not present",
+  "akMangalMismatch": "Mismatch — one chart has Mangal Dosha and the other does not; classically this is checked further before ruling the match in or out (mutual cancellation rules, mitigating dignity, etc.).",
+  "akPdfDisclaimer": "Checks Mars in 1/2/4/7/8/12 from both Lagna and Moon. Ashtakoota tables per guna_milan.dart doc comments — not validated against a printed reference; cross-check before relying on this for consultations.",
+  "akKootaBreakdown":"Koota breakdown",
+  "akMangalDosha": "Mangal Dosha",
+  "akExportPdf": "Export PDF",
+  "akBrideError": "Could not compute bride chart: {e}",
+  "@akBrideError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "akGroomError": "Could not compute groom chart: {e}",
+  "@akGroomError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "cbTitle": "Share to Mahakosh",
+  "cbAnonName": "Name removed — never stored or shown",
+  "cbAnonBirth": "Birth date & place are shown to researchers",
+  "cbAnonTime": "Exact birth time is used for calculations but never displayed",
+  "cbAnonEvents": "Life events you add are visible to researchers",
+  "@cbAnonName": {
+    "description": "The four cbAnon* lines are the anonymization promises shown before consent. They state what the app does with the data — translate precisely; do not soften or embellish."
+  },
+  "cbThirdPartyConsent": "I confirm I have this person's consent to share their birth data for research",
+  "@cbThirdPartyConsent": {
+    "description": "Third-party consent checkbox. Legally load-bearing — the user is asserting they have someone else's permission. Use the dual-gender first-person form in languages that mark speaker gender (Hindi: देता/देती हूँ)."
+  },
+  "cbEventPrivacyWarning": "Event text is visible to researchers on the anonymized chart — don't include names, contact details, hospitals or other places, or anything that could identify a real person.",
+  "cbMainConsent": "I consent to share this chart and the life events above — including any health-related ones — for community research",
+  "@cbMainConsent": {
+    "description": "The primary consent checkbox — the single most important string in the app to get right. Explicitly covers health data. Use the dual-gender first-person form where the language marks speaker gender (Hindi: देता/देती हूँ)."
+  },
+  "cbDate": "Date…",
+  "cbPublishing": "Publishing…",
+  "cbPublish": "Publish to Mahakosh",
+  "cbWithdrawNote": "You can withdraw this chart at any time from Mahakosh.",
+  "cbContributed": "Chart contributed to Mahakosh · community research ({code})",
+  "@cbContributed": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "cbBackendMissing": "Mahakosh needs the backend configured. See supabase/README.md.",
+  "cbSignInPrompt": "Sign in to contribute charts to community research.",
+  "cbHeading": "This chart will be shared",
+  "cbSubheading": "anonymously with the research community.",
+  "cbThisIs": "This is:",
+  "cbLifeEvents": "Life events",
+  "cbEventsEmptyHint": "Dated, tagged events make a chart useful for pattern research (e.g. Marriage · 2014, Career change · 2019).",
+  "cbEventsPulledHint": "Pulled from this kundli's Life Events. Add more below for this submission; manage them permanently on the kundli's Life Events screen.",
+  "cbHealthRelatedEvent": "Health-related event",
+  "cbTagHint": "e.g. Organ transplant",
+  "cbNotesHint": "Notes for researchers",
+  "cbHealthRelated": "Health-related",
+  "cbAddEvent": "Add event",
+  "cbError": "Could not contribute: {e}",
+  "@cbError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "evTitle": "Life Events",
+  "evAddEvent": "Add event",
+  "evEditEvent": "Edit event",
+  "evLoadError": "Could not load events: {e}",
+  "@evLoadError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "evEmpty": "No events recorded yet. Add marriages, births, career moves and other milestones — they power prediction verification and can be shared to Mahakosh.",
+  "evDeleteTitle": "Delete this event?",
+  "evDeleteBody": "\"{label}\" will be removed from this kundli.",
+  "@evDeleteBody": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "evCategory": "Category",
+  "evAgeInYears": "Age in years",
+  "evAgeHint": "e.g. 27",
+  "evPickDate": "Pick date",
+  "evTitleOptional": "Title (optional)",
+  "evTitleHint": "Short headline for this event",
+  "evNotesOptional": "Notes (optional)",
+  "evPrivacyHint": "If this kundli is ever shared to Mahakosh, event titles and notes become visible to researchers — avoid names or other identifying details.",
+  "evCatMarriage": "Marriage",
+  "@evCatMarriage": {
+    "description": "LIFE-EVENT CATEGORIES (through evCatOther) — the stored value stays English; only the display label is localized."
+  },
+  "evCatChildbirth": "Childbirth",
+  "evCatRelationship": "Relationship",
+  "evCatCareer": "Career",
+  "evCatEducation": "Education",
+  "evCatHealth": "Health",
+  "evCatRelocation": "Relocation",
+  "evCatBereavement": "Bereavement",
+  "evCatAccident": "Accident",
+  "evCatFinancial": "Financial",
+  "evCatSpiritual": "Spiritual",
+  "evCatOther": "Other",
+  "rdTitle": "Research Request",
+  "rdStatusInReview": "In review",
+  "rdStatusLive": "Live",
+  "rdStatusNotApproved": "Not approved",
+  "rdNoMatches": "No matches yet. Contributors are notified when their charts match.",
+  "rdMore": "More",
+  "rdHideFromView": "Hide from my view",
+  "rdNotFound": "Request not found.",
+  "rdMatchingCharts": "MATCHING CHARTS",
+  "rdMatchesError": "Could not load matches: {e}",
+  "@rdMatchesError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "rdReport": "Report...",
+  "rdExplore": "Explore these patterns in Mahakosh",
+  "rdHidden": "Hidden Chart {code} from your view.",
+  "@rdHidden": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "rdUndo": "Undo",
+  "rdHideError": "Could not hide chart: {e}",
+  "@rdHideError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "nrTitle": "New Research Request",
+  "nrSubmitted": "Request submitted — it goes live after a quick review.",
+  "nrSubmitting": "Submitting…",
+  "nrSubmit": "Submit for review",
+  "nrModerationNote": "Requests are reviewed before going live — primarily to catch attempts to identify a specific known individual rather than genuine pattern research.",
+  "nrTitleLabel": "Title",
+  "nrTitleHint": "e.g. Mars in 7H + Rahu dasha at marriage",
+  "nrPurpose": "Purpose",
+  "nrPurposeHint": "What pattern are you researching, and why?",
+  "nrPrivacyHint": "Title and purpose are shown publicly — don't include names, contact details, or anything that could identify a real person.",
+  "nrCriteriaSection": "CRITERIA (structured — runs as a real query)",
+  "nrAddCriterion": "Add criterion",
+  "nrPlanet": "Planet",
+  "nrHouseFromLagna": "House (from lagna)",
+  "nrHouseN": "{n}H",
+  "@nrHouseN": {
+    "description": "Compact house token in the criterion dropdown — '7H'. 'H' is the app-wide house code; keep it Latin.",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "nrAdd": "Add",
+  "msBackendMissing": "Mahakosh needs the backend configured (SUPABASE_URL / SUPABASE_ANON_KEY). See supabase/README.md.",
+  "msSignInPrompt": "Sign in to search the community research repository.",
+  "msSearchFailed": "Search failed: {e}",
+  "@msSearchFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "msFilterCharts": "Filter charts",
+  "msFiltersCount": "Filters ({count})",
+  "@msFiltersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "msClear": "Clear",
+  "msClearAll": "Clear all",
+  "msBookmarked": "BOOKMARKED · {count}",
+  "@msBookmarked": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "msBookmarksError": "Could not load bookmarks: {e}",
+  "@msBookmarksError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "msBookmarkError": "Could not update bookmark: {e}",
+  "@msBookmarkError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "msChartCode": "Chart {code}",
+  "@msChartCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "msNoLongerAvailable": "No longer available on Mahakosh",
+  "msRemoveBookmark": "Remove bookmark",
+  "msMore": "More",
+  "msHideFromView": "Hide from my view",
+  "msCombineWith": "Combine with",
+  "msAddFilterTitle": "Add filter",
+  "msSign": "Sign",
+  "msYogaCode": "Yoga code",
+  "msEventTag": "Event tag",
+  "msBornBetween": "Born between (either side optional)",
+  "msFromDate": "From date",
+  "msToDate": "To date",
+  "msLongPressClear": "Long-press a button to clear it.",
+  "msSetDateBound": "Set at least one date bound.",
+  "msNot": "NOT ",
+  "@msNot": {
+    "description": "Prefix on a negated filter chip — 'NOT Sun in sign 5'. Keep the trailing space."
+  },
+  "fltPlanetInSign": "{planet} in sign {n}",
+  "@fltPlanetInSign": {
+    "description": "MAHAKOSH FILTER CHIP labels. {n} is a 1-based sign/nakshatra number, not a name.",
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "fltPlanetInHouse": "{planet} in {n}H",
+  "@fltPlanetInHouse": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "fltPlanetInNakshatra": "{planet} in nakshatra {n}",
+  "@fltPlanetInNakshatra": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "fltYoga": "Yoga: {code}",
+  "@fltYoga": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "fltEvent": "Event: {tag}",
+  "@fltEvent": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "fltBorn": "Born {parts}",
+  "@fltBorn": {
+    "placeholders": {
+      "parts": {
+        "type": "String"
+      }
+    }
+  },
+  "dsTitle": "Discussion · {code}",
+  "@dsTitle": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "dsPostError": "Could not post: {e}",
+  "@dsPostError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dsChooseDisplayName": "Choose a display name",
+  "dsDisplayNameHint": "Shown publicly next to your comments and research posts. You don't need to use your real name.",
+  "dsDisplayName": "Display name",
+  "dsEdit": "Edit",
+  "dsReply": "Reply",
+  "dsReportEllipsis": "Report…",
+  "dsBlockUser": "Block {name}",
+  "@dsBlockUser": {
+    "description": "{name} is the commenter's own display name — user content, never translated.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dsDeleteTitle": "Delete comment?",
+  "dsDeleteBody": "The comment is removed for everyone. Replies to it stay, quoting a deleted comment.",
+  "dsReported": "Comment reported — our team will review it. You can also block the author to hide their comments.",
+  "dsDeleteError": "Could not delete: {e}",
+  "@dsDeleteError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dsReportError": "Could not report: {e}",
+  "@dsReportError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dsBlocked": "{name} blocked — their comments are hidden from your view and our moderators were notified.",
+  "@dsBlocked": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dsBlockError": "Could not block: {e}",
+  "@dsBlockError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dsUndo": "Undo",
+  "dsLoadError": "Could not load the discussion: {e}",
+  "@dsLoadError": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
+  "dsEmpty": "No comments yet — share your reading of this chart.",
+  "dsComposerHint": "Share your reading…",
+  "dsReportComment": "Report comment",
+  "dsReportQuote": "“{body}” — {name}",
+  "@dsReportQuote": {
+    "description": "Quotes the reported comment. Both placeholders are user content — never translated; only the surrounding punctuation/quote marks may adapt to local convention.",
+    "placeholders": {
+      "body": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dsReportBlurb": "Sends the comment for review by our team. The author is never told who reported it.",
+  "dsReportDetails": "Additional details (optional)",
+  "dsSubmitReport": "Submit report",
+  "reportDeanonymization": "Could identify a real, named person",
+  "@reportDeanonymization": {
+    "description": "REPORT REASONS (through reportOther) — the stored key stays English; only the display label is localized."
+  },
+  "reportHealthPrivacy": "Sensitive health information shouldn’t be public",
+  "reportHarassment": "Harassing, hateful, or abusive content",
+  "reportSpam": "Spam or fake/test data",
+  "reportOther": "Something else",
+  "navToday": "Today",
+  "navHome": "Home",
+  "navMahakosh": "Mahakosh",
+  "navResearch": "Research",
+  "@navToday": {
+    "description": "BOTTOM NAV labels (navToday…navResearch). Nav labels say WHERE you are — keep them short; they share one pill."
+  },
+  "mnSectionTools": "TOOLS",
+  "mnSectionAccount": "ACCOUNT",
+  "mnSectionMahakosh": "MAHAKOSH",
+  "mnSectionAdmin": "ADMIN",
+  "mnSectionAbout": "ABOUT",
+  "mnHiddenChartsSubtitle": "Charts you've hidden from your own Mahakosh view"
 }

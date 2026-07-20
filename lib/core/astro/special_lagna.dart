@@ -69,10 +69,8 @@ const Map<Planet, int> induKalas = {
 
 /// Indu Lagna (sign-level).
 ZodiacSign induLagnaSign(AstroSnapshot s) {
-  final ninthFromLagna =
-      ZodiacSign.values[(s.lagnaSign.index + 8) % 12].lord;
-  final ninthFromMoon =
-      ZodiacSign.values[(s.moonSign.index + 8) % 12].lord;
+  final ninthFromLagna = ZodiacSign.values[(s.lagnaSign.index + 8) % 12].lord;
+  final ninthFromMoon = ZodiacSign.values[(s.moonSign.index + 8) % 12].lord;
   final sum = induKalas[ninthFromLagna]! + induKalas[ninthFromMoon]!;
   var r = sum % 12;
   if (r == 0) r = 12;
@@ -126,17 +124,14 @@ List<SpecialLagnaPoint> timeBasedSpecialLagnas({
     point(
         SpecialLagnaKind.bhava,
         bhavaLagnaLongitude(
-            sunAtSunrise: sunAtSunrise,
-            daysSinceSunrise: daysSinceSunrise)),
+            sunAtSunrise: sunAtSunrise, daysSinceSunrise: daysSinceSunrise)),
     point(
         SpecialLagnaKind.hora,
         horaLagnaLongitude(
-            sunAtSunrise: sunAtSunrise,
-            daysSinceSunrise: daysSinceSunrise)),
+            sunAtSunrise: sunAtSunrise, daysSinceSunrise: daysSinceSunrise)),
     point(
         SpecialLagnaKind.ghati,
         ghatiLagnaLongitude(
-            sunAtSunrise: sunAtSunrise,
-            daysSinceSunrise: daysSinceSunrise)),
+            sunAtSunrise: sunAtSunrise, daysSinceSunrise: daysSinceSunrise)),
   ];
 }

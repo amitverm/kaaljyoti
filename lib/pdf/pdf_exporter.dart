@@ -3,12 +3,15 @@
 /// nothing about module internals. Free on every plan.
 library;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
+import 'pw.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../core/astro/ayanamsa.dart';
+import '../core/constants.dart';
 import '../core/date_format.dart';
 import '../modules/common.dart';
 import '../widgetsystem/astro_module.dart';
@@ -34,6 +37,22 @@ class PdfExportOptions {
   final String? brandingFooter;
 }
 
+/// The text whose scripts the document must embed fonts for.
+///
+/// [pdfTheme] picks the embedded faces from this sample, so EVERY
+/// user-entered string that can reach a page has to be listed here —
+/// one that isn't renders as empty boxes. That is not hypothetical: the
+/// practitioner branding line was missing, and a Hindi credit came out
+/// as tofu on an English export. Module-generated text needs no entry;
+/// it is written in the UI language, whose script the endonym carries.
+@visibleForTesting
+String pdfScriptSample(ModuleContext ctx, PdfExportOptions options) => [
+      ctx.l10n.languageEndonym,
+      ctx.kundli.name,
+      ctx.kundli.placeName,
+      options.brandingFooter ?? '',
+    ].join();
+
 class PdfExporter {
   Future<void> exportAndShare(
     ModuleContext ctx,
@@ -42,8 +61,7 @@ class PdfExporter {
     final doc = await _build(ctx, options);
     await Printing.sharePdf(
       bytes: await doc.save(),
-      filename:
-          '${ctx.kundli.name.replaceAll(RegExp(r'\s+'), '_')}_kundli.pdf',
+      filename: '${ctx.kundli.name.replaceAll(RegExp(r'\s+'), '_')}_kundli.pdf',
     );
   }
 
@@ -58,33 +76,30 @@ class PdfExporter {
 
   Future<pw.Document> _build(
       ModuleContext ctx, PdfExportOptions options) async {
-    // Embed real fonts: the built-in Helvetica is a non-Unicode Type1
-    // font (console warnings for — · etc.), and embedding IBM Plex +
-    // Marcellus makes the report match the app's brand. Fonts are
-    // cached by `printing` after the first fetch; if unavailable
-    // (offline first run), fall back to the defaults.
-    pw.ThemeData? theme;
+    // User content may be in any script regardless of the export
+    // language (a Devanagari name or branding line in an English export
+    // is ordinary, not an edge case) — see [pdfScriptSample].
+    final theme = await pdfTheme(scriptSample: pdfScriptSample(ctx, options));
+    // Marcellus is the cover's display face only — its own fetch, so
+    // losing it doesn't cost us the body theme.
     pw.Font? display;
     try {
-      final base = await PdfGoogleFonts.iBMPlexSansRegular();
-      final bold = await PdfGoogleFonts.iBMPlexSansBold();
-      final italic = await PdfGoogleFonts.iBMPlexSansItalic();
       display = await PdfGoogleFonts.marcellusRegular();
-      theme = pw.ThemeData.withFont(
-          base: base, bold: bold, italic: italic);
     } catch (_) {
       // Offline without cached fonts — export still works.
     }
+    // The app emblem (same art as the launcher icon) crowns the cover.
+    final emblem = pw.MemoryImage(
+        (await rootBundle.load('assets/emblem.png')).buffer.asUint8List());
 
     final doc = pw.Document(
-      title: '${ctx.kundli.name} — Kundli',
+      title: ctx.l10n.pdfDocTitle(ctx.kundli.name),
       producer: 'Kaal Jyoti',
       theme: theme,
     );
-    final format = options.paper == PdfPaper.a4
-        ? PdfPageFormat.a4
-        : PdfPageFormat.letter;
-    final birthFmt = DateFormat('${TEDate.pref.datePattern} · HH:mm');
+    final format =
+        options.paper == PdfPaper.a4 ? PdfPageFormat.a4 : PdfPageFormat.letter;
+    final birthFmt = DateFormat('${KJDate.pref.datePattern} · HH:mm');
 
     if (options.coverPage) {
       doc.addPage(
@@ -96,24 +111,22 @@ class PdfExporter {
               child: pw.Column(
                 mainAxisAlignment: pw.MainAxisAlignment.center,
                 children: [
+                  pw.Image(emblem, width: 72, height: 72),
+                  pw.SizedBox(height: 16),
                   pw.Text('KAAL JYOTI',
                       style: pw.TextStyle(
-                          fontSize: 11,
-                          letterSpacing: 4,
-                          color: pdfInkSoft)),
+                          fontSize: 11, letterSpacing: 4, color: pdfInkSoft)),
                   pw.SizedBox(height: 24),
                   pw.Text(ctx.kundli.name,
                       style: pw.TextStyle(
                           font: display, fontSize: 32, color: pdfInk)),
                   pw.SizedBox(height: 10),
                   pw.Text(
-                    birthFmt
-                        .format(ctx.kundli.toBirthData().localDateTime),
+                    birthFmt.format(ctx.kundli.toBirthData().localDateTime),
                     style: pw.TextStyle(fontSize: 12, color: pdfInkSoft),
                   ),
                   pw.Text(ctx.kundli.placeName,
-                      style:
-                          pw.TextStyle(fontSize: 12, color: pdfInkSoft)),
+                      style: pw.TextStyle(fontSize: 12, color: pdfInkSoft)),
                   pw.SizedBox(height: 6),
                   pw.Text(
                     '${Ayanamsa.byId(ctx.snapshot.ayanamsaId).name} ayanamsa',
@@ -122,8 +135,7 @@ class PdfExporter {
                   if (options.brandingFooter != null) ...[
                     pw.SizedBox(height: 48),
                     pw.Text(options.brandingFooter!,
-                        style: pw.TextStyle(
-                            fontSize: 10, color: pdfMaroon)),
+                        style: pw.TextStyle(fontSize: 10, color: pdfMaroon)),
                   ],
                 ],
               ),
@@ -158,7 +170,9 @@ class PdfExporter {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(
-                    options.brandingFooter ?? 'Kaal Jyoti',
+                    // Practitioner branding replaces the default
+                    // copyright line, never stacks with it.
+                    options.brandingFooter ?? '$kCopyrightLine · $kWebsite',
                     style: pw.TextStyle(fontSize: 8, color: pdfInkSoft),
                   ),
                   pw.Text('${context.pageNumber} / ${context.pagesCount}',
@@ -168,7 +182,7 @@ class PdfExporter {
               if (context.pageNumber == context.pagesCount)
                 pw.Padding(
                   padding: const pw.EdgeInsets.only(top: 3),
-                  child: kjPdfCredit(),
+                  child: kjPdfCredit(ctx.l10n),
                 ),
             ],
           ),

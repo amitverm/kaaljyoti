@@ -28,6 +28,7 @@ import '../data/models.dart';
 import '../mahakosh/models.dart';
 import '../mahakosh/report_chart.dart';
 import '../screens/dashboard_screen.dart' show showWidgetMenu;
+import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
 import '../widgetsystem/astro_module.dart';
@@ -43,15 +44,14 @@ typedef _MkEvent = ({
 
 /// The community-card label for one life event, honouring the precision the
 /// native recorded (exact / month / year / age) rather than forcing a year.
-String _mkEventLabel(_MkEvent e) {
+String _mkEventLabel(AppLocalizations l10n, _MkEvent e) {
   final when = switch (e.precision) {
-    'age' => e.ageYears == null ? '' : 'Age ${e.ageYears}',
+    'age' => e.ageYears == null ? '' : l10n.mkcAge('${e.ageYears}'),
     'year' => e.date == null ? '' : e.date!.split('-').first,
-    'month' =>
-      e.date == null ? '' : DateFormat('MMM yyyy').format(DateTime.parse(e.date!)),
-    _ => e.date == null
+    'month' => e.date == null
         ? ''
-        : TEDate.date(DateTime.parse(e.date!)),
+        : DateFormat('MMM yyyy').format(DateTime.parse(e.date!)),
+    _ => e.date == null ? '' : KJDate.date(DateTime.parse(e.date!)),
   };
   return when.isEmpty ? e.tag : '${e.tag} · $when';
 }
@@ -99,7 +99,7 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not update bookmark: $e')));
+            SnackBar(content: Text(context.l10n.mkcBookmarkError('$e'))));
       }
     }
   }
@@ -107,35 +107,36 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
   @override
   Widget build(BuildContext context) {
     final chartAsync = ref.watch(mahakoshChartProvider(widget.mkCode));
-    final isBm = (ref.watch(mahakoshBookmarkCodesProvider).value ??
-            const <String>{})
-        .contains(widget.mkCode);
+    final isBm =
+        (ref.watch(mahakoshBookmarkCodesProvider).value ?? const <String>{})
+            .contains(widget.mkCode);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chart ${widget.mkCode}'),
+        title: Text(context.l10n.mkcTitle(widget.mkCode)),
         actions: [
           IconButton(
             icon: const Icon(Icons.forum_outlined),
-            tooltip: 'Discussion',
+            tooltip: context.l10n.mkcDiscussion,
             onPressed: () =>
                 context.push('/mahakosh/chart/${widget.mkCode}/discussion'),
           ),
           IconButton(
             icon: Icon(isBm ? Icons.bookmark : Icons.bookmark_border),
-            tooltip: isBm ? 'Remove bookmark' : 'Bookmark',
+            tooltip: isBm
+                ? context.l10n.mkcRemoveBookmark
+                : context.l10n.mkcBookmark,
             onPressed: () => _toggleBookmark(isBm),
           ),
           PopupMenuButton<void>(
-            tooltip: 'More',
+            tooltip: context.l10n.rdMore,
             itemBuilder: (ctx) => [
               PopupMenuItem(
                 onTap: _hideChart,
-                child: const Text('Hide from my view'),
+                child: Text(context.l10n.rdHideFromView),
               ),
               PopupMenuItem(
-                onTap: () => showReportChartSheet(
-                    context, ref, widget.mkCode,
+                onTap: () => showReportChartSheet(context, ref, widget.mkCode,
                     onReported: () => GoRouter.of(context).pop()),
                 child: const Text('Report...'),
               ),
@@ -145,11 +146,9 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
       ),
       body: chartAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            EmptyState(message: 'Could not load this chart: $e'),
-        data: (chart) => chart.hasBirthData
-            ? _fullDashboard(chart)
-            : _legacyView(chart),
+        error: (e, _) => EmptyState(message: context.l10n.mkcLoadError('$e')),
+        data: (chart) =>
+            chart.hasBirthData ? _fullDashboard(chart) : _legacyView(chart),
       ),
     );
   }
@@ -162,21 +161,23 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
     final repo = ref.read(mahakoshRepoProvider);
     if (repo == null) return;
     final mkCode = widget.mkCode;
+    // Captured before the first await — context must not be used across
+    // suspension points (and this one pops the screen itself).
+    final l10n = context.l10n;
     final router = GoRouter.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
       await repo.hideChart(mkCode);
       router.pop();
       messenger.showSnackBar(SnackBar(
-        content: Text('Hidden Chart $mkCode from your view.'),
+        content: Text(l10n.rdHidden(mkCode)),
         action: SnackBarAction(
-          label: 'Undo',
+          label: l10n.rdUndo,
           onPressed: () => repo.unhideChart(mkCode),
         ),
       ));
     } catch (e) {
-      messenger
-          .showSnackBar(SnackBar(content: Text('Could not hide chart: $e')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.rdHideError('$e'))));
     }
   }
 
@@ -184,23 +185,22 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
   // Full experience: global views over a locally recomputed snapshot.
   // ------------------------------------------------------------------
   Widget _fullDashboard(AnonymizedChart chart) {
-    final snapshotAsync =
-        ref.watch(_mahakoshSnapshotProvider(widget.mkCode));
+    final snapshotAsync = ref.watch(_mahakoshSnapshotProvider(widget.mkCode));
     final viewsAsync = ref.watch(dashboardViewsProvider);
 
     return snapshotAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => EmptyState(message: 'Calculation failed: $e'),
+      error: (e, _) => EmptyState(message: context.l10n.dbCalcFailed('$e')),
       data: (snapshot) => viewsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(message: 'Could not load views: $e'),
+        error: (e, _) => EmptyState(message: context.l10n.dbViewsError('$e')),
         data: (views) {
           final active = views.isEmpty
               ? null
               : views.firstWhere((v) => v.id == _activeViewId,
                   orElse: () => views.first);
           if (active == null) {
-            return const EmptyState(message: 'No dashboard views.');
+            return EmptyState(message: context.l10n.dbNoViews);
           }
           final kundli = syntheticKundliForChart(chart);
           final ctx = ModuleContext(
@@ -222,15 +222,13 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
                     // UI (thousands of births share a date + place;
                     // the exact minute is the identifying detail).
                     [
-                      'Anonymized',
-                      TEDate.date(kundli.toBirthData().localDateTime),
-                      'birth time hidden',
-                      if ((chart.placeName ?? '').isNotEmpty)
-                        chart.placeName!,
+                      context.l10n.mkcAnonymized,
+                      KJDate.date(kundli.toBirthData().localDateTime),
+                      context.l10n.mkcBirthTimeHidden,
+                      if ((chart.placeName ?? '').isNotEmpty) chart.placeName!,
                       Ayanamsa.byId(chart.ayanamsaId).name,
                     ].join(' · '),
-                    style:
-                        TETheme.mono(size: 10.5, color: TEColors.inkSoft),
+                    style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft),
                   ),
                 ),
               ),
@@ -248,8 +246,8 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
                           selected: v.id == active.id,
                           labelStyle: TextStyle(
                               color: v.id == active.id
-                                  ? TEColors.paper
-                                  : TEColors.ink),
+                                  ? KJColors.paper
+                                  : KJColors.ink),
                           onSelected: (_) =>
                               setState(() => _activeViewId = v.id),
                         ),
@@ -269,12 +267,11 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
   /// kundlis. Drill-in and the per-widget settings menu are enabled;
   /// long-press drag-to-rearrange is not (arrangement is edited from the
   /// user's own dashboard, whose global views this chart also uses).
-  Widget _grid(
-      String viewId, ModuleContext ctx, AnonymizedChart chart) {
+  Widget _grid(String viewId, ModuleContext ctx, AnonymizedChart chart) {
     final placedAsync = ref.watch(viewWidgetsProvider(viewId));
     return placedAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => EmptyState(message: 'Could not load widgets: $e'),
+      error: (e, _) => EmptyState(message: context.l10n.dbWidgetsError('$e')),
       data: (placed) => LayoutBuilder(builder: (context, constraints) {
         final isWide = constraints.maxWidth >= 720;
         int units(CardSpan s) => switch (s) {
@@ -320,9 +317,7 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
                     ],
                     if (row.fold<int>(0, (s, p) => s + units(p.span)) < 6)
                       Expanded(
-                        flex: 6 -
-                            row.fold<int>(
-                                0, (s, p) => s + units(p.span)),
+                        flex: 6 - row.fold<int>(0, (s, p) => s + units(p.span)),
                         child: const SizedBox(),
                       ),
                   ],
@@ -343,14 +338,14 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
         ref.watch(chartCommentCountProvider(widget.mkCode)).value ?? 0;
     return Card(
       child: ListTile(
-        leading: Icon(Icons.forum_outlined, color: TEColors.maroon),
-        title: const Text('Discussion',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        leading: Icon(Icons.forum_outlined, color: KJColors.maroon),
+        title: Text(context.l10n.mkcDiscussion,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         subtitle: Text(
           count == 0
-              ? 'Be the first to share a reading of this chart'
-              : '$count comment${count == 1 ? '' : 's'}',
-          style: TextStyle(fontSize: 12, color: TEColors.inkSoft),
+              ? context.l10n.mkcBeFirst
+              : context.l10n.mkcComments(count),
+          style: TextStyle(fontSize: 12, color: KJColors.inkSoft),
         ),
         trailing: const Icon(Icons.chevron_right, size: 20),
         onTap: () =>
@@ -362,11 +357,8 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
   Widget _card(PlacedWidget pwd, ModuleContext ctx) {
     final module = moduleById(pwd.widgetId);
     if (module == null) return const SizedBox();
-    final summary = module.configSummary(pwd.config);
     return ModuleCard(
-      title: summary == null
-          ? module.meta.title
-          : '${module.meta.title} · $summary',
+      title: moduleInstanceTitle(module, pwd.config, context.l10n),
       // Drill-in — pure calculation, routed through the SAME detail
       // screen as the user's own kundlis (the mk_ id resolves to this
       // chart's in-memory synthetic kundli). The card's own config is
@@ -393,11 +385,11 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('LIFE EVENTS',
+              Text(context.l10n.mkcLifeEvents,
                   style: TextStyle(
                       fontSize: 10.5,
                       letterSpacing: 1.1,
-                      color: TEColors.inkSoft,
+                      color: KJColors.inkSoft,
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
               for (final e in chart.events)
@@ -407,11 +399,12 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          _mkEventLabel(e),
+                          _mkEventLabel(context.l10n, e),
                           style: const TextStyle(fontSize: 13),
                         ),
                       ),
-                      if (e.isHealth) const TETag('Health', maroon: true),
+                      if (e.isHealth)
+                        KJTag(context.l10n.mkcHealth, maroon: true),
                     ],
                   ),
                 ),
@@ -441,16 +434,13 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: TEColors.maroon.withValues(alpha: 0.06),
+            color: KJColors.maroon.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(12),
-            border:
-                Border.all(color: TEColors.maroon.withValues(alpha: 0.3)),
+            border: Border.all(color: KJColors.maroon.withValues(alpha: 0.3)),
           ),
           child: Text(
-            'Shared before birth details were included — only the chart '
-            'itself is available. The contributor can re-share to enable '
-            'full calculations.',
-            style: TextStyle(fontSize: 12.5, color: TEColors.maroon),
+            context.l10n.mkcLegacyNotice,
+            style: TextStyle(fontSize: 12.5, color: KJColors.maroon),
           ),
         ),
         const SizedBox(height: 12),
@@ -458,8 +448,9 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
             placements: placements, lagna: lagna, style: ChartStyle.north),
         const SizedBox(height: 8),
         Text(
-          'Lagna ${lagna.western} · ${formatDegree(chart.ascendant)}',
-          style: TETheme.mono(size: 12, color: TEColors.inkSoft),
+          '${context.l10n.labelLagna} ${lagna.label(context.l10n)} · '
+          '${formatDegree(chart.ascendant)}',
+          style: KJTheme.mono(size: 12, color: KJColors.inkSoft),
         ),
         const SizedBox(height: 12),
         for (final entry in positions.entries)
@@ -469,17 +460,17 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
               children: [
                 SizedBox(
                     width: 90,
-                    child: Text(entry.key.displayName,
+                    child: Text(entry.key.label(context.l10n),
                         style: TextStyle(
                             fontSize: 13,
                             color: planetInk(entry.key),
                             fontWeight: FontWeight.w600))),
                 Expanded(
                   child: Text(
-                    '${ZodiacSign.fromLongitude(entry.value).western} '
+                    '${ZodiacSign.fromLongitude(entry.value).label(context.l10n)} '
                     '${formatDegree(entry.value)} · '
-                    '${Nakshatra.fromLongitude(entry.value).displayName}',
-                    style: TETheme.mono(size: 11.5),
+                    '${Nakshatra.fromLongitude(entry.value).label(context.l10n)}',
+                    style: KJTheme.mono(size: 11.5),
                   ),
                 ),
               ],

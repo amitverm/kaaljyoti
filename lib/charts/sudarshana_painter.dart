@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 
 /// Sudarshana Chakra — three concentric 12-sector wheels read
 /// together: Lagna chart innermost, Chandra (Moon) chart in the
@@ -12,11 +13,16 @@ import '../core/theme/theme.dart';
 /// house 1 sits at the top and houses proceed counter-clockwise.
 class SudarshanaPainter extends CustomPainter {
   SudarshanaPainter({
+    required this.l10n,
     required this.lagnaSign,
     required this.moonSign,
     required this.sunSign,
     required this.placements,
   });
+
+  /// Localized strings for the graha/rashi tokens — a painter has no
+  /// BuildContext at paint time, so the host widget injects it.
+  final AppLocalizations l10n;
 
   final ZodiacSign lagnaSign;
   final ZodiacSign moonSign;
@@ -33,10 +39,10 @@ class SudarshanaPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final r = base / 2;
 
-    canvas.drawRect(Offset.zero & size, Paint()..color = TEColors.paper);
+    canvas.drawRect(Offset.zero & size, Paint()..color = KJColors.paper);
 
     final line = Paint()
-      ..color = TEColors.ink
+      ..color = KJColors.ink
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeW;
     for (final f in _bounds) {
@@ -49,7 +55,7 @@ class SudarshanaPainter extends CustomPainter {
     double sectorStart(int k) => -math.pi / 2 + math.pi / 12 - k * math.pi / 6;
 
     final divider = Paint()
-      ..color = TEColors.ink
+      ..color = KJColors.ink
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeW * 0.7;
     for (var k = 0; k < 12; k++) {
@@ -73,7 +79,7 @@ class SudarshanaPainter extends CustomPainter {
           sectorStart(0), -math.pi / 6, false)
       ..close();
     canvas.drawPath(
-        wedge, Paint()..color = TEColors.maroon.withValues(alpha: 0.06));
+        wedge, Paint()..color = KJColors.maroon.withValues(alpha: 0.06));
 
     final signSize = base * 0.02;
     final planetSize = base * 0.022;
@@ -92,9 +98,9 @@ class SudarshanaPainter extends CustomPainter {
         final signTp = TextPainter(
           text: TextSpan(
             text: '${sign.index + 1}',
-            style: TETheme.mono(
+            style: KJTheme.mono(
               size: signSize,
-              color: k == 0 ? TEColors.maroon : TEColors.inkSoft,
+              color: k == 0 ? KJColors.maroon : KJColors.inkSoft,
               weight: k == 0 ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
@@ -109,8 +115,8 @@ class SudarshanaPainter extends CustomPainter {
         if (planets.isEmpty) continue;
         final tp = TextPainter(
           text: TextSpan(
-            text: planets.map((p) => p.abbr).join(' '),
-            style: TETheme.mono(size: planetSize, color: TEColors.ink),
+            text: planets.map((p) => p.abbrLabel(l10n)).join(' '),
+            style: KJTheme.mono(size: planetSize, color: KJColors.ink),
           ),
           textDirection: TextDirection.ltr,
           textAlign: TextAlign.center,
@@ -125,7 +131,7 @@ class SudarshanaPainter extends CustomPainter {
     final hub = TextPainter(
       text: TextSpan(
         text: 'La\nMo\nSu',
-        style: TETheme.mono(size: base * 0.018, color: TEColors.inkSoft),
+        style: KJTheme.mono(size: base * 0.018, color: KJColors.inkSoft),
       ),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
@@ -133,7 +139,7 @@ class SudarshanaPainter extends CustomPainter {
     hub.paint(canvas, center - Offset(hub.width / 2, hub.height / 2));
   }
 
-  final TEPalette _palette = TEColors.current;
+  final KJPalette _palette = KJColors.current;
 
   @override
   bool shouldRepaint(covariant SudarshanaPainter oldDelegate) =>
@@ -141,5 +147,6 @@ class SudarshanaPainter extends CustomPainter {
       oldDelegate.moonSign != moonSign ||
       oldDelegate.sunSign != sunSign ||
       oldDelegate.placements != placements ||
+      oldDelegate.l10n != l10n ||
       oldDelegate._palette != _palette;
 }

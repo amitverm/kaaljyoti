@@ -4,12 +4,36 @@ library;
 import 'models.dart';
 
 const List<String> _tithiNames = [
-  'Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami',
-  'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami',
-  'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima',
-  'Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami',
-  'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami',
-  'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Amavasya',
+  'Pratipada',
+  'Dwitiya',
+  'Tritiya',
+  'Chaturthi',
+  'Panchami',
+  'Shashthi',
+  'Saptami',
+  'Ashtami',
+  'Navami',
+  'Dashami',
+  'Ekadashi',
+  'Dwadashi',
+  'Trayodashi',
+  'Chaturdashi',
+  'Purnima',
+  'Pratipada',
+  'Dwitiya',
+  'Tritiya',
+  'Chaturthi',
+  'Panchami',
+  'Shashthi',
+  'Saptami',
+  'Ashtami',
+  'Navami',
+  'Dashami',
+  'Ekadashi',
+  'Dwadashi',
+  'Trayodashi',
+  'Chaturdashi',
+  'Amavasya',
 ];
 
 /// Tithi name for a 0-based lunar-day index (0 = Shukla Pratipada …
@@ -21,21 +45,53 @@ String tithiNameFor(int index) => _tithiNames[index % 30];
 String pakshaFor(int index) => index % 30 < 15 ? 'Shukla' : 'Krishna';
 
 const List<String> _yogaNames = [
-  'Vishkambha', 'Priti', 'Ayushman', 'Saubhagya', 'Shobhana',
-  'Atiganda', 'Sukarma', 'Dhriti', 'Shula', 'Ganda',
-  'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra',
-  'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva',
-  'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma',
-  'Indra', 'Vaidhriti',
+  'Vishkambha',
+  'Priti',
+  'Ayushman',
+  'Saubhagya',
+  'Shobhana',
+  'Atiganda',
+  'Sukarma',
+  'Dhriti',
+  'Shula',
+  'Ganda',
+  'Vriddhi',
+  'Dhruva',
+  'Vyaghata',
+  'Harshana',
+  'Vajra',
+  'Siddhi',
+  'Vyatipata',
+  'Variyan',
+  'Parigha',
+  'Shiva',
+  'Siddha',
+  'Sadhya',
+  'Shubha',
+  'Shukla',
+  'Brahma',
+  'Indra',
+  'Vaidhriti',
 ];
 
 const List<String> _movableKaranas = [
-  'Bava', 'Balava', 'Kaulava', 'Taitila', 'Gara', 'Vanija', 'Vishti',
+  'Bava',
+  'Balava',
+  'Kaulava',
+  'Taitila',
+  'Gara',
+  'Vanija',
+  'Vishti',
 ];
 
 const List<String> _varaNames = [
-  'Somavara', 'Mangalavara', 'Budhavara', 'Guruvara',
-  'Shukravara', 'Shanivara', 'Ravivara',
+  'Somavara',
+  'Mangalavara',
+  'Budhavara',
+  'Guruvara',
+  'Shukravara',
+  'Shanivara',
+  'Ravivara',
 ];
 
 PanchangData computePanchang({
@@ -72,7 +128,9 @@ PanchangData computePanchang({
     pada: Nakshatra.padaFromLongitude(moonLongitude),
     yogaIndex: yogaIndex,
     yogaName: _yogaNames[yogaIndex],
+    karanaIndex: karanaIndex,
     karanaName: karana,
+    varaIndex: localDateTime.weekday - 1,
     vara: _varaNames[localDateTime.weekday - 1],
   );
 }

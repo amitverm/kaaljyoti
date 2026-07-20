@@ -17,6 +17,7 @@ import '../core/theme/theme.dart';
 import '../services/social_auth.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -59,9 +60,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       // diagnosing provider misconfiguration - log it, show the calm
       // message.
       debugPrint('social sign-in failed: $e');
-      setState(() => _error = e is StateError
-          ? e.message
-          : 'Sign-in failed. Please try again or use the email code.');
+      setState(
+          () => _error = e is StateError ? e.message : context.l10n.siError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -111,12 +111,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   String _friendly(Object e) {
     final msg = e.toString();
     if (msg.contains('rate limit') || msg.contains('429')) {
-      return 'Too many attempts — please wait a minute and try again.';
+      return context.l10n.siErrorRateLimit;
     }
     if (msg.contains('expired') || msg.contains('invalid')) {
-      return 'That code didn\'t match or has expired. Request a new one.';
+      return context.l10n.siErrorBadCode;
     }
-    return 'Something went wrong. Check the email address and try again.';
+    return context.l10n.siErrorGeneric;
   }
 
   @override
@@ -124,13 +124,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final client = ref.watch(supabaseClientProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign In')),
+      appBar: AppBar(title: Text(context.l10n.siTitle)),
       body: client == null
-          ? const EmptyState(
-              message:
-                  'Accounts need the backend configured (SUPABASE_URL / '
-                  'SUPABASE_ANON_KEY). The app works fully offline without '
-                  'one — sync and Mahakosh are the only features gated.')
+          ? EmptyState(message: context.l10n.siBackendMissing)
           : ListView(
               padding: formPadding(context),
               children: [
@@ -140,29 +136,26 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 Center(
                   child: Column(
                     children: [
-                      Image.asset('assets/emblem.png',
-                          width: 72, height: 72),
+                      Image.asset('assets/emblem.png', width: 72, height: 72),
                       const SizedBox(height: 12),
                       Text('KAAL JYOTI',
                           style: TextStyle(
                               fontSize: 13,
                               letterSpacing: 4,
-                              color: TEColors.ink)),
+                              color: KJColors.ink)),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'An account unlocks cross-device sync and Mahakosh — '
-                  'chart casting never requires one.',
-                  style:
-                      TextStyle(fontSize: 13.5, color: TEColors.inkSoft),
+                  context.l10n.siAccountUnlocks,
+                  style: TextStyle(fontSize: 13.5, color: KJColors.inkSoft),
                 ),
                 const SizedBox(height: 20),
                 if (kGoogleSignInConfigured) ...[
                   OutlinedButton.icon(
                     icon: const Icon(Icons.g_mobiledata, size: 26),
-                    label: const Text('Continue with Google'),
+                    label: Text(context.l10n.siContinueGoogle),
                     onPressed: _busy
                         ? null
                         : () => _social((s) => s.signInWithGoogle()),
@@ -172,7 +165,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 if (_showApple) ...[
                   OutlinedButton.icon(
                     icon: const Icon(Icons.apple, size: 22),
-                    label: const Text('Continue with Apple'),
+                    label: Text(context.l10n.siContinueApple),
                     onPressed: _busy
                         ? null
                         : () => _social((s) => s.signInWithApple()),
@@ -186,12 +179,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       children: [
                         const Expanded(child: Divider()),
                         Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text('or use an email code',
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(context.l10n.siOrEmailCode,
                               style: TextStyle(
-                                  fontSize: 12,
-                                  color: TEColors.inkSoft)),
+                                  fontSize: 12, color: KJColors.inkSoft)),
                         ),
                         const Expanded(child: Divider()),
                       ],
@@ -202,7 +193,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   keyboardType: TextInputType.emailAddress,
                   autocorrect: false,
                   enabled: !_codeSent,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: InputDecoration(labelText: context.l10n.siEmail),
                   onSubmitted: (_) => _codeSent ? null : _sendCode(),
                 ),
                 if (_codeSent) ...[
@@ -214,10 +205,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     // Supabase OTP length is a project setting (6–10
                     // digits) — don't assume a fixed length.
                     maxLength: 10,
-                    style: TETheme.mono(size: 20),
+                    style: KJTheme.mono(size: 20),
                     decoration: InputDecoration(
-                      labelText: 'One-time code',
-                      helperText: 'Sent to $_email — check spam too',
+                      labelText: context.l10n.siOneTimeCode,
+                      helperText: context.l10n.siCodeSentTo(_email),
                       counterText: '',
                     ),
                     onSubmitted: (_) => _verify(),
@@ -227,17 +218,17 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 10),
                     child: Text(_error!,
-                        style: TextStyle(
-                            fontSize: 12.5, color: TEColors.maroon)),
+                        style:
+                            TextStyle(fontSize: 12.5, color: KJColors.maroon)),
                   ),
                 const SizedBox(height: 20),
                 FilledButton(
-                  onPressed: _busy
-                      ? null
-                      : (_codeSent ? _verify : _sendCode),
+                  onPressed: _busy ? null : (_codeSent ? _verify : _sendCode),
                   child: Text(_busy
-                      ? 'Working…'
-                      : (_codeSent ? 'Verify & sign in' : 'Send code')),
+                      ? context.l10n.siWorking
+                      : (_codeSent
+                          ? context.l10n.siVerifySignIn
+                          : context.l10n.siSendCode)),
                 ),
                 if (_codeSent)
                   TextButton(
@@ -250,17 +241,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                               _error = null;
                             });
                           },
-                    child:
-                        const Text('Different email / resend code'),
+                    child: Text(context.l10n.siDifferentEmail),
                   ),
                 const SizedBox(height: 8),
                 Center(
                   child: Text(
-                    'No password needed — first sign-in creates your '
-                    'account automatically.',
+                    context.l10n.siNoPassword,
                     textAlign: TextAlign.center,
-                    style: TETheme.mono(
-                        size: 10.5, color: TEColors.inkSoft),
+                    style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -272,17 +260,17 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     alignment: WrapAlignment.center,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Text('By continuing you agree to the ',
+                      Text(context.l10n.siAgreePrefix,
                           style: TextStyle(
-                              fontSize: 11.5, color: TEColors.inkSoft)),
-                      _legalLink('Terms of Use', kTermsUrl),
-                      Text(' and ',
+                              fontSize: 11.5, color: KJColors.inkSoft)),
+                      _legalLink(context.l10n.siTermsOfUse, kTermsUrl),
+                      Text(context.l10n.siAgreeAnd,
                           style: TextStyle(
-                              fontSize: 11.5, color: TEColors.inkSoft)),
-                      _legalLink('Privacy Policy', kPrivacyUrl),
-                      Text('.',
+                              fontSize: 11.5, color: KJColors.inkSoft)),
+                      _legalLink(context.l10n.siPrivacyPolicy, kPrivacyUrl),
+                      Text(context.l10n.siAgreeSuffix,
                           style: TextStyle(
-                              fontSize: 11.5, color: TEColors.inkSoft)),
+                              fontSize: 11.5, color: KJColors.inkSoft)),
                     ],
                   ),
                 ),
@@ -292,12 +280,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   Widget _legalLink(String label, String url) => InkWell(
-        onTap: () => launchUrl(Uri.parse(url),
-            mode: LaunchMode.externalApplication),
+        onTap: () =>
+            launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
         child: Text(label,
             style: TextStyle(
                 fontSize: 11.5,
-                color: TEColors.maroon,
+                color: KJColors.maroon,
                 decoration: TextDecoration.underline)),
       );
 }

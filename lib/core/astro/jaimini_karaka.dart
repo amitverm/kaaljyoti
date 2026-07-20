@@ -44,8 +44,7 @@ const _saptaKarakaGrahas = [
 /// rare with real ephemeris data) fall back to the classical order
 /// Sun > Moon > Mars > Mercury > Jupiter > Venus > Saturn.
 Map<Planet, Karaka> saptaKarakas(Map<Planet, PlanetPosition> positions) {
-  final ranked = [..._saptaKarakaGrahas]
-    ..sort((a, b) {
+  final ranked = [..._saptaKarakaGrahas]..sort((a, b) {
       final da = positions[a]!.degreesInSign;
       final db = positions[b]!.degreesInSign;
       final cmp = db.compareTo(da);

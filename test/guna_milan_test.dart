@@ -41,7 +41,9 @@ void main() {
   });
 
   group('taraKoota', () {
-    test('bride Ashwini -> groom Rohini: bride-to-groom count = 4 (Kshema, auspicious)', () {
+    test(
+        'bride Ashwini -> groom Rohini: bride-to-groom count = 4 (Kshema, auspicious)',
+        () {
       // Ashwini(0) -> Rohini(3): count = 4, tara = 4 (Kshema) - favorable.
       // (Reverse direction, groom->bride, wraps to tara 7 = Vadha,
       // unfavorable, so overall this pair scores 1.5 not the full 3 —
@@ -94,7 +96,8 @@ void main() {
 
   group('grahaMaitriKoota', () {
     test('same rasi lord scores full 5', () {
-      expect(grahaMaitriKoota(ZodiacSign.aries, ZodiacSign.scorpio), 5); // both Mars-ruled
+      expect(grahaMaitriKoota(ZodiacSign.aries, ZodiacSign.scorpio),
+          5); // both Mars-ruled
     });
     test('mutual friends score 5', () {
       // Leo (Sun) & Cancer (Moon): Sun's friends include Moon, and
@@ -116,7 +119,8 @@ void main() {
 
   group('ganaKoota', () {
     test('same Gana scores 6', () {
-      expect(ganaKoota(Nakshatra.ashwini, Nakshatra.mrigashira), 6); // both Deva
+      expect(
+          ganaKoota(Nakshatra.ashwini, Nakshatra.mrigashira), 6); // both Deva
       expect(ganaOf(Nakshatra.ashwini), Gana.deva);
       expect(ganaOf(Nakshatra.rohini), Gana.manushya);
       expect(ganaOf(Nakshatra.krittika), Gana.rakshasa);
@@ -162,26 +166,27 @@ void main() {
 
   group('GunaMilanResult.verdict', () {
     const kootas = [
-      KootaScore(name: 'x', points: 0, maxPoints: 1),
+      KootaScore(koota: Koota.varna, points: 0, maxPoints: 1),
     ];
     GunaMilanResult withTotal(double total) {
       // Build a synthetic result whose kootas sum to `total`.
       return GunaMilanResult(
         kootas: [
-          KootaScore(name: 'all', points: total, maxPoints: 36),
+          KootaScore(koota: Koota.varna, points: total, maxPoints: 36),
         ],
         brideMangalDosha: false,
         groomMangalDosha: false,
       );
     }
+
     test('bands match the handoff spec', () {
-      expect(withTotal(17).verdict, 'Not recommended');
-      expect(withTotal(18).verdict, 'Average');
-      expect(withTotal(24).verdict, 'Average');
-      expect(withTotal(25).verdict, 'Good');
-      expect(withTotal(32).verdict, 'Good');
-      expect(withTotal(33).verdict, 'Excellent');
-      expect(withTotal(36).verdict, 'Excellent');
+      expect(withTotal(17).verdict, GunaVerdict.notRecommended);
+      expect(withTotal(18).verdict, GunaVerdict.average);
+      expect(withTotal(24).verdict, GunaVerdict.average);
+      expect(withTotal(25).verdict, GunaVerdict.good);
+      expect(withTotal(32).verdict, GunaVerdict.good);
+      expect(withTotal(33).verdict, GunaVerdict.excellent);
+      expect(withTotal(36).verdict, GunaVerdict.excellent);
     });
     test('maxTotal is 36', () {
       expect(GunaMilanResult.maxTotal, 36);

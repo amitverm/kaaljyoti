@@ -27,8 +27,8 @@ class ExportRepository {
 
   Future<SavedExportConfig?> load(String kundliId) async {
     final db = await _db.database;
-    final rows = await db.query('export_configs',
-        where: 'kundli_id = ?', whereArgs: [kundliId]);
+    final rows = await db
+        .query('export_configs', where: 'kundli_id = ?', whereArgs: [kundliId]);
     if (rows.isEmpty) return null;
     final r = rows.first;
     final decoded = jsonDecode(r['blocks'] as String) as List;

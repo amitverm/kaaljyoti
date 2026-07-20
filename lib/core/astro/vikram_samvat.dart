@@ -27,9 +27,18 @@ enum MasaSystem {
 
 /// Lunar month names, Chaitra = 0 … Phalguna = 11.
 const List<String> _masaNames = [
-  'Chaitra', 'Vaishakha', 'Jyeshtha', 'Ashadha',
-  'Shravana', 'Bhadrapada', 'Ashwina', 'Kartika',
-  'Margashirsha', 'Pausha', 'Magha', 'Phalguna',
+  'Chaitra',
+  'Vaishakha',
+  'Jyeshtha',
+  'Ashadha',
+  'Shravana',
+  'Bhadrapada',
+  'Ashwina',
+  'Kartika',
+  'Margashirsha',
+  'Pausha',
+  'Magha',
+  'Phalguna',
 ];
 
 /// The lunar month and Vikram Samvat year for an instant.
@@ -135,9 +144,7 @@ VikramMasa computeVikramMasa(
   // Year rolls at Chaitra (Sun in Meena at its starting amavasya).
   // Walk new moons back to that Chaitra; its Gregorian year + 57 = V.S.
   var chaitraNM = startNM;
-  for (var i = 0;
-      _rashi(svc, chaitraNM, ayanamsaId) != 11 && i < 14;
-      i++) {
+  for (var i = 0; _rashi(svc, chaitraNM, ayanamsaId) != 11 && i < 14; i++) {
     chaitraNM = _newMoonNear(svc, ayanamsaId, chaitraNM - 29.530588);
   }
   final chaitraYear =

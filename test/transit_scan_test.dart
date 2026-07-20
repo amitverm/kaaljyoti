@@ -65,8 +65,7 @@ void main() {
     // segmentation: contiguity + sign matches a mid-sample.
     for (var i = 0; i < occ.length; i++) {
       if (i > 0) expect(occ[i].start, occ[i - 1].end);
-      final mid =
-          occ[i].start.add(occ[i].end.difference(occ[i].start) ~/ 2);
+      final mid = occ[i].start.add(occ[i].end.difference(occ[i].start) ~/ 2);
       expect(occ[i].sign, ZodiacSign.fromLongitude(zigzag(mid)));
     }
     expect(occ.first.start, epoch);
@@ -121,8 +120,11 @@ void main() {
       ayanamsaId: 1,
       saturn: linear(355, 1 / 3),
     );
-    expect(phases.map((p) => p.label).take(3).toList(),
-        ['Rising', 'Peak', 'Setting']);
+    expect(phases.map((p) => p.kind).take(3).toList(), [
+      SadeSatiPhaseKind.rising,
+      SadeSatiPhaseKind.peak,
+      SadeSatiPhaseKind.setting,
+    ]);
     expect(phases[0].sign, ZodiacSign.aries);
     expect(phases[1].sign, ZodiacSign.taurus);
     expect(phases[2].sign, ZodiacSign.gemini);

@@ -21,7 +21,7 @@ Website: **[kaaljyoti.com](https://kaaljyoti.com)** · [Privacy](https://kaaljyo
 - **Offline-first storage** — SQLCipher-encrypted SQLite; passphrase in platform keystore. Personal kundlis never leave the device unless sync is enabled.
 - **Mahakosh** — consent-governed contribution (self/third-party/health consent branches), anonymized charts (MK-codes), precomputed search index, AND/OR/NOT combination search, research request board with moderation queue, two-way notifications, respond-with-chart flow.
 - **Accounts & sync** — Supabase auth (value-driven, never forced); opt-in per-kundli cross-device sync.
-- **i18n architecture** — `lib/l10n/app_en.arb` with the Sanskrit-term policy documented; add `app_<code>.arb` per language, no code changes.
+- **i18n architecture** — every user-facing string lives in `lib/l10n/app_<code>.arb`, with the Sanskrit-term policy (transliterate, don't translate) documented per key. A new language is **one file and no Dart**: it appears in Settings ▸ Language on its own, named in its own script, and PDF export embeds the right fonts by detecting the scripts in the text (20 scripts covered, Latin/Greek/Cyrillic native). Untranslated keys fall back to English, so partial translations ship fine. See [docs/adding-a-language.md](docs/adding-a-language.md). English and Hindi are complete.
 
 Also included: **community discussions** on Mahakosh charts (report/block/moderation built in), **push notifications** (FCM as a delivery pipe only — no Firebase Analytics; entirely disabled unless you provide your own Firebase config at build time), and optional **crash reporting** (Sentry; inert without a DSN — builds you compile yourself contain no telemetry).
 
@@ -66,7 +66,9 @@ lib/
   services/          place lookup (Open-Meteo + tz), sync
   screens/           all 15 designed screens + PDF export screen
   pdf/               exporter (loops over registry pdfViews)
-  l10n/              app_en.arb + terminology policy
+  l10n/              app_<code>.arb per language + terminology policy;
+                     astro_l10n.dart maps core enums -> localized text
+                     (core stays pure Dart and locale-unaware)
 supabase/            migrations (schema + RLS + triggers), edge functions
                      (search, matching, moderation, notification fan-out)
 ```
@@ -76,6 +78,14 @@ supabase/            migrations (schema + RLS + triggers), edge functions
 See [CONTRIBUTING.md](CONTRIBUTING.md) — contributions are welcome and
 require copyright assignment (this keeps the project's licensing options
 open). Run `flutter analyze` and `flutter test` before submitting.
+
+Two guides for the most common contributions:
+
+- **[Translate the app](docs/adding-a-language.md)** — add one
+  `app_<code>.arb` file; no Dart, and no programming experience needed.
+  Partial translations are welcome.
+- **[Add a yoga](docs/adding-yogas.md)** — a rule in the detection
+  engine is usually 10–25 lines plus a test.
 
 ## License
 

@@ -5,6 +5,7 @@ library;
 import '../modules/ashtakavarga_module.dart';
 import '../modules/bhava_bala_module.dart';
 import '../modules/birth_chart_module.dart';
+import '../modules/chalit_module.dart';
 import '../modules/dasha_module.dart';
 import '../modules/divisional_module.dart';
 import '../modules/jaimini_aspect_module.dart';
@@ -23,7 +24,16 @@ import '../modules/planetary_positions_module.dart';
 import '../modules/sade_sati_module.dart';
 import '../modules/special_lagna_module.dart';
 import '../modules/transit_module.dart';
+import '../modules/tripataki_module.dart';
 import '../modules/upcoming_events_module.dart';
+import '../modules/varshphal_bala_module.dart';
+import '../modules/varshphal_dasha_module.dart';
+import '../modules/varshphal_divisional_module.dart';
+import '../modules/varshphal_maasa_module.dart';
+import '../modules/varshphal_yoga_module.dart';
+import '../modules/varshphal_maitri_module.dart';
+import '../modules/varshphal_module.dart';
+import '../modules/varshphal_saham_module.dart';
 import '../modules/yogas_module.dart';
 import 'astro_module.dart';
 
@@ -34,6 +44,17 @@ const List<AstroModule> _allModules = [
   MoonNakshatraModule(),
   PlanetaryPositionsModule(),
   DivisionalChartModule(),
+  ChalitModule(),
+  VarshphalModule(),
+  VarshphalDivisionalModule(),
+  VarshphalMaitriModule(),
+  VarshphalYogaModule(),
+  PanchaVargiyaBalaModule(),
+  HarshaBalaModule(),
+  VarshphalDashaModule(),
+  VarshphalSahamModule(),
+  TripatakiModule(),
+  VarshphalMaasaModule(),
   SpecialLagnaModule(),
   AshtakavargaModule(),
   PanchadhaMaitriModule(),

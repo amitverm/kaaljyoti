@@ -16,6 +16,7 @@ import '../data/settings_repository.dart';
 import '../services/current_location_service.dart';
 import '../services/os_widget_service.dart';
 import '../services/place_lookup_service.dart';
+import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
 
@@ -152,7 +153,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   Future<void> _showTransitOptions() async {
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       isScrollControlled: true,
       showDragHandle: true,
       builder: (ctx) => StatefulBuilder(
@@ -163,24 +164,24 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Transit now', style: TETheme.serif(size: 18)),
+                Text(context.l10n.tdTransitNow, style: KJTheme.serif(size: 18)),
                 const SizedBox(height: 14),
-                const TESectionLabel('Display'),
+                KJSectionLabel(context.l10n.tdDisplaySection),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     FilterChip(
-                      label: const Text('Planet degrees',
-                          style: TextStyle(fontSize: 12.5)),
+                      label: Text(context.l10n.cfgPlanetDegrees,
+                          style: const TextStyle(fontSize: 12.5)),
                       selected: _showChartDegrees,
-                      checkmarkColor: TEColors.paper,
+                      checkmarkColor: KJColors.paper,
                       labelStyle: TextStyle(
                           fontSize: 12.5,
                           color: _showChartDegrees
-                              ? TEColors.paper
-                              : TEColors.ink),
+                              ? KJColors.paper
+                              : KJColors.ink),
                       onSelected: (_) {
                         _toggleChartDegrees();
                         setSheetState(() {});
@@ -193,7 +194,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Done'),
+                    child: Text(context.l10n.done),
                   ),
                 ),
               ],
@@ -208,30 +209,26 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       ? '—'
       : '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
-  static const _weekdays = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
-    'Sunday',
-  ];
-
-  /// "till 14:32" or "till tomorrow 02:10".
-  String _till(DateTime? t) {
+  /// " · till 14:32" or " · till tomorrow 02:10".
+  String _till(AppLocalizations l10n, DateTime? t) {
     if (t == null) return '';
     final now = DateTime.now();
     final tomorrow = t.day != now.day;
-    return ' · till ${tomorrow ? 'tomorrow ' : ''}${_hm(t)}';
+    return tomorrow ? l10n.tdTillTomorrow(_hm(t)) : l10n.tdTill(_hm(t));
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final d = _data;
     final place = _place;
-    return TEScaffold(
-      section: TESection.today,
-      appBar: AppBar(title: const Text('Today')),
+    return KJScaffold(
+      section: KJSection.today,
+      appBar: AppBar(title: Text(l10n.tdTitle)),
       body: d == null
           ? Center(
               child: _error != null
-                  ? Text('Calculation failed: $_error')
+                  ? Text(l10n.tdCalcFailed('$_error'))
                   : const CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: () async => _compute(),
@@ -248,22 +245,23 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: TEColors.maroon.withValues(alpha: 0.08),
+                          color: KJColors.maroon.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: TEColors.maroon.withValues(alpha: 0.4)),
+                              color: KJColors.maroon.withValues(alpha: 0.4)),
                         ),
                         child: Row(
                           children: [
                             Icon(Icons.place_outlined,
-                                size: 18, color: TEColors.maroon),
+                                size: 18, color: KJColors.maroon),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Timings are for New Delhi — tap to set'
-                                ' your city for accurate sunrise & muhurta.',
+                                l10n.tdPlaceNudge(
+                                    place?.name.split(',').first ??
+                                        'New Delhi'),
                                 style: TextStyle(
-                                    fontSize: 12.5, color: TEColors.maroon),
+                                    fontSize: 12.5, color: KJColors.maroon),
                               ),
                             ),
                           ],
@@ -277,11 +275,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          // English UI, English weekday (the Sanskrit
-                          // vara stays in kundli panchang contexts).
-                          '${_weekdays[d.at.weekday - 1]} · '
-                          '${TEDate.date(d.at)}',
-                          style: TETheme.serif(size: 18),
+                          // Civil weekday (the Sanskrit vara stays in
+                          // kundli panchang contexts).
+                          l10n.tdDateLine(weekdayLabel(l10n, d.at.weekday),
+                              KJDate.date(d.at)),
+                          style: KJTheme.serif(size: 18),
                         ),
                       ),
                       InkWell(
@@ -294,12 +292,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.place_outlined,
-                                  size: 14, color: TEColors.maroon),
+                                  size: 14, color: KJColors.maroon),
                               const SizedBox(width: 3),
                               Text(
                                 place?.name.split(',').first ?? '',
-                                style: TETheme.mono(
-                                    size: 11.5, color: TEColors.maroon),
+                                style: KJTheme.mono(
+                                    size: 11.5, color: KJColors.maroon),
                               ),
                             ],
                           ),
@@ -311,7 +309,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
                   // Panchang card.
                   ModuleCard(
-                    title: 'Panchang',
+                    title: l10n.modulePanchangTitle,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -321,32 +319,49 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                           onTap: _toggleMasaSystem,
                           borderRadius: BorderRadius.circular(8),
                           child: _row(
-                            'Maasa',
-                            '${d.masa.displayName} · V.S. ${d.masa.samvatYear}'
-                            '  (${d.masa.system == MasaSystem.purnimanta ? 'Purnimanta' : 'Amanta'} ⇄)',
+                            l10n.labelMaasa,
+                            l10n.tdMaasaValue(
+                              () {
+                                final month =
+                                    masaLabelForIndex(l10n, d.masa.monthIndex);
+                                return d.masa.isAdhik
+                                    ? l10n.masaAdhik(month)
+                                    : month;
+                              }(),
+                              '${d.masa.samvatYear}',
+                              d.masa.system == MasaSystem.purnimanta
+                                  ? l10n.masaPurnimanta
+                                  : l10n.masaAmanta,
+                            ),
                           ),
                         ),
-                        _row('Paksha', d.panchang.paksha),
+                        _row(l10n.labelPaksha,
+                            pakshaLabelForIndex(l10n, d.panchang.tithiIndex)),
                         // One row per tithi touching today (sunrise →
                         // next sunrise): a transition day shows both,
                         // each with the moment it hands over.
                         for (var i = 0; i < d.tithis.length; i++)
-                          _row(i == 0 ? 'Tithi' : '',
-                              '${d.tithis[i].name}${_till(d.tithis[i].ends)}'),
+                          _row(
+                              i == 0 ? l10n.labelTithi : '',
+                              '${tithiLabelForIndex(l10n, d.tithis[i].index)}'
+                              '${_till(l10n, d.tithis[i].ends)}'),
                         _row(
-                            'Nakshatra',
-                            '${d.panchang.nakshatra.displayName}'
-                            ' (pada ${d.panchang.pada})'
-                            '${_till(d.nakshatraEnds)}'),
-                        _row('Yoga',
-                            '${d.panchang.yogaName}${_till(d.yogaEnds)}'),
-                        _row('Karana',
-                            '${d.panchang.karanaName}${_till(d.karanaEnds)}'),
-                        _row('Sunrise / Sunset',
+                            l10n.labelNakshatra,
+                            '${l10n.tdNakshatraValue(d.panchang.nakshatra.label(l10n), '${d.panchang.pada}')}'
+                            '${_till(l10n, d.nakshatraEnds)}'),
+                        _row(
+                            l10n.labelYoga,
+                            '${yogaLabelForIndex(l10n, d.panchang.yogaIndex)}'
+                            '${_till(l10n, d.yogaEnds)}'),
+                        _row(
+                            l10n.labelKarana,
+                            '${karanaLabelForIndex(l10n, d.panchang.karanaIndex)}'
+                            '${_till(l10n, d.karanaEnds)}'),
+                        _row(l10n.tdSunriseSunset,
                             '${_hm(d.sunrise)} / ${_hm(d.sunset)}'),
                         _row(
-                            'Moon',
-                            '${d.positions[Planet.moon]!.sign.western} · '
+                            l10n.planetMoon,
+                            '${d.positions[Planet.moon]!.sign.label(l10n)} · '
                             '${formatDegreeInSign(d.positions[Planet.moon]!.degreesInSign)}'),
                       ],
                     ),
@@ -357,23 +372,25 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   // inauspicious in maroon, all local math from the
                   // sunrise-sunset span.
                   ModuleCard(
-                    title: 'Timings',
+                    title: l10n.tdTimingsCard,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _timeRow('Brahma Muhurta', d.brahmaMuhurta,
+                        _timeRow(l10n.mhBrahmaMuhurta, d.brahmaMuhurta,
                             good: true),
                         _timeRow(
-                            'Abhijit Muhurta'
-                            '${d.at.weekday == DateTime.wednesday ? ' (avoid — Wednesday)' : ''}',
+                            '${l10n.mhAbhijitMuhurta}'
+                            '${d.at.weekday == DateTime.wednesday ? l10n.mhAbhijitAvoidWednesday : ''}',
                             d.abhijitMuhurta,
                             good: d.at.weekday != DateTime.wednesday),
-                        _timeRow('Rahu Kaal', d.rahuKalam, good: false),
-                        _timeRow('Yamaganda', d.yamaganda, good: false),
-                        _timeRow('Gulika Kaal', d.gulikaKalam, good: false),
+                        _timeRow(l10n.mhRahuKaal, d.rahuKalam, good: false),
+                        _timeRow(l10n.mhYamaganda, d.yamaganda, good: false),
+                        _timeRow(l10n.mhGulikaKaal, d.gulikaKalam, good: false),
                         if (d.dishaShool != null)
-                          _row('Disha Shool',
-                              '${d.dishaShool} — avoid setting out this way'),
+                          _row(
+                              l10n.mhDishaShool,
+                              l10n.mhDishaShoolValue(
+                                  d.dishaShool!.label(l10n))),
                       ],
                     ),
                   ),
@@ -381,7 +398,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
                   // Live transit card.
                   ModuleCard(
-                    title: 'Transit now',
+                    title: l10n.tdTransitNow,
                     // Degrees also live in the positions table below, so
                     // the wheel labels are optional — the '···' sheet
                     // toggles them, mirroring the dashboard widget menu.
@@ -419,17 +436,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Rising ${d.lagnaSign.western}'
-                          ' ${formatDegreeInSign(d.ascendant)}'
-                          ' · as of ${_hm(d.at)}',
-                          style: TETheme.mono(
-                              size: 11.5, color: TEColors.inkSoft),
+                          l10n.tdRisingLine(d.lagnaSign.label(l10n),
+                              formatDegreeInSign(d.ascendant), _hm(d.at)),
+                          style:
+                              KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
                         ),
                         const SizedBox(height: 16),
-                        Divider(height: 1, color: TEColors.hairline),
+                        Divider(height: 1, color: KJColors.hairline),
                         const SizedBox(height: 12),
-                        Text('Transit Positions',
-                            style: TETheme.serif(size: 16)),
+                        Text(l10n.transitPositionsHeading,
+                            style: KJTheme.serif(size: 16)),
                         const SizedBox(height: 8),
                         TransitPositionsTable(
                           positions: d.positions,
@@ -459,15 +475,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 children: [
                   Flexible(
                     child: Text(label,
-                        style: TextStyle(
-                            fontSize: 12.5, color: TEColors.inkSoft)),
+                        style:
+                            TextStyle(fontSize: 12.5, color: KJColors.inkSoft)),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     '${_hm(w.start)} – ${_hm(w.end)}',
                     style: TextStyle(
                       fontSize: 13,
-                      color: good ? TEColors.forest : TEColors.maroon,
+                      color: good ? KJColors.forest : KJColors.maroon,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -482,7 +498,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label,
-                style: TextStyle(fontSize: 12.5, color: TEColors.inkSoft)),
+                style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft)),
             const SizedBox(width: 12),
             Flexible(
               child: Text(value,
@@ -500,8 +516,7 @@ class _PlacePickerDialog extends ConsumerStatefulWidget {
   const _PlacePickerDialog();
 
   @override
-  ConsumerState<_PlacePickerDialog> createState() =>
-      _PlacePickerDialogState();
+  ConsumerState<_PlacePickerDialog> createState() => _PlacePickerDialogState();
 }
 
 class _PlacePickerDialogState extends ConsumerState<_PlacePickerDialog> {
@@ -546,7 +561,7 @@ class _PlacePickerDialogState extends ConsumerState<_PlacePickerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Panchang location'),
+      title: Text(context.l10n.tdPanchangLocation),
       content: SizedBox(
         width: 360,
         child: Column(
@@ -560,16 +575,17 @@ class _PlacePickerDialogState extends ConsumerState<_PlacePickerDialog> {
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : Icon(Icons.my_location, color: TEColors.maroon),
+                  : Icon(Icons.my_location, color: KJColors.maroon),
               title: Text(
-                _locating ? 'Locating…' : 'Use current location',
-                style: TextStyle(color: TEColors.maroon, fontSize: 14),
+                _locating
+                    ? context.l10n.tdLocating
+                    : context.l10n.tdUseCurrentLocation,
+                style: TextStyle(color: KJColors.maroon, fontSize: 14),
               ),
               subtitle: _locateFailed
-                  ? const Text(
-                      'Could not get location — check permission,'
-                      ' or search below',
-                      style: TextStyle(fontSize: 11),
+                  ? Text(
+                      context.l10n.tdLocateFailed,
+                      style: const TextStyle(fontSize: 11),
                     )
                   : null,
               onTap: _locating ? null : _useCurrentLocation,
@@ -579,7 +595,7 @@ class _PlacePickerDialogState extends ConsumerState<_PlacePickerDialog> {
             TextField(
               controller: _controller,
               autofocus: true,
-              decoration: const InputDecoration(hintText: 'Search city…'),
+              decoration: InputDecoration(hintText: context.l10n.tdSearchCity),
               onChanged: _onChanged,
             ),
             const SizedBox(height: 8),
@@ -602,7 +618,7 @@ class _PlacePickerDialogState extends ConsumerState<_PlacePickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
       ],
     );

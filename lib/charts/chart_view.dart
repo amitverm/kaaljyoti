@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/astro/models.dart';
+import '../l10n/astro_l10n.dart';
 import 'chart_style.dart';
 import 'circular_chart_painter.dart';
 import 'north_chart_painter.dart';
@@ -98,8 +99,10 @@ class ChartView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final CustomPainter painter = switch (style) {
       ChartStyle.north => NorthChartPainter(
+          l10n: l10n,
           placements: placements,
           lagna: lagna,
           retrograde: retrograde,
@@ -113,6 +116,7 @@ class ChartView extends StatelessWidget {
           padaLabels: padaLabels,
         ),
       ChartStyle.south => SouthChartPainter(
+          l10n: l10n,
           placements: placements,
           lagna: lagna,
           retrograde: retrograde,
@@ -126,6 +130,7 @@ class ChartView extends StatelessWidget {
           padaLabels: padaLabels,
         ),
       ChartStyle.circular => CircularChartPainter(
+          l10n: l10n,
           placements: placements,
           lagna: lagna,
           retrograde: retrograde,

@@ -39,8 +39,8 @@ enum DateFormatPref {
 /// rebuilds on change (its ValueKey includes the pref), so all dates re-render
 /// — including those produced by module-level formatters, which read [pref]
 /// lazily through the getters below.
-class TEDate {
-  TEDate._();
+class KJDate {
+  KJDate._();
 
   static DateFormatPref pref = DateFormatPref.dMMMy;
 

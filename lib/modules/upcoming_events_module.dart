@@ -10,7 +10,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../core/astro/dasha/dasha.dart';
 import '../core/astro/models.dart';
@@ -19,8 +19,12 @@ import '../core/date_format.dart';
 import '../core/theme/theme.dart';
 import '../core/theme/type_scale.dart';
 import '../state/providers.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
+
+String _upcomingEventsTitle(AppLocalizations l10n) =>
+    l10n.moduleUpcomingEventsTitle;
 
 enum FeedSource { dasha, transit, sadeSati }
 
@@ -37,10 +41,10 @@ class FeedEvent {
   final FeedSource source;
   final Planet? planet; // colors + filters the label, where known
 
-  String get sourceLabel => switch (source) {
-        FeedSource.dasha => 'Dasha',
-        FeedSource.transit => 'Transit',
-        FeedSource.sadeSati => 'Sade Sati',
+  String sourceLabel(AppLocalizations l10n) => switch (source) {
+        FeedSource.dasha => l10n.ueSourceDasha,
+        FeedSource.transit => l10n.ueSourceTransit,
+        FeedSource.sadeSati => l10n.ueSourceSadeSati,
       };
 }
 
@@ -51,7 +55,11 @@ const _levelTag = {1: 'MD', 2: 'AD', 3: 'PD', 4: 'SD', 5: 'PrD'};
 /// the slow movers whose ingresses and natal hits matter most for
 /// consultation prep).
 const _kFilterPlanets = [
-  Planet.saturn, Planet.jupiter, Planet.rahu, Planet.ketu, Planet.mars,
+  Planet.saturn,
+  Planet.jupiter,
+  Planet.rahu,
+  Planet.ketu,
+  Planet.mars,
 ];
 
 /// Walks the WHOLE dasha tree (not just the currently-active chain),
@@ -63,6 +71,7 @@ const _kFilterPlanets = [
 /// change within a longer window (e.g. a 24-month window spanning two
 /// antardasha changes only ever showed the first).
 void _walkDashaLevel(
+  AppLocalizations l10n,
   List<DashaPeriod> siblings,
   DateTime now,
   DateTime to,
@@ -79,19 +88,21 @@ void _walkDashaLevel(
       out.add(FeedEvent(
         time: p.end,
         label: next == null
-            ? '$tag ${p.lordLabel} ends'
-            : '$tag ${p.lordLabel} ends → ${next.lordLabel} begins',
+            ? l10n.ueDashaEnds(tag, dashaLordLabel(l10n, p))
+            : l10n.ueDashaEndsBegins(
+                tag, dashaLordLabel(l10n, p), dashaLordLabel(l10n, next)),
         source: FeedSource.dasha,
         planet: p.planet,
       ));
     }
     if (p.level < maxLevel) {
-      _walkDashaLevel(p.children, now, to, maxLevel, out);
+      _walkDashaLevel(l10n, p.children, now, to, maxLevel, out);
     }
   }
 }
 
 List<FeedEvent> _dashaChangeEvents(
+  AppLocalizations l10n,
   ModuleContext ctx,
   DashaSystem system,
   DateTime now,
@@ -101,13 +112,13 @@ List<FeedEvent> _dashaChangeEvents(
   final result = ctx.dasha(system);
   final maxLevel = fineLevels ? 5 : 3;
   final out = <FeedEvent>[];
-  _walkDashaLevel(result.periods, now, to, maxLevel, out);
+  _walkDashaLevel(l10n, result.periods, now, to, maxLevel, out);
   return out;
 }
 
 /// Sade Sati phase starts/ends clipped to [now, to] (the full-lifetime
 /// series is shared via [sadeSatiPhasesProvider] — this just filters).
-List<FeedEvent> _sadeSatiFeedEvents(
+List<FeedEvent> _sadeSatiFeedEvents(AppLocalizations l10n,
     List<SadeSatiPhase> phases, DateTime now, DateTime to) {
   final out = <FeedEvent>[];
   bool within(DateTime t) => !t.isBefore(now) && !t.isAfter(to);
@@ -115,13 +126,13 @@ List<FeedEvent> _sadeSatiFeedEvents(
     if (within(ph.start)) {
       out.add(FeedEvent(
           time: ph.start,
-          label: 'Sade Sati ${ph.label} begins',
+          label: l10n.ueSadeSatiBegins(ph.kind.label(l10n)),
           source: FeedSource.sadeSati));
     }
     if (within(ph.end)) {
       out.add(FeedEvent(
           time: ph.end,
-          label: 'Sade Sati ${ph.label} ends',
+          label: l10n.ueSadeSatiEnds(ph.kind.label(l10n)),
           source: FeedSource.sadeSati));
     }
   }
@@ -130,9 +141,9 @@ List<FeedEvent> _sadeSatiFeedEvents(
 
 // Full-date formatters follow the user's app-wide date-format choice; the
 // month-only formatter stays fixed.
-DateFormat get _dateTimeFmt =>
-    DateFormat('${TEDate.pref.datePattern}, h:mm a');
-DateFormat get _dateFmt => DateFormat(TEDate.pref.datePattern);
+DateFormat get _dateTimeFmt => DateFormat('${KJDate.pref.datePattern}, h:mm a');
+DateFormat get _dateFmt => DateFormat(KJDate.pref.datePattern);
+DateFormat get _timeFmt => DateFormat('h:mm a');
 final _monthFmt = DateFormat('MMMM yyyy');
 
 class UpcomingEventsModule extends AstroModule {
@@ -142,34 +153,33 @@ class UpcomingEventsModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'upcoming_events',
         title: 'Upcoming Events',
+        localizedTitle: _upcomingEventsTitle,
         icon: Icons.event_note_outlined,
         category: 'Timing & Dashas',
       );
 
   @override
-  List<ModuleConfigChoice> configChoices() => [
+  List<ModuleConfigChoice> configChoices(AppLocalizations l10n) => [
         ModuleConfigChoice(
           key: 'system',
-          label: 'Dasha system',
+          label: l10n.cfgDashaSystem,
           options: [
-            for (final s in DashaSystem.values) (s.name, s.displayName),
+            for (final s in DashaSystem.values) (s.name, s.label(l10n)),
           ],
         ),
-        const ModuleConfigChoice(
+        ModuleConfigChoice(
           key: 'months',
-          label: 'Window',
+          label: l10n.cfgWindow,
           options: [
-            ('3', '3 months'),
-            ('6', '6 months'),
-            ('12', '12 months'),
-            ('24', '24 months'),
+            for (final m in const [3, 6, 12, 24]) ('$m', l10n.windowMonths(m)),
           ],
           defaultValue: '12',
         ),
-        const ModuleConfigChoice(
+        ModuleConfigChoice(
           key: 'fine',
-          label: 'Fine levels (Sookshma/Pran)',
-          options: [('hide', 'Hide'), ('show', 'Show')],
+          label: l10n.cfgFineLevels,
+          options: [('hide', l10n.hide), ('show', l10n.show)],
+          toggleOnValue: 'show',
           defaultValue: 'hide',
         ),
       ];
@@ -210,6 +220,7 @@ class UpcomingEventsModule extends AstroModule {
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
+    final l10n = ctx.l10n;
     final system = _system(ctx);
     final months = _months(ctx);
     final fine = _fineLevels(ctx);
@@ -217,7 +228,7 @@ class UpcomingEventsModule extends AstroModule {
     final to = DateTime.utc(now.year, now.month + months, now.day);
 
     final dashaEvents =
-        _dashaChangeEvents(ctx, system, now, to, fineLevels: fine);
+        _dashaChangeEvents(l10n, ctx, system, now, to, fineLevels: fine);
     final s = ctx.snapshot;
     final transitEvents = scanGochar(
       natalPoints: natalPointsFor(s),
@@ -231,22 +242,29 @@ class UpcomingEventsModule extends AstroModule {
       to: s.birth.dateTimeUtc.add(const Duration(days: 36525)),
       ayanamsaId: s.ayanamsaId,
     );
-    final sadeSatiEvents = _sadeSatiFeedEvents(phases, now, to);
+    final sadeSatiEvents = _sadeSatiFeedEvents(l10n, phases, now, to);
     final all = [
       ...dashaEvents,
       for (final e in transitEvents)
         FeedEvent(
-            time: e.time, label: e.label, source: FeedSource.transit, planet: e.planet),
+            time: e.time,
+            label: transitEventLabel(l10n, e),
+            source: FeedSource.transit,
+            planet: e.planet),
       ...sadeSatiEvents,
     ]..sort((a, b) => a.time.compareTo(b.time));
 
     return [
-      pdfSectionHeader('Upcoming Events — next $months months'),
+      pdfSectionHeader(l10n.uePdfHeader('$months')),
       pw.TableHelper.fromTextArray(
-        headers: const ['Date', 'Source', 'Event'],
+        headers: [l10n.ueColDate, l10n.ueColSource, l10n.ueColEvent],
         data: [
           for (final e in all)
-            [_dateTimeFmt.format(e.time.toLocal()), e.sourceLabel, e.label],
+            [
+              _dateTimeFmt.format(e.time.toLocal()),
+              e.sourceLabel(l10n),
+              e.label,
+            ],
         ],
         headerStyle: pw.TextStyle(
             fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: pdfInkSoft),
@@ -291,6 +309,7 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final ctx = widget.ctx;
     final gocharAsync =
         ref.watch(gocharEventsProvider((ctx.kundli.id, widget.months)));
@@ -301,29 +320,32 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
           height: 60, child: Center(child: CircularProgressIndicator()));
     }
     if (gocharAsync.hasError) {
-      return Text('Could not scan transits: ${gocharAsync.error}');
+      return Text(l10n.ueScanTransitError('${gocharAsync.error}'));
     }
     if (sadeSatiAsync.hasError) {
-      return Text('Could not scan Sade Sati: ${sadeSatiAsync.error}');
+      return Text(l10n.ueScanSadeSatiError('${sadeSatiAsync.error}'));
     }
 
     final now = DateTime.now().toUtc();
     final to = DateTime.utc(now.year, now.month + widget.months, now.day);
-    final dashaEvents = _dashaChangeEvents(ctx, widget.system, now, to,
+    final dashaEvents = _dashaChangeEvents(l10n, ctx, widget.system, now, to,
         fineLevels: widget.fineLevels);
     final sadeSatiEvents =
-        _sadeSatiFeedEvents(sadeSatiAsync.value!, now, to);
+        _sadeSatiFeedEvents(l10n, sadeSatiAsync.value!, now, to);
     final transitEvents = [
       for (final e in gocharAsync.value!)
         FeedEvent(
-            time: e.time, label: e.label, source: FeedSource.transit, planet: e.planet),
+            time: e.time,
+            label: transitEventLabel(l10n, e),
+            source: FeedSource.transit,
+            planet: e.planet),
     ];
     var all = [...dashaEvents, ...transitEvents, ...sadeSatiEvents]
       ..sort((a, b) => a.time.compareTo(b.time));
 
     if (widget.cardMode) {
       final next = all.take(4).toList();
-      if (next.isEmpty) return const Text('No events in the coming window.');
+      if (next.isEmpty) return Text(l10n.ueNoEventsWindow);
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [for (final e in next) _eventRow(e, dateOnly: true)],
@@ -360,9 +382,9 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
             for (final src in FeedSource.values)
               FilterChip(
                 label: Text(switch (src) {
-                  FeedSource.dasha => 'Dasha',
-                  FeedSource.transit => 'Transits',
-                  FeedSource.sadeSati => 'Sade Sati',
+                  FeedSource.dasha => l10n.ueSourceDasha,
+                  FeedSource.transit => l10n.ueFilterTransits,
+                  FeedSource.sadeSati => l10n.ueSourceSadeSati,
                 }),
                 selected: _sourceFilter.contains(src),
                 onSelected: (sel) => setState(() {
@@ -379,7 +401,7 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
           children: [
             for (final p in _kFilterPlanets)
               FilterChip(
-                label: Text(p.abbr),
+                label: Text(p.abbrLabel(l10n)),
                 selected: _planetFilter.contains(p),
                 onSelected: (sel) => setState(() {
                   _planetFilter = {..._planetFilter};
@@ -389,13 +411,13 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
           ],
         ),
         const SizedBox(height: 12),
-        if (all.isEmpty) const Text('No events match this filter.'),
+        if (all.isEmpty) Text(l10n.ueNoEventsFilter),
         for (final entry in byMonth.entries) ...[
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Text(
               entry.key.toUpperCase(),
-              style: TEType.kicker(),
+              style: KJType.kicker(),
             ),
           ),
           if (entry.key == todayKey)
@@ -403,15 +425,23 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
-                  Expanded(child: Container(height: 1, color: TEColors.maroon.withValues(alpha: 0.4))),
+                  Expanded(
+                      child: Container(
+                          height: 1,
+                          color: KJColors.maroon.withValues(alpha: 0.4))),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text('TODAY · ${_dateFmt.format(now.toLocal())}',
+                    child: Text(
+                        l10n.ueTodayDivider(_dateFmt.format(now.toLocal())),
                         style: TextStyle(
-                            fontSize: 10, color: TEColors.maroon,
+                            fontSize: 10,
+                            color: KJColors.maroon,
                             fontWeight: FontWeight.w600)),
                   ),
-                  Expanded(child: Container(height: 1, color: TEColors.maroon.withValues(alpha: 0.4))),
+                  Expanded(
+                      child: Container(
+                          height: 1,
+                          color: KJColors.maroon.withValues(alpha: 0.4))),
                 ],
               ),
             ),
@@ -421,32 +451,57 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
     );
   }
 
+  /// Colours the leading graha name when the label starts with it —
+  /// compared against the LOCALIZED name (feed and transit lines are
+  /// both localized now).
+  ///
+  /// Date and time stack on two lines: a single-line "date, h:mm AM"
+  /// either wrapped the meridiem onto its own orphan line or crowded
+  /// the event text, depending on the date-format preference's width.
   Widget _eventRow(FeedEvent e, {required bool dateOnly}) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 5),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              width: dateOnly ? 78 : 130,
-              child: Text(
-                (dateOnly ? _dateFmt : _dateTimeFmt).format(e.time.toLocal()),
-                style: TETheme.mono(size: 11, color: TEColors.inkSoft),
-              ),
+              width: 86,
+              child: dateOnly
+                  ? Text(
+                      _dateFmt.format(e.time.toLocal()),
+                      style: KJTheme.mono(size: 11, color: KJColors.inkSoft),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _dateFmt.format(e.time.toLocal()),
+                          style:
+                              KJTheme.mono(size: 11, color: KJColors.inkSoft),
+                        ),
+                        Text(
+                          _timeFmt.format(e.time.toLocal()),
+                          style:
+                              KJTheme.mono(size: 10.5, color: KJColors.inkSoft),
+                        ),
+                      ],
+                    ),
             ),
             Expanded(
-              child: e.planet != null && e.label.startsWith(e.planet!.displayName)
+              child: e.planet != null &&
+                      e.label.startsWith(e.planet!.label(context.l10n))
                   ? Text.rich(
                       TextSpan(
                         style: const TextStyle(fontSize: 13),
                         children: [
                           TextSpan(
-                            text: e.planet!.displayName,
+                            text: e.planet!.label(context.l10n),
                             style: TextStyle(
                                 color: planetInk(e.planet!),
                                 fontWeight: FontWeight.w600),
                           ),
                           TextSpan(
-                              text: e.label.substring(e.planet!.displayName.length)),
+                              text: e.label.substring(
+                                  e.planet!.label(context.l10n).length)),
                         ],
                       ),
                     )

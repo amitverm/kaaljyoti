@@ -14,7 +14,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../charts/chart_style.dart';
 import '../charts/chart_view.dart';
@@ -24,8 +24,11 @@ import '../core/astro/transit.dart' as transit;
 import '../core/theme/theme.dart';
 import '../pdf/pdf_chart.dart';
 import '../state/providers.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
+
+String _transitTitle(AppLocalizations l10n) => l10n.moduleTransitTitle;
 
 class TransitModule extends AstroModule {
   const TransitModule();
@@ -34,23 +37,26 @@ class TransitModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'transit',
         title: 'Transit',
+        localizedTitle: _transitTitle,
         icon: Icons.public,
         category: 'Chart & Grahas',
         defaultSpan: CardSpan.full,
       );
 
   @override
-  List<ModuleConfigChoice> configChoices() => const [
-        chartStyleChoice,
+  List<ModuleConfigChoice> configChoices(AppLocalizations l10n) => [
+        chartStyleChoice(l10n),
         ModuleConfigChoice(
           key: 'degrees',
-          label: 'Planet degrees',
-          options: [('off', 'Hide'), ('on', 'Show')],
+          label: l10n.cfgPlanetDegrees,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
         ),
         ModuleConfigChoice(
           key: 'sav',
-          label: 'SAV points',
-          options: [('off', 'Hide'), ('on', 'Show')],
+          label: l10n.cfgSavPoints,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
         ),
       ];
 
@@ -100,17 +106,19 @@ class TransitModule extends AstroModule {
     final tPos =
         transit.currentTransitPositions(ayanamsaId: s.ayanamsaId, at: now);
     final showSav = _showSav(ctx.config);
+    final l10n = ctx.l10n;
     return [
-      pdfSectionHeader('Transit'),
+      pdfSectionHeader(l10n.moduleTransitTitle),
       pw.Text(
         // A PDF is static, so it can only ever capture the instant it
         // was exported at — call that out explicitly.
-        'Sky positions as of export time: ${now.toLocal()}',
+        l10n.transitPdfAsOf('${now.toLocal()}'),
         style: pdfLabel(),
       ),
       pw.SizedBox(height: 6),
       pw.Center(
         child: pdfChart(
+          l10n: l10n,
           placements: transit.transitPlacements(tPos),
           lagna: s.lagnaSign,
           style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
@@ -122,18 +130,23 @@ class TransitModule extends AstroModule {
       ),
       if (showSav) ...[
         pw.SizedBox(height: 4),
-        pw.Text('SAV bindus per sign (Sarvashtakavarga)', style: pdfLabel()),
+        pw.Text(l10n.transitSavNote, style: pdfLabel()),
       ],
       pw.SizedBox(height: 6),
       pw.TableHelper.fromTextArray(
-        headers: ['Graha', 'Sign', 'Degree', 'Nakshatra'],
+        headers: [
+          l10n.labelGraha,
+          l10n.labelSign,
+          l10n.labelDegree,
+          l10n.labelNakshatra,
+        ],
         data: [
           for (final p in tPos.values)
             [
-              '${p.planet.displayName}${p.isRetrograde ? ' (R)' : ''}',
-              p.sign.western,
+              '${p.planet.label(l10n)}${p.isRetrograde ? ' (R)' : ''}',
+              p.sign.label(l10n),
               formatDegree(p.longitude),
-              p.nakshatra.displayName,
+              p.nakshatra.label(l10n),
             ],
         ],
         headerStyle: pdfLabel(),
@@ -180,8 +193,7 @@ class _TransitBodyState extends ConsumerState<_TransitBody> {
     // being remounted on navigation, and card + detail views stay in
     // sync with each other.
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      final fixed =
-          ref.read(transitFixedTimeProvider(widget.ctx.kundli.id));
+      final fixed = ref.read(transitFixedTimeProvider(widget.ctx.kundli.id));
       if (fixed == null && mounted) setState(() {});
     });
   }
@@ -195,12 +207,11 @@ class _TransitBodyState extends ConsumerState<_TransitBody> {
   @override
   Widget build(BuildContext context) {
     final s = widget.ctx.snapshot;
-    final fixed =
-        ref.watch(transitFixedTimeProvider(widget.ctx.kundli.id));
+    final fixed = ref.watch(transitFixedTimeProvider(widget.ctx.kundli.id));
     final asOf = fixed ?? DateTime.now();
     final isLive = fixed == null;
-    final tPos = transit.currentTransitPositions(
-        ayanamsaId: s.ayanamsaId, at: asOf);
+    final tPos =
+        transit.currentTransitPositions(ayanamsaId: s.ayanamsaId, at: asOf);
     final placements = transit.transitPlacements(tPos);
     final retro = {for (final p in tPos.values) p.planet: p.isRetrograde};
     final tokens = <Planet, PlanetToken>{};
@@ -230,25 +241,25 @@ class _TransitBodyState extends ConsumerState<_TransitBody> {
         ),
         const SizedBox(height: 10),
         Text(
-          'Transiting grahas in the ${s.lagnaSign.western} lagna houses'
-          '${isLive ? ' · live' : ''}',
-          style: TETheme.mono(size: 12, color: TEColors.inkSoft),
+          '${context.l10n.transitInLagnaHouses(s.lagnaSign.label(context.l10n))}'
+          '${isLive ? ' · ${context.l10n.transitLiveWord}' : ''}',
+          style: KJTheme.mono(size: 12, color: KJColors.inkSoft),
         ),
         Padding(
           padding: const EdgeInsets.only(top: 2),
           child: Text(
-            'Graha positions are geocentric — identical from any place',
-            style: TETheme.mono(
-                size: 10.5, color: TEColors.inkSoft.withValues(alpha: 0.7)),
+            context.l10n.transitGeocentricNote,
+            style: KJTheme.mono(
+                size: 10.5, color: KJColors.inkSoft.withValues(alpha: 0.7)),
           ),
         ),
         if (widget.savLabels.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Text(
-              'SAV bindus per sign (Sarvashtakavarga)',
-              style: TETheme.mono(
-                  size: 10.5, color: TEColors.inkSoft.withValues(alpha: 0.7)),
+              context.l10n.transitSavNote,
+              style: KJTheme.mono(
+                  size: 10.5, color: KJColors.inkSoft.withValues(alpha: 0.7)),
             ),
           ),
         const SizedBox(height: 8),
@@ -260,7 +271,8 @@ class _TransitBodyState extends ConsumerState<_TransitBody> {
         ),
         if (widget.detailed) ...[
           const SizedBox(height: 20),
-          Text('Transit Positions', style: TETheme.serif(size: 16)),
+          Text(context.l10n.transitPositionsHeading,
+              style: KJTheme.serif(size: 16)),
           const SizedBox(height: 8),
           TransitPositionsTable(positions: tPos),
         ],

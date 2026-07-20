@@ -88,8 +88,8 @@ void main() {
       Planet.venus: ZodiacSign.pisces,
       Planet.moon: ZodiacSign.taurus,
     };
-    final padas = arudhaPadasFromLagna(
-        ZodiacSign.capricorn, (lord) => lordSigns[lord]!);
+    final padas =
+        arudhaPadasFromLagna(ZodiacSign.capricorn, (lord) => lordSigns[lord]!);
     final expected = [
       ZodiacSign.taurus, // 1P
       ZodiacSign.aries, // 2P
@@ -113,7 +113,8 @@ void main() {
 
     // Lord in its own sign → the house itself is the pada.
     final own = arudhaPadasFromLagna(
-        ZodiacSign.aries, (lord) => ZodiacSign.aries.lord == lord
+        ZodiacSign.aries,
+        (lord) => ZodiacSign.aries.lord == lord
             ? ZodiacSign.aries
             : lordSigns[lord] ?? ZodiacSign.aries);
     expect(own.first.sign, ZodiacSign.aries);
@@ -155,14 +156,41 @@ void main() {
     final kahala = byCode('kahala_yoga').single;
     expect(kahala.participants.toSet(), {Planet.mars, Planet.mercury});
     for (final absent in [
-      'harsha', 'sarala', 'vimala', 'neecha_bhanga', 'gaja_kesari',
-      'chandra_mangala', 'mangal_dosha', 'kaal_sarp', 'kaal_sarp_partial',
-      'ruchaka', 'bhadra', 'hamsa', 'malavya', 'shasha',
-      'parivartana_maha', 'parivartana_dainya', 'sunapha', 'anapha',
-      'durudhara', 'vesi', 'vasi', 'ubhayachari', 'adhi_yoga', 'amala',
-      'shakata', 'lakshmi_yoga', 'saraswati_yoga', 'parvata_yoga',
-      'rajju_yoga', 'musala_yoga', 'nala_yoga', 'guru_chandal',
-      'vish_yoga', 'grahan_dosha', 'angarak_dosha',
+      'harsha',
+      'sarala',
+      'vimala',
+      'neecha_bhanga',
+      'gaja_kesari',
+      'chandra_mangala',
+      'mangal_dosha',
+      'kaal_sarp',
+      'kaal_sarp_partial',
+      'ruchaka',
+      'bhadra',
+      'hamsa',
+      'malavya',
+      'shasha',
+      'parivartana_maha',
+      'parivartana_dainya',
+      'sunapha',
+      'anapha',
+      'durudhara',
+      'vesi',
+      'vasi',
+      'ubhayachari',
+      'adhi_yoga',
+      'amala',
+      'shakata',
+      'lakshmi_yoga',
+      'saraswati_yoga',
+      'parvata_yoga',
+      'rajju_yoga',
+      'musala_yoga',
+      'nala_yoga',
+      'guru_chandal',
+      'vish_yoga',
+      'grahan_dosha',
+      'angarak_dosha',
     ]) {
       expect(byCode(absent), isEmpty, reason: absent);
     }
@@ -187,6 +215,9 @@ void main() {
     const madhya = {3, 5, 10, 12, 17, 19, 24, 26};
     const prakara = {2, 6, 9, 13, 16, 20, 23, 27};
     const bahya = {1, 7, 8, 14, 15, 21, 22, 28};
+    // The four rings partition the 28 offsets exactly (also puts bahya —
+    // otherwise only implied by the ternary's fallthrough — to use).
+    expect({...stambha, ...madhya, ...prakara, ...bahya}.length, 28);
     for (var off = 1; off <= 28; off++) {
       final expected = stambha.contains(off)
           ? KotaRing.stambha

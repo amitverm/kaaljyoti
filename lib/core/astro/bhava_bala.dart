@@ -99,18 +99,22 @@ BhavaSignNature bhavaSignNatureOf(ZodiacSign sign, double degreeInSign) {
     case ZodiacSign.pisces:
       return BhavaSignNature.jalachara;
     case ZodiacSign.cancer:
-      // ROUND 4 FIX: Cancer (the crab) is KEETA, not jalachara — the
-      // PL9 fixture's Dig Bala row only reproduces 12/12 with Cancer
-      // peaking at house 7 (H7 Cancer = 60 in the fixture; jalachara's
-      // peak-4 model gave 30).
+    // ROUND 4 FIX: Cancer (the crab) is KEETA, not jalachara — the
+    // PL9 fixture's Dig Bala row only reproduces 12/12 with Cancer
+    // peaking at house 7 (H7 Cancer = 60 in the fixture; jalachara's
+    // peak-4 model gave 30).
     case ZodiacSign.scorpio:
       return BhavaSignNature.keeta;
     case ZodiacSign.sagittarius:
       // Front half human (Nara), back half horse (Chatushpada).
-      return degreeInSign < 15 ? BhavaSignNature.nara : BhavaSignNature.chatushpada;
+      return degreeInSign < 15
+          ? BhavaSignNature.nara
+          : BhavaSignNature.chatushpada;
     case ZodiacSign.capricorn:
       // Front half goat (Chatushpada), back half fish (Jalachara).
-      return degreeInSign < 15 ? BhavaSignNature.chatushpada : BhavaSignNature.jalachara;
+      return degreeInSign < 15
+          ? BhavaSignNature.chatushpada
+          : BhavaSignNature.jalachara;
   }
 }
 
@@ -297,8 +301,7 @@ List<BhavaBalaResult> computeBhavaBala(
           drishti: bhavaDrishtiBala(
               (sign.index * 30).toDouble(), snapshot.positions,
               moonIsShukla: moonIsShukla),
-          planetsIn:
-              planetsInBala(house, houseOfPlanet, snapshot.positions),
+          planetsIn: planetsInBala(house, houseOfPlanet, snapshot.positions),
           dayNight: dayNightBala(sign, isDayBirth: isDayBirth),
         );
       }(),

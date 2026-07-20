@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../core/astro/maitri.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
 
@@ -18,10 +19,14 @@ import 'common.dart';
 class PanchadhaMaitriModule extends AstroModule {
   const PanchadhaMaitriModule();
 
+  static String _title(AppLocalizations l10n) =>
+      l10n.modulePanchadhaMaitriTitle;
+
   @override
   ModuleMeta get meta => const ModuleMeta(
         id: 'panchadha_maitri',
         title: 'Panchadha Maitri',
+        localizedTitle: _title,
         icon: Icons.hub_outlined,
         category: 'Chart & Grahas',
         defaultSpan: CardSpan.full,
@@ -43,9 +48,8 @@ class PanchadhaMaitriModule extends AstroModule {
           ),
           const SizedBox(height: 10),
           Text(
-            'Fivefold relationship — each row graha toward the column '
-            'graha (natural + temporary combined).',
-            style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+            context.l10n.maitriCardBlurb,
+            style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
           ),
         ],
       );
@@ -57,16 +61,27 @@ class PanchadhaMaitriModule extends AstroModule {
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final s = ctx.snapshot;
+    final l10n = ctx.l10n;
+    // Abbr legend derived from the same keys the grid renders with, so a
+    // translation can never drift from its own table.
+    final legend = PanchadhaMaitri.values
+        .map((m) => '${m.abbrLabel(l10n)} ${m.tierLabel(l10n)}')
+        .join(' · ');
     return [
-      pdfSectionHeader('Panchadha Maitri'),
+      pdfSectionHeader(l10n.modulePanchadhaMaitriTitle),
       pw.TableHelper.fromTextArray(
-        headers: ['From \\ To', ...kShadbalaPlanets.map((p) => p.abbr)],
+        headers: [
+          l10n.maitriFromTo,
+          ...kShadbalaPlanets.map((p) => p.abbrLabel(l10n)),
+        ],
         data: [
           for (final from in kShadbalaPlanets)
             [
-              from.abbr,
+              from.abbrLabel(l10n),
               for (final to in kShadbalaPlanets)
-                from == to ? '—' : maitriBetween(from, to, s).compound.abbr,
+                from == to
+                    ? '—'
+                    : maitriBetween(from, to, s).compound.abbrLabel(l10n),
             ],
         ],
         headerStyle: pdfLabel(),
@@ -77,8 +92,7 @@ class PanchadhaMaitriModule extends AstroModule {
       ),
       pw.SizedBox(height: 4),
       pw.Text(
-        'Row graha\'s compound relationship to the column graha. '
-        'AM Ati Mitra · Mi Mitra · Sm Sama · St Satru · AS Ati Satru.',
+        '${l10n.maitriPdfLegendPrefix} $legend.',
         style: pdfLabel(),
       ),
     ];
@@ -89,38 +103,64 @@ class PanchadhaMaitriModule extends AstroModule {
 // Which layer the grid is showing.
 // ---------------------------------------------------------------------------
 
-enum _MaitriMode {
-  compound('Compound'),
-  natural('Natural'),
-  temporary('Temporary');
+enum _MaitriMode { compound, natural, temporary }
 
-  const _MaitriMode(this.label);
-  final String label;
+extension on _MaitriMode {
+  String label(AppLocalizations l10n) => switch (this) {
+        _MaitriMode.compound => l10n.maitriModeCompound,
+        _MaitriMode.natural => l10n.maitriModeNatural,
+        _MaitriMode.temporary => l10n.maitriModeTemporary,
+      };
 }
 
 /// (background, foreground, cell token) for a rendered relationship.
 typedef _CellSpec = ({Color bg, Color fg, String text});
 
-_CellSpec _compoundSpec(PanchadhaMaitri m) => switch (m) {
-      PanchadhaMaitri.atiMitra =>
-        (bg: TEColors.forest.withValues(alpha: 0.24), fg: TEColors.forest, text: m.abbr),
-      PanchadhaMaitri.mitra =>
-        (bg: TEColors.forest.withValues(alpha: 0.12), fg: TEColors.forest, text: m.abbr),
-      PanchadhaMaitri.sama =>
-        (bg: TEColors.paperAlt, fg: TEColors.inkSoft, text: m.abbr),
-      PanchadhaMaitri.satru =>
-        (bg: TEColors.maroon.withValues(alpha: 0.12), fg: TEColors.maroon, text: m.abbr),
-      PanchadhaMaitri.atiSatru =>
-        (bg: TEColors.maroon.withValues(alpha: 0.24), fg: TEColors.maroon, text: m.abbr),
+_CellSpec _compoundSpec(PanchadhaMaitri m, AppLocalizations l10n) =>
+    switch (m) {
+      PanchadhaMaitri.atiMitra => (
+          bg: KJColors.forest.withValues(alpha: 0.24),
+          fg: KJColors.forest,
+          text: m.abbrLabel(l10n)
+        ),
+      PanchadhaMaitri.mitra => (
+          bg: KJColors.forest.withValues(alpha: 0.12),
+          fg: KJColors.forest,
+          text: m.abbrLabel(l10n)
+        ),
+      PanchadhaMaitri.sama => (
+          bg: KJColors.paperAlt,
+          fg: KJColors.inkSoft,
+          text: m.abbrLabel(l10n)
+        ),
+      PanchadhaMaitri.satru => (
+          bg: KJColors.maroon.withValues(alpha: 0.12),
+          fg: KJColors.maroon,
+          text: m.abbrLabel(l10n)
+        ),
+      PanchadhaMaitri.atiSatru => (
+          bg: KJColors.maroon.withValues(alpha: 0.24),
+          fg: KJColors.maroon,
+          text: m.abbrLabel(l10n)
+        ),
     };
 
-_CellSpec _relSpec(PlanetaryRel r) => switch (r) {
-      PlanetaryRel.friend =>
-        (bg: TEColors.forest.withValues(alpha: 0.14), fg: TEColors.forest, text: 'F'),
-      PlanetaryRel.neutral =>
-        (bg: TEColors.paperAlt, fg: TEColors.inkSoft, text: 'N'),
-      PlanetaryRel.enemy =>
-        (bg: TEColors.maroon.withValues(alpha: 0.12), fg: TEColors.maroon, text: 'E'),
+_CellSpec _relSpec(PlanetaryRel r, AppLocalizations l10n) => switch (r) {
+      PlanetaryRel.friend => (
+          bg: KJColors.forest.withValues(alpha: 0.14),
+          fg: KJColors.forest,
+          text: r.abbrLabel(l10n)
+        ),
+      PlanetaryRel.neutral => (
+          bg: KJColors.paperAlt,
+          fg: KJColors.inkSoft,
+          text: r.abbrLabel(l10n)
+        ),
+      PlanetaryRel.enemy => (
+          bg: KJColors.maroon.withValues(alpha: 0.12),
+          fg: KJColors.maroon,
+          text: r.abbrLabel(l10n)
+        ),
     };
 
 // ---------------------------------------------------------------------------
@@ -138,17 +178,18 @@ class _MaitriGrid extends StatelessWidget {
   final _MaitriMode mode;
   final double cell;
 
-  _CellSpec _spec(Planet from, Planet to) {
+  _CellSpec _spec(Planet from, Planet to, AppLocalizations l10n) {
     final rel = maitriBetween(from, to, snapshot);
     return switch (mode) {
-      _MaitriMode.compound => _compoundSpec(rel.compound),
-      _MaitriMode.natural => _relSpec(rel.natural),
-      _MaitriMode.temporary => _relSpec(rel.temporary),
+      _MaitriMode.compound => _compoundSpec(rel.compound, l10n),
+      _MaitriMode.natural => _relSpec(rel.natural, l10n),
+      _MaitriMode.temporary => _relSpec(rel.temporary, l10n),
     };
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final fs = cell <= 28 ? 9.0 : 11.0;
     final headFs = cell <= 28 ? 9.5 : 11.5;
     return Table(
@@ -157,13 +198,13 @@ class _MaitriGrid extends StatelessWidget {
         TableRow(children: [
           SizedBox(width: cell, height: cell),
           for (final p in kShadbalaPlanets)
-            _headerCell(p.abbr, planetInk(p), headFs),
+            _headerCell(p.abbrLabel(l10n), planetInk(p), headFs),
         ]),
         for (final from in kShadbalaPlanets)
           TableRow(children: [
-            _headerCell(from.abbr, planetInk(from), headFs),
+            _headerCell(from.abbrLabel(l10n), planetInk(from), headFs),
             for (final to in kShadbalaPlanets)
-              from == to ? _selfCell() : _relCell(_spec(from, to), fs),
+              from == to ? _selfCell() : _relCell(_spec(from, to, l10n), fs),
           ]),
       ],
     );
@@ -185,7 +226,7 @@ class _MaitriGrid extends StatelessWidget {
         margin: const EdgeInsets.all(1.5),
         alignment: Alignment.center,
         child: Text('·',
-            style: TextStyle(color: TEColors.hairline, fontSize: cell * 0.4)),
+            style: TextStyle(color: KJColors.hairline, fontSize: cell * 0.4)),
       );
 
   Widget _relCell(_CellSpec s, double fs) => Container(
@@ -219,35 +260,25 @@ class _MaitriDetailBody extends StatefulWidget {
 class _MaitriDetailBodyState extends State<_MaitriDetailBody> {
   _MaitriMode _mode = _MaitriMode.compound;
 
-  String get _blurb => switch (_mode) {
-        _MaitriMode.compound =>
-          'The Panchadha (fivefold) relationship: the natural friendship '
-              'blended with the temporary one, on the Ati Mitra … Ati '
-              'Satru scale. A graha fares best in a sign owned by its '
-              'compound friend.',
-        _MaitriMode.natural =>
-          'Naisargika (natural) relationship — the fixed classical table, '
-              'the same for every chart.',
-        _MaitriMode.temporary =>
-          'Tatkalika (temporary) relationship — chart-specific: a graha in '
-              'the 2nd/3rd/4th/10th/11th/12th sign from another is its '
-              'temporary friend, otherwise its enemy.',
+  String _blurb(AppLocalizations l10n) => switch (_mode) {
+        _MaitriMode.compound => l10n.maitriBlurbCompound,
+        _MaitriMode.natural => l10n.maitriBlurbNatural,
+        _MaitriMode.temporary => l10n.maitriBlurbTemporary,
       };
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Panchadha Maitri', style: TETheme.serif(size: 18)),
+          Text(l10n.modulePanchadhaMaitriTitle, style: KJTheme.serif(size: 18)),
           const SizedBox(height: 4),
           Text(
-            'Read a cell as the ROW graha\'s view of the COLUMN graha — '
-            'these relationships are directional, so the grid is not '
-            'symmetric.',
-            style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+            l10n.maitriDirectionalNote,
+            style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -256,10 +287,10 @@ class _MaitriDetailBodyState extends State<_MaitriDetailBody> {
             children: [
               for (final m in _MaitriMode.values)
                 ChoiceChip(
-                  label: Text(m.label),
+                  label: Text(m.label(l10n)),
                   selected: _mode == m,
                   labelStyle: TextStyle(
-                      color: _mode == m ? TEColors.paper : TEColors.ink),
+                      color: _mode == m ? KJColors.paper : KJColors.ink),
                   onSelected: (_) => setState(() => _mode = m),
                 ),
             ],
@@ -276,8 +307,8 @@ class _MaitriDetailBodyState extends State<_MaitriDetailBody> {
           const SizedBox(height: 16),
           _Legend(mode: _mode),
           const SizedBox(height: 14),
-          Text(_blurb,
-              style: TETheme.mono(size: 11.5, color: TEColors.inkSoft)),
+          Text(_blurb(l10n),
+              style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft)),
         ],
       ),
     );
@@ -291,15 +322,30 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final entries = <(_CellSpec, String)>[
       if (mode == _MaitriMode.compound)
         for (final m in PanchadhaMaitri.values)
-          (_compoundSpec(m), '${m.abbr} — ${m.label} · ${m.english}')
+          (
+            _compoundSpec(m, l10n),
+            '${m.abbrLabel(l10n)} — ${m.tierLabel(l10n)} · '
+                '${m.glossLabel(l10n)}'
+          )
       else ...[
-        (_relSpec(PlanetaryRel.friend), 'F — Friend (Mitra)'),
+        (
+          _relSpec(PlanetaryRel.friend, l10n),
+          '${PlanetaryRel.friend.abbrLabel(l10n)} — ${l10n.maitriLegendFriend}'
+        ),
         if (mode == _MaitriMode.natural)
-          (_relSpec(PlanetaryRel.neutral), 'N — Neutral (Sama)'),
-        (_relSpec(PlanetaryRel.enemy), 'E — Enemy (Satru)'),
+          (
+            _relSpec(PlanetaryRel.neutral, l10n),
+            '${PlanetaryRel.neutral.abbrLabel(l10n)} — '
+                '${l10n.maitriLegendNeutral}'
+          ),
+        (
+          _relSpec(PlanetaryRel.enemy, l10n),
+          '${PlanetaryRel.enemy.abbrLabel(l10n)} — ${l10n.maitriLegendEnemy}'
+        ),
       ],
     ];
     return Column(
@@ -327,7 +373,7 @@ class _Legend extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(label,
-                    style: TETheme.mono(size: 11, color: TEColors.inkSoft)),
+                    style: KJTheme.mono(size: 11, color: KJColors.inkSoft)),
               ],
             ),
           ),

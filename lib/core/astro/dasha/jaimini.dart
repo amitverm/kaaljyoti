@@ -43,8 +43,7 @@ class JaiminiCharaCalculator implements DashaCalculator {
     final forward = _savya.contains(lagna);
     final signs = <ZodiacSign>[
       for (var i = 0; i < 12; i++)
-        ZodiacSign.values[
-            (lagna.index + (forward ? i : -i) + 144) % 12],
+        ZodiacSign.values[(lagna.index + (forward ? i : -i) + 144) % 12],
     ];
 
     var cursor = birth;
@@ -53,7 +52,8 @@ class JaiminiCharaCalculator implements DashaCalculator {
       final years = _charaYears(sign, snapshot);
       final start = cursor;
       final end = addYears(start, years.toDouble());
-      periods.add(_buildPeriod(sign, years.toDouble(), start, end, 1, snapshot));
+      periods
+          .add(_buildPeriod(sign, years.toDouble(), start, end, 1, snapshot));
       cursor = end;
     }
     return DashaResult(system: system, periods: periods);
@@ -132,8 +132,8 @@ class JaiminiCharaCalculator implements DashaCalculator {
               final children = <DashaPeriod>[];
               var cursor = parent.start;
               for (var i = 1; i <= 12; i++) {
-                final sub = ZodiacSign.values[
-                    (sign.index + (forward ? i : -i) + 144) % 12];
+                final sub = ZodiacSign
+                    .values[(sign.index + (forward ? i : -i) + 144) % 12];
                 final subEnd =
                     i == 12 ? parent.end : addYears(cursor, subLength);
                 children.add(_buildPeriod(

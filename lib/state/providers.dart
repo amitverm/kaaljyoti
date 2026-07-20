@@ -8,10 +8,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../admin/admin_repository.dart';
 import '../charts/chart_style.dart';
 import '../core/astro/bhava_bala.dart';
+import '../core/astro/ephemeris_service.dart';
 import '../core/astro/models.dart';
 import '../core/astro/shadbala.dart';
 import '../core/astro/snapshot_builder.dart';
 import '../core/astro/transit_scan.dart';
+import '../core/astro/varshphal.dart';
 import '../core/constants.dart';
 import '../core/date_format.dart';
 import '../data/dashboard_repository.dart';
@@ -101,8 +103,8 @@ final chartCommentsProvider = FutureProvider.autoDispose
 /// Visible-comment count for the Discussion entry card on the chart
 /// screen. Kept separate from [chartCommentsProvider] so the dashboard
 /// doesn't load whole threads just to label a card.
-final chartCommentCountProvider = FutureProvider.autoDispose
-    .family<int, String>((ref, mkCode) async {
+final chartCommentCountProvider =
+    FutureProvider.autoDispose.family<int, String>((ref, mkCode) async {
   final repo = ref.watch(discussionRepoProvider);
   if (repo == null) return 0;
   return repo.commentCount(mkCode);
@@ -297,14 +299,14 @@ final appearanceProvider =
   (ref) => AppearanceNotifier(ref.watch(settingsRepoProvider)),
 );
 
-/// App-wide date format. Mirrors its value into `TEDate.pref` (the
+/// App-wide date format. Mirrors its value into `KJDate.pref` (the
 /// context-free source of truth used by every screen and module) both at
 /// startup and on change. The app root watches this provider and includes it
 /// in its rebuild key, so changing the format re-renders all dates instantly.
 class DateFormatNotifier extends StateNotifier<DateFormatPref> {
-  DateFormatNotifier(this._repo) : super(TEDate.pref) {
+  DateFormatNotifier(this._repo) : super(KJDate.pref) {
     _repo.dateFormat().then((p) {
-      TEDate.pref = p;
+      KJDate.pref = p;
       state = p;
     });
   }
@@ -312,7 +314,7 @@ class DateFormatNotifier extends StateNotifier<DateFormatPref> {
   final SettingsRepository _repo;
 
   void update(DateFormatPref pref) {
-    TEDate.pref = pref;
+    KJDate.pref = pref;
     state = pref;
     _repo.setDateFormat(pref);
   }
@@ -323,6 +325,26 @@ final dateFormatProvider =
   (ref) => DateFormatNotifier(ref.watch(settingsRepoProvider)),
 );
 
+/// App language — 'system' (follow device locale) or a language code
+/// ('en', 'hi'). The app root watches this and passes the forced locale
+/// to MaterialApp, so changing it re-renders every screen instantly.
+class LanguageNotifier extends StateNotifier<String> {
+  LanguageNotifier(this._repo) : super('system') {
+    _repo.language().then((code) => state = code);
+  }
+
+  final SettingsRepository _repo;
+
+  void update(String code) {
+    state = code;
+    _repo.setLanguage(code);
+  }
+}
+
+final languageProvider = StateNotifierProvider<LanguageNotifier, String>(
+  (ref) => LanguageNotifier(ref.watch(settingsRepoProvider)),
+);
+
 // --- Snapshot (computed once per chart, shared everywhere) ------------------
 
 final _snapshotBuilder = SnapshotBuilder();
@@ -331,8 +353,7 @@ final snapshotProvider =
     FutureProvider.family<AstroSnapshot, String>((ref, kundliId) async {
   final kundli = await resolveKundli(ref, kundliId);
   if (kundli == null) throw StateError('Kundli not found');
-  final int defaultAyanamsa =
-      await ref.watch(defaultAyanamsaProvider.future);
+  final int defaultAyanamsa = await ref.watch(defaultAyanamsaProvider.future);
   final int ayanamsa = kundli.ayanamsaOverrideId ?? defaultAyanamsa;
   return _snapshotBuilder.build(kundli.toBirthData(), ayanamsa);
 });
@@ -356,6 +377,150 @@ final moduleContextProvider =
 });
 
 // --- Gochar scan (shared by the Gochar module and Upcoming Events) ---------
+
+/// One year's Varshphal: the sidereal solar-return instant, the varsha
+/// chart (a full snapshot cast at that instant, at the BIRTH place, in
+/// the kundli's own ayanamsa), and the Muntha. Memoized per
+/// (kundli, varsha year) — the widget's prev/next stepper revisits
+/// years freely without recomputing.
+class VarshphalData {
+  const VarshphalData({
+    required this.varshaYear,
+    required this.returnUtc,
+    required this.snapshot,
+    required this.muntha,
+    required this.munthaDegreeInSign,
+    required this.dayPravesha,
+    required this.natalLagna,
+  });
+
+  final int varshaYear;
+  final DateTime returnUtc;
+  final AstroSnapshot snapshot;
+  final ZodiacSign muntha;
+
+  /// Whether the varsha pravesha fell between sunrise and sunset at the
+  /// birth place — drives Harsha Bala, the Tri-Rashi Pati and the
+  /// Dina-Ratri Pati. Defaults to day in degenerate (polar) cases.
+  final bool dayPravesha;
+
+  /// Natal lagna — the Janma Lagna Pati among the office-bearers.
+  final ZodiacSign natalLagna;
+
+  /// Muntha's degree within its sign — the natal ascendant's
+  /// degree-in-sign carried into the advanced sign (the Muntha starts
+  /// AT the lagna and moves exactly one sign per completed year, so at
+  /// each varsha pravesh its in-sign degree is the natal lagna's).
+  final double munthaDegreeInSign;
+
+  /// Muntha's house in the varsha chart (whole sign from varsha lagna).
+  int get munthaHouse =>
+      ((muntha.index - snapshot.lagnaSign.index + 12) % 12) + 1;
+}
+
+final varshphalProvider =
+    FutureProvider.family<VarshphalData, (String kundliId, int varshaYear)>(
+        (ref, key) async {
+  final (kundliId, year) = key;
+  final natal = await ref.watch(snapshotProvider(kundliId).future);
+  final birth = natal.birth;
+  final returnUtc = solarReturnUtc(
+    birthUtc: birth.dateTimeUtc,
+    natalSunLongitude: natal.positions[Planet.sun]!.longitude,
+    varshaYear: year,
+    ayanamsaId: natal.ayanamsaId,
+  );
+  // Offset at the RETURN instant (DST zones differ from birth's own).
+  final offset = ref
+      .read(placeLookupProvider)
+      .offsetMinutesAtUtc(birth.timezoneName, returnUtc);
+  final snap = await _snapshotBuilder.build(
+    BirthData(
+      dateTimeUtc: returnUtc,
+      latitude: birth.latitude,
+      longitude: birth.longitude,
+      timezoneName: birth.timezoneName,
+      utcOffsetMinutes: offset,
+    ),
+    natal.ayanamsaId,
+  );
+  // Day/night at the pravesha instant, birth place (Hindu sunrise
+  // convention, same as the rest of the app).
+  var dayPravesha = true;
+  try {
+    final svc = EphemerisService.instance;
+    final jd = svc.julianDayUt(returnUtc);
+    final rise = svc.sunriseBefore(jd, birth.latitude, birth.longitude);
+    final set = rise == null
+        ? null
+        : svc.sunEventAfter(rise, birth.latitude, birth.longitude, rise: false);
+    if (set != null) dayPravesha = jd < set;
+  } catch (_) {}
+  return VarshphalData(
+    varshaYear: year,
+    returnUtc: returnUtc,
+    snapshot: snap,
+    muntha: munthaSign(natal.lagnaSign, year),
+    munthaDegreeInSign: natal.ascendant % 30,
+    dayPravesha: dayPravesha,
+    natalLagna: natal.lagnaSign,
+  );
+});
+
+/// One maasa (monthly) chart within a varsha — pravesha instant and a
+/// full snapshot at the birth place, memoized per (kundli, year, month).
+class MaasaPraveshData {
+  const MaasaPraveshData({
+    required this.month,
+    required this.praveshUtc,
+    required this.snapshot,
+    required this.dayPravesha,
+  });
+
+  final int month; // 1-12 within the varsha
+  final DateTime praveshUtc;
+  final AstroSnapshot snapshot;
+  final bool dayPravesha;
+}
+
+final maasaPraveshProvider = FutureProvider.family<MaasaPraveshData,
+    (String kundliId, int varshaYear, int month)>((ref, key) async {
+  final (kundliId, year, month) = key;
+  final varsha = await ref.watch(varshphalProvider((kundliId, year)).future);
+  final natal = await ref.watch(snapshotProvider(kundliId).future);
+  final birth = natal.birth;
+  final praveshUtc = maasaPraveshUtc(
+    varshaPraveshUtc: varsha.returnUtc,
+    natalSunLongitude: natal.positions[Planet.sun]!.longitude,
+    month: month,
+    ayanamsaId: natal.ayanamsaId,
+  );
+  final offset = ref
+      .read(placeLookupProvider)
+      .offsetMinutesAtUtc(birth.timezoneName, praveshUtc);
+  final snap = await _snapshotBuilder.build(
+    BirthData(
+      dateTimeUtc: praveshUtc,
+      latitude: birth.latitude,
+      longitude: birth.longitude,
+      timezoneName: birth.timezoneName,
+      utcOffsetMinutes: offset,
+    ),
+    natal.ayanamsaId,
+  );
+  var day = true;
+  try {
+    final svc = EphemerisService.instance;
+    final jd = svc.julianDayUt(praveshUtc);
+    final rise = svc.sunriseBefore(jd, birth.latitude, birth.longitude);
+    final set = rise == null
+        ? null
+        : svc.sunEventAfter(rise, birth.latitude, birth.longitude, rise: false);
+    if (set != null) day = jd < set;
+  } catch (_) {}
+  return MaasaPraveshData(
+      month: month, praveshUtc: praveshUtc, snapshot: snap, dayPravesha: day);
+});
 
 /// Natal reference points for a transit scan: the 9 grahas + Lagna.
 Map<String, double> natalPointsFor(AstroSnapshot s) => {
@@ -430,6 +595,28 @@ final bhavaBalaProvider =
 /// the detail view stay in sync and the rotation survives navigation.
 final chartViewFromProvider =
     StateProvider.family<ZodiacSign?, String>((ref, kundliId) => null);
+
+/// Same double-tap "view from" rotation for the OTHER whole-sign chart
+/// widgets (divisional, varshphal). Keyed '<kundliId>#<scope>' — e.g.
+/// '<id>#d9', '<id>#varshphal' — so each widget rotates independently
+/// of the Birth Chart and of each other, but still survives navigation.
+final widgetViewFromProvider =
+    StateProvider.family<ZodiacSign?, String>((ref, key) => null);
+
+/// Chalit's rotate-by-cusp, set by double-tapping a house (houses are
+/// cusp-bounded, so rotation is a HOUSE number, not a sign). Null = the
+/// natural view from house 1.
+final chalitViewHouseProvider =
+    StateProvider.family<int?, String>((ref, kundliId) => null);
+
+/// The varsha year the WHOLE Varshphal dashboard shows, per kundli —
+/// null = the varsha running today. The Varshphal Chart's stepper
+/// writes it; every varsha widget (divisionals, dashas, bala, sahams…)
+/// reads it, so the entire suite flips year together. A per-widget year
+/// would let a D9 silently show a different varsha than the chart
+/// beside it — a wrong-reading hazard, not a feature.
+final varshphalYearProvider =
+    StateProvider.family<int?, String>((ref, kundliId) => null);
 
 /// The transit "as of" instant a user scrubbed to, per kundli — null
 /// means live. Lives in a provider rather than widget State so it (a)

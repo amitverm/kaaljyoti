@@ -12,13 +12,15 @@
 library;
 
 import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
+import 'pw.dart' as pw;
 
 import '../charts/chart_style.dart';
 import '../core/astro/models.dart';
 import '../modules/common.dart';
+import '../l10n/astro_l10n.dart';
 
 pw.Widget pdfChart({
+  required AppLocalizations l10n,
   required Map<ZodiacSign, List<Planet>> placements,
   required ZodiacSign lagna,
   required ChartStyle style,
@@ -31,11 +33,11 @@ pw.Widget pdfChart({
   final trueAsc = trueAscendantSign ?? lagna;
   switch (style) {
     case ChartStyle.south:
-      return _south(placements, lagna, size, retrograde, trueAsc,
+      return _south(l10n, placements, lagna, size, retrograde, trueAsc,
           ascendantDegree, padaLabels);
     case ChartStyle.north:
     case ChartStyle.circular: // circular: North fallback in PDF (v1)
-      return _north(placements, lagna, size, retrograde, trueAsc,
+      return _north(l10n, placements, lagna, size, retrograde, trueAsc,
           ascendantDegree, padaLabels);
   }
 }
@@ -44,24 +46,28 @@ pw.Widget pdfChart({
 /// — so the marker is suppressed for them, matching the on-screen
 /// painters. "(R)" (not ℞) matches [pdfPositionsTable]'s existing
 /// convention, since core PDF fonts don't reliably carry the ℞ glyph.
-String _planetLine(List<Planet> planets, Map<Planet, bool> retrograde) =>
+String _planetLine(AppLocalizations l10n, List<Planet> planets,
+        Map<Planet, bool> retrograde) =>
     planets.map((p) {
       final isNode = p == Planet.rahu || p == Planet.ketu;
       final retro = !isNode && (retrograde[p] ?? false);
-      return retro ? '${p.abbr}(R)' : p.abbr;
+      final abbr = p.abbrLabel(l10n);
+      return retro ? '$abbr(R)' : abbr;
     }).join(' ');
 
-String _ascText(double? ascendantDegree) => ascendantDegree != null
-    ? 'Asc ${formatDegreeInSign(ascendantDegree)}'
-    : 'Asc';
+String _ascText(AppLocalizations l10n, double? ascendantDegree) =>
+    ascendantDegree != null
+        ? '${l10n.chartAsc} ${formatDegreeInSign(ascendantDegree)}'
+        : l10n.chartAsc;
 
 pw.Widget _houseLabel({
+  required AppLocalizations l10n,
   required int signNumber,
   required List<Planet> planets,
   required Map<Planet, bool> retrograde,
   List<String> padas = const [],
   bool isAsc = false,
-  String ascText = 'Asc',
+  String ascText = '',
   double width = 58,
 }) =>
     pw.SizedBox(
@@ -80,7 +86,7 @@ pw.Widget _houseLabel({
                     fontWeight: pw.FontWeight.bold)),
           if (planets.isNotEmpty)
             pw.Text(
-              _planetLine(planets, retrograde),
+              _planetLine(l10n, planets, retrograde),
               textAlign: pw.TextAlign.center,
               style: pw.TextStyle(fontSize: 8, color: pdfInk),
             ),
@@ -99,6 +105,7 @@ pw.Widget _houseLabel({
 /// "Asc" label marks the true ascendant's house regardless of [lagna]
 /// (which may be a "view from" anchor rather than the true ascendant).
 pw.Widget _north(
+  AppLocalizations l10n,
   Map<ZodiacSign, List<Planet>> placements,
   ZodiacSign lagna,
   double s,
@@ -123,7 +130,7 @@ pw.Widget _north(
     12: (0.75, 0.10),
   };
   final houseOfTrueAsc = ((trueAsc.index - lagna.index + 12) % 12) + 1;
-  final ascText = _ascText(ascendantDegree);
+  final ascText = _ascText(l10n, ascendantDegree);
 
   return pw.SizedBox(
     width: s,
@@ -157,12 +164,12 @@ pw.Widget _north(
             () {
               final house = entry.key;
               final (ax, ay) = entry.value;
-              final sign =
-                  ZodiacSign.values[(lagna.index + house - 1) % 12];
+              final sign = ZodiacSign.values[(lagna.index + house - 1) % 12];
               return pw.Positioned(
                 left: ax * s - 29,
                 top: ay * s - 11,
                 child: _houseLabel(
+                  l10n: l10n,
                   signNumber: sign.index + 1,
                   planets: placements[sign] ?? const [],
                   retrograde: retrograde,
@@ -183,6 +190,7 @@ pw.Widget _north(
 /// stroke. An explicit "Asc" label marks the true ascendant's cell
 /// regardless of [lagna].
 pw.Widget _south(
+  AppLocalizations l10n,
   Map<ZodiacSign, List<Planet>> placements,
   ZodiacSign lagna,
   double s,
@@ -207,7 +215,7 @@ pw.Widget _south(
     ZodiacSign.aquarius: (1, 0),
   };
   final cell = s / 4;
-  final ascText = _ascText(ascendantDegree);
+  final ascText = _ascText(l10n, ascendantDegree);
 
   return pw.SizedBox(
     width: s,
@@ -254,9 +262,9 @@ pw.Widget _south(
                   child: pw.Column(
                     mainAxisAlignment: pw.MainAxisAlignment.center,
                     children: [
-                      pw.Text(sign.western.substring(0, 3),
-                          style: pw.TextStyle(
-                              fontSize: 5.5, color: pdfInkSoft)),
+                      pw.Text(sign.abbrLabel(l10n),
+                          style:
+                              pw.TextStyle(fontSize: 5.5, color: pdfInkSoft)),
                       if (sign == trueAsc)
                         pw.Text(ascText,
                             style: pw.TextStyle(
@@ -265,13 +273,11 @@ pw.Widget _south(
                                 fontWeight: pw.FontWeight.bold)),
                       if ((placements[sign] ?? const []).isNotEmpty)
                         pw.Padding(
-                          padding: const pw.EdgeInsets.symmetric(
-                              horizontal: 2),
+                          padding: const pw.EdgeInsets.symmetric(horizontal: 2),
                           child: pw.Text(
-                            _planetLine(placements[sign]!, retrograde),
+                            _planetLine(l10n, placements[sign]!, retrograde),
                             textAlign: pw.TextAlign.center,
-                            style: pw.TextStyle(
-                                fontSize: 8, color: pdfInk),
+                            style: pw.TextStyle(fontSize: 8, color: pdfInk),
                           ),
                         ),
                       if ((padaLabels[sign] ?? const []).isNotEmpty)

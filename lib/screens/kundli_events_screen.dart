@@ -13,6 +13,7 @@ import '../core/theme/theme.dart';
 import '../data/models.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 
 class KundliEventsScreen extends ConsumerWidget {
   const KundliEventsScreen({super.key, required this.kundliId});
@@ -26,7 +27,7 @@ class KundliEventsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Life Events'),
+        title: Text(context.l10n.evTitle),
         actions: [
           if (kundli != null)
             Padding(
@@ -34,7 +35,7 @@ class KundliEventsScreen extends ConsumerWidget {
               child: Center(
                 child: Text(
                   kundli.name,
-                  style: TETheme.mono(size: 11, color: TEColors.inkSoft),
+                  style: KJTheme.mono(size: 11, color: KJColors.inkSoft),
                 ),
               ),
             ),
@@ -43,19 +44,16 @@ class KundliEventsScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openEditor(context, ref),
         icon: const Icon(Icons.add),
-        label: const Text('Add event'),
+        label: Text(context.l10n.evAddEvent),
       ),
       body: eventsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(message: 'Could not load events: $e'),
+        error: (e, _) => EmptyState(message: context.l10n.evLoadError('$e')),
         data: (events) {
           if (events.isEmpty) {
             return EmptyState(
-              message:
-                  'No events recorded yet. Add marriages, births, career '
-                  'moves and other milestones — they power prediction '
-                  'verification and can be shared to Mahakosh.',
-              actionLabel: 'Add event',
+              message: context.l10n.evEmpty,
+              actionLabel: context.l10n.evAddEvent,
               onAction: () => _openEditor(context, ref),
             );
           }
@@ -75,7 +73,7 @@ class KundliEventsScreen extends ConsumerWidget {
                 child: Text(
                   '${events.length} event${events.length == 1 ? '' : 's'}'
                   '${(kundli?.syncEnabled ?? false) ? ' · synced to your account' : ' · on this device'}',
-                  style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
+                  style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
                 ),
               ),
               for (final e in sorted)
@@ -96,7 +94,7 @@ class KundliEventsScreen extends ConsumerWidget {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -109,16 +107,16 @@ class KundliEventsScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete this event?'),
-        content: Text('"${e.label}" will be removed from this kundli.'),
+        title: Text(ctx.l10n.evDeleteTitle),
+        content: Text(ctx.l10n.evDeleteBody(e.label)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(ctx.l10n.cancel)),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child:
-                  Text('Delete', style: TextStyle(color: TEColors.maroon))),
+              child: Text(ctx.l10n.delete,
+                  style: TextStyle(color: KJColors.maroon))),
         ],
       ),
     );
@@ -129,10 +127,12 @@ class KundliEventsScreen extends ConsumerWidget {
   }
 }
 
-String eventDateLabel(KundliEvent e) {
+String eventDateLabel(AppLocalizations l10n, KundliEvent e) {
   switch (e.datePrecision) {
     case EventDatePrecision.age:
-      return e.ageYears == null ? 'Age —' : 'Age ${e.ageYears}';
+      return e.ageYears == null
+          ? l10n.kevAgeUnknown
+          : l10n.kevAge('${e.ageYears}');
     case EventDatePrecision.year:
       return e.eventDate == null ? '—' : '${e.eventDate!.year}';
     case EventDatePrecision.month:
@@ -140,9 +140,7 @@ String eventDateLabel(KundliEvent e) {
           ? '—'
           : DateFormat('MMM yyyy').format(e.eventDate!);
     case EventDatePrecision.exact:
-      return e.eventDate == null
-          ? '—'
-          : TEDate.date(e.eventDate!);
+      return e.eventDate == null ? '—' : KJDate.date(e.eventDate!);
   }
 }
 
@@ -175,11 +173,12 @@ class _EventCard extends StatelessWidget {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(event.label,
-                              style: TETheme.serif(size: 16)),
+                          child:
+                              Text(event.label, style: KJTheme.serif(size: 16)),
                         ),
                         const SizedBox(width: 8),
-                        TETag(eventDateLabel(event), maroon: true),
+                        KJTag(eventDateLabel(context.l10n, event),
+                            maroon: true),
                       ],
                     ),
                     if (event.title != null && event.title!.trim().isNotEmpty)
@@ -195,7 +194,7 @@ class _EventCard extends StatelessWidget {
                         child: Text(
                           event.description!,
                           style: TextStyle(
-                              fontSize: 12.5, color: TEColors.inkSoft),
+                              fontSize: 12.5, color: KJColors.inkSoft),
                         ),
                       ),
                   ],
@@ -203,8 +202,8 @@ class _EventCard extends StatelessWidget {
               ),
               IconButton(
                 icon: Icon(Icons.delete_outline,
-                    size: 20, color: TEColors.inkSoft),
-                tooltip: 'Delete event',
+                    size: 20, color: KJColors.inkSoft),
+                tooltip: context.l10n.kevDeleteEvent,
                 visualDensity: VisualDensity.compact,
                 onPressed: onDelete,
               ),
@@ -277,11 +276,11 @@ class _EventEditorState extends ConsumerState<_EventEditor> {
     // Validate the date/age that matches the chosen precision.
     if (_precision == EventDatePrecision.age) {
       if (ageYears == null || ageYears < 0 || ageYears > 150) {
-        _toast('Enter a valid age in years.');
+        _toast(context.l10n.kevInvalidAge);
         return;
       }
     } else if (_date == null) {
-      _toast('Pick a date for this event.');
+      _toast(context.l10n.kevPickDate);
       return;
     }
 
@@ -333,8 +332,8 @@ class _EventEditorState extends ConsumerState<_EventEditor> {
     }
   }
 
-  void _toast(String m) => ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(m)));
+  void _toast(String m) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
   @override
   Widget build(BuildContext context) {
@@ -347,23 +346,25 @@ class _EventEditorState extends ConsumerState<_EventEditor> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_isEdit ? 'Edit event' : 'Add event',
-                style: TETheme.serif(size: 18)),
+            Text(_isEdit ? context.l10n.evEditEvent : context.l10n.evAddEvent,
+                style: KJTheme.serif(size: 18)),
             const SizedBox(height: 14),
             // Compact dropdown rather than a 12-chip Wrap — mobile screens are
             // small, and 'Other' covers anything outside the curated set.
             DropdownButtonFormField<EventCategory>(
               value: _category,
               isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Category'),
+              decoration: InputDecoration(labelText: context.l10n.evCategory),
               items: [
                 for (final c in EventCategory.values)
-                  DropdownMenuItem(value: c, child: Text(c.label)),
+                  DropdownMenuItem(
+                      value: c,
+                      child: Text(eventCategoryLabel(context.l10n, c))),
               ],
               onChanged: (c) => setState(() => _category = c ?? _category),
             ),
             const SizedBox(height: 16),
-            _label('WHEN'),
+            _label(context.l10n.kevWhen),
             Wrap(
               spacing: 8,
               children: [
@@ -372,7 +373,7 @@ class _EventEditorState extends ConsumerState<_EventEditor> {
                     label: Text(_precisionLabel(p)),
                     selected: _precision == p,
                     labelStyle: TextStyle(
-                        color: _precision == p ? TEColors.paper : TEColors.ink),
+                        color: _precision == p ? KJColors.paper : KJColors.ink),
                     onSelected: (_) => setState(() => _precision = p),
                   ),
               ],
@@ -382,9 +383,9 @@ class _EventEditorState extends ConsumerState<_EventEditor> {
               TextField(
                 controller: _ageController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Age in years',
-                  hintText: 'e.g. 27',
+                decoration: InputDecoration(
+                  labelText: context.l10n.evAgeInYears,
+                  hintText: context.l10n.evAgeHint,
                 ),
               )
             else
@@ -392,23 +393,25 @@ class _EventEditorState extends ConsumerState<_EventEditor> {
                 onPressed: _pickDate,
                 icon: const Icon(Icons.event, size: 18),
                 label: Text(_date == null
-                    ? 'Pick date'
-                    : eventDateLabel(KundliEvent(
-                        id: '',
-                        kundliId: '',
-                        eventDate: _date,
-                        datePrecision: _precision,
-                        createdAt: _date!,
-                        updatedAt: _date!,
-                      ))),
+                    ? context.l10n.evPickDate
+                    : eventDateLabel(
+                        context.l10n,
+                        KundliEvent(
+                          id: '',
+                          kundliId: '',
+                          eventDate: _date,
+                          datePrecision: _precision,
+                          createdAt: _date!,
+                          updatedAt: _date!,
+                        ))),
               ),
             const SizedBox(height: 16),
             TextField(
               controller: _titleController,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Title (optional)',
-                hintText: 'Short headline for this event',
+              decoration: InputDecoration(
+                labelText: context.l10n.evTitleOptional,
+                hintText: context.l10n.evTitleHint,
               ),
             ),
             const SizedBox(height: 12),
@@ -417,23 +420,23 @@ class _EventEditorState extends ConsumerState<_EventEditor> {
               textCapitalization: TextCapitalization.sentences,
               minLines: 1,
               maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Notes (optional)',
+              decoration: InputDecoration(
+                labelText: context.l10n.evNotesOptional,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'If this kundli is ever shared to Mahakosh, event titles and '
-              'notes become visible to researchers — avoid names or other '
-              'identifying details.',
-              style: TextStyle(fontSize: 11.5, color: TEColors.inkSoft),
+              context.l10n.evPrivacyHint,
+              style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
             ),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _saving ? null : _save,
               child: Text(_saving
-                  ? 'Saving…'
-                  : (_isEdit ? 'Save changes' : 'Add event')),
+                  ? context.l10n.kevSaving
+                  : (_isEdit
+                      ? context.l10n.kevSaveChanges
+                      : context.l10n.kevAddEvent)),
             ),
           ],
         ),
@@ -442,10 +445,10 @@ class _EventEditorState extends ConsumerState<_EventEditor> {
   }
 
   String _precisionLabel(EventDatePrecision p) => switch (p) {
-        EventDatePrecision.exact => 'Exact date',
-        EventDatePrecision.month => 'Month',
-        EventDatePrecision.year => 'Year',
-        EventDatePrecision.age => 'Age',
+        EventDatePrecision.exact => context.l10n.kevPrecisionExact,
+        EventDatePrecision.month => context.l10n.kevPrecisionMonth,
+        EventDatePrecision.year => context.l10n.kevPrecisionYear,
+        EventDatePrecision.age => context.l10n.kevPrecisionAge,
       };
 
   Widget _label(String t) => Padding(
@@ -454,7 +457,7 @@ class _EventEditorState extends ConsumerState<_EventEditor> {
             style: TextStyle(
                 fontSize: 10.5,
                 letterSpacing: 1.1,
-                color: TEColors.inkSoft,
+                color: KJColors.inkSoft,
                 fontWeight: FontWeight.w600)),
       );
 }

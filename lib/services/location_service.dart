@@ -59,9 +59,9 @@ class LocationService {
   Future<(String, String, String)> _reverseGeocode(
       double lat, double lon) async {
     try {
-      final uri = Uri.parse(
-          'https://api.bigdatacloud.net/data/reverse-geocode-client'
-          '?latitude=$lat&longitude=$lon&localityLanguage=en');
+      final uri =
+          Uri.parse('https://api.bigdatacloud.net/data/reverse-geocode-client'
+              '?latitude=$lat&longitude=$lon&localityLanguage=en');
       final res = await http.get(uri).timeout(const Duration(seconds: 8));
       if (res.statusCode == 200) {
         final body = jsonDecode(res.body) as Map<String, dynamic>;

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../charts/chart_style.dart';
 import '../charts/chart_view.dart';
@@ -17,10 +17,11 @@ import '../core/astro/transit.dart' as transit;
 import '../core/theme/theme.dart';
 import '../pdf/pdf_chart.dart';
 import '../state/providers.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
 
-const _onOff = <(String, String)>[('off', 'Hide'), ('on', 'Show')];
+String _birthChartTitle(AppLocalizations l10n) => l10n.moduleBirthChartTitle;
 
 class BirthChartModule extends AstroModule {
   const BirthChartModule();
@@ -29,6 +30,7 @@ class BirthChartModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'birth_chart',
         title: 'Birth Chart',
+        localizedTitle: _birthChartTitle,
         icon: Icons.grid_4x4,
         category: 'Chart & Grahas',
         defaultSpan: CardSpan.full,
@@ -39,33 +41,45 @@ class BirthChartModule extends AstroModule {
   // in [chartViewFromProvider]). Legacy saved 'view_from' configs are
   // still honored via [_viewFromSign].
   @override
-  List<ModuleConfigChoice> configChoices() => const [
-        chartStyleChoice,
+  List<ModuleConfigChoice> configChoices(AppLocalizations l10n) => [
+        chartStyleChoice(l10n),
         ModuleConfigChoice(
-          key: 'degrees', label: 'Planet degrees', options: _onOff),
+          key: 'degrees',
+          label: l10n.cfgPlanetDegrees,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
+        ),
         ModuleConfigChoice(
           key: 'karakas',
-          label: 'Jaimini karakas (Sapta)',
-          options: _onOff,
+          label: l10n.cfgJaiminiKarakas,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
         ),
         ModuleConfigChoice(
           key: 'padas',
-          label: 'Jaimini padas (1P–12P)',
-          options: _onOff,
+          label: l10n.cfgJaiminiPadas,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
           defaultValue: 'on', // shown by default, Parashar Light style
         ),
         ModuleConfigChoice(
           key: 'indu',
-          label: 'Indu Lagna mark (IL)',
-          options: _onOff,
+          label: l10n.cfgInduLagna,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
         ),
         ModuleConfigChoice(
           key: 'extras',
-          label: 'Dignity & combustion',
-          options: _onOff,
+          label: l10n.cfgDignityCombustion,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
         ),
         ModuleConfigChoice(
-          key: 'transit', label: 'Current transit overlay', options: _onOff),
+          key: 'transit',
+          label: l10n.cfgTransitOverlay,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
+        ),
       ];
 
   bool _flag(Map<String, dynamic> config, String key) =>
@@ -115,11 +129,14 @@ class BirthChartModule extends AstroModule {
     return s.lagnaSign;
   }
 
-  String _viewFromLabel(String value) {
-    if (value == 'lagna' || value.isEmpty) return 'Lagna';
+  String _viewFromLabel(String value, AppLocalizations l10n) {
+    if (value == 'lagna' || value.isEmpty) return l10n.labelLagna;
     if (value.startsWith('h') && int.tryParse(value.substring(1)) != null) {
-      return 'House ${value.substring(1)}';
+      return l10n.houseN(value.substring(1));
     }
+    // Planet reference points are stored by enum name ('moon', …).
+    final planet = Planet.values.where((p) => p.name == value).firstOrNull;
+    if (planet != null) return planet.label(l10n);
     return value[0].toUpperCase() + value.substring(1);
   }
 
@@ -144,9 +161,8 @@ class BirthChartModule extends AstroModule {
           degreeInSign: showDegrees ? p.degreesInSign : null,
           karaka: karakas[p.planet]?.code,
           dignity: showExtras ? dignityOf(p) : PlanetDignity.none,
-          combust: showExtras && p.planet != Planet.sun
-              ? isCombust(p, sun)
-              : false,
+          combust:
+              showExtras && p.planet != Planet.sun ? isCombust(p, sun) : false,
         ),
     };
   }
@@ -161,7 +177,9 @@ class BirthChartModule extends AstroModule {
     final viewFrom = _viewFromSign(ctx.config, s);
 
     final tokens = _tokens(s,
-        showDegrees: showDegrees, showKarakas: showKarakas, showExtras: showExtras);
+        showDegrees: showDegrees,
+        showKarakas: showKarakas,
+        showExtras: showExtras);
 
     return _BirthChartCardBody(
       kundliId: ctx.kundli.id,
@@ -174,7 +192,8 @@ class BirthChartModule extends AstroModule {
       padaLabels: _overlay(s, ctx.config),
       style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
       viewFromLabel: viewFrom != s.lagnaSign
-          ? _viewFromLabel((ctx.config['view_from'] as String?) ?? 'lagna')
+          ? _viewFromLabel(
+              (ctx.config['view_from'] as String?) ?? 'lagna', context.l10n)
           : null,
     );
   }
@@ -196,7 +215,7 @@ class BirthChartModule extends AstroModule {
           cardView(context, ctx),
           if (showKarakas) ...[
             const SizedBox(height: 20),
-            Text('Jaimini Karakas (Sapta)', style: TETheme.serif(size: 16)),
+            Text(context.l10n.karakaPdfHeader, style: KJTheme.serif(size: 16)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -204,15 +223,15 @@ class BirthChartModule extends AstroModule {
               children: [
                 for (final entry in karakas.entries)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: TEColors.paperAlt,
+                      color: KJColors.paperAlt,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: TEColors.hairline),
+                      border: Border.all(color: KJColors.hairline),
                     ),
                     child: Text(
-                      '${entry.value.code} · ${entry.key.displayName}',
+                      '${entry.value.code} · ${entry.key.label(context.l10n)}',
                       style: const TextStyle(fontSize: 12.5),
                     ),
                   ),
@@ -222,12 +241,13 @@ class BirthChartModule extends AstroModule {
           if (showExtras) ...[
             const SizedBox(height: 16),
             Text(
-              '↑ exalted · ↓ debilitated · ○ own sign · • combust',
-              style: TETheme.mono(size: 11, color: TEColors.inkSoft),
+              context.l10n.bcDignityLegend,
+              style: KJTheme.mono(size: 11, color: KJColors.inkSoft),
             ),
           ],
           const SizedBox(height: 24),
-          Text('Planetary Positions', style: TETheme.serif(size: 18)),
+          Text(context.l10n.modulePlanetaryPositionsTitle,
+              style: KJTheme.serif(size: 18)),
           const SizedBox(height: 8),
           PositionsTable(snapshot: s, showAscendant: true),
         ],
@@ -236,29 +256,32 @@ class BirthChartModule extends AstroModule {
   }
 
   @override
-  String? configSummary(Map<String, dynamic> config) {
+  String? configSummary(Map<String, dynamic> config, AppLocalizations l10n) {
     final parts = <String>[];
     final o = chartStyleFromConfig(config, ChartStyle.north);
-    if (o.isOverridden) parts.add(o.style.displayName);
+    if (o.isOverridden) parts.add(o.style.label(l10n));
     final viewFrom = config['view_from'] as String?;
     if (viewFrom != null && viewFrom != 'lagna') {
-      parts.add('From ${_viewFromLabel(viewFrom)}');
+      parts.add(l10n.summaryFrom(_viewFromLabel(viewFrom, l10n)));
     }
     return parts.isEmpty ? null : parts.join(' · ');
   }
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
+    final l10n = ctx.l10n;
     final s = ctx.snapshot;
     return [
-      pdfSectionHeader('Birth Chart (Rashi / D1)'),
+      pdfSectionHeader(l10n.bcPdfHeader),
       pw.Text(
-        'Lagna: ${s.lagnaSign.western} ${formatDegree(s.ascendant)}',
+        ctx.l10n.bcLagnaLine(
+            s.lagnaSign.label(ctx.l10n), formatDegree(s.ascendant)),
         style: pdfBody(),
       ),
       pw.SizedBox(height: 10),
       pw.Center(
         child: pdfChart(
+          l10n: l10n,
           placements: vargaPlacements(s, Varga.d1),
           lagna: s.lagnaSign,
           style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
@@ -371,12 +394,11 @@ class _BirthChartCardBodyState extends ConsumerState<_BirthChartCardBody> {
           // Tapping the lagna's own house resets — unless a legacy
           // 'view_from' config would then re-rotate, in which case the
           // lagna sign is stored explicitly to override it.
-          onSignSelect: (sign) => ref
-                  .read(chartViewFromProvider(widget.kundliId).notifier)
-                  .state =
-              (sign == s.lagnaSign && widget.viewFrom == s.lagnaSign)
-                  ? null
-                  : sign,
+          onSignSelect: (sign) =>
+              ref.read(chartViewFromProvider(widget.kundliId).notifier).state =
+                  (sign == s.lagnaSign && widget.viewFrom == s.lagnaSign)
+                      ? null
+                      : sign,
         ),
         const SizedBox(height: 10),
         Row(
@@ -384,10 +406,9 @@ class _BirthChartCardBodyState extends ConsumerState<_BirthChartCardBody> {
           children: [
             Expanded(
               child: Text(
-                'Lagna ${s.lagnaSign.western} · ${formatDegree(s.ascendant)}'
-                '${viewFrom != s.lagnaSign ? ' · Viewing from '
-                    '${tapped != null ? tapped.western : widget.viewFromLabel ?? viewFrom.western}' : ''}',
-                style: TETheme.mono(size: 12, color: TEColors.inkSoft),
+                '${context.l10n.bcLagnaShort(s.lagnaSign.label(context.l10n), formatDegree(s.ascendant))}'
+                '${viewFrom != s.lagnaSign ? ' · ${context.l10n.bcViewingFrom(tapped != null ? tapped.label(context.l10n) : widget.viewFromLabel ?? viewFrom.label(context.l10n))}' : ''}',
+                style: KJTheme.mono(size: 12, color: KJColors.inkSoft),
               ),
             ),
             if (viewFrom != s.lagnaSign)
@@ -401,10 +422,10 @@ class _BirthChartCardBodyState extends ConsumerState<_BirthChartCardBody> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   child: Text(
-                    'Reset',
-                    style: TETheme.mono(
+                    context.l10n.bcReset,
+                    style: KJTheme.mono(
                         size: 11.5,
-                        color: TEColors.maroon,
+                        color: KJColors.maroon,
                         weight: FontWeight.w600),
                   ),
                 ),
@@ -415,10 +436,9 @@ class _BirthChartCardBodyState extends ConsumerState<_BirthChartCardBody> {
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Text(
-              'Double-tap or long-press a house to view the chart from it',
-              style: TETheme.mono(
-                  size: 10.5,
-                  color: TEColors.inkSoft.withValues(alpha: 0.7)),
+              context.l10n.bcTapHint,
+              style: KJTheme.mono(
+                  size: 10.5, color: KJColors.inkSoft.withValues(alpha: 0.7)),
             ),
           ),
         if (widget.showTransit) ...[
@@ -432,11 +452,8 @@ class _BirthChartCardBodyState extends ConsumerState<_BirthChartCardBody> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              isLive
-                  ? 'Transit shown in green, live'
-                  : 'Transit shown in green, as of the chosen date/time '
-                      '(past, present, or future)',
-              style: TETheme.mono(size: 10.5, color: TEColors.transit),
+              isLive ? context.l10n.bcTransitLive : context.l10n.bcTransitAsOf,
+              style: KJTheme.mono(size: 10.5, color: KJColors.transit),
             ),
           ),
         ],

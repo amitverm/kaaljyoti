@@ -14,47 +14,48 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:pdf/widgets.dart' as pw;
+import '../pdf/pw.dart' as pw;
 
 import '../core/astro/ayanamsa.dart';
 import '../core/astro/ephemeris_service.dart';
 import '../core/astro/kp.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
 
-/// Two-letter sign abbreviations (Aries → Pisces).
-const List<String> _signAbbr = [
-  'Ar', 'Ta', 'Ge', 'Cn', 'Le', 'Vi', //
-  'Li', 'Sc', 'Sg', 'Cp', 'Aq', 'Pi',
-];
+String _kpCuspsTitle(AppLocalizations l10n) => l10n.moduleKpCuspsTitle;
+String _kpPlanetsTitle(AppLocalizations l10n) => l10n.moduleKpPlanetsTitle;
+String _kpSignificatorsTitle(AppLocalizations l10n) =>
+    l10n.moduleKpSignificatorsTitle;
+String _kpRulingPlanetsTitle(AppLocalizations l10n) =>
+    l10n.moduleKpRulingPlanetsTitle;
 
 const String _kpCategory = 'KP (Krishnamurti)';
 
-String _degInSign(double lon) =>
-    '${formatDegreeInSign(lon)} ${_signAbbr[(lon ~/ 30) % 12]}';
+String _degInSign(double lon, AppLocalizations l10n) =>
+    '${formatDegreeInSign(lon)} '
+    '${ZodiacSign.fromLongitude(lon).abbrLabel(l10n)}';
 
 bool _isKpAyanamsa(AstroSnapshot s) => s.ayanamsaId == 5 || s.ayanamsaId == 45;
 
-Widget _ayanamsaHint(AstroSnapshot s) => Padding(
+Widget _ayanamsaHint(AstroSnapshot s, AppLocalizations l10n) => Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
-        'Ayanamsa: ${Ayanamsa.byId(s.ayanamsaId).name} — KP analysis '
-        'traditionally uses the Krishnamurti ayanamsa (editable on '
-        'the kundli).',
-        style: TextStyle(fontSize: 11.5, color: TEColors.inkSoft),
+        l10n.kpAyanamsaHint(Ayanamsa.byId(s.ayanamsaId).name),
+        style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
       ),
     );
 
 Widget _caption(String t) => Padding(
       padding: const EdgeInsets.only(top: 6),
-      child: Text(t, style: TextStyle(fontSize: 11, color: TEColors.inkSoft)),
+      child: Text(t, style: TextStyle(fontSize: 11, color: KJColors.inkSoft)),
     );
 
 Widget _sectionTitle(String t) => Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(t, style: TETheme.serif(size: 17)),
+      child: Text(t, style: KJTheme.serif(size: 17)),
     );
 
 Widget _head(String t) => Padding(
@@ -63,7 +64,7 @@ Widget _head(String t) => Padding(
           style: TextStyle(
               fontSize: 10.5,
               letterSpacing: 0.6,
-              color: TEColors.inkSoft,
+              color: KJColors.inkSoft,
               fontWeight: FontWeight.w600)),
     );
 
@@ -78,10 +79,10 @@ Widget _cell(String t, {Color? color, bool bold = false}) => Padding(
 
 Widget _cellMono(String t) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Text(t, style: TETheme.mono(size: 12)),
+      child: Text(t, style: KJTheme.mono(size: 12)),
     );
 
-Widget _lordChain(KpLords l, {bool subSub = false}) {
+Widget _lordChain(KpLords l, AppLocalizations l10n, {bool subSub = false}) {
   final parts = [l.signLord, l.starLord, l.subLord, if (subSub) l.subSubLord];
   return Text.rich(
     TextSpan(children: [
@@ -89,36 +90,39 @@ Widget _lordChain(KpLords l, {bool subSub = false}) {
         if (i > 0)
           TextSpan(
             text: '·',
-            style: TextStyle(color: TEColors.hairline, fontSize: 12),
+            style: TextStyle(color: KJColors.hairline, fontSize: 12),
           ),
         TextSpan(
-          text: parts[i].abbr,
-          style: TETheme.mono(size: 12, color: planetInk(parts[i])),
+          text: parts[i].abbrLabel(l10n),
+          style: KJTheme.mono(size: 12, color: planetInk(parts[i])),
         ),
       ],
     ]),
   );
 }
 
-Widget _planetList(List<Planet> planets) => planets.isEmpty
-    ? Text('—', style: TextStyle(fontSize: 12.5, color: TEColors.inkSoft))
-    : Text.rich(
-        TextSpan(children: [
-          for (var i = 0; i < planets.length; i++) ...[
-            if (i > 0) const TextSpan(text: ' '),
-            TextSpan(
-              text: planets[i].abbr,
-              style: TETheme.mono(size: 12, color: planetInk(planets[i])),
-            ),
-          ],
-        ]),
-      );
+Widget _planetList(List<Planet> planets, AppLocalizations l10n) =>
+    planets.isEmpty
+        ? Text('—', style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft))
+        : Text.rich(
+            TextSpan(children: [
+              for (var i = 0; i < planets.length; i++) ...[
+                if (i > 0) const TextSpan(text: ' '),
+                TextSpan(
+                  text: planets[i].abbrLabel(l10n),
+                  style: KJTheme.mono(size: 12, color: planetInk(planets[i])),
+                ),
+              ],
+            ]),
+          );
 
 // ---------------------------------------------------------------------------
 // Shared tables
 // ---------------------------------------------------------------------------
 
-Widget _cuspsTable(KpChart kp, {required bool compact}) => Table(
+Widget _cuspsTable(KpChart kp, AppLocalizations l10n,
+        {required bool compact}) =>
+    Table(
       columnWidths: const {
         0: FlexColumnWidth(0.8),
         1: FlexColumnWidth(1.8),
@@ -126,28 +130,30 @@ Widget _cuspsTable(KpChart kp, {required bool compact}) => Table(
       },
       children: [
         TableRow(children: [
-          _head('Cusp'),
-          _head('Degree'),
-          _head(compact ? 'Sgn·Str·Sub' : 'Sign·Star·Sub·SS'),
+          _head(l10n.kpHeadCusp),
+          _head(l10n.labelDegree),
+          _head(compact ? l10n.kpHeadChainCompact : l10n.kpHeadChainFull),
         ]),
         for (final c in kp.cusps)
           TableRow(
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: TEColors.hairline)),
+              border: Border(top: BorderSide(color: KJColors.hairline)),
             ),
             children: [
               _cell('${c.house}', bold: c.house == 1 || c.house == 10),
-              _cellMono(_degInSign(c.longitude)),
+              _cellMono(_degInSign(c.longitude, l10n)),
               Padding(
                 padding: EdgeInsets.symmetric(vertical: compact ? 4 : 6),
-                child: _lordChain(c.lords, subSub: !compact),
+                child: _lordChain(c.lords, l10n, subSub: !compact),
               ),
             ],
           ),
       ],
     );
 
-Widget _planetsTable(KpChart kp, {required bool compact}) => Table(
+Widget _planetsTable(KpChart kp, AppLocalizations l10n,
+        {required bool compact}) =>
+    Table(
       columnWidths: const {
         0: FlexColumnWidth(1.0),
         1: FlexColumnWidth(1.8),
@@ -156,34 +162,35 @@ Widget _planetsTable(KpChart kp, {required bool compact}) => Table(
       },
       children: [
         TableRow(children: [
-          _head('Graha'),
-          _head('Degree'),
-          _head('Hse'),
-          _head(compact ? 'Sgn·Str·Sub' : 'Sign·Star·Sub·SS'),
+          _head(l10n.labelGraha),
+          _head(l10n.labelDegree),
+          _head(l10n.kpHeadHouseAbbr),
+          _head(compact ? l10n.kpHeadChainCompact : l10n.kpHeadChainFull),
         ]),
         for (final p in kp.planets)
           TableRow(
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: TEColors.hairline)),
+              border: Border(top: BorderSide(color: KJColors.hairline)),
             ),
             children: [
               _cell(
-                '${p.planet.abbr}${p.position.isRetrograde ? ' ℞' : ''}',
+                '${p.planet.abbrLabel(l10n)}'
+                '${p.position.isRetrograde ? ' ℞' : ''}',
                 color: planetInk(p.planet),
                 bold: true,
               ),
-              _cellMono(_degInSign(p.position.longitude)),
+              _cellMono(_degInSign(p.position.longitude, l10n)),
               _cell('${p.house}'),
               Padding(
                 padding: EdgeInsets.symmetric(vertical: compact ? 4 : 6),
-                child: _lordChain(p.lords, subSub: !compact),
+                child: _lordChain(p.lords, l10n, subSub: !compact),
               ),
             ],
           ),
       ],
     );
 
-Widget _significatorsTable(KpChart kp) => Table(
+Widget _significatorsTable(KpChart kp, AppLocalizations l10n) => Table(
       columnWidths: const {
         0: FlexColumnWidth(0.7),
         1: FlexColumnWidth(1.6),
@@ -193,7 +200,7 @@ Widget _significatorsTable(KpChart kp) => Table(
       },
       children: [
         TableRow(children: [
-          _head('Hse'),
+          _head(l10n.kpHeadHouseAbbr),
           _head('A'),
           _head('B'),
           _head('C'),
@@ -202,45 +209,49 @@ Widget _significatorsTable(KpChart kp) => Table(
         for (final s in kp.significators)
           TableRow(
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: TEColors.hairline)),
+              border: Border(top: BorderSide(color: KJColors.hairline)),
             ),
             children: [
               _cell('${s.house}'),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                child: _planetList(s.inStarOfOccupants),
+                child: _planetList(s.inStarOfOccupants, l10n),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                child: _planetList(s.occupants),
+                child: _planetList(s.occupants, l10n),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                child: _planetList(s.inStarOfOwner),
+                child: _planetList(s.inStarOfOwner, l10n),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                child: _planetList([s.owner]),
+                child: _planetList([s.owner], l10n),
               ),
             ],
           ),
       ],
     );
 
-Widget _significationsTable(KpChart kp) => Table(
+Widget _significationsTable(KpChart kp, AppLocalizations l10n) => Table(
       columnWidths: const {
         0: FlexColumnWidth(1.1),
         1: FlexColumnWidth(3.2),
       },
       children: [
-        TableRow(children: [_head('Graha'), _head('Signifies houses')]),
+        TableRow(children: [
+          _head(l10n.labelGraha),
+          _head(l10n.kpHeadSignifiesHouses),
+        ]),
         for (final p in kp.planets)
           TableRow(
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: TEColors.hairline)),
+              border: Border(top: BorderSide(color: KJColors.hairline)),
             ),
             children: [
-              _cell(p.planet.abbr, color: planetInk(p.planet), bold: true),
+              _cell(p.planet.abbrLabel(l10n),
+                  color: planetInk(p.planet), bold: true),
               _cellMono(kp.housesSignifiedBy(p.planet).join(', ')),
             ],
           ),
@@ -251,12 +262,12 @@ Widget _significationsTable(KpChart kp) => Table(
 // Shared PDF helpers
 // ---------------------------------------------------------------------------
 
-String _pdfChain(KpLords l) =>
-    '${l.signLord.abbr} · ${l.starLord.abbr} · ${l.subLord.abbr} · '
-    '${l.subSubLord.abbr}';
+String _pdfChain(KpLords l, AppLocalizations l10n) =>
+    '${l.signLord.abbrLabel(l10n)} · ${l.starLord.abbrLabel(l10n)} · '
+    '${l.subLord.abbrLabel(l10n)} · ${l.subSubLord.abbrLabel(l10n)}';
 
-String _pdfList(List<Planet> ps) =>
-    ps.isEmpty ? '-' : ps.map((p) => p.abbr).join(' ');
+String _pdfList(List<Planet> ps, AppLocalizations l10n) =>
+    ps.isEmpty ? '-' : ps.map((p) => p.abbrLabel(l10n)).join(' ');
 
 pw.Widget _pdfTable(List<String> headers, List<List<String>> data) =>
     pw.TableHelper.fromTextArray(
@@ -286,39 +297,38 @@ class KpCuspsModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'kp',
         title: 'KP · Cusps',
+        localizedTitle: _kpCuspsTitle,
         icon: Icons.adjust,
         category: _kpCategory,
       );
 
   @override
   Widget cardView(BuildContext context, ModuleContext ctx) {
+    final l10n = context.l10n;
     final kp = KpChart(ctx.snapshot);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!_isKpAyanamsa(ctx.snapshot)) _ayanamsaHint(ctx.snapshot),
-        _cuspsTable(kp, compact: true),
-        _caption('Placidus cusps — Sign · Star · Sub lords'),
+        if (!_isKpAyanamsa(ctx.snapshot)) _ayanamsaHint(ctx.snapshot, l10n),
+        _cuspsTable(kp, l10n, compact: true),
+        _caption(l10n.kpCuspsCardCaption),
       ],
     );
   }
 
   @override
   Widget detailView(BuildContext context, ModuleContext ctx) {
+    final l10n = context.l10n;
     final kp = KpChart(ctx.snapshot);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!_isKpAyanamsa(ctx.snapshot)) _ayanamsaHint(ctx.snapshot),
-          _sectionTitle('House Cusps (Placidus)'),
-          _cuspsTable(kp, compact: false),
-          _caption(
-            'KP uses unequal Placidus houses: a matter belongs to the '
-            'cusp whose span it falls in. The cusp SUB LORD is KP\'s '
-            'deciding factor for whether a house\'s matters fructify.',
-          ),
+          if (!_isKpAyanamsa(ctx.snapshot)) _ayanamsaHint(ctx.snapshot, l10n),
+          _sectionTitle(l10n.kpCuspsSectionTitle),
+          _cuspsTable(kp, l10n, compact: false),
+          _caption(l10n.kpCuspsDetailCaption),
         ],
       ),
     );
@@ -326,14 +336,19 @@ class KpCuspsModule extends AstroModule {
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
+    final l10n = ctx.l10n;
     final kp = KpChart(ctx.snapshot);
     return [
-      pdfSectionHeader('KP — House Cusps (Placidus)'),
+      pdfSectionHeader(l10n.kpPdfCuspsHeader),
       _pdfTable(
-        ['Cusp', 'Degree', 'Sign · Star · Sub · SS'],
+        [l10n.kpHeadCusp, l10n.labelDegree, l10n.kpHeadChainFull],
         [
           for (final c in kp.cusps)
-            ['${c.house}', _degInSign(c.longitude), _pdfChain(c.lords)],
+            [
+              '${c.house}',
+              _degInSign(c.longitude, l10n),
+              _pdfChain(c.lords, l10n),
+            ],
         ],
       ),
     ];
@@ -351,40 +366,38 @@ class KpPlanetsModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'kp_planets',
         title: 'KP · Planets',
+        localizedTitle: _kpPlanetsTitle,
         icon: Icons.language,
         category: _kpCategory,
       );
 
   @override
   Widget cardView(BuildContext context, ModuleContext ctx) {
+    final l10n = context.l10n;
     final kp = KpChart(ctx.snapshot);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!_isKpAyanamsa(ctx.snapshot)) _ayanamsaHint(ctx.snapshot),
-        _planetsTable(kp, compact: true),
-        _caption('Sign · Star · Sub lords; houses via Placidus cusps'),
+        if (!_isKpAyanamsa(ctx.snapshot)) _ayanamsaHint(ctx.snapshot, l10n),
+        _planetsTable(kp, l10n, compact: true),
+        _caption(l10n.kpPlanetsCardCaption),
       ],
     );
   }
 
   @override
   Widget detailView(BuildContext context, ModuleContext ctx) {
+    final l10n = context.l10n;
     final kp = KpChart(ctx.snapshot);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!_isKpAyanamsa(ctx.snapshot)) _ayanamsaHint(ctx.snapshot),
-          _sectionTitle('Planet Sub Lords'),
-          _planetsTable(kp, compact: false),
-          _caption(
-            'A planet gives the results of its STAR lord; its SUB lord '
-            'decides whether those results are favourable. Hse is the '
-            'Placidus cusp-span house the planet occupies (can differ '
-            'from its whole-sign house).',
-          ),
+          if (!_isKpAyanamsa(ctx.snapshot)) _ayanamsaHint(ctx.snapshot, l10n),
+          _sectionTitle(l10n.kpPlanetsSectionTitle),
+          _planetsTable(kp, l10n, compact: false),
+          _caption(l10n.kpPlanetsDetailCaption),
         ],
       ),
     );
@@ -392,18 +405,25 @@ class KpPlanetsModule extends AstroModule {
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
+    final l10n = ctx.l10n;
     final kp = KpChart(ctx.snapshot);
     return [
-      pdfSectionHeader('KP — Planet Sub Lords'),
+      pdfSectionHeader(l10n.kpPdfPlanetsHeader),
       _pdfTable(
-        ['Graha', 'Degree', 'House', 'Sign · Star · Sub · SS'],
+        [
+          l10n.labelGraha,
+          l10n.labelDegree,
+          l10n.labelHouse,
+          l10n.kpHeadChainFull,
+        ],
         [
           for (final p in kp.planets)
             [
-              '${p.planet.displayName}${p.position.isRetrograde ? ' (R)' : ''}',
-              _degInSign(p.position.longitude),
+              '${p.planet.label(l10n)}'
+                  '${p.position.isRetrograde ? ' (R)' : ''}',
+              _degInSign(p.position.longitude, l10n),
               '${p.house}',
-              _pdfChain(p.lords),
+              _pdfChain(p.lords, l10n),
             ],
         ],
       ),
@@ -422,51 +442,46 @@ class KpSignificatorsModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'kp_significators',
         title: 'KP · Significators',
+        localizedTitle: _kpSignificatorsTitle,
         icon: Icons.account_tree_outlined,
         category: _kpCategory,
       );
 
   @override
   Widget cardView(BuildContext context, ModuleContext ctx) {
+    final l10n = context.l10n;
     final kp = KpChart(ctx.snapshot);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _significatorsTable(kp),
-        _caption(
-          'A — in star of occupants · B — occupants · C — in star of '
-          'owner · D — owner',
-        ),
+        _significatorsTable(kp, l10n),
+        _caption(l10n.kpSignificatorsLegend),
       ],
     );
   }
 
   @override
   Widget detailView(BuildContext context, ModuleContext ctx) {
+    final l10n = context.l10n;
     final kp = KpChart(ctx.snapshot);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('House Significators'),
+          _sectionTitle(l10n.kpHouseSignificatorsTitle),
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              'A — in star of occupants · B — occupants · '
-              'C — in star of owner · D — owner (A is strongest)',
-              style: TextStyle(fontSize: 11.5, color: TEColors.inkSoft),
+              l10n.kpSignificatorsLegendDetail,
+              style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
             ),
           ),
-          _significatorsTable(kp),
+          _significatorsTable(kp, l10n),
           const SizedBox(height: 20),
-          _sectionTitle('Planet Significations'),
-          _significationsTable(kp),
-          _caption(
-            'The reverse view: every house each planet speaks for. An '
-            'event fructifies when its dasha lords signify the '
-            'relevant houses.',
-          ),
+          _sectionTitle(l10n.kpPlanetSignificationsTitle),
+          _significationsTable(kp, l10n),
+          _caption(l10n.kpSignificationsCaption),
         ],
       ),
     );
@@ -474,35 +489,36 @@ class KpSignificatorsModule extends AstroModule {
 
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
+    final l10n = ctx.l10n;
     final kp = KpChart(ctx.snapshot);
     return [
-      pdfSectionHeader('KP — House Significators (A / B / C / D)'),
+      pdfSectionHeader(l10n.kpPdfSignificatorsHeader),
       _pdfTable(
         [
-          'House',
-          'A — star of occupants',
-          'B — occupants',
-          'C — star of owner',
-          'D — owner',
+          l10n.labelHouse,
+          l10n.kpHeadAStarOfOccupants,
+          l10n.kpHeadBOccupants,
+          l10n.kpHeadCStarOfOwner,
+          l10n.kpHeadDOwner,
         ],
         [
           for (final s in kp.significators)
             [
               '${s.house}',
-              _pdfList(s.inStarOfOccupants),
-              _pdfList(s.occupants),
-              _pdfList(s.inStarOfOwner),
-              s.owner.abbr,
+              _pdfList(s.inStarOfOccupants, l10n),
+              _pdfList(s.occupants, l10n),
+              _pdfList(s.inStarOfOwner, l10n),
+              s.owner.abbrLabel(l10n),
             ],
         ],
       ),
-      pdfSectionHeader('KP — Planet Significations'),
+      pdfSectionHeader(l10n.kpPdfSignificationsHeader),
       _pdfTable(
-        ['Graha', 'Signifies houses'],
+        [l10n.labelGraha, l10n.kpHeadSignifiesHouses],
         [
           for (final p in kp.planets)
             [
-              p.planet.displayName,
+              p.planet.label(l10n),
               kp.housesSignifiedBy(p.planet).join(', '),
             ],
         ],
@@ -522,6 +538,7 @@ class KpRulingPlanetsModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'kp_ruling',
         title: 'KP · Ruling Planets',
+        localizedTitle: _kpRulingPlanetsTitle,
         icon: Icons.schedule,
         category: _kpCategory,
       );
@@ -537,14 +554,9 @@ class KpRulingPlanetsModule extends AstroModule {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _sectionTitle('Ruling Planets · now'),
+            _sectionTitle(context.l10n.kpRulingPlanetsNowTitle),
             _RulingPlanetsView(snapshot: ctx.snapshot, compact: false),
-            _caption(
-              'KP horary: the lords ruling the moment a question is '
-              'judged. Events tend to fructify when the ruling planets '
-              'overlap the significators of the relevant houses. '
-              'Reopen this view to refresh.',
-            ),
+            _caption(context.l10n.kpRulingPlanetsCaption),
           ],
         ),
       );
@@ -567,6 +579,7 @@ class _RulingPlanetsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final KpRulingPlanets rp;
     try {
       final eph = EphemerisService.instance;
@@ -587,8 +600,8 @@ class _RulingPlanetsView extends StatelessWidget {
       );
     } catch (_) {
       return Text(
-        'Ruling planets unavailable (calculations not ready).',
-        style: TextStyle(fontSize: 12.5, color: TEColors.inkSoft),
+        l10n.kpRulingPlanetsUnavailable,
+        style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft),
       );
     }
 
@@ -600,17 +613,15 @@ class _RulingPlanetsView extends StatelessWidget {
               SizedBox(
                 width: compact ? 104 : 120,
                 child: Text(label,
-                    style:
-                        TextStyle(fontSize: 12.5, color: TEColors.inkSoft)),
+                    style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft)),
               ),
               Expanded(
                 child: Wrap(
                   spacing: 8,
                   children: [
                     for (final p in ps)
-                      Text(compact ? p.abbr : p.displayName,
-                          style:
-                              TETheme.mono(size: 12.5, color: planetInk(p))),
+                      Text(compact ? p.abbrLabel(l10n) : p.label(l10n),
+                          style: KJTheme.mono(size: 12.5, color: planetInk(p))),
                   ],
                 ),
               ),
@@ -621,17 +632,20 @@ class _RulingPlanetsView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        row('Day lord', [rp.dayLord]),
-        row('Lagna Sgn·Str·Sub',
+        row(l10n.kpDayLord, [rp.dayLord]),
+        row(l10n.kpLagnaChainLabel,
             [rp.lagnaSignLord, rp.lagnaStarLord, rp.lagnaSubLord]),
-        row('Moon Sgn·Str·Sub',
+        row(l10n.kpMoonChainLabel,
             [rp.moonSignLord, rp.moonStarLord, rp.moonSubLord]),
-        row('Distinct RP', rp.distinct),
+        row(l10n.kpDistinctRp, rp.distinct),
         const SizedBox(height: 4),
         Text(
-          'Now, at ${snapshot.birth.placeName.isEmpty ? 'the birth place' : snapshot.birth.placeName}. '
-          'Day lord follows the civil weekday.',
-          style: TextStyle(fontSize: 11, color: TEColors.inkSoft),
+          l10n.kpRulingPlanetsFootnote(
+            snapshot.birth.placeName.isEmpty
+                ? l10n.kpBirthPlaceFallback
+                : snapshot.birth.placeName,
+          ),
+          style: TextStyle(fontSize: 11, color: KJColors.inkSoft),
         ),
       ],
     );

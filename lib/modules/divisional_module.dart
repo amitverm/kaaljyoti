@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:pdf/widgets.dart' as pw;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../pdf/pw.dart' as pw;
 
+import '../charts/chart_style.dart';
 import '../charts/chart_view.dart';
 import '../core/astro/divisional.dart';
 import '../core/astro/jaimini_pada.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
 import '../pdf/pdf_chart.dart';
+import '../state/providers.dart';
+import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
+
+String _divisionalChartTitle(AppLocalizations l10n) =>
+    l10n.moduleDivisionalChartTitle;
 
 /// Configurable divisional chart. Per-instance config picks the varga
 /// ({'varga': 'd9'}), so duplicating this widget three times can show
@@ -21,9 +28,10 @@ class DivisionalChartModule extends AstroModule {
   ModuleMeta get meta => const ModuleMeta(
         id: 'divisional',
         title: 'Divisional Chart',
+        localizedTitle: _divisionalChartTitle,
         icon: Icons.grid_view,
-        category: 'Divisional Charts',
-        defaultSpan: CardSpan.half,
+        category: 'Chart & Grahas',
+        defaultSpan: CardSpan.full,
       );
 
   Varga _varga(Map<String, dynamic> config) =>
@@ -45,26 +53,27 @@ class DivisionalChartModule extends AstroModule {
       chartStyleFromConfig(ctx.config, ctx.chartStyle);
 
   @override
-  List<ModuleConfigChoice> configChoices() => [
+  List<ModuleConfigChoice> configChoices(AppLocalizations l10n) => [
         ModuleConfigChoice(
           key: 'varga',
-          label: 'Divisional chart',
+          label: l10n.cfgDivisionalChart,
           options: [
             for (final v in Varga.values.where((v) => v != Varga.d1))
-              (v.name, '${v.displayName} — ${v.theme}'),
+              (v.name, v.displayLabel(l10n)),
           ],
         ),
-        chartStyleChoice,
-        const ModuleConfigChoice(
+        chartStyleChoice(l10n),
+        ModuleConfigChoice(
           key: 'padas',
-          label: 'Jaimini padas (1P–12P)',
-          options: [('off', 'Hide'), ('on', 'Show')],
+          label: l10n.cfgJaiminiPadas,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
           defaultValue: 'on', // shown by default, Parashar Light style
         ),
       ];
 
   @override
-  String? configSummary(Map<String, dynamic> config) =>
+  String? configSummary(Map<String, dynamic> config, AppLocalizations l10n) =>
       _varga(config).code;
 
   @override
@@ -84,22 +93,12 @@ class DivisionalChartModule extends AstroModule {
   Widget cardView(BuildContext context, ModuleContext ctx) {
     final varga = _varga(ctx.config);
     final s = ctx.snapshot;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ChartView(
-          placements: vargaPlacements(s, varga),
-          lagna: vargaLagna(s, varga),
-          style: _style(ctx).style,
-          padaLabels: _padaLabels(s, varga, ctx.config),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          '${varga.displayName} · ${varga.theme}\n'
-          '${varga.code} Lagna ${vargaLagna(s, varga).western}',
-          style: TETheme.mono(size: 11.5, color: TEColors.inkSoft),
-        ),
-      ],
+    return _DivisionalChartBody(
+      viewKey: '${ctx.kundli.id}#${varga.code}',
+      varga: varga,
+      snapshot: s,
+      style: _style(ctx).style,
+      padaLabels: _padaLabels(s, varga, ctx.config),
     );
   }
 
@@ -107,15 +106,17 @@ class DivisionalChartModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final varga = _varga(ctx.config);
     final s = ctx.snapshot;
+    final l10n = ctx.l10n;
     return [
-      pdfSectionHeader('${varga.displayName} (${varga.theme})'),
+      pdfSectionHeader(varga.displayLabel(l10n)),
       pw.Text(
-        '${varga.code} Lagna: ${vargaLagna(s, varga).western}',
+        l10n.vargaLagnaLine(varga.code, vargaLagna(s, varga).label(l10n)),
         style: pdfBody(),
       ),
       pw.SizedBox(height: 10),
       pw.Center(
         child: pdfChart(
+          l10n: l10n,
           placements: vargaPlacements(s, varga),
           lagna: vargaLagna(s, varga),
           style: _style(ctx).style,
@@ -125,5 +126,51 @@ class DivisionalChartModule extends AstroModule {
       ),
       pw.SizedBox(height: 6),
     ];
+  }
+}
+
+/// Chart body with the Birth-Chart-style double-tap rotation, keyed
+/// per (kundli, varga) so each divisional chart rotates independently.
+class _DivisionalChartBody extends ConsumerWidget {
+  const _DivisionalChartBody({
+    required this.viewKey,
+    required this.varga,
+    required this.snapshot,
+    required this.style,
+    required this.padaLabels,
+  });
+
+  final String viewKey;
+  final Varga varga;
+  final AstroSnapshot snapshot;
+  final ChartStyle style;
+  final Map<ZodiacSign, List<String>> padaLabels;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = snapshot;
+    final lagna = vargaLagna(s, varga);
+    final viewFrom = ref.watch(widgetViewFromProvider(viewKey)) ?? lagna;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ChartView(
+          placements: vargaPlacements(s, varga),
+          lagna: viewFrom,
+          trueAscendantSign: lagna,
+          style: style,
+          padaLabels: padaLabels,
+          onSignSelect: (sign) => ref
+              .read(widgetViewFromProvider(viewKey).notifier)
+              .state = sign == lagna ? null : sign,
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '${varga.displayLabel(context.l10n)}\n'
+          '${context.l10n.vargaLagnaLine(varga.code, lagna.label(context.l10n))}',
+          style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
+        ),
+      ],
+    );
   }
 }

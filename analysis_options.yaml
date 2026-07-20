@@ -7,3 +7,10 @@ linter:
 analyzer:
   exclude:
     - "**/*.g.dart"
+  errors:
+    # Every user-facing string now goes through context.l10n, which is an
+    # InheritedWidget lookup — so a post-await `context.l10n` in a catch
+    # block throws on a popped screen and swallows the very error it was
+    # reporting. That is a crash, not a style nit; capture l10n and the
+    # messenger before the first await instead.
+    use_build_context_synchronously: error

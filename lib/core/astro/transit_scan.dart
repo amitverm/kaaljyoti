@@ -23,14 +23,26 @@ double _norm180(double x) {
   return n > 180 ? n - 360 : n;
 }
 
-/// Production sampler for [planet]. Uses the shared service; one call
-/// computes all bodies, which is fast enough for scan workloads
-/// (native sweph, ~hundreds of samples per year-long scan).
+/// Production sampler for [planet] — single-body ephemeris call, and
+/// memoized per instant: scans walk the SAME coarse grid once per
+/// crossing target (12 sign boundaries, plus every drishti × natal
+/// point in [scanGochar]), so without the cache a year-long scan
+/// recomputes identical samples ~50×. Together with the single-body
+/// call (was: all nine bodies per sample) this took the dashboard's
+/// first-mount scan load from ~10^6 swe_calc calls to ~10^3 — the
+/// Sentry KAALJYOTI-PROD-4/5 main-thread hangs. Results are
+/// bit-identical: same values, just not recomputed.
+///
+/// The cache lives inside the closure — hold one sampler per scan, not
+/// globally (a global cache would pin every instant ever sampled).
 LongitudeAt ephemerisLongitude(Planet planet, int ayanamsaId) {
   final svc = EphemerisService.instance;
-  return (t) => svc
-      .planetPositions(svc.julianDayUt(t.toUtc()), ayanamsaId)[planet]!
-      .longitude;
+  final cache = <int, double>{};
+  return (t) {
+    final utc = t.toUtc();
+    return cache[utc.millisecondsSinceEpoch] ??=
+        svc.planetLongitude(svc.julianDayUt(utc), ayanamsaId, planet);
+  };
 }
 
 /// All instants in [from, to] where [f] crosses [target] (either
@@ -157,7 +169,14 @@ class TransitEvent {
 
 /// Forward angle (degrees) of each Vedic drishti house from the planet.
 const Map<int, double> drishtiAngle = {
-  1: 0, 3: 60, 4: 90, 5: 120, 7: 180, 8: 210, 9: 240, 10: 270,
+  1: 0,
+  3: 60,
+  4: 90,
+  5: 120,
+  7: 180,
+  8: 210,
+  9: 240,
+  10: 270,
 };
 
 /// Full drishti sets: Saturn 3/7/10, Jupiter 5/7/9, Mars 4/7/8, Rahu/
@@ -173,7 +192,11 @@ List<int> drishtisOf(Planet p) => switch (p) {
 
 /// Slow movers whose hits are consultation-worthy by default.
 const List<Planet> kGocharDefaultPlanets = [
-  Planet.saturn, Planet.jupiter, Planet.rahu, Planet.ketu, Planet.mars,
+  Planet.saturn,
+  Planet.jupiter,
+  Planet.rahu,
+  Planet.ketu,
+  Planet.mars,
 ];
 
 /// Scan [from, to] for ingresses of [planets] and their drishti hits on
@@ -188,8 +211,7 @@ List<TransitEvent> scanGochar({
   List<Planet> planets = kGocharDefaultPlanets,
   LongitudeAt Function(Planet)? samplerFor,
 }) {
-  final sampler =
-      samplerFor ?? (p) => ephemerisLongitude(p, ayanamsaId);
+  final sampler = samplerFor ?? (p) => ephemerisLongitude(p, ayanamsaId);
   final out = <TransitEvent>[];
   for (final planet in planets) {
     final f = sampler(planet);
@@ -198,8 +220,8 @@ List<TransitEvent> scanGochar({
       for (final t in findLongitudeCrossings(f, k * 30.0, from, to)) {
         // Sample just after to know the sign actually entered
         // (a retrograde crossing "enters" the earlier sign).
-        final after = ZodiacSign.fromLongitude(
-            f(t.add(const Duration(hours: 6))));
+        final after =
+            ZodiacSign.fromLongitude(f(t.add(const Duration(hours: 6))));
         out.add(TransitEvent(
           planet: planet,
           kind: TransitEventKind.ingress,
@@ -212,10 +234,9 @@ List<TransitEvent> scanGochar({
     // → crossing target = natal - angle.
     for (final d in drishtisOf(planet)) {
       final angle = drishtiAngle[d]!;
-      for (final MapEntry(key: label, value: natal)
-          in natalPoints.entries) {
-        for (final t in findLongitudeCrossings(
-            f, _norm360(natal - angle), from, to)) {
+      for (final MapEntry(key: label, value: natal) in natalPoints.entries) {
+        for (final t
+            in findLongitudeCrossings(f, _norm360(natal - angle), from, to)) {
           out.add(TransitEvent(
             planet: planet,
             kind: TransitEventKind.aspect,
@@ -235,17 +256,25 @@ List<TransitEvent> scanGochar({
 // Sade Sati
 // ---------------------------------------------------------------------------
 
+/// The phase of a Sade Sati occupancy, by Saturn's position relative to
+/// the natal Moon: [rising] 12th, [peak] over the Moon, [setting] 2nd,
+/// and [smallPanoti] the 4th/8th dhaiya (which is not part of the
+/// seven-and-a-half years proper — modules filter on it).
+///
+/// Identity, not display text: modules filter, order, and colour by
+/// phase, so this must not be a string the presentation layer
+/// translates out from under them.
+enum SadeSatiPhaseKind { rising, peak, setting, smallPanoti }
+
 class SadeSatiPhase {
   const SadeSatiPhase({
-    required this.label,
+    required this.kind,
     required this.sign,
     required this.start,
     required this.end,
   });
 
-  /// 'Rising' (12th from Moon), 'Peak' (over Moon), 'Setting' (2nd),
-  /// or 'Small Panoti' (4th/8th from Moon — dhaiya).
-  final String label;
+  final SadeSatiPhaseKind kind;
   final ZodiacSign sign;
   final DateTime start;
   final DateTime end;
@@ -268,20 +297,20 @@ List<SadeSatiPhase> sadeSatiPhases({
   // 5-day steps are ample: Saturn needs ~2.5 months to cross a degree.
   final occ = signOccupancy(f, from, to, step: const Duration(days: 5));
   final m = moonSign.index;
-  String? labelFor(int signIdx) {
+  SadeSatiPhaseKind? kindFor(int signIdx) {
     final rel = (signIdx - m + 12) % 12;
     return switch (rel) {
-      11 => 'Rising',
-      0 => 'Peak',
-      1 => 'Setting',
-      3 || 7 => 'Small Panoti',
+      11 => SadeSatiPhaseKind.rising,
+      0 => SadeSatiPhaseKind.peak,
+      1 => SadeSatiPhaseKind.setting,
+      3 || 7 => SadeSatiPhaseKind.smallPanoti,
       _ => null,
     };
   }
 
   return [
     for (final o in occ)
-      if (labelFor(o.sign.index) case final l?)
-        SadeSatiPhase(label: l, sign: o.sign, start: o.start, end: o.end),
+      if (kindFor(o.sign.index) case final k?)
+        SadeSatiPhase(kind: k, sign: o.sign, start: o.start, end: o.end),
   ];
 }

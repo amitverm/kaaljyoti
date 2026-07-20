@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import 'chart_tuning.dart';
 import 'planet_token.dart';
 
@@ -24,29 +27,77 @@ List<NorthHouse> northHouseGeometry(Rect rect) {
       rect.height * h);
   return [
     // 1: top diamond
-    (centroid: at(0.50, 0.25), vertex: at(0.50, 0.50), content: box(0.38, 0.14, 0.24, 0.22)),
+    (
+      centroid: at(0.50, 0.25),
+      vertex: at(0.50, 0.50),
+      content: box(0.38, 0.14, 0.24, 0.22)
+    ),
     // 2: top-left edge triangle — content hugs the wide top edge
-    (centroid: at(0.25, 1 / 12), vertex: at(0.25, 0.25), content: box(0.145, 0.025, 0.21, 0.11)),
+    (
+      centroid: at(0.25, 1 / 12),
+      vertex: at(0.25, 0.25),
+      content: box(0.145, 0.025, 0.21, 0.11)
+    ),
     // 3: left-top corner triangle — content stacks along the tall left edge
-    (centroid: at(1 / 12, 0.25), vertex: at(0.25, 0.25), content: box(0.02, 0.14, 0.115, 0.22)),
+    (
+      centroid: at(1 / 12, 0.25),
+      vertex: at(0.25, 0.25),
+      content: box(0.02, 0.14, 0.115, 0.22)
+    ),
     // 4: left diamond
-    (centroid: at(0.25, 0.50), vertex: at(0.50, 0.50), content: box(0.13, 0.39, 0.24, 0.22)),
+    (
+      centroid: at(0.25, 0.50),
+      vertex: at(0.50, 0.50),
+      content: box(0.13, 0.39, 0.24, 0.22)
+    ),
     // 5: left-bottom corner triangle
-    (centroid: at(1 / 12, 0.75), vertex: at(0.25, 0.75), content: box(0.02, 0.64, 0.115, 0.22)),
+    (
+      centroid: at(1 / 12, 0.75),
+      vertex: at(0.25, 0.75),
+      content: box(0.02, 0.64, 0.115, 0.22)
+    ),
     // 6: bottom-left edge triangle
-    (centroid: at(0.25, 11 / 12), vertex: at(0.25, 0.75), content: box(0.145, 0.865, 0.21, 0.11)),
+    (
+      centroid: at(0.25, 11 / 12),
+      vertex: at(0.25, 0.75),
+      content: box(0.145, 0.865, 0.21, 0.11)
+    ),
     // 7: bottom diamond
-    (centroid: at(0.50, 0.75), vertex: at(0.50, 0.50), content: box(0.38, 0.64, 0.24, 0.22)),
+    (
+      centroid: at(0.50, 0.75),
+      vertex: at(0.50, 0.50),
+      content: box(0.38, 0.64, 0.24, 0.22)
+    ),
     // 8: bottom-right edge triangle
-    (centroid: at(0.75, 11 / 12), vertex: at(0.75, 0.75), content: box(0.645, 0.865, 0.21, 0.11)),
+    (
+      centroid: at(0.75, 11 / 12),
+      vertex: at(0.75, 0.75),
+      content: box(0.645, 0.865, 0.21, 0.11)
+    ),
     // 9: right-bottom corner triangle
-    (centroid: at(11 / 12, 0.75), vertex: at(0.75, 0.75), content: box(0.865, 0.64, 0.115, 0.22)),
+    (
+      centroid: at(11 / 12, 0.75),
+      vertex: at(0.75, 0.75),
+      content: box(0.865, 0.64, 0.115, 0.22)
+    ),
     // 10: right diamond
-    (centroid: at(0.75, 0.50), vertex: at(0.50, 0.50), content: box(0.63, 0.39, 0.24, 0.22)),
+    (
+      centroid: at(0.75, 0.50),
+      vertex: at(0.50, 0.50),
+      content: box(0.63, 0.39, 0.24, 0.22)
+    ),
     // 11: right-top corner triangle
-    (centroid: at(11 / 12, 0.25), vertex: at(0.75, 0.25), content: box(0.865, 0.14, 0.115, 0.22)),
+    (
+      centroid: at(11 / 12, 0.25),
+      vertex: at(0.75, 0.25),
+      content: box(0.865, 0.14, 0.115, 0.22)
+    ),
     // 12: top-right edge triangle
-    (centroid: at(0.75, 1 / 12), vertex: at(0.75, 0.25), content: box(0.645, 0.025, 0.21, 0.11)),
+    (
+      centroid: at(0.75, 1 / 12),
+      vertex: at(0.75, 0.25),
+      content: box(0.645, 0.025, 0.21, 0.11)
+    ),
   ];
 }
 
@@ -72,8 +123,7 @@ bool _inPoly(List<(double, double)> poly, double x, double y) {
   for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
     final (xi, yi) = poly[i];
     final (xj, yj) = poly[j];
-    if ((yi > y) != (yj > y) &&
-        x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
+    if ((yi > y) != (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
       inside = !inside;
     }
   }
@@ -99,7 +149,7 @@ int? northHouseHit(Size size, Offset pos) {
 /// from", instead of clinging to the top diamond.
 void drawNorthFrame(Canvas canvas, Size size, Rect rect, double strokeW,
     {int tintHouse = 1}) {
-  canvas.drawRect(Offset.zero & size, Paint()..color = TEColors.paper);
+  canvas.drawRect(Offset.zero & size, Paint()..color = KJColors.paper);
   final poly = _northPolys[(tintHouse - 1).clamp(0, 11)];
   final tintPath = Path()
     ..moveTo(rect.left + rect.width * poly.first.$1,
@@ -110,10 +160,10 @@ void drawNorthFrame(Canvas canvas, Size size, Rect rect, double strokeW,
   tintPath.close();
   canvas.drawPath(
     tintPath,
-    Paint()..color = TEColors.maroon.withValues(alpha: 0.06),
+    Paint()..color = KJColors.maroon.withValues(alpha: 0.06),
   );
   final line = Paint()
-    ..color = TEColors.ink
+    ..color = KJColors.ink
     ..style = PaintingStyle.stroke
     ..strokeWidth = strokeW
     ..strokeJoin = StrokeJoin.miter;
@@ -144,6 +194,7 @@ void drawNorthFrame(Canvas canvas, Size size, Rect rect, double strokeW,
 /// given) at [trueAscendantSign]'s house, independent of [lagna].
 class NorthChartPainter extends CustomPainter {
   NorthChartPainter({
+    required this.l10n,
     required this.placements,
     required this.lagna,
     this.retrograde = const {},
@@ -155,8 +206,15 @@ class NorthChartPainter extends CustomPainter {
     this.transitPlacements,
     this.transitRetrograde = const {},
     this.padaLabels = const {},
+    this.houseData,
+    this.ascendantHouse,
+    this.boundaryLabels,
     // Repaint live when the chart text settings change.
   }) : super(repaint: chartTuning);
+
+  /// Localized strings for the graha/rashi tokens. A painter has no
+  /// BuildContext at paint time, so the host widget injects it.
+  final AppLocalizations l10n;
 
   final Map<ZodiacSign, List<Planet>> placements;
   final ZodiacSign lagna;
@@ -173,18 +231,41 @@ class NorthChartPainter extends CustomPainter {
   /// grey trailing line in each house (Parashar Light style).
   final Map<ZodiacSign, List<String>> padaLabels;
 
+  /// Cusp-bounded (chalit) mode: when set, drawn house n takes ITS OWN
+  /// sign number, planets, and grey annotation lines ([notes] — e.g.
+  /// madhya/sandhi degrees) from `houseData[n-1]` instead of deriving
+  /// them from [lagna]/[placements]. Necessary because chalit houses
+  /// are not sign-aligned — two houses may share a sign and a sign may
+  /// host no house, which a Map<ZodiacSign, …> cannot express. The
+  /// sign-keyed overlays (transit, padas) don't apply in this mode;
+  /// [notes] renders through the same grey channel padas use.
+  final List<({int signNumber, List<Planet> planets, List<String> notes})>?
+      houseData;
+
+  /// Chalit mode only: which DRAWN house carries the "As" marker and
+  /// the ascendant tint (1-based; house 1 unless rotated by cusp).
+  final int? ascendantHouse;
+
+  /// Chalit mode only: a label painted ON the dividing line at the
+  /// START of each drawn house (index 0 = the boundary opening house 1)
+  /// — the bhava sandhi degrees, sitting on the actual line they
+  /// describe. Each pair of adjacent house polygons shares exactly one
+  /// edge; the label centers on that edge's midpoint.
+  final List<String>? boundaryLabels;
+
   @override
   void paint(Canvas canvas, Size size) {
     final base = size.shortestSide;
     final strokeW = (base * 0.004).clamp(1.0, 1.6).toDouble();
     final rect = (Offset.zero & size).deflate(strokeW / 2);
     final trueAsc = trueAscendantSign ?? lagna;
-    final houseOfTrueAsc = (trueAsc.index - lagna.index + 12) % 12;
+    final houseOfTrueAsc = houseData != null
+        ? (ascendantHouse ?? 1) - 1
+        : (trueAsc.index - lagna.index + 12) % 12;
 
     // Ground, Ascendant-house tint, frame, diagonals, inner diamond —
     // shared with the bindu (ashtakavarga) painter.
-    drawNorthFrame(canvas, size, rect, strokeW,
-        tintHouse: houseOfTrueAsc + 1);
+    drawNorthFrame(canvas, size, rect, strokeW, tintHouse: houseOfTrueAsc + 1);
 
     // Shared house geometry: sign numbers sit between vertex and
     // centroid; planet stacks are fitted inside each house's shape-
@@ -198,7 +279,8 @@ class NorthChartPainter extends CustomPainter {
 
     for (var n = 1; n <= 12; n++) {
       final h = houses[n - 1];
-      final signNumber = ((lagna.index + n - 1) % 12) + 1;
+      final signNumber =
+          houseData?[n - 1].signNumber ?? ((lagna.index + n - 1) % 12) + 1;
       final sign = ZodiacSign.values[signNumber - 1];
       final isTrueAsc = (n - 1) == houseOfTrueAsc;
 
@@ -208,9 +290,9 @@ class NorthChartPainter extends CustomPainter {
       final signTp = TextPainter(
         text: TextSpan(
           text: '$signNumber',
-          style: TETheme.mono(
+          style: KJTheme.mono(
             size: signSize,
-            color: isTrueAsc ? TEColors.maroon : TEColors.inkSoft,
+            color: isTrueAsc ? KJColors.maroon : KJColors.inkSoft,
             weight: isTrueAsc ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
@@ -224,9 +306,13 @@ class NorthChartPainter extends CustomPainter {
       // ascendant stacked as the first line of its house, and the whole
       // block fitted inside the house's shape-aware content rect so it
       // stays clear of the diagonals and the sign number.
-      final planets = placements[sign] ?? const <Planet>[];
-      final transitPlanets = transitPlacements?[sign] ?? const <Planet>[];
-      final padas = padaLabels[sign] ?? const <String>[];
+      final planets =
+          houseData?[n - 1].planets ?? placements[sign] ?? const <Planet>[];
+      final transitPlanets = houseData != null
+          ? const <Planet>[]
+          : transitPlacements?[sign] ?? const <Planet>[];
+      final padas =
+          houseData?[n - 1].notes ?? padaLabels[sign] ?? const <String>[];
       final deg = ascendantDegree;
       final ascLabel = isTrueAsc
           ? (deg != null ? 'As ${formatDegreeInSign(deg)}' : 'As')
@@ -239,7 +325,8 @@ class NorthChartPainter extends CustomPainter {
       }
       final planetTokens = [
         for (final p in planets)
-          tokens[p] ?? PlanetToken(planet: p, retrograde: retrograde[p] ?? false),
+          tokens[p] ??
+              PlanetToken(planet: p, retrograde: retrograde[p] ?? false),
       ];
       // Settings > Chart text: "Text area within house" inflates the
       // conservative content rects (the narrow corner/edge triangles
@@ -250,6 +337,7 @@ class NorthChartPainter extends CustomPainter {
         height: h.content.height * tune.contentInflate,
       );
       final layout = HouseLabelLayout(
+        l10n: l10n,
         tokens: planetTokens,
         transitPlanets: transitPlanets,
         transitRetrograde: transitRetrograde,
@@ -263,6 +351,61 @@ class NorthChartPainter extends CustomPainter {
       );
       layout.paint(canvas, content.center);
     }
+
+    // Sandhi labels ALONG and ON the dividing lines (chalit mode). The
+    // boundary opening drawn house i+1 is the edge its polygon shares
+    // with the previous house's polygon; the label is rotated parallel
+    // to that edge and sits centered ON it over a paper wash — a label
+    // nudged into a house reads as house data, but a sandhi belongs to
+    // the boundary itself.
+    final boundaries = boundaryLabels;
+    if (houseData != null && boundaries != null) {
+      final labelSize = base * 0.030 * tune.annotationScale;
+      for (var i = 0; i < 12; i++) {
+        final label = boundaries[i];
+        if (label.isEmpty) continue;
+        final prev = _northPolys[(i + 11) % 12];
+        final own = _northPolys[i];
+        final shared = [
+          for (final v in own)
+            if (prev.contains(v)) v
+        ];
+        if (shared.length < 2) continue;
+        Offset at((double, double) v) => Offset(
+            rect.left + rect.width * v.$1, rect.top + rect.height * v.$2);
+        final p1 = at(shared[0]);
+        final p2 = at(shared[1]);
+        final mid = (p1 + p2) / 2;
+        // Angle of the edge, normalized so text is never upside down.
+        var angle = math.atan2(p2.dy - p1.dy, p2.dx - p1.dx);
+        if (angle > math.pi / 2) angle -= math.pi;
+        if (angle <= -math.pi / 2) angle += math.pi;
+        final tp = TextPainter(
+          text: TextSpan(
+            text: label,
+            style: KJTheme.mono(size: labelSize, color: KJColors.inkSoft),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        canvas.save();
+        canvas.translate(mid.dx, mid.dy);
+        canvas.rotate(angle);
+        // Paper wash in the rotated frame, so the line disappears
+        // behind the label instead of striking through it.
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+                center: Offset.zero,
+                width: tp.width + 6,
+                height: tp.height + 2),
+            const Radius.circular(2),
+          ),
+          Paint()..color = KJColors.paper.withValues(alpha: 0.92),
+        );
+        tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
+        canvas.restore();
+      }
+    }
   }
 
   void _paintCentered(Canvas canvas, TextPainter tp, Offset center) =>
@@ -270,7 +413,7 @@ class NorthChartPainter extends CustomPainter {
 
   // Captured at construction: paint output depends on the active
   // palette, so a palette change must trigger a repaint.
-  final TEPalette _palette = TEColors.current;
+  final KJPalette _palette = KJColors.current;
 
   @override
   bool shouldRepaint(covariant NorthChartPainter oldDelegate) =>
@@ -285,5 +428,9 @@ class NorthChartPainter extends CustomPainter {
       oldDelegate.transitPlacements != transitPlacements ||
       oldDelegate.transitRetrograde != transitRetrograde ||
       oldDelegate.padaLabels != padaLabels ||
+      oldDelegate.houseData != houseData ||
+      oldDelegate.ascendantHouse != ascendantHouse ||
+      oldDelegate.boundaryLabels != boundaryLabels ||
+      oldDelegate.l10n != l10n ||
       oldDelegate._palette != _palette;
 }

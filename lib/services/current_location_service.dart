@@ -42,8 +42,7 @@ class CurrentLocationService {
               m.locality!
             else if ((m.subAdministrativeArea ?? '').isNotEmpty)
               m.subAdministrativeArea!,
-            if ((m.administrativeArea ?? '').isNotEmpty)
-              m.administrativeArea!,
+            if ((m.administrativeArea ?? '').isNotEmpty) m.administrativeArea!,
           ].join(', ');
           if (name.isEmpty) name = 'Current location';
         }

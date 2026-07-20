@@ -59,6 +59,25 @@ enum ZodiacSign {
   bool get isDual => index % 3 == 2;
 }
 
+/// A cardinal direction. Identity, not display text — the presentation
+/// layer names it per locale (see Disha Shool on the Today screen).
+enum Direction {
+  east,
+  north,
+  south,
+  west;
+
+  /// English name, for the same reasons the other core enums keep one:
+  /// stable identifier, tests, and the not-yet-localized OS widget.
+  /// In-app UI must use the l10n extension instead.
+  String get displayName => switch (this) {
+        east => 'East',
+        north => 'North',
+        south => 'South',
+        west => 'West',
+      };
+}
+
 /// The 27 nakshatras. `index` is 0-based (Ashwini = 0).
 enum Nakshatra {
   ashwini('Ashwini'),
@@ -174,7 +193,9 @@ class PanchangData {
     required this.pada,
     required this.yogaIndex, // 0–26
     required this.yogaName,
+    required this.karanaIndex, // 0–59 within the lunation
     required this.karanaName,
+    required this.varaIndex, // 0 = Somavara … 6 = Ravivara
     required this.vara, // weekday name
   });
 
@@ -185,7 +206,9 @@ class PanchangData {
   final int pada;
   final int yogaIndex;
   final String yogaName;
+  final int karanaIndex;
   final String karanaName;
+  final int varaIndex;
   final String vara;
 }
 

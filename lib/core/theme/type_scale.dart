@@ -10,7 +10,7 @@
 /// Weights 400/500/600 only — nothing uses 700.
 ///
 /// Colour follows the active palette: full ink for display / body / data,
-/// muted ink ([TEColors.inkSoft]) for kickers, captions and meta. Accent
+/// muted ink ([KJColors.inkSoft]) for kickers, captions and meta. Accent
 /// colours (maroon / forest) are passed explicitly only where colour
 /// carries meaning (active state, confirmation) — never for plain emphasis.
 ///
@@ -18,7 +18,7 @@
 /// is converted at each token (px = size × em).
 ///
 /// Prefer these tokens over one-off `TextStyle(...)`. In "Simple" font
-/// mode ([TETheme.useSerif] == false) the display tokens fall back to
+/// mode ([KJTheme.useSerif] == false) the display tokens fall back to
 /// Plex Sans 600 for legibility at large sizes.
 library;
 
@@ -27,15 +27,25 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'theme.dart';
 
-abstract final class TEType {
-  static Color get _ink => TEColors.ink;
-  static Color get _muted => TEColors.inkSoft;
+/// Snaps [weight] to the nearest BUNDLED IBM Plex weight (w400/w500/
+/// w600). Runtime font fetching is off (main.dart), so an unbundled
+/// weight makes google_fonts throw on EVERY render (Sentry
+/// KAALJYOTI-PROD-3) — the text-style helpers snap instead so no call
+/// site can ever hit that.
+FontWeight plexBundledWeight(FontWeight weight) => weight.value <= 400
+    ? FontWeight.w400
+    : weight.value >= 600
+        ? FontWeight.w600
+        : FontWeight.w500;
+
+abstract final class KJType {
+  static Color get _ink => KJColors.ink;
+  static Color get _muted => KJColors.inkSoft;
 
   // ── Display · Marcellus (Plex Sans 600 in Simple mode) ────────────────
-  static TextStyle _display(double size,
-      {double height = 1.1, Color? color}) {
+  static TextStyle _display(double size, {double height = 1.1, Color? color}) {
     final c = color ?? _ink;
-    return TETheme.useSerif
+    return KJTheme.useSerif
         ? GoogleFonts.marcellus(fontSize: size, height: height, color: c)
         : GoogleFonts.ibmPlexSans(
             fontSize: size,
@@ -65,13 +75,18 @@ abstract final class TEType {
       color: color ?? _ink);
 
   /// UI / Body — descriptions, readings, list rows. 13–14 / 1.5, 400.
+  ///
+  /// [weight] is snapped to a bundled weight via [plexBundledWeight].
   static TextStyle body({
     double size = 14,
     FontWeight weight = FontWeight.w400,
     Color? color,
   }) =>
       GoogleFonts.ibmPlexSans(
-          fontSize: size, height: 1.5, fontWeight: weight, color: color ?? _ink);
+          fontSize: size,
+          height: 1.5,
+          fontWeight: plexBundledWeight(weight),
+          color: color ?? _ink);
 
   /// UI / Body, emphasised — secondary links, emphasised rows. 500.
   static TextStyle bodyStrong({double size = 14, Color? color}) =>
@@ -106,7 +121,7 @@ abstract final class TEType {
   // ── Mono · IBM Plex Mono ──────────────────────────────────────────────
   /// Mono / Kicker — uppercase section eyebrows (SCREENS, SYSTEM,
   /// CAST YOUR KUNDALI). 10 / 1, 500, +0.18em. Caller uppercases the
-  /// text; muted ink by default. See [TESectionLabel] for the widget.
+  /// text; muted ink by default. See [KJSectionLabel] for the widget.
   static TextStyle kicker({Color? color}) => GoogleFonts.ibmPlexMono(
       fontSize: 10,
       height: 1.0,
@@ -116,6 +131,8 @@ abstract final class TEType {
 
   /// Mono / Data — degrees, dasha durations, coordinates, IDs (MK-4831).
   /// 13 / 1.2, 500, +0.02em. Full ink by default.
+  ///
+  /// [weight] is snapped to a bundled weight via [plexBundledWeight].
   static TextStyle data({
     double size = 13,
     FontWeight weight = FontWeight.w500,
@@ -124,7 +141,7 @@ abstract final class TEType {
       GoogleFonts.ibmPlexMono(
           fontSize: size,
           height: 1.2,
-          fontWeight: weight,
+          fontWeight: plexBundledWeight(weight),
           letterSpacing: size * 0.02,
           color: color ?? _ink);
 

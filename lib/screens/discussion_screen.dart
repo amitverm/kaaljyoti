@@ -23,6 +23,7 @@ import '../mahakosh/models.dart';
 import '../mahakosh/report_chart.dart' show kReportReasons;
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 
 class DiscussionScreen extends ConsumerStatefulWidget {
   const DiscussionScreen({super.key, required this.mkCode});
@@ -64,6 +65,9 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
     if (body.isEmpty || _sending) return;
     final repo = ref.read(discussionRepoProvider);
     if (repo == null) return;
+    // Captured before the first await — context must not be used across
+    // suspension points.
+    final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
 
     // First-ever comment: ask for the public display name once.
@@ -96,8 +100,8 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
       });
       _refresh();
     } catch (e) {
-      messenger.showSnackBar(
-          SnackBar(content: Text('Could not post: ${_errText(e)}')));
+      messenger
+          .showSnackBar(SnackBar(content: Text(l10n.dsPostError(_errText(e)))));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -108,14 +112,13 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
         builder: (ctx) {
           final controller = TextEditingController();
           return AlertDialog(
-            title: const Text('Choose a display name'),
+            title: Text(ctx.l10n.dsChooseDisplayName),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Shown publicly next to your comments and research '
-                  'posts. You don\'t need to use your real name.',
-                  style: TextStyle(fontSize: 12.5, color: TEColors.inkSoft),
+                  ctx.l10n.dsDisplayNameHint,
+                  style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -123,20 +126,20 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
                   autofocus: true,
                   maxLength: 40,
                   decoration:
-                      const InputDecoration(labelText: 'Display name'),
+                      InputDecoration(labelText: ctx.l10n.dsDisplayName),
                 ),
               ],
             ),
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Cancel')),
+                  child: Text(ctx.l10n.cancel)),
               FilledButton(
                 onPressed: () {
                   final name = controller.text.trim();
                   if (name.isNotEmpty) Navigator.pop(ctx, name);
                 },
-                child: const Text('Save'),
+                child: Text(ctx.l10n.save),
               ),
             ],
           );
@@ -155,7 +158,7 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
             const Duration(hours: 24);
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -164,38 +167,36 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
               if (editable)
                 ListTile(
                   leading: const Icon(Icons.edit_outlined),
-                  title: const Text('Edit'),
+                  title: Text(context.l10n.dsEdit),
                   onTap: () => Navigator.pop(ctx, 'edit'),
                 ),
               ListTile(
-                leading: Icon(Icons.delete_outline, color: TEColors.maroon),
-                title: Text('Delete',
-                    style: TextStyle(color: TEColors.maroon)),
+                leading: Icon(Icons.delete_outline, color: KJColors.maroon),
+                title: Text(context.l10n.delete,
+                    style: TextStyle(color: KJColors.maroon)),
                 onTap: () => Navigator.pop(ctx, 'delete'),
               ),
             ] else ...[
               ListTile(
                 leading: const Icon(Icons.reply),
-                title: const Text('Reply'),
+                title: Text(context.l10n.dsReply),
                 onTap: () => Navigator.pop(ctx, 'reply'),
               ),
               ListTile(
                 leading: const Icon(Icons.flag_outlined),
-                title: const Text('Report…'),
+                title: Text(context.l10n.dsReportEllipsis),
                 onTap: () => Navigator.pop(ctx, 'report'),
               ),
               // A deleted account has no one to block.
               if (c.authorId != null)
-              ListTile(
-                leading: const Icon(Icons.block),
-                title: Text('Block ${c.authorName}'),
-                subtitle: const Text(
-                    'Hides all their comments from your view and '
-                    'reports this comment to our moderators. '
-                    'They won’t be notified.',
-                    style: TextStyle(fontSize: 11.5)),
-                onTap: () => Navigator.pop(ctx, 'block'),
-              ),
+                ListTile(
+                  leading: const Icon(Icons.block),
+                  title: Text(
+                      context.l10n.dsBlockUser(commentAuthor(context.l10n, c))),
+                  subtitle: Text(context.l10n.dsBlockSubtitle,
+                      style: const TextStyle(fontSize: 11.5)),
+                  onTap: () => Navigator.pop(ctx, 'block'),
+                ),
             ],
           ],
         ),
@@ -224,22 +225,23 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
   }
 
   Future<void> _delete(ChartComment c) async {
+    // Captured before the first await — context must not be used across
+    // suspension points.
+    final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete comment?'),
-        content: const Text(
-            'The comment is removed for everyone. Replies to it stay, '
-            'quoting a deleted comment.'),
+        title: Text(ctx.l10n.dsDeleteTitle),
+        content: Text(ctx.l10n.dsDeleteBody),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(ctx.l10n.cancel)),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child:
-                  Text('Delete', style: TextStyle(color: TEColors.maroon))),
+              child: Text(ctx.l10n.delete,
+                  style: TextStyle(color: KJColors.maroon))),
         ],
       ),
     );
@@ -249,29 +251,30 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
       _refresh();
     } catch (e) {
       messenger.showSnackBar(
-          SnackBar(content: Text('Could not delete: ${_errText(e)}')));
+          SnackBar(content: Text(l10n.dsDeleteError(_errText(e)))));
     }
   }
 
   Future<void> _report(ChartComment c) async {
+    // Captured before the first await — context must not be used across
+    // suspension points.
+    final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final result = await showModalBottomSheet<(String, String)>(
       context: context,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       isScrollControlled: true,
       builder: (ctx) => _ReportCommentSheet(comment: c),
     );
     if (result == null || !mounted) return;
     try {
-      await ref.read(discussionRepoProvider)?.reportComment(c.id,
-          reason: result.$1, details: result.$2);
-      messenger.showSnackBar(const SnackBar(
-          content: Text(
-              'Comment reported — our team will review it. You can also '
-              'block the author to hide their comments.')));
+      await ref
+          .read(discussionRepoProvider)
+          ?.reportComment(c.id, reason: result.$1, details: result.$2);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.dsReported)));
     } catch (e) {
       messenger.showSnackBar(
-          SnackBar(content: Text('Could not report: ${_errText(e)}')));
+          SnackBar(content: Text(l10n.dsReportError(_errText(e)))));
     }
   }
 
@@ -280,6 +283,9 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
     // deleted-account author has no id to block — guard anyway.
     final authorId = c.authorId;
     if (authorId == null) return;
+    // Captured before the first await — context must not be used
+    // across suspension points.
+    final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     try {
       final repo = ref.read(discussionRepoProvider);
@@ -295,10 +301,9 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
       } catch (_) {}
       _refresh();
       messenger.showSnackBar(SnackBar(
-        content: Text('${c.authorName} blocked — their comments are '
-            'hidden from your view and our moderators were notified.'),
+        content: Text(l10n.dsBlocked(commentAuthor(l10n, c))),
         action: SnackBarAction(
-          label: 'Undo',
+          label: l10n.dsUndo,
           onPressed: () async {
             await ref.read(discussionRepoProvider)?.unblockUser(authorId);
             _refresh();
@@ -307,7 +312,7 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
       ));
     } catch (e) {
       messenger.showSnackBar(
-          SnackBar(content: Text('Could not block: ${_errText(e)}')));
+          SnackBar(content: Text(l10n.dsBlockError(_errText(e)))));
     }
   }
 
@@ -319,7 +324,7 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
     final commentsAsync = ref.watch(chartCommentsProvider(widget.mkCode));
 
     return Scaffold(
-      appBar: AppBar(title: Text('Discussion · ${widget.mkCode}')),
+      appBar: AppBar(title: Text(context.l10n.dsTitle(widget.mkCode))),
       body: user == null
           ? Center(
               child: Padding(
@@ -328,16 +333,14 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Sign in to read and join the discussion on '
-                      'community charts.',
+                      context.l10n.dsSignInPrompt,
                       textAlign: TextAlign.center,
-                      style:
-                          TextStyle(fontSize: 13.5, color: TEColors.inkSoft),
+                      style: TextStyle(fontSize: 13.5, color: KJColors.inkSoft),
                     ),
                     const SizedBox(height: 12),
                     FilledButton(
                       onPressed: () => context.push('/signin'),
-                      child: const Text('Sign in'),
+                      child: Text(context.l10n.signIn),
                     ),
                   ],
                 ),
@@ -349,12 +352,10 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
                   child: commentsAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => EmptyState(
-                        message: 'Could not load the discussion: $e'),
+                    error: (e, _) =>
+                        EmptyState(message: context.l10n.dsLoadError('$e')),
                     data: (comments) => comments.isEmpty
-                        ? const EmptyState(
-                            message: 'No comments yet — share your '
-                                'reading of this chart.')
+                        ? EmptyState(message: context.l10n.dsEmpty)
                         : RefreshIndicator(
                             onRefresh: () async => _refresh(),
                             child: ListView.builder(
@@ -362,8 +363,7 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
                               padding:
                                   const EdgeInsets.fromLTRB(16, 10, 16, 10),
                               itemCount: comments.length,
-                              itemBuilder: (_, i) => _bubble(
-                                  comments[i],
+                              itemBuilder: (_, i) => _bubble(comments[i],
                                   {for (final c in comments) c.id: c}),
                             ),
                           ),
@@ -387,8 +387,8 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: c.isMine
-                ? TEColors.maroon.withValues(alpha: 0.05)
-                : TEColors.ink.withValues(alpha: 0.03),
+                ? KJColors.maroon.withValues(alpha: 0.05)
+                : KJColors.ink.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -398,19 +398,18 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      c.authorName,
+                      commentAuthor(context.l10n, c),
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
-                        color: c.isMine ? TEColors.maroon : TEColors.ink,
+                        color: c.isMine ? KJColors.maroon : KJColors.ink,
                       ),
                     ),
                   ),
                   Text(
-                    '${DateFormat('d MMM, HH:mm').format(c.createdAt.toLocal())}'
-                    '${c.editedAt != null ? ' · edited' : ''}',
-                    style:
-                        TETheme.mono(size: 10, color: TEColors.inkSoft),
+                    '${DateFormat('d MMM, HH:mm', context.l10n.localeName).format(c.createdAt.toLocal())}'
+                    '${c.editedAt != null ? ' · ${context.l10n.dsEdited}' : ''}',
+                    style: KJTheme.mono(size: 10, color: KJColors.inkSoft),
                   ),
                 ],
               ),
@@ -421,34 +420,33 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
-                    color: TEColors.ink.withValues(alpha: 0.04),
+                    color: KJColors.ink.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(8),
                     border: Border(
                         left: BorderSide(
-                            color: TEColors.maroon.withValues(alpha: 0.5),
+                            color: KJColors.maroon.withValues(alpha: 0.5),
                             width: 2)),
                   ),
                   child: Text(
                     parent == null
-                        ? 'Original comment unavailable'
+                        ? context.l10n.dsOriginalUnavailable
                         : parent.isVisible
-                            ? '${parent.authorName}: ${parent.body}'
-                            : parent.placeholder,
+                            ? '${commentAuthor(context.l10n, parent)}: ${parent.body}'
+                            : commentPlaceholder(context.l10n, parent.status),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style:
-                        TextStyle(fontSize: 11.5, color: TEColors.inkSoft),
+                    style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
                   ),
                 ),
               ],
               const SizedBox(height: 6),
               c.isVisible
                   ? Text(c.body, style: const TextStyle(fontSize: 13.5))
-                  : Text(c.placeholder,
+                  : Text(commentPlaceholder(context.l10n, c.status),
                       style: TextStyle(
                           fontSize: 12.5,
                           fontStyle: FontStyle.italic,
-                          color: TEColors.inkSoft)),
+                          color: KJColors.inkSoft)),
               if (c.isVisible && !c.isMine)
                 Align(
                   alignment: Alignment.centerRight,
@@ -461,8 +459,8 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
                       _replyTo = c;
                     }),
                     icon: const Icon(Icons.reply, size: 15),
-                    label:
-                        const Text('Reply', style: TextStyle(fontSize: 12)),
+                    label: Text(context.l10n.dsReply,
+                        style: const TextStyle(fontSize: 12)),
                   ),
                 ),
             ],
@@ -474,17 +472,18 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
 
   Widget _composerBar() {
     final banner = _editing != null
-        ? 'Editing your comment'
+        ? context.l10n.dsEditingBanner
         : _replyTo != null
-            ? 'Replying to ${_replyTo!.authorName}: ${_replyTo!.body}'
+            ? context.l10n.dsReplyingBanner(
+                commentAuthor(context.l10n, _replyTo!), _replyTo!.body)
             : null;
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
         decoration: BoxDecoration(
-          color: TEColors.paper,
+          color: KJColors.paper,
           border: Border(
-              top: BorderSide(color: TEColors.ink.withValues(alpha: 0.08))),
+              top: BorderSide(color: KJColors.ink.withValues(alpha: 0.08))),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -499,8 +498,8 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
                         banner,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontSize: 11.5, color: TEColors.inkSoft),
+                        style:
+                            TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
                       ),
                     ),
                     InkWell(
@@ -509,8 +508,8 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
                         if (_editing != null) _composer.clear();
                         _editing = null;
                       }),
-                      child: Icon(Icons.close,
-                          size: 16, color: TEColors.inkSoft),
+                      child:
+                          Icon(Icons.close, size: 16, color: KJColors.inkSoft),
                     ),
                   ],
                 ),
@@ -518,10 +517,10 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
-                'Public — avoid names or identifying details.',
+                context.l10n.dsPublicHint,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 10.5, color: TEColors.inkSoft),
+                style: TextStyle(fontSize: 10.5, color: KJColors.inkSoft),
               ),
             ),
             Row(
@@ -533,8 +532,8 @@ class _DiscussionScreenState extends ConsumerState<DiscussionScreen> {
                     minLines: 1,
                     maxLines: 4,
                     maxLength: 2000,
-                    decoration: const InputDecoration(
-                      hintText: 'Share your reading…',
+                    decoration: InputDecoration(
+                      hintText: context.l10n.dsComposerHint,
                       counterText: '',
                       isDense: true,
                     ),
@@ -592,19 +591,19 @@ class _ReportCommentSheetState extends State<_ReportCommentSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Report comment', style: TETheme.serif(size: 18)),
+          Text(context.l10n.dsReportComment, style: KJTheme.serif(size: 18)),
           const SizedBox(height: 6),
           Text(
-            '“${widget.comment.body}” — ${widget.comment.authorName}',
+            context.l10n
+                .dsReportQuote(widget.comment.body, widget.comment.authorName),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, color: TEColors.inkSoft),
+            style: TextStyle(fontSize: 12, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 4),
           Text(
-            'Sends the comment for review by our team. The author is '
-            'never told who reported it.',
-            style: TextStyle(fontSize: 12.5, color: TEColors.inkSoft),
+            context.l10n.dsReportBlurb,
+            style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft),
           ),
           const SizedBox(height: 10),
           for (final e in kReportReasons.entries)
@@ -613,23 +612,24 @@ class _ReportCommentSheetState extends State<_ReportCommentSheet> {
               dense: true,
               value: e.key,
               groupValue: _reason,
-              activeColor: TEColors.maroon,
-              title: Text(e.value, style: const TextStyle(fontSize: 13.5)),
+              activeColor: KJColors.maroon,
+              title: Text(reportReasonLabel(context.l10n, e.key),
+                  style: const TextStyle(fontSize: 13.5)),
               onChanged: (v) => setState(() => _reason = v!),
             ),
           const SizedBox(height: 8),
           TextField(
             controller: _details,
             maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Additional details (optional)',
+            decoration: InputDecoration(
+              labelText: context.l10n.dsReportDetails,
             ),
           ),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: () =>
                 Navigator.pop(context, (_reason, _details.text.trim())),
-            child: const Text('Submit report'),
+            child: Text(context.l10n.dsSubmitReport),
           ),
         ],
       ),

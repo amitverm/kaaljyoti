@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import 'chart_tuning.dart';
 import 'planet_token.dart';
 
@@ -26,6 +27,7 @@ ZodiacSign? southSignHit(Size size, Offset pos) {
 /// known), independent of [lagna].
 class SouthChartPainter extends CustomPainter {
   SouthChartPainter({
+    required this.l10n,
     required this.placements,
     required this.lagna,
     this.retrograde = const {},
@@ -39,6 +41,10 @@ class SouthChartPainter extends CustomPainter {
     this.padaLabels = const {},
     // Repaint live when the chart text settings change.
   }) : super(repaint: chartTuning);
+
+  /// Localized strings for the graha/rashi tokens. A painter has no
+  /// BuildContext at paint time, so the host widget injects it.
+  final AppLocalizations l10n;
 
   final Map<ZodiacSign, List<Planet>> placements;
   final ZodiacSign lagna;
@@ -90,7 +96,7 @@ class SouthChartPainter extends CustomPainter {
         );
 
     // Ground.
-    canvas.drawRect(Offset.zero & size, Paint()..color = TEColors.paper);
+    canvas.drawRect(Offset.zero & size, Paint()..color = KJColors.paper);
 
     // Ascendant cell tint — follows the TRUE ascendant, not the
     // "view from" rotation anchor, so the highlight never lies about
@@ -99,12 +105,12 @@ class SouthChartPainter extends CustomPainter {
     final ascCell = cellRect(ascRow, ascCol);
     canvas.drawRect(
       ascCell,
-      Paint()..color = TEColors.maroon.withValues(alpha: 0.08),
+      Paint()..color = KJColors.maroon.withValues(alpha: 0.08),
     );
 
     // Grid: outer frame plus each ring cell (center 2×2 stays open).
     final line = Paint()
-      ..color = TEColors.ink
+      ..color = KJColors.ink
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeW
       ..strokeJoin = StrokeJoin.miter;
@@ -120,7 +126,7 @@ class SouthChartPainter extends CustomPainter {
       Offset(ascCell.left + diagLen, ascCell.top),
       Offset(ascCell.left, ascCell.top + diagLen),
       Paint()
-        ..color = TEColors.maroon
+        ..color = KJColors.maroon
         ..strokeWidth = strokeW * 1.2
         ..strokeCap = StrokeCap.round,
     );
@@ -136,10 +142,10 @@ class SouthChartPainter extends CustomPainter {
 
       // Sign abbreviation, tucked into the top-right corner.
       final signTp = _layout(
-        sign.western.substring(0, 3),
-        TETheme.mono(
+        sign.abbrLabel(l10n),
+        KJTheme.mono(
           size: signSize,
-          color: sign == trueAsc ? TEColors.maroon : TEColors.inkSoft,
+          color: sign == trueAsc ? KJColors.maroon : KJColors.inkSoft,
           weight: sign == trueAsc ? FontWeight.w600 : FontWeight.w400,
         ),
         cellW,
@@ -157,9 +163,11 @@ class SouthChartPainter extends CustomPainter {
       if (sign == trueAsc) {
         final deg = ascendantDegree;
         final ascTp = _layout(
-          deg != null ? 'Asc ${formatDegreeInSign(deg)}' : 'Asc',
-          TETheme.mono(
-              size: signSize, color: TEColors.maroon, weight: FontWeight.w600),
+          deg != null
+              ? '${l10n.chartAsc} ${formatDegreeInSign(deg)}'
+              : l10n.chartAsc,
+          KJTheme.mono(
+              size: signSize, color: KJColors.maroon, weight: FontWeight.w600),
           cellW,
         );
         ascTp.paint(
@@ -178,9 +186,11 @@ class SouthChartPainter extends CustomPainter {
       }
       final planetTokens = [
         for (final p in planets)
-          tokens[p] ?? PlanetToken(planet: p, retrograde: retrograde[p] ?? false),
+          tokens[p] ??
+              PlanetToken(planet: p, retrograde: retrograde[p] ?? false),
       ];
       final layout = HouseLabelLayout(
+        l10n: l10n,
         tokens: planetTokens,
         transitPlanets: transitPlanets,
         transitRetrograde: transitRetrograde,
@@ -204,7 +214,7 @@ class SouthChartPainter extends CustomPainter {
 
   // Captured at construction: paint output depends on the active
   // palette, so a palette change must trigger a repaint.
-  final TEPalette _palette = TEColors.current;
+  final KJPalette _palette = KJColors.current;
 
   @override
   bool shouldRepaint(covariant SouthChartPainter oldDelegate) =>
@@ -219,5 +229,6 @@ class SouthChartPainter extends CustomPainter {
       oldDelegate.transitPlacements != transitPlacements ||
       oldDelegate.transitRetrograde != transitRetrograde ||
       oldDelegate.padaLabels != padaLabels ||
+      oldDelegate.l10n != l10n ||
       oldDelegate._palette != _palette;
 }

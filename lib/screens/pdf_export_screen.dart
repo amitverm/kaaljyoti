@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/theme.dart';
 import '../data/export_repository.dart';
 import '../pdf/pdf_exporter.dart';
+import '../l10n/astro_l10n.dart';
+import '../widgetsystem/astro_module.dart';
 import '../state/providers.dart';
 import '../widgetsystem/registry.dart';
 import '../ui/common.dart';
@@ -30,13 +32,10 @@ class _Entry {
 
   PdfBlock get block => (widgetId: widgetId, config: config);
 
-  String label() {
+  String label(AppLocalizations l10n) {
     final module = moduleById(widgetId);
     if (module == null) return widgetId;
-    final summary = module.configSummary(config);
-    return summary == null
-        ? module.meta.title
-        : '${module.meta.title} · $summary';
+    return moduleInstanceTitle(module, config, l10n);
   }
 
   _Entry copy() => _Entry(widgetId, Map.of(config), true);
@@ -86,8 +85,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   Future<List<_Entry>> _dashboardSeed() async {
     final entries = <_Entry>[];
     final seen = <String>{};
-    final views =
-        await ref.read(dashboardRepoProvider).views();
+    final views = await ref.read(dashboardRepoProvider).views();
     if (views.isNotEmpty) {
       final placed =
           await ref.read(dashboardRepoProvider).widgetsFor(views.first.id);
@@ -134,9 +132,11 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
 
   Future<void> _run(bool print) async {
     setState(() => _working = true);
+    // Capture before the first await — context must not be touched
+    // across suspension points.
+    final l10n = context.l10n;
     try {
-      final ctx =
-          await ref.read(moduleContextProvider(widget.kundliId).future);
+      final ctx = await ref.read(moduleContextProvider(widget.kundliId).future);
       final options = PdfExportOptions(
         blocks: [
           for (final e in _entries!)
@@ -149,17 +149,21 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
             : _brandingController.text.trim(),
       );
       final exporter = PdfExporter();
+      // Thread the current locale's strings into the context — pdfView
+      // renders outside the widget tree and can't reach an inherited
+      // AppLocalizations (see ModuleContext.l10n).
+      final localizedCtx = ctx.withL10n(l10n);
       if (print) {
-        await exporter.printDialog(ctx, options);
+        await exporter.printDialog(localizedCtx, options);
       } else {
-        await exporter.exportAndShare(ctx, options);
+        await exporter.exportAndShare(localizedCtx, options);
       }
       // A successful export defines this kundli's report template.
       await _saveConfig();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Export failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.peExportFailed('$e'))));
       }
     } finally {
       if (mounted) setState(() => _working = false);
@@ -173,7 +177,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     if (module == null) return;
     await showModalBottomSheet(
       context: context,
-      backgroundColor: TEColors.paper,
+      backgroundColor: KJColors.paper,
       showDragHandle: true,
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.85,
@@ -191,39 +195,39 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(module.meta.title,
-                          style: TETheme.serif(size: 18)),
-                      for (final choice in module.configChoices()) ...[
-                  const SizedBox(height: 14),
-                  TESectionLabel(choice.label),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final (value, label) in choice.options)
-                        ChoiceChip(
-                          label: Text(label,
-                              style: const TextStyle(fontSize: 12.5)),
-                          selected: (e.config[choice.key] ??
-                                  choice.effectiveDefault) ==
-                              value,
-                          labelStyle: TextStyle(
-                              fontSize: 12.5,
-                              color: (e.config[choice.key] ??
-                                          choice.effectiveDefault) ==
-                                      value
-                                  ? TEColors.paper
-                                  : TEColors.ink),
-                          onSelected: (_) {
-                            e.config = {...e.config, choice.key: value};
-                            setSheetState(() {});
-                            setState(() {});
-                          },
+                      Text(module.meta.titleFor(ctx.l10n),
+                          style: KJTheme.serif(size: 18)),
+                      for (final choice in module.configChoices(ctx.l10n)) ...[
+                        const SizedBox(height: 14),
+                        KJSectionLabel(choice.label),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final (value, label) in choice.options)
+                              ChoiceChip(
+                                label: Text(label,
+                                    style: const TextStyle(fontSize: 12.5)),
+                                selected: (e.config[choice.key] ??
+                                        choice.effectiveDefault) ==
+                                    value,
+                                labelStyle: TextStyle(
+                                    fontSize: 12.5,
+                                    color: (e.config[choice.key] ??
+                                                choice.effectiveDefault) ==
+                                            value
+                                        ? KJColors.paper
+                                        : KJColors.ink),
+                                onSelected: (_) {
+                                  e.config = {...e.config, choice.key: value};
+                                  setSheetState(() {});
+                                  setState(() {});
+                                },
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
-                ],
+                      ],
                     ],
                   ),
                 ),
@@ -235,7 +239,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Done'),
+                    child: Text(context.l10n.done),
                   ),
                 ),
               ),
@@ -254,32 +258,27 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     // guard here too so no direct route can leak it.
     if (isMahakoshKundliId(widget.kundliId)) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Export / Print')),
-        body: const EmptyState(
-          message: 'PDF export is available for your own kundlis only. '
-              'Community charts stay anonymized — their birth time is '
-              'never exported.',
-        ),
+        appBar: AppBar(title: Text(context.l10n.peTitle)),
+        body: EmptyState(message: context.l10n.peOwnKundlisOnly),
       );
     }
 
     _initSelection();
     final entries = _entries;
-    final selectedCount =
-        entries?.where((e) => e.selected).length ?? 0;
+    final selectedCount = entries?.where((e) => e.selected).length ?? 0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Export / Print')),
+      appBar: AppBar(title: Text(context.l10n.peTitle)),
       body: entries == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: formPadding(context),
               children: [
-                Text('MODULES IN THIS EXPORT',
+                Text(context.l10n.peModulesSection,
                     style: TextStyle(
                         fontSize: 10.5,
                         letterSpacing: 1.1,
-                        color: TEColors.inkSoft,
+                        color: KJColors.inkSoft,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Row(
@@ -287,19 +286,16 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                     Expanded(
                       child: Text(
                         _hasSavedConfig
-                            ? 'Your saved report for this kundli — kept '
-                                'separate from the dashboard.'
-                            : 'First export starts from your dashboard; '
-                                'after that the report is remembered '
-                                'separately.',
-                        style: TextStyle(
-                            fontSize: 12.5, color: TEColors.inkSoft),
+                            ? context.l10n.peSavedReportNote
+                            : context.l10n.peFirstExportNote,
+                        style:
+                            TextStyle(fontSize: 12.5, color: KJColors.inkSoft),
                       ),
                     ),
                     if (_hasSavedConfig)
                       TextButton(
                         onPressed: _resetFromDashboard,
-                        child: const Text('Reset',
+                        child: Text(context.l10n.peReset,
                             style: TextStyle(fontSize: 12.5)),
                       ),
                   ],
@@ -313,54 +309,53 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                         Expanded(
                           child: CheckboxListTile(
                             dense: true,
-                            controlAffinity:
-                                ListTileControlAffinity.leading,
-                            activeColor: TEColors.maroon,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            activeColor: KJColors.maroon,
                             value: e.selected,
-                            title: Text(e.label()),
+                            title: Text(e.label(context.l10n)),
                             onChanged: (v) =>
                                 setState(() => e.selected = v ?? false),
                           ),
                         ),
                         if (moduleById(e.widgetId)
-                                ?.configChoices()
+                                ?.configChoices(context.l10n)
                                 .isNotEmpty ??
                             false)
                           IconButton(
                             icon: const Icon(Icons.tune, size: 18),
-                            tooltip: 'Configure this block',
+                            tooltip: context.l10n.peConfigureBlock,
                             onPressed: () => _configureEntry(e),
                           ),
                         IconButton(
                           icon: const Icon(Icons.copy, size: 18),
-                          tooltip: 'Duplicate this block',
-                          onPressed: () => setState(() => entries.insert(
-                              entries.indexOf(e) + 1, e.copy())),
+                          tooltip: context.l10n.peDuplicateBlock,
+                          onPressed: () => setState(() =>
+                              entries.insert(entries.indexOf(e) + 1, e.copy())),
                         ),
                       ],
                     ),
                   ),
                 const SizedBox(height: 16),
-                Text('OPTIONS',
+                Text(context.l10n.peOptionsSection,
                     style: TextStyle(
                         fontSize: 10.5,
                         letterSpacing: 1.1,
-                        color: TEColors.inkSoft,
+                        color: KJColors.inkSoft,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Text('Paper', style: TextStyle(fontSize: 13.5)),
+                    Text(context.l10n.pePaper,
+                        style: const TextStyle(fontSize: 13.5)),
                     const SizedBox(width: 12),
                     ChoiceChip(
                       label: const Text('A4'),
                       selected: _paper == PdfPaper.a4,
                       labelStyle: TextStyle(
                           color: _paper == PdfPaper.a4
-                              ? TEColors.paper
-                              : TEColors.ink),
-                      onSelected: (_) =>
-                          setState(() => _paper = PdfPaper.a4),
+                              ? KJColors.paper
+                              : KJColors.ink),
+                      onSelected: (_) => setState(() => _paper = PdfPaper.a4),
                     ),
                     const SizedBox(width: 8),
                     ChoiceChip(
@@ -368,8 +363,8 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                       selected: _paper == PdfPaper.letter,
                       labelStyle: TextStyle(
                           color: _paper == PdfPaper.letter
-                              ? TEColors.paper
-                              : TEColors.ink),
+                              ? KJColors.paper
+                              : KJColors.ink),
                       onSelected: (_) =>
                           setState(() => _paper = PdfPaper.letter),
                     ),
@@ -377,42 +372,32 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  activeThumbColor: TEColors.maroon,
+                  activeThumbColor: KJColors.maroon,
                   value: _coverPage,
                   onChanged: (v) => setState(() => _coverPage = v),
-                  title: const Text('Cover page',
-                      style: TextStyle(fontSize: 13.5)),
+                  title: Text(context.l10n.peCoverPage,
+                      style: const TextStyle(fontSize: 13.5)),
                 ),
                 TextField(
                   controller: _brandingController,
-                  decoration: const InputDecoration(
-                    labelText: 'Practitioner branding (optional)',
-                    helperText:
-                        'Shown on the cover and footer — e.g. your name '
-                        'and contact, so the report reads as coming from you',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.peBranding,
+                    helperText: context.l10n.peBrandingHelper,
                   ),
                 ),
                 const SizedBox(height: 20),
                 FilledButton(
-                  onPressed: selectedCount == 0 || _working
-                      ? null
-                      : () => _run(false),
-                  child:
-                      Text(_working ? 'Generating…' : 'Generate & share'),
+                  onPressed:
+                      selectedCount == 0 || _working ? null : () => _run(false),
+                  child: Text(_working
+                      ? context.l10n.peGenerating
+                      : context.l10n.peGenerateShare),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton(
-                  onPressed: selectedCount == 0 || _working
-                      ? null
-                      : () => _run(true),
-                  child: const Text('Print'),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'PDF export is free for any of your kundlis, on any plan.',
-                  textAlign: TextAlign.center,
-                  style:
-                      TextStyle(fontSize: 11.5, color: TEColors.inkSoft),
+                  onPressed:
+                      selectedCount == 0 || _working ? null : () => _run(true),
+                  child: Text(context.l10n.pePrint),
                 ),
               ],
             ),

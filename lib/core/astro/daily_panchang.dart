@@ -105,7 +105,7 @@ class DailyPanchang {
   final TimeWindow? brahmaMuhurta;
 
   /// Direction to avoid setting out toward today (weekday rule).
-  final String? dishaShool;
+  final Direction? dishaShool;
 
   ZodiacSign get lagnaSign => ZodiacSign.fromLongitude(ascendant);
 
@@ -211,15 +211,14 @@ DailyPanchang computeDailyPanchang({
     return (_norm(m - s) / 6).floorToDouble();
   }
 
-  DateTime? local(double? jdUt) => jdUt == null
-      ? null
-      : EphemerisService.dateTimeFromJdUt(jdUt).toLocal();
+  DateTime? local(double? jdUt) =>
+      jdUt == null ? null : EphemerisService.dateTimeFromJdUt(jdUt).toLocal();
 
   // Vedic day anchor: the sunrise at/before now, and the following
   // sunset.
   final rise = svc.sunriseBefore(jd, latitude, longitude);
-  final set = svc.sunEventAfter(rise ?? (jd - 0.5), latitude, longitude,
-      rise: false);
+  final set =
+      svc.sunEventAfter(rise ?? (jd - 0.5), latitude, longitude, rise: false);
   final riseL = local(rise);
   final setL = local(set);
 
@@ -227,8 +226,8 @@ DailyPanchang computeDailyPanchang({
   // Walk the tithi bucket from the window start, hopping boundary to
   // boundary, so a transition day naturally yields two (or, on a
   // kshaya day, three) entries rather than only the live one.
-  final nextRise = svc.sunEventAfter(rise ?? (jd - 0.5), latitude, longitude,
-      rise: true);
+  final nextRise =
+      svc.sunEventAfter(rise ?? (jd - 0.5), latitude, longitude, rise: true);
   final tithis = <TithiSpan>[];
   if (rise != null && nextRise != null && nextRise > rise) {
     var cursor = rise;
@@ -273,8 +272,13 @@ DailyPanchang computeDailyPanchang({
   const yamaSeg = {1: 4, 2: 3, 3: 2, 4: 1, 5: 7, 6: 6, 7: 5};
   const gulikaSeg = {1: 6, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1, 7: 7};
   const dishaShoolOf = {
-    1: 'East', 2: 'North', 3: 'North', 4: 'South',
-    5: 'West', 6: 'East', 7: 'West',
+    1: Direction.east,
+    2: Direction.north,
+    3: Direction.north,
+    4: Direction.south,
+    5: Direction.west,
+    6: Direction.east,
+    7: Direction.west,
   };
 
   TimeWindow? abhijit;

@@ -78,7 +78,7 @@ class AdminScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Text('Nothing pending.',
                         style:
-                            TextStyle(fontSize: 13, color: TEColors.inkSoft)),
+                            TextStyle(fontSize: 13, color: KJColors.inkSoft)),
                   )
                 : Column(children: [
                     for (final r in items) _requestCard(context, ref, r),
@@ -96,7 +96,7 @@ class AdminScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Text('Nothing pending.',
                         style:
-                            TextStyle(fontSize: 13, color: TEColors.inkSoft)),
+                            TextStyle(fontSize: 13, color: KJColors.inkSoft)),
                   )
                 : Column(children: [
                     for (final r in items) _reportCard(context, ref, r),
@@ -114,7 +114,7 @@ class AdminScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text('Nothing pending.',
                             style: TextStyle(
-                                fontSize: 13, color: TEColors.inkSoft)),
+                                fontSize: 13, color: KJColors.inkSoft)),
                       )
                     : Column(children: [
                         for (final r in items)
@@ -132,7 +132,7 @@ class AdminScreen extends ConsumerWidget {
             style: TextStyle(
                 fontSize: 10.5,
                 letterSpacing: 1.1,
-                color: TEColors.inkSoft,
+                color: KJColors.inkSoft,
                 fontWeight: FontWeight.w600)),
       );
 
@@ -152,8 +152,8 @@ class AdminScreen extends ConsumerWidget {
               Text(r.description, style: const TextStyle(fontSize: 12.5)),
             ],
             const SizedBox(height: 6),
-            Text(TEDate.date(r.createdAt),
-                style: TETheme.mono(size: 10.5, color: TEColors.inkSoft)),
+            Text(KJDate.date(r.createdAt),
+                style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft)),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -204,14 +204,14 @@ class AdminScreen extends ConsumerWidget {
                 style: const TextStyle(
                     fontSize: 14.5, fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
-            TETag(r.reasonLabel, maroon: true),
+            KJTag(r.reasonLabel, maroon: true),
             if (r.details.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(r.details, style: const TextStyle(fontSize: 12.5)),
             ],
             const SizedBox(height: 6),
-            Text(TEDate.date(r.createdAt),
-                style: TETheme.mono(size: 10.5, color: TEColors.inkSoft)),
+            Text(KJDate.date(r.createdAt),
+                style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft)),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -231,7 +231,7 @@ class AdminScreen extends ConsumerWidget {
                 const SizedBox(width: 10),
                 FilledButton(
                   style:
-                      FilledButton.styleFrom(backgroundColor: TEColors.maroon),
+                      FilledButton.styleFrom(backgroundColor: KJColors.maroon),
                   onPressed: () => _moderate(
                     context,
                     ref,
@@ -265,16 +265,15 @@ class AdminScreen extends ConsumerWidget {
                 style: const TextStyle(
                     fontSize: 14.5, fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
-            TETag(r.reasonLabel, maroon: true),
+            KJTag(r.reasonLabel, maroon: true),
             const SizedBox(height: 6),
             // The snapshot taken at report time — the live comment may
             // have been edited or deleted since; this is the evidence.
             Container(
               width: double.infinity,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: TEColors.ink.withValues(alpha: 0.04),
+                color: KJColors.ink.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text('“${r.bodySnapshot}”',
@@ -285,8 +284,8 @@ class AdminScreen extends ConsumerWidget {
               Text(r.details, style: const TextStyle(fontSize: 12.5)),
             ],
             const SizedBox(height: 6),
-            Text(TEDate.date(r.createdAt),
-                style: TETheme.mono(size: 10.5, color: TEColors.inkSoft)),
+            Text(KJDate.date(r.createdAt),
+                style: KJTheme.mono(size: 10.5, color: KJColors.inkSoft)),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -299,15 +298,14 @@ class AdminScreen extends ConsumerWidget {
                         .read(adminRepoProvider)!
                         .moderateCommentReport(
                             reportId: r.id, remove: false, note: note),
-                    after: () =>
-                        ref.invalidate(_pendingCommentReportsProvider),
+                    after: () => ref.invalidate(_pendingCommentReportsProvider),
                   ),
                   child: const Text('Dismiss'),
                 ),
                 const SizedBox(width: 10),
                 FilledButton(
                   style:
-                      FilledButton.styleFrom(backgroundColor: TEColors.maroon),
+                      FilledButton.styleFrom(backgroundColor: KJColors.maroon),
                   onPressed: () => _moderate(
                     context,
                     ref,
@@ -316,8 +314,7 @@ class AdminScreen extends ConsumerWidget {
                         .read(adminRepoProvider)!
                         .moderateCommentReport(
                             reportId: r.id, remove: true, note: note),
-                    after: () =>
-                        ref.invalidate(_pendingCommentReportsProvider),
+                    after: () => ref.invalidate(_pendingCommentReportsProvider),
                   ),
                   child: const Text('Remove comment'),
                 ),

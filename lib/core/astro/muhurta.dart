@@ -12,26 +12,28 @@ library;
 import 'daily_panchang.dart' show TimeWindow;
 import 'models.dart';
 
-/// One Choghadiya or Hora timeline slot.
+/// One Choghadiya or Hora timeline slot: exactly one of [choghadiya]
+/// (Choghadiya slots) or [planet] (Hora slots, the ruling graha) is set,
+/// and that field is the slot's identity. There is deliberately no name
+/// string — the two timelines name their slots differently, and the
+/// presentation layer localizes each from its own value.
 class MuhurtaSegment {
   const MuhurtaSegment({
-    required this.name,
     required this.start,
     required this.end,
-    this.good,
+    this.choghadiya,
     this.planet,
   });
 
-  final String name;
   final DateTime start;
   final DateTime end;
 
+  final Choghadiya? choghadiya;
+  final Planet? planet;
+
   /// Auspicious/inauspicious for Choghadiya; null for Hora, whose
   /// favorability is purpose-dependent rather than fixed per slot.
-  final bool? good;
-
-  /// Set for Hora slots (the ruling graha); null for Choghadiya.
-  final Planet? planet;
+  bool? get good => choghadiya?.isAuspicious;
 
   bool contains(DateTime t) => !t.isBefore(start) && t.isBefore(end);
 }
@@ -40,24 +42,38 @@ class MuhurtaSegment {
 // Choghadiya
 // ---------------------------------------------------------------------------
 
-/// Traditional cyclic order of the 7 Choghadiya names.
-const List<String> kChoghadiyaCycle = [
-  'Udveg', 'Char', 'Labh', 'Amrit', 'Kaal', 'Shubh', 'Rog',
-];
+/// The 7 Choghadiya. Declaration order IS the traditional cycle — the
+/// day's segments walk it with modular arithmetic, so do not reorder.
+///
+/// Identity, not display text: auspiciousness is decided here and the
+/// presentation layer translates the names, so neither can drift out
+/// from under the other.
+enum Choghadiya {
+  udveg,
+  char,
+  labh,
+  amrit,
+  kaal,
+  shubh,
+  rog;
 
-/// Amrit / Shubh / Labh / Char are auspicious; the rest are not.
-const Set<String> kChoghadiyaGood = {'Amrit', 'Shubh', 'Labh', 'Char'};
+  /// Amrit / Shubh / Labh / Char are auspicious; the rest are not.
+  bool get isAuspicious => switch (this) {
+        amrit || shubh || labh || char => true,
+        udveg || kaal || rog => false,
+      };
+}
 
-/// The day's first Choghadiya name by weekday (`DateTime.weekday`:
-/// Mon=1 … Sun=7).
-const Map<int, String> kChoghadiyaFirstByWeekday = {
-  DateTime.sunday: 'Udveg',
-  DateTime.monday: 'Amrit',
-  DateTime.tuesday: 'Rog',
-  DateTime.wednesday: 'Labh',
-  DateTime.thursday: 'Shubh',
-  DateTime.friday: 'Char',
-  DateTime.saturday: 'Kaal',
+/// The day's first Choghadiya by weekday (`DateTime.weekday`: Mon=1 …
+/// Sun=7).
+const Map<int, Choghadiya> kChoghadiyaFirstByWeekday = {
+  DateTime.sunday: Choghadiya.udveg,
+  DateTime.monday: Choghadiya.amrit,
+  DateTime.tuesday: Choghadiya.rog,
+  DateTime.wednesday: Choghadiya.labh,
+  DateTime.thursday: Choghadiya.shubh,
+  DateTime.friday: Choghadiya.char,
+  DateTime.saturday: Choghadiya.kaal,
 };
 
 /// Day (sunrise→sunset) and night (sunset→next sunrise) Choghadiya,
@@ -68,8 +84,7 @@ const Map<int, String> kChoghadiyaFirstByWeekday = {
   required DateTime sunset,
   required DateTime nextSunrise,
 }) {
-  final firstName = kChoghadiyaFirstByWeekday[sunrise.weekday]!;
-  final dayStartIdx = kChoghadiyaCycle.indexOf(firstName);
+  final dayStartIdx = kChoghadiyaFirstByWeekday[sunrise.weekday]!.index;
   final nightStartIdx = (dayStartIdx + 4) % 7; // "5th from the day's first"
 
   List<MuhurtaSegment> build(DateTime from, DateTime to, int cycleStart) {
@@ -77,10 +92,9 @@ const Map<int, String> kChoghadiyaFirstByWeekday = {
     return [
       for (var i = 0; i < 8; i++)
         MuhurtaSegment(
-          name: kChoghadiyaCycle[(cycleStart + i) % 7],
+          choghadiya: Choghadiya.values[(cycleStart + i) % 7],
           start: from.add(len * i),
           end: i == 7 ? to : from.add(len * (i + 1)),
-          good: kChoghadiyaGood.contains(kChoghadiyaCycle[(cycleStart + i) % 7]),
         ),
     ];
   }
@@ -134,7 +148,6 @@ List<MuhurtaSegment> horaSegments({
   for (var i = 0; i < 12; i++) {
     final p = kHoraCycle[(startIdx + i) % 7];
     out.add(MuhurtaSegment(
-      name: p.displayName,
       start: sunrise.add(dayLen * i),
       end: i == 11 ? sunset : sunrise.add(dayLen * (i + 1)),
       planet: p,
@@ -143,7 +156,6 @@ List<MuhurtaSegment> horaSegments({
   for (var i = 0; i < 12; i++) {
     final p = kHoraCycle[(startIdx + 12 + i) % 7];
     out.add(MuhurtaSegment(
-      name: p.displayName,
       start: sunset.add(nightLen * i),
       end: i == 11 ? nextSunrise : sunset.add(nightLen * (i + 1)),
       planet: p,
@@ -157,13 +169,37 @@ List<MuhurtaSegment> horaSegments({
 // ---------------------------------------------------------------------------
 
 /// 1-based eighth-of-daylight segment for Rahu Kaal, by weekday.
-const Map<int, int> kRahuKaalSegment = {1: 2, 2: 7, 3: 5, 4: 6, 5: 4, 6: 3, 7: 8};
+const Map<int, int> kRahuKaalSegment = {
+  1: 2,
+  2: 7,
+  3: 5,
+  4: 6,
+  5: 4,
+  6: 3,
+  7: 8
+};
 
 /// 1-based eighth-of-daylight segment for Yamaganda, by weekday.
-const Map<int, int> kYamagandaSegment = {1: 4, 2: 3, 3: 2, 4: 1, 5: 7, 6: 6, 7: 5};
+const Map<int, int> kYamagandaSegment = {
+  1: 4,
+  2: 3,
+  3: 2,
+  4: 1,
+  5: 7,
+  6: 6,
+  7: 5
+};
 
 /// 1-based eighth-of-daylight segment for Gulika Kaal, by weekday.
-const Map<int, int> kGulikaKaalSegment = {1: 6, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1, 7: 7};
+const Map<int, int> kGulikaKaalSegment = {
+  1: 6,
+  2: 5,
+  3: 4,
+  4: 3,
+  5: 2,
+  6: 1,
+  7: 7
+};
 
 TimeWindow _eighthWindow(DateTime sunrise, DateTime sunset, int segment1to8) {
   final len = sunset.difference(sunrise) ~/ 8;
@@ -189,8 +225,7 @@ TimeWindow abhijitMuhurtaWindow(DateTime sunrise, DateTime sunset) {
   return TimeWindow(start, start.add(muhurta));
 }
 
-bool abhijitApplies(DateTime sunrise) =>
-    sunrise.weekday != DateTime.wednesday;
+bool abhijitApplies(DateTime sunrise) => sunrise.weekday != DateTime.wednesday;
 
 // ---------------------------------------------------------------------------
 // Personalize: Tara bala / Chandra bala (require a natal reference)
@@ -209,8 +244,15 @@ enum TaraBalaResult {
   ativadha;
 
   static const _labels = [
-    'Janma', 'Sampat', 'Vipat', 'Kshema', 'Pratyari', 'Sadhaka', 'Vadha',
-    'Mitra', 'Ati-Mitra',
+    'Janma',
+    'Sampat',
+    'Vipat',
+    'Kshema',
+    'Pratyari',
+    'Sadhaka',
+    'Vadha',
+    'Mitra',
+    'Ati-Mitra',
   ];
 
   String get label => _labels[index];

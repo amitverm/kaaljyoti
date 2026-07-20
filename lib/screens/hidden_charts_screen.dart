@@ -13,6 +13,7 @@ import '../core/theme/theme.dart';
 import '../mahakosh/models.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import '../l10n/astro_l10n.dart';
 
 final hiddenChartsProvider = FutureProvider<List<HiddenMahakoshChart>>((ref) {
   final repo = ref.watch(mahakoshRepoProvider);
@@ -30,22 +31,19 @@ class HiddenChartsScreen extends ConsumerWidget {
     final hidden = ref.watch(hiddenChartsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Hidden charts')),
+      appBar: AppBar(title: Text(context.l10n.mnHiddenCharts)),
       body: repo == null || user == null
           ? EmptyState(
               message: user == null && repo != null
-                  ? 'Sign in to manage hidden charts.'
-                  : 'Needs the backend configured. See supabase/README.md.',
+                  ? context.l10n.hcSignInPrompt
+                  : context.l10n.hcBackendMissing,
             )
           : hidden.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => EmptyState(message: 'Could not load: $e'),
+              error: (e, _) =>
+                  EmptyState(message: context.l10n.uiCouldNotLoad('$e')),
               data: (items) => items.isEmpty
-                  ? const EmptyState(
-                      message: 'Nothing hidden. Charts you hide from '
-                          'Mahakosh — search, browse, or a chart\'s own '
-                          '"..." menu — show up here so you can undo it '
-                          'any time.')
+                  ? EmptyState(message: context.l10n.hcEmpty)
                   : RefreshIndicator(
                       onRefresh: () async =>
                           ref.invalidate(hiddenChartsProvider),
@@ -53,10 +51,9 @@ class HiddenChartsScreen extends ConsumerWidget {
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
                         children: [
                           Text(
-                            'Hidden charts are only hidden for you — '
-                            'everyone else still sees them normally.',
+                            context.l10n.hcNote,
                             style: TextStyle(
-                                fontSize: 12.5, color: TEColors.inkSoft),
+                                fontSize: 12.5, color: KJColors.inkSoft),
                           ),
                           const SizedBox(height: 14),
                           for (final h in items) _row(context, ref, h),
@@ -69,32 +66,33 @@ class HiddenChartsScreen extends ConsumerWidget {
 
   Widget _row(BuildContext context, WidgetRef ref, HiddenMahakoshChart h) {
     final parts = [
-      if (h.birthYear != null) 'b. ${h.birthYear}',
+      if (h.birthYear != null) context.l10n.labelBornYear('${h.birthYear}'),
       if (h.locationGeneral.isNotEmpty) h.locationGeneral,
-      'hidden ${TEDate.date(h.hiddenAt.toLocal())}',
+      context.l10n.hcHiddenOn(KJDate.date(h.hiddenAt.toLocal())),
     ];
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        title: Text('Chart ${h.mkCode} (anonymized)',
-            style:
-                const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-        subtitle:
-            Text(parts.join(' · '), style: const TextStyle(fontSize: 12)),
+        title: Text(context.l10n.hcChartAnonymized(h.mkCode),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        subtitle: Text(parts.join(' · '), style: const TextStyle(fontSize: 12)),
         trailing: TextButton(
           onPressed: () async {
             final repo = ref.read(mahakoshRepoProvider);
             if (repo == null) return;
+            // Captured before the first await — this row has no State to
+            // guard with, so context must not be used after the call.
+            final l10n = context.l10n;
             final messenger = ScaffoldMessenger.of(context);
             try {
               await repo.unhideChart(h.mkCode);
               ref.invalidate(hiddenChartsProvider);
             } catch (e) {
               messenger.showSnackBar(
-                  SnackBar(content: Text('Could not unhide: $e')));
+                  SnackBar(content: Text(l10n.hcUnhideError('$e'))));
             }
           },
-          child: const Text('Unhide'),
+          child: Text(context.l10n.hcUnhide),
         ),
       ),
     );

@@ -8,7 +8,7 @@
 /// lines — so a degree can't orphan away from its planet — and when
 /// degrees are shown each planet gets its own line, stacked vertically.
 /// Planet abbreviations are tinted with the traditional per-planet
-/// colours from the active palette ([TEPalette.planets]).
+/// colours from the active palette ([KJPalette.planets]).
 library;
 
 import 'dart:math' as math;
@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import '../core/astro/dignity.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../l10n/astro_l10n.dart';
 import 'chart_tuning.dart';
 
 /// Everything a painter needs to render one planet's label: its
@@ -54,15 +55,15 @@ class PlanetToken {
 /// [HouseLabelLayout] so all three chart styles read consistently.
 TextPainter singleTokenPainter(
   PlanetToken token, {
+  required AppLocalizations l10n,
   required double fontSize,
   bool showDegrees = false,
   bool showKarakas = false,
   bool isTransit = false,
 }) {
   final spans = isTransit
-      ? _transitChipSpans(
-          token.planet, token.showRetrograde, fontSize)
-      : _natalChipSpans(token, fontSize,
+      ? _transitChipSpans(l10n, token.planet, token.showRetrograde, fontSize)
+      : _natalChipSpans(l10n, token, fontSize,
           showDegrees: showDegrees, showKarakas: showKarakas);
   return TextPainter(
     text: TextSpan(children: spans),
@@ -75,6 +76,7 @@ TextPainter singleTokenPainter(
 /// retrograde/dignity/combustion glyphs + degree + karaka. Rendered as
 /// one unbreakable unit.
 List<InlineSpan> _natalChipSpans(
+  AppLocalizations l10n,
   PlanetToken t,
   double fontSize, {
   required bool showDegrees,
@@ -83,28 +85,32 @@ List<InlineSpan> _natalChipSpans(
   final tune = chartTuning.value; // Settings > Chart text
   final modSize = fontSize * tune.annotationScale;
   final ink = planetInk(t.planet);
-  final base = TETheme.mono(size: fontSize, color: ink, weight: tune.weight);
-  final mod = TETheme.mono(size: modSize, color: TEColors.inkSoft);
-  final degreeStyle = TETheme.mono(size: modSize, color: TEColors.inkSoft);
-  final karakaStyle = TETheme.mono(
-      size: modSize, color: TEColors.maroon, weight: FontWeight.w600);
+  final base = KJTheme.mono(size: fontSize, color: ink, weight: tune.weight);
+  final mod = KJTheme.mono(size: modSize, color: KJColors.inkSoft);
+  final degreeStyle = KJTheme.mono(size: modSize, color: KJColors.inkSoft);
+  final karakaStyle = KJTheme.mono(
+      size: modSize, color: KJColors.maroon, weight: FontWeight.w600);
 
-  final spans = <InlineSpan>[TextSpan(text: t.planet.abbr, style: base)];
+  final spans = <InlineSpan>[
+    TextSpan(text: t.planet.abbrLabel(l10n), style: base)
+  ];
   if (t.showRetrograde) {
     spans.add(TextSpan(text: '®', style: mod.copyWith(color: ink)));
   }
   switch (t.dignity) {
     case PlanetDignity.exalted:
-      spans.add(TextSpan(text: '↑', style: mod.copyWith(color: TEColors.forest)));
+      spans.add(
+          TextSpan(text: '↑', style: mod.copyWith(color: KJColors.forest)));
     case PlanetDignity.debilitated:
-      spans.add(TextSpan(text: '↓', style: mod.copyWith(color: TEColors.maroon)));
+      spans.add(
+          TextSpan(text: '↓', style: mod.copyWith(color: KJColors.maroon)));
     case PlanetDignity.ownSign:
       spans.add(TextSpan(text: '○', style: mod));
     case PlanetDignity.none:
       break;
   }
   if (t.combust) {
-    spans.add(TextSpan(text: '•', style: mod.copyWith(color: TEColors.maroon)));
+    spans.add(TextSpan(text: '•', style: mod.copyWith(color: KJColors.maroon)));
   }
   if (showDegrees && t.degreeInSign != null) {
     // Non-breaking space: the degree may never wrap away from its planet.
@@ -121,18 +127,23 @@ List<InlineSpan> _natalChipSpans(
 
 /// A transit (current-sky) planet chip: lowercase, italic, transit
 /// green — visually distinct from natal planets.
+///
+/// `toLowerCase()` is a no-op in caseless scripts (Devanagari and most
+/// Indic scripts), so there the italic + transit-green carry the whole
+/// distinction. That still reads clearly; it just isn't reinforced by
+/// case the way the Latin tokens are.
 List<InlineSpan> _transitChipSpans(
-    Planet p, bool retrograde, double fontSize) {
-  final base = TETheme.mono(size: fontSize * 0.85, color: TEColors.transit)
+    AppLocalizations l10n, Planet p, bool retrograde, double fontSize) {
+  final base = KJTheme.mono(size: fontSize * 0.85, color: KJColors.transit)
       .copyWith(fontStyle: FontStyle.italic);
   final spans = <InlineSpan>[
-    TextSpan(text: p.abbr.toLowerCase(), style: base),
+    TextSpan(text: p.abbrLabel(l10n).toLowerCase(), style: base),
   ];
   final isNode = p == Planet.rahu || p == Planet.ketu;
   if (!isNode && retrograde) {
     spans.add(TextSpan(
         text: '®',
-        style: TETheme.mono(size: fontSize * 0.61, color: TEColors.transit)));
+        style: KJTheme.mono(size: fontSize * 0.61, color: KJColors.transit)));
   }
   return spans;
 }
@@ -154,6 +165,7 @@ List<InlineSpan> _transitChipSpans(
 /// anchor. [width]/[height] expose the block's final size.
 class HouseLabelLayout {
   HouseLabelLayout({
+    required AppLocalizations l10n,
     required List<PlanetToken> tokens,
     List<Planet> transitPlanets = const [],
     Map<Planet, bool> transitRetrograde = const {},
@@ -168,8 +180,8 @@ class HouseLabelLayout {
   }) {
     // Shrink floor: explicit arg wins, else Settings > Chart text.
     final floor = minFontScale ?? chartTuning.value.minFontScale;
-    List<TextPainter> pack(double fontSize, {required bool onePerRow}) =>
-        _pack(
+    List<TextPainter> pack(double fontSize, {required bool onePerRow}) => _pack(
+          l10n: l10n,
           tokens: tokens,
           transitPlanets: transitPlanets,
           transitRetrograde: transitRetrograde,
@@ -220,6 +232,7 @@ class HouseLabelLayout {
   }
 
   static List<TextPainter> _pack({
+    required AppLocalizations l10n,
     required List<PlanetToken> tokens,
     required List<Planet> transitPlanets,
     required Map<Planet, bool> transitRetrograde,
@@ -231,7 +244,7 @@ class HouseLabelLayout {
     required bool showKarakas,
     required bool onePerRow,
   }) {
-    final gapStyle = TETheme.mono(size: fontSize);
+    final gapStyle = KJTheme.mono(size: fontSize);
 
     // Build every chip with its measured width.
     final chips = <(List<InlineSpan>, double)>[];
@@ -239,27 +252,27 @@ class HouseLabelLayout {
       chips.add(_measure([
         TextSpan(
           text: ascLabel,
-          style: TETheme.mono(
+          style: KJTheme.mono(
               size: fontSize * 0.9,
-              color: TEColors.maroon,
+              color: KJColors.maroon,
               weight: FontWeight.w600),
         ),
       ]));
     }
     for (final t in tokens) {
-      chips.add(_measure(_natalChipSpans(t, fontSize,
+      chips.add(_measure(_natalChipSpans(l10n, t, fontSize,
           showDegrees: showDegrees, showKarakas: showKarakas)));
     }
     final transitChips = <(List<InlineSpan>, double)>[
       for (final p in transitPlanets)
-        _measure(
-            _transitChipSpans(p, transitRetrograde[p] ?? false, fontSize)),
+        _measure(_transitChipSpans(
+            l10n, p, transitRetrograde[p] ?? false, fontSize)),
     ];
     // Pada codes: light grey, Parashar Light style — visually recessive
     // next to the planets.
-    final padaStyle = TETheme.mono(
+    final padaStyle = KJTheme.mono(
       size: fontSize * 0.85,
-      color: TEColors.inkSoft.withValues(alpha: 0.65),
+      color: KJColors.inkSoft.withValues(alpha: 0.65),
     );
     final padaChips = <(List<InlineSpan>, double)>[
       for (final l in padaLabels)
