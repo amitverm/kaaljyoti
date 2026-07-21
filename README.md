@@ -1,4 +1,4 @@
-# Kaal Jyoti
+# Kaal Jyotii
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Flutter](https://img.shields.io/badge/Flutter-3.27+-02569B.svg)](https://flutter.dev)
