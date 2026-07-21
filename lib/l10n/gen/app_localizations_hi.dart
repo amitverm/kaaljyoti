@@ -144,7 +144,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get rsPickChart =>
-      'इस शोध अनुरोध के लिए टैग करने हेतु अपनी किसी महाकोश-साझा कुंडली को चुनें। अनुरोधकर्ता इसे अनाम रूप में देखता है।';
+      'इस शोध अनुरोध के लिए टैग करने हेतु अपनी कोई भी महाकोश-साझा कुंडलियाँ चुनें। अनुरोधकर्ता उन्हें अनाम रूप में देखता है।';
 
   @override
   String get rsNotShared =>
@@ -155,6 +155,17 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get rsTagChart => 'कुंडली टैग करें';
+
+  @override
+  String rsTagSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count कुंडलियाँ टैग करें',
+      one: '1 कुंडली टैग करें',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get hcSignInPrompt =>
@@ -3523,6 +3534,17 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get tdTithiKshaya => ' (क्षय)';
+
+  @override
+  String get tdTithiVriddhi => ' (वृद्धि)';
+
+  @override
+  String tdTillDate(String date, String time) {
+    return ' · $date $time तक';
+  }
+
+  @override
   String get tdTimingsCard => 'समय';
 
   @override
@@ -4081,6 +4103,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get beManualEntry => 'स्थान स्वयं दर्ज करें';
 
   @override
+  String get bePlaceSearchOffline =>
+      'स्थान खोज उपलब्ध नहीं — नीचे स्थान स्वयं दर्ज करें।';
+
+  @override
+  String get placeSearchOffline =>
+      'स्थान खोज तक नहीं पहुँच सके — अपना कनेक्शन जाँचें।';
+
+  @override
   String get beLatitudeLabel => 'अक्षांश';
 
   @override
@@ -4406,7 +4436,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get rsTitle => 'कुंडली के साथ उत्तर दें';
 
   @override
-  String get rsTagged => 'कुंडली इस अनुरोध से जोड़ी गई।';
+  String rsTagged(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count कुंडलियाँ इस अनुरोध से जोड़ी गईं।',
+      one: 'कुंडली इस अनुरोध से जोड़ी गई।',
+    );
+    return '$_temp0';
+  }
 
   @override
   String rsError(String e) {
@@ -4800,6 +4838,11 @@ class AppLocalizationsHi extends AppLocalizations {
       'अनुरोध भेजा गया — त्वरित समीक्षा के बाद यह प्रकाशित होगा।';
 
   @override
+  String nrSubmitFailed(String e) {
+    return 'भेजा नहीं जा सका: $e';
+  }
+
+  @override
   String get nrSubmitting => 'भेजा जा रहा है…';
 
   @override
@@ -4828,6 +4871,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get nrCriteriaSection =>
       'मानदंड (संरचित — वास्तविक क्वेरी के रूप में चलते हैं)';
+
+  @override
+  String get nrCriteriaOptionalHint =>
+      'वैकल्पिक — यदि आपको अभी नहीं पता कि यह पैटर्न किस संयोजन से दर्शाया जाता है (यही स्वयं शोध का प्रश्न हो सकता है), तो इसे खाली छोड़ दें। मानदंड के बिना स्वचालित मिलान नहीं होगा — कुंडलियाँ केवल सदस्यों की स्वयं भेजी प्रतिक्रियाओं से आएँगी।';
 
   @override
   String get nrAddCriterion => 'मानदंड जोड़ें';
@@ -4934,6 +4981,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get msSetDateBound => 'कम से कम एक तिथि सीमा दें।';
+
+  @override
+  String get msEnterValue => 'पहले कोई मान लिखें।';
 
   @override
   String get msNot => 'नहीं ';

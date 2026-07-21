@@ -353,7 +353,7 @@ abstract class AppLocalizations {
   /// No description provided for @rsPickChart.
   ///
   /// In en, this message translates to:
-  /// **'Pick one of your Mahakosh-shared charts to tag against this research request. The requester sees it anonymized.'**
+  /// **'Pick any of your Mahakosh-shared charts to tag against this research request. The requester sees them anonymized.'**
   String get rsPickChart;
 
   /// No description provided for @rsNotShared.
@@ -373,6 +373,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tag chart'**
   String get rsTagChart;
+
+  /// No description provided for @rsTagSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Tag 1 chart} other{Tag {count} charts}}'**
+  String rsTagSelected(int count);
 
   /// No description provided for @hcSignInPrompt.
   ///
@@ -6489,6 +6495,24 @@ abstract class AppLocalizations {
   /// **' · till tomorrow {time}'**
   String tdTillTomorrow(String time);
 
+  /// No description provided for @tdTithiKshaya.
+  ///
+  /// In en, this message translates to:
+  /// **' (kshaya)'**
+  String get tdTithiKshaya;
+
+  /// No description provided for @tdTithiVriddhi.
+  ///
+  /// In en, this message translates to:
+  /// **' (vriddhi)'**
+  String get tdTithiVriddhi;
+
+  /// No description provided for @tdTillDate.
+  ///
+  /// In en, this message translates to:
+  /// **' · till {date} {time}'**
+  String tdTillDate(String date, String time);
+
   /// No description provided for @tdTimingsCard.
   ///
   /// In en, this message translates to:
@@ -7473,6 +7497,18 @@ abstract class AppLocalizations {
   /// **'Enter place manually'**
   String get beManualEntry;
 
+  /// No description provided for @bePlaceSearchOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach place search — enter the place manually below.'**
+  String get bePlaceSearchOffline;
+
+  /// No description provided for @placeSearchOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach place search — check your connection.'**
+  String get placeSearchOffline;
+
   /// No description provided for @beLatitudeLabel.
   ///
   /// In en, this message translates to:
@@ -7992,8 +8028,8 @@ abstract class AppLocalizations {
   /// No description provided for @rsTagged.
   ///
   /// In en, this message translates to:
-  /// **'Chart tagged against this request.'**
-  String get rsTagged;
+  /// **'{count, plural, =1{Chart tagged against this request.} other{{count} charts tagged against this request.}}'**
+  String rsTagged(int count);
 
   /// No description provided for @rsError.
   ///
@@ -8685,6 +8721,12 @@ abstract class AppLocalizations {
   /// **'Request submitted — it goes live after a quick review.'**
   String get nrSubmitted;
 
+  /// No description provided for @nrSubmitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not submit: {e}'**
+  String nrSubmitFailed(String e);
+
   /// No description provided for @nrSubmitting.
   ///
   /// In en, this message translates to:
@@ -8738,6 +8780,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CRITERIA (structured — runs as a real query)'**
   String get nrCriteriaSection;
+
+  /// No description provided for @nrCriteriaOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — leave empty if you don\'t yet know which combination represents the pattern (that may be the research question itself). Without criteria there\'s no automatic matching; charts arrive only through members\' manual responses.'**
+  String get nrCriteriaOptionalHint;
 
   /// No description provided for @nrAddCriterion.
   ///
@@ -8918,6 +8966,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set at least one date bound.'**
   String get msSetDateBound;
+
+  /// No description provided for @msEnterValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a value first.'**
+  String get msEnterValue;
 
   /// Prefix on a negated filter chip — 'NOT Sun in sign 5'. Keep the trailing space.
   ///

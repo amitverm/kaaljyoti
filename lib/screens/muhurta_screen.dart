@@ -560,6 +560,7 @@ class _MuhurtaPlacePickerDialogState
   Timer? _debounce;
   bool _locating = false;
   bool _locateFailed = false;
+  bool _searchFailed = false;
 
   Future<void> _useCurrentLocation() async {
     setState(() {
@@ -588,8 +589,22 @@ class _MuhurtaPlacePickerDialogState
   void _onChanged(String q) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 350), () async {
-      final results = await ref.read(placeLookupProvider).search(q);
-      if (mounted) setState(() => _results = results);
+      try {
+        final results = await ref.read(placeLookupProvider).search(q);
+        if (mounted) setState(() {
+              _results = results;
+              _searchFailed = false;
+            });
+      } catch (_) {
+        // Offline / dead network: surface inline rather than letting the
+        // exception escape the Timer callback and get reported as a crash.
+        if (mounted) {
+          setState(() {
+            _results = const [];
+            _searchFailed = true;
+          });
+        }
+      }
     });
   }
 
@@ -634,6 +649,12 @@ class _MuhurtaPlacePickerDialogState
               onChanged: _onChanged,
             ),
             const SizedBox(height: 8),
+            if (_searchFailed)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(context.l10n.placeSearchOffline,
+                    style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
+              ),
             for (final r in _results.take(6))
               ListTile(
                 dense: true,

@@ -38,6 +38,9 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
   TimeOfDay? _time;
   PlaceResult? _place;
   List<PlaceResult> _placeResults = [];
+  // True when the last geocoder search threw (offline / dead network) —
+  // drives the inline nudge toward manual entry so the failure isn't silent.
+  bool _placeSearchFailed = false;
   Timer? _debounce;
   int _ayanamsaId = Ayanamsa.lahiri.id;
   // Chart style is no longer chosen here — new kundlis adopt the app-wide
@@ -119,8 +122,24 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
   void _onPlaceQuery(String q) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 350), () async {
-      final results = await ref.read(placeLookupProvider).search(q);
-      if (mounted) setState(() => _placeResults = results);
+      try {
+        final results = await ref.read(placeLookupProvider).search(q);
+        if (mounted) {
+          setState(() {
+            _placeResults = results;
+            _placeSearchFailed = false;
+          });
+        }
+      } catch (_) {
+        // Offline / dead network: surface it inline (manual entry works
+        // offline) instead of failing silently.
+        if (mounted) {
+          setState(() {
+            _placeResults = [];
+            _placeSearchFailed = true;
+          });
+        }
+      }
     });
   }
 
@@ -281,12 +300,28 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
                         _place = r;
                         _placeController.text = r.displayName;
                         _placeResults = [];
+                        _placeSearchFailed = false;
                       }),
                     ),
                 ],
               ),
             ),
-          Row(
+          if (_placeSearchFailed && _place == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                l10n.bePlaceSearchOffline,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+          // Wrap, not Row: on narrow screens the two labels together
+          // exceed the width and a Row overflows (~26px) — the second
+          // button drops to the next line instead.
+          Wrap(
+            spacing: 4,
             children: [
               TextButton.icon(
                 icon: Icon(

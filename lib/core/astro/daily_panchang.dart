@@ -28,6 +28,8 @@ class TithiSpan {
     required this.paksha,
     required this.starts,
     required this.ends,
+    this.kshaya = false,
+    this.vriddhi = false,
   });
 
   /// 0-based lunar-day index (0 = Shukla Pratipada … 29 = Amavasya).
@@ -42,6 +44,17 @@ class TithiSpan {
   /// When this tithi ends. May fall after the window (i.e. tomorrow).
   /// Null only if the ephemeris boundary search failed.
   final DateTime? ends;
+
+  /// Kshaya (decayed): begins after this sunrise and ends before the
+  /// next one, so it never rules a civil date — traditional calendars
+  /// omit it, and observances tied to it shift.
+  final bool kshaya;
+
+  /// Vriddhi (grown): rules two consecutive sunrises, so the civil
+  /// calendar repeats it. True on both days of the pair — when the span
+  /// covers this whole Vedic day (day 1) and when the sunrise tithi
+  /// already ruled the previous sunrise (day 2).
+  final bool vriddhi;
 }
 
 class DailyPanchang {
@@ -154,6 +167,51 @@ double? _nextChange(double Function(double jd) bucket, double fromJd) {
   return hiV;
 }
 
+/// Walks the tithi bucket across one Vedic day ([riseJd] → [nextRiseJd]),
+/// hopping boundary to boundary, so a transition day yields two spans and
+/// a kshaya day three. Pure over the injected [tithiBucket] — headlessly
+/// testable with synthetic longitudes (the ephemeris FFI can't load under
+/// `flutter test`).
+///
+/// [prevSunriseTithi] is the bucket index at the *previous* sunrise; it
+/// is what lets day 2 of a vriddhi pair be recognized (the sunrise tithi
+/// repeats). Pass null when the previous sunrise can't be resolved —
+/// day-2 vriddhi then simply isn't flagged.
+List<TithiSpan> tithiSpansForWindow({
+  required double riseJd,
+  required double nextRiseJd,
+  required int? prevSunriseTithi,
+  required double Function(double jd) tithiBucket,
+  required DateTime? Function(double? jd) toLocal,
+}) {
+  final spans = <TithiSpan>[];
+  var cursor = riseJd;
+  DateTime? spanStart; // first span began before the window
+  for (var guard = 0; cursor < nextRiseJd && guard < 40; guard++) {
+    final idx = tithiBucket(cursor).toInt();
+    final endJd = _nextChange(tithiBucket, cursor);
+    final atSunrise = spans.isEmpty;
+    spans.add(TithiSpan(
+      index: idx,
+      name: tithiNameFor(idx),
+      paksha: pakshaFor(idx),
+      starts: spanStart,
+      ends: toLocal(endJd),
+      // Touches neither sunrise: born and gone inside the window.
+      kshaya: !atSunrise && endJd != null && endJd < nextRiseJd,
+      // Rules two sunrises: covers this whole window (day 1), or the
+      // sunrise tithi already ruled the previous sunrise (day 2).
+      vriddhi: atSunrise &&
+          (idx == prevSunriseTithi ||
+              (endJd != null && endJd >= nextRiseJd)),
+    ));
+    if (endJd == null) break;
+    cursor = endJd + 0.5 / 1440; // step just past the boundary
+    spanStart = toLocal(endJd);
+  }
+  return spans;
+}
+
 DailyPanchang computeDailyPanchang({
   required DateTime now,
   required double latitude,
@@ -222,30 +280,23 @@ DailyPanchang computeDailyPanchang({
   final riseL = local(rise);
   final setL = local(set);
 
-  // Every tithi spanning the Vedic day (this sunrise → next sunrise).
-  // Walk the tithi bucket from the window start, hopping boundary to
-  // boundary, so a transition day naturally yields two (or, on a
-  // kshaya day, three) entries rather than only the live one.
+  // Every tithi spanning the Vedic day (this sunrise → next sunrise),
+  // with kshaya/vriddhi flags. Day-2 vriddhi needs the tithi at the
+  // previous sunrise, so resolve that first.
   final nextRise =
       svc.sunEventAfter(rise ?? (jd - 0.5), latitude, longitude, rise: true);
   final tithis = <TithiSpan>[];
   if (rise != null && nextRise != null && nextRise > rise) {
-    var cursor = rise;
-    DateTime? spanStart; // first span began before the window
-    for (var guard = 0; cursor < nextRise && guard < 40; guard++) {
-      final idx = tithiBucket(cursor).toInt();
-      final endJd = _nextChange(tithiBucket, cursor);
-      tithis.add(TithiSpan(
-        index: idx,
-        name: tithiNameFor(idx),
-        paksha: pakshaFor(idx),
-        starts: spanStart,
-        ends: local(endJd),
-      ));
-      if (endJd == null) break;
-      cursor = endJd + 0.5 / 1440; // step just past the boundary
-      spanStart = local(endJd);
-    }
+    final prevRise =
+        svc.sunriseBefore(rise - 2 / 1440, latitude, longitude);
+    tithis.addAll(tithiSpansForWindow(
+      riseJd: rise,
+      nextRiseJd: nextRise,
+      prevSunriseTithi:
+          prevRise == null ? null : tithiBucket(prevRise).toInt(),
+      tithiBucket: tithiBucket,
+      toLocal: local,
+    ));
   }
   if (tithis.isEmpty) {
     // Polar / unresolved sunrise: fall back to the live tithi alone.

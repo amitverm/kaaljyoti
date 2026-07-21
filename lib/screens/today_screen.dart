@@ -209,12 +209,24 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       ? '—'
       : '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
-  /// " · till 14:32" or " · till tomorrow 02:10".
+  /// " · till 14:32", " · till tomorrow 02:10", or, for anything two or
+  /// more calendar days out, " · till 23 Jul 2026 07:04".
+  ///
+  /// A tithi that begins just before the next sunrise still touches the
+  /// current Vedic day, so it is listed here even though it ends ~a day
+  /// later — which can land on the day *after* tomorrow. The delta must
+  /// therefore be a real calendar-day difference, not a day-of-month
+  /// compare (which mislabels 2-days-out as "tomorrow" and breaks across
+  /// month boundaries).
   String _till(AppLocalizations l10n, DateTime? t) {
     if (t == null) return '';
     final now = DateTime.now();
-    final tomorrow = t.day != now.day;
-    return tomorrow ? l10n.tdTillTomorrow(_hm(t)) : l10n.tdTill(_hm(t));
+    final today = DateTime(now.year, now.month, now.day);
+    final endDay = DateTime(t.year, t.month, t.day);
+    final days = endDay.difference(today).inDays;
+    if (days <= 0) return l10n.tdTill(_hm(t));
+    if (days == 1) return l10n.tdTillTomorrow(_hm(t));
+    return l10n.tdTillDate(KJDate.date(t), _hm(t));
   }
 
   @override
@@ -339,11 +351,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                             pakshaLabelForIndex(l10n, d.panchang.tithiIndex)),
                         // One row per tithi touching today (sunrise →
                         // next sunrise): a transition day shows both,
-                        // each with the moment it hands over.
+                        // each with the moment it hands over. Kshaya
+                        // (skipped) and vriddhi (repeated) tithis are
+                        // marked, as in a printed panchang.
                         for (var i = 0; i < d.tithis.length; i++)
                           _row(
                               i == 0 ? l10n.labelTithi : '',
                               '${tithiLabelForIndex(l10n, d.tithis[i].index)}'
+                              '${d.tithis[i].kshaya ? l10n.tdTithiKshaya : ''}'
+                              '${d.tithis[i].vriddhi ? l10n.tdTithiVriddhi : ''}'
                               '${_till(l10n, d.tithis[i].ends)}'),
                         _row(
                             l10n.labelNakshatra,
@@ -525,6 +541,7 @@ class _PlacePickerDialogState extends ConsumerState<_PlacePickerDialog> {
   Timer? _debounce;
   bool _locating = false;
   bool _locateFailed = false;
+  bool _searchFailed = false;
 
   Future<void> _useCurrentLocation() async {
     setState(() {
@@ -553,8 +570,23 @@ class _PlacePickerDialogState extends ConsumerState<_PlacePickerDialog> {
   void _onChanged(String q) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 350), () async {
-      final results = await ref.read(placeLookupProvider).search(q);
-      if (mounted) setState(() => _results = results);
+      try {
+        final results = await ref.read(placeLookupProvider).search(q);
+        if (mounted) setState(() {
+              _results = results;
+              _searchFailed = false;
+            });
+      } catch (_) {
+        // Offline / dead network: the geocoder throws (host lookup or
+        // timeout). Show it inline instead of letting it escape the Timer
+        // callback into the zone handler and get reported as a crash.
+        if (mounted) {
+          setState(() {
+            _results = const [];
+            _searchFailed = true;
+          });
+        }
+      }
     });
   }
 
@@ -599,6 +631,12 @@ class _PlacePickerDialogState extends ConsumerState<_PlacePickerDialog> {
               onChanged: _onChanged,
             ),
             const SizedBox(height: 8),
+            if (_searchFailed)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(context.l10n.placeSearchOffline,
+                    style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
+              ),
             for (final r in _results.take(6))
               ListTile(
                 dense: true,

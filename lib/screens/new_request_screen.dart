@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
+import '../mahakosh/filter_builder_sheet.dart';
 import '../mahakosh/models.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
@@ -29,24 +29,36 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
 
   Future<void> _submit() async {
     final repo = ref.read(researchRepoProvider);
-    if (repo == null || _criteria.isEmpty) return;
+    if (repo == null) return;
     // Captured before the first await — context must not be used across
     // suspension points.
     final l10n = context.l10n;
     setState(() => _submitting = true);
     try {
+      // Criteria is optional (the pattern may be exactly what's being
+      // researched): without it the request relies on manual responses
+      // instead of auto-matching.
       await repo.submit(
         title: _titleController.text.trim(),
         description: _descController.text.trim(),
-        criteria: _criteria.length == 1
-            ? _criteria.first
-            : GroupFilter('AND', _criteria.cast<FilterNode>()),
+        criteria: switch (_criteria.length) {
+          0 => null,
+          1 => _criteria.first,
+          _ => GroupFilter('AND', _criteria.cast<FilterNode>()),
+        },
       );
       ref.invalidate(researchBoardProvider);
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(l10n.nrSubmitted)));
         context.pop();
+      }
+    } catch (e) {
+      // Without this the failure is invisible: the async error is
+      // unhandled and the button just flips back to "Submit".
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.nrSubmitFailed('$e'))));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -62,6 +74,10 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
         children: [
           TextField(
             controller: _titleController,
+            // Rebuild so the submit button enables as soon as a title
+            // exists — criteria no longer gates it (and its setState no
+            // longer serves as the accidental rebuild trigger).
+            onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
                 labelText: context.l10n.nrTitleLabel,
                 hintText: context.l10n.nrTitleHint),
@@ -86,6 +102,11 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
                   letterSpacing: 1.1,
                   color: KJColors.inkSoft,
                   fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Text(
+            context.l10n.nrCriteriaOptionalHint,
+            style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
+          ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -106,9 +127,7 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
           ),
           const SizedBox(height: 24),
           FilledButton(
-            onPressed: _criteria.isEmpty ||
-                    _titleController.text.trim().isEmpty ||
-                    _submitting
+            onPressed: _titleController.text.trim().isEmpty || _submitting
                 ? null
                 : _submit,
             child: Text(_submitting
@@ -127,64 +146,12 @@ class _NewRequestScreenState extends ConsumerState<NewRequestScreen> {
   }
 
   Future<void> _addCriterion() async {
-    // Minimal inline builder: planet-in-house and yoga/life-event tags.
-    final planetController = ValueNotifier<Planet>(Planet.mars);
-    final houseController = ValueNotifier<int>(7);
-    await showModalBottomSheet(
-      context: context,
-      backgroundColor: KJColors.paper,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(context.l10n.nrAddCriterion, style: KJTheme.serif(size: 18)),
-            const SizedBox(height: 12),
-            ValueListenableBuilder(
-              valueListenable: planetController,
-              builder: (_, planet, __) => DropdownButtonFormField<Planet>(
-                value: planet,
-                decoration: InputDecoration(labelText: context.l10n.nrPlanet),
-                items: [
-                  for (final p in Planet.values)
-                    DropdownMenuItem(
-                        value: p,
-                        child: Text(p.label(context.l10n),
-                            style: TextStyle(color: planetInk(p)))),
-                ],
-                onChanged: (p) => planetController.value = p!,
-              ),
-            ),
-            const SizedBox(height: 10),
-            ValueListenableBuilder(
-              valueListenable: houseController,
-              builder: (_, house, __) => DropdownButtonFormField<int>(
-                value: house,
-                decoration:
-                    InputDecoration(labelText: context.l10n.nrHouseFromLagna),
-                items: [
-                  for (var h = 1; h <= 12; h++)
-                    DropdownMenuItem(
-                        value: h, child: Text(context.l10n.nrHouseN('$h'))),
-                ],
-                onChanged: (v) => houseController.value = v!,
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () {
-                setState(() => _criteria.add(AtomicFilter(
-                      type: 'planet_in_house',
-                      planet: planetController.value.name,
-                      house: houseController.value,
-                    )));
-                Navigator.pop(ctx);
-              },
-              child: Text(context.l10n.nrAdd),
-            ),
-          ],
-        ),
-      ),
-    );
+    // Same builder as Mahakosh search — the full filter vocabulary
+    // (house/sign/nakshatra, yoga, life event, birth range), not just
+    // planet-in-house.
+    final filter = await showFilterBuilderSheet(context);
+    if (filter != null) {
+      setState(() => _criteria.add(filter));
+    }
   }
 }

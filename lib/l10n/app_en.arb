@@ -59,10 +59,18 @@
   "bcTapHint": "Double-tap or long-press a house to view the chart from it",
   "bcTransitLive": "Transit shown in green, live",
   "bcTransitAsOf": "Transit shown in green, as of the chosen date/time (past, present, or future)",
-  "rsPickChart": "Pick one of your Mahakosh-shared charts to tag against this research request. The requester sees it anonymized.",
+  "rsPickChart": "Pick any of your Mahakosh-shared charts to tag against this research request. The requester sees them anonymized.",
   "rsNotShared": "Not shared yet — share a kundli first, then respond:",
   "rsTagging": "Tagging…",
   "rsTagChart": "Tag chart",
+  "rsTagSelected": "{count, plural, =1{Tag 1 chart} other{Tag {count} charts}}",
+  "@rsTagSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hcSignInPrompt": "Sign in to manage hidden charts.",
   "hcBackendMissing": "Needs the backend configured. See supabase/README.md.",
   "@hcBackendMissing": {
@@ -2043,6 +2051,19 @@
       }
     }
   },
+  "tdTithiKshaya": " (kshaya)",
+  "tdTithiVriddhi": " (vriddhi)",
+  "tdTillDate": " · till {date} {time}",
+  "@tdTillDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "tdTimingsCard": "Timings",
   "tdTransitNow": "Transit now",
   "tdDisplaySection": "Display",
@@ -2434,6 +2455,8 @@
   "dfYear": "Year",
   "dfPickFromCalendar": "Pick from calendar",
   "beManualEntry": "Enter place manually",
+  "bePlaceSearchOffline": "Couldn't reach place search — enter the place manually below.",
+  "placeSearchOffline": "Couldn't reach place search — check your connection.",
   "beLatitudeLabel": "Latitude",
   "beLongitudeLabel": "Longitude",
   "beTimezoneLabel": "Timezone",
@@ -2663,7 +2686,14 @@
     }
   },
   "rsTitle": "Respond with a Chart",
-  "rsTagged": "Chart tagged against this request.",
+  "rsTagged": "{count, plural, =1{Chart tagged against this request.} other{{count} charts tagged against this request.}}",
+  "@rsTagged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "rsError": "Could not respond: {e}",
   "@rsError": {
     "placeholders": {
@@ -2897,6 +2927,14 @@
   },
   "nrTitle": "New Research Request",
   "nrSubmitted": "Request submitted — it goes live after a quick review.",
+  "nrSubmitFailed": "Could not submit: {e}",
+  "@nrSubmitFailed": {
+    "placeholders": {
+      "e": {
+        "type": "String"
+      }
+    }
+  },
   "nrSubmitting": "Submitting…",
   "nrSubmit": "Submit for review",
   "nrModerationNote": "Requests are reviewed before going live — primarily to catch attempts to identify a specific known individual rather than genuine pattern research.",
@@ -2906,6 +2944,7 @@
   "nrPurposeHint": "What pattern are you researching, and why?",
   "nrPrivacyHint": "Title and purpose are shown publicly — don't include names, contact details, or anything that could identify a real person.",
   "nrCriteriaSection": "CRITERIA (structured — runs as a real query)",
+  "nrCriteriaOptionalHint": "Optional — leave empty if you don't yet know which combination represents the pattern (that may be the research question itself). Without criteria there's no automatic matching; charts arrive only through members' manual responses.",
   "nrAddCriterion": "Add criterion",
   "nrPlanet": "Planet",
   "nrHouseFromLagna": "House (from lagna)",
@@ -2986,6 +3025,7 @@
   "msToDate": "To date",
   "msLongPressClear": "Long-press a button to clear it.",
   "msSetDateBound": "Set at least one date bound.",
+  "msEnterValue": "Type a value first.",
   "msNot": "NOT ",
   "@msNot": {
     "description": "Prefix on a negated filter chip — 'NOT Sun in sign 5'. Keep the trailing space."

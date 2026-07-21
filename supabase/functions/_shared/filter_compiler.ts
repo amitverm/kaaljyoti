@@ -99,8 +99,34 @@ const PLANETS = new Set([
   "ascendant",
 ]);
 
-// yoga codes and life-event tags: lowercase snake-ish identifiers.
+// yoga codes: lowercase snake-ish identifiers (app-generated).
 const CODE_RE = /^[a-z0-9][a-z0-9_\-]{0,63}$/;
+
+// Life-event tags are FREE TEXT from contributed charts (the event's
+// title or category label — 'Marriage', 'Heart transplant', or anything
+// the contributor typed, in any script). Validated only for sanity
+// (non-empty, bounded, no control chars); matching is case-insensitive
+// substring, so the value ends up inside an ILIKE pattern parameter.
+const MAX_TAG_LENGTH = 64;
+const CONTROL_RE = /[\u0000-\u001f\u007f]/;
+
+function requireTag(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new FilterValidationError("tag must be a string");
+  }
+  const tag = value.trim();
+  if (tag.length === 0 || tag.length > MAX_TAG_LENGTH || CONTROL_RE.test(tag)) {
+    throw new FilterValidationError(
+      `tag must be 1-${MAX_TAG_LENGTH} characters of plain text`,
+    );
+  }
+  return tag;
+}
+
+/** Escape LIKE/ILIKE wildcards so user text matches literally. */
+function likePattern(text: string): string {
+  return "%" + text.replace(/[\\%_]/g, (m) => "\\" + m) + "%";
+}
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -247,10 +273,13 @@ export function compileFilter(
                           AND cy.yoga_code = ${yoga})`;
       }
       case "life_event": {
-        const tag = bind(requireCode(n.tag, "tag"));
+        // Free-text match: contributed tags are event titles / category
+        // labels ('Marriage', 'Heart transplant'), so exact compare on a
+        // snake_code would never hit. ILIKE substring, wildcards escaped.
+        const tag = bind(likePattern(requireTag(n.tag)));
         return `EXISTS (SELECT 1 FROM public.life_events le
                         WHERE le.chart_id = ${chartAlias}.id
-                          AND le.tag = ${tag})`;
+                          AND le.tag ILIKE ${tag})`;
       }
       case "birth_range": {
         // Filters on the chart's LOCAL birth date / time-of-day.

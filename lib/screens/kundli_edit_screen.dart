@@ -39,6 +39,7 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
   List<PlaceResult> _placeResults = [];
   Timer? _debounce;
   bool _dirtyBirthData = false;
+  bool _placeSearchFailed = false;
 
   @override
   void initState() {
@@ -272,11 +273,35 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
               });
               _debounce?.cancel();
               _debounce = Timer(const Duration(milliseconds: 350), () async {
-                final results = await ref.read(placeLookupProvider).search(q);
-                if (mounted) setState(() => _placeResults = results);
+                try {
+                  final results =
+                      await ref.read(placeLookupProvider).search(q);
+                  if (mounted) {
+                    setState(() {
+                      _placeResults = results;
+                      _placeSearchFailed = false;
+                    });
+                  }
+                } catch (_) {
+                  // Offline / dead network: surface inline rather than
+                  // letting the exception escape the Timer callback and
+                  // get reported as a crash.
+                  if (mounted) {
+                    setState(() {
+                      _placeResults = [];
+                      _placeSearchFailed = true;
+                    });
+                  }
+                }
               });
             },
           ),
+          if (_placeSearchFailed && _newPlace == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(context.l10n.placeSearchOffline,
+                  style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
+            ),
           if (_placeResults.isNotEmpty && _newPlace == null)
             Card(
               margin: const EdgeInsets.only(top: 4),

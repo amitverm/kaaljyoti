@@ -26,17 +26,20 @@ class ResearchRepository {
 
   /// Submit a structured request — criteria is a FilterNode tree, not
   /// free-form text. Goes into the moderation queue (pending_review).
+  /// Null criteria means the requester doesn't know the combination yet
+  /// (that's the research question) — the request skips auto-matching
+  /// and collects charts through manual responses only.
   Future<void> submit({
     required String title,
     required String description,
-    required FilterNode criteria,
+    FilterNode? criteria,
   }) async {
     if (_userId == null) throw StateError('Sign in to post a request.');
     await _client.from('research_requests').insert({
       'requester_id': _userId,
       'title': title,
       'description': description,
-      'criteria': criteria.toJson(),
+      'criteria': criteria?.toJson(),
     });
   }
 
@@ -54,23 +57,33 @@ class ResearchRepository {
     ];
   }
 
-  /// Manually tag one of the user's contributed charts against an
-  /// open request (screen 12 — Respond to Request).
-  Future<void> respondWithChart({
+  /// Manually tag one or more of the user's contributed charts against an
+  /// open request (screen 12 — Respond to Request). Only the caller's own
+  /// charts are resolvable (contributor_id filter), so a stray mk_code that
+  /// isn't theirs is simply skipped rather than tagging someone else's
+  /// chart. The upsert is idempotent (re-tagging an already-matched chart
+  /// is a no-op), so responding twice never duplicates a match.
+  Future<void> respondWithCharts({
     required String requestId,
-    required String mkCode,
+    required List<String> mkCodes,
   }) async {
-    final chart = await _client
+    if (mkCodes.isEmpty) return;
+    final charts = await _client
         .from('mahakosh_charts')
         .select('id')
-        .eq('mk_code', mkCode)
-        .eq('contributor_id', _userId as Object)
-        .single();
-    await _client.from('request_matches').upsert({
-      'request_id': requestId,
-      'chart_id': chart['id'],
-      'source': 'manual',
-      'matched_by': _userId,
-    }, onConflict: 'request_id,chart_id', ignoreDuplicates: true);
+        .inFilter('mk_code', mkCodes)
+        .eq('contributor_id', _userId as Object);
+    final rows = [
+      for (final c in charts)
+        {
+          'request_id': requestId,
+          'chart_id': c['id'],
+          'source': 'manual',
+          'matched_by': _userId,
+        }
+    ];
+    if (rows.isEmpty) return;
+    await _client.from('request_matches').upsert(rows,
+        onConflict: 'request_id,chart_id', ignoreDuplicates: true);
   }
 }

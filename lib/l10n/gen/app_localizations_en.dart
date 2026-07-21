@@ -144,7 +144,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rsPickChart =>
-      'Pick one of your Mahakosh-shared charts to tag against this research request. The requester sees it anonymized.';
+      'Pick any of your Mahakosh-shared charts to tag against this research request. The requester sees them anonymized.';
 
   @override
   String get rsNotShared =>
@@ -155,6 +155,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rsTagChart => 'Tag chart';
+
+  @override
+  String rsTagSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tag $count charts',
+      one: 'Tag 1 chart',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get hcSignInPrompt => 'Sign in to manage hidden charts.';
@@ -3527,6 +3538,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get tdTithiKshaya => ' (kshaya)';
+
+  @override
+  String get tdTithiVriddhi => ' (vriddhi)';
+
+  @override
+  String tdTillDate(String date, String time) {
+    return ' · till $date $time';
+  }
+
+  @override
   String get tdTimingsCard => 'Timings';
 
   @override
@@ -4085,6 +4107,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get beManualEntry => 'Enter place manually';
 
   @override
+  String get bePlaceSearchOffline =>
+      'Couldn\'t reach place search — enter the place manually below.';
+
+  @override
+  String get placeSearchOffline =>
+      'Couldn\'t reach place search — check your connection.';
+
+  @override
   String get beLatitudeLabel => 'Latitude';
 
   @override
@@ -4412,7 +4442,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rsTitle => 'Respond with a Chart';
 
   @override
-  String get rsTagged => 'Chart tagged against this request.';
+  String rsTagged(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count charts tagged against this request.',
+      one: 'Chart tagged against this request.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String rsError(String e) {
@@ -4804,6 +4842,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Request submitted — it goes live after a quick review.';
 
   @override
+  String nrSubmitFailed(String e) {
+    return 'Could not submit: $e';
+  }
+
+  @override
   String get nrSubmitting => 'Submitting…';
 
   @override
@@ -4832,6 +4875,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get nrCriteriaSection =>
       'CRITERIA (structured — runs as a real query)';
+
+  @override
+  String get nrCriteriaOptionalHint =>
+      'Optional — leave empty if you don\'t yet know which combination represents the pattern (that may be the research question itself). Without criteria there\'s no automatic matching; charts arrive only through members\' manual responses.';
 
   @override
   String get nrAddCriterion => 'Add criterion';
@@ -4938,6 +4985,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get msSetDateBound => 'Set at least one date bound.';
+
+  @override
+  String get msEnterValue => 'Type a value first.';
 
   @override
   String get msNot => 'NOT ';

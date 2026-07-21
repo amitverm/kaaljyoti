@@ -21,22 +21,23 @@ class RespondScreen extends ConsumerStatefulWidget {
 }
 
 class _RespondScreenState extends ConsumerState<RespondScreen> {
-  String? _selectedMkCode;
+  final Set<String> _selectedMkCodes = {};
   bool _submitting = false;
 
   Future<void> _submit() async {
     final repo = ref.read(researchRepoProvider);
-    if (repo == null || _selectedMkCode == null) return;
+    if (repo == null || _selectedMkCodes.isEmpty) return;
+    final count = _selectedMkCodes.length;
     setState(() => _submitting = true);
     try {
-      await repo.respondWithChart(
+      await repo.respondWithCharts(
         requestId: widget.requestId,
-        mkCode: _selectedMkCode!,
+        mkCodes: _selectedMkCodes.toList(),
       );
       ref.invalidate(requestMatchesProvider(widget.requestId));
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(context.l10n.rsTagged)));
+            .showSnackBar(SnackBar(content: Text(context.l10n.rsTagged(count))));
         context.pop();
       }
     } catch (e) {
@@ -75,14 +76,20 @@ class _RespondScreenState extends ConsumerState<RespondScreen> {
               for (final k in shared)
                 Card(
                   margin: const EdgeInsets.only(bottom: 8),
-                  child: RadioListTile<String>(
-                    value: k.mahakoshCode!,
-                    groupValue: _selectedMkCode,
+                  child: CheckboxListTile(
+                    value: _selectedMkCodes.contains(k.mahakoshCode),
                     activeColor: KJColors.maroon,
+                    controlAffinity: ListTileControlAffinity.leading,
                     title: Text('${k.name} · ${k.mahakoshCode}'),
                     subtitle: Text(context.l10n.rsSharedToMahakosh,
                         style: TextStyle(fontSize: 11.5)),
-                    onChanged: (v) => setState(() => _selectedMkCode = v),
+                    onChanged: (v) => setState(() {
+                      if (v ?? false) {
+                        _selectedMkCodes.add(k.mahakoshCode!);
+                      } else {
+                        _selectedMkCodes.remove(k.mahakoshCode);
+                      }
+                    }),
                   ),
                 ),
               if (unshared.isNotEmpty) ...[
@@ -107,10 +114,12 @@ class _RespondScreenState extends ConsumerState<RespondScreen> {
               const SizedBox(height: 20),
               FilledButton(
                 onPressed:
-                    _selectedMkCode == null || _submitting ? null : _submit,
+                    _selectedMkCodes.isEmpty || _submitting ? null : _submit,
                 child: Text(_submitting
                     ? context.l10n.rsTagging
-                    : context.l10n.rsTagChart),
+                    : _selectedMkCodes.isEmpty
+                        ? context.l10n.rsTagChart
+                        : context.l10n.rsTagSelected(_selectedMkCodes.length)),
               ),
             ],
           );

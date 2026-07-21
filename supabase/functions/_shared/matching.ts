@@ -136,6 +136,12 @@ export async function matchNewRequest(sql: Sql, requestId: string): Promise<Requ
     throw new HttpError(409, `research request ${requestId} is '${request.status}', not 'live'`);
   }
 
+  // No criteria (0026) — the requester doesn't know the combination yet;
+  // the request collects charts through manual responses only.
+  if (request.criteria == null) {
+    return { request_id: request.id, new_matches: 0, contributors_notified: 0 };
+  }
+
   // criteria is contributor-supplied jsonb — compile (and re-validate) it.
   let compiled;
   try {
@@ -201,6 +207,9 @@ export async function matchNewChart(sql: Sql, chartId: string): Promise<ChartMat
   };
 
   for (const request of liveRequests) {
+    // Criteria-less requests (0026) never auto-match.
+    if (request.criteria == null) continue;
+
     // $1 is reserved for the chart id, so compiled params start at $2.
     let compiled;
     try {

@@ -16,30 +16,48 @@ import '../mahakosh/models.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
 
-final _pendingRequestsProvider = FutureProvider<List<ResearchRequest>>((ref) {
+// autoDispose so the queue refetches every time the (pushed) Admin screen
+// is opened — a kept-alive FutureProvider fetches once per app session and
+// then serves that cache forever, so a request created after the first
+// visit wouldn't appear until a manual pull-to-refresh invalidated it.
+final _pendingRequestsProvider =
+    FutureProvider.autoDispose<List<ResearchRequest>>((ref) {
   final repo = ref.watch(adminRepoProvider);
   if (repo == null) return Future.value([]);
   return repo.pendingRequests();
 });
 
-final _pendingReportsProvider = FutureProvider<List<AdminChartReport>>((ref) {
+final _pendingReportsProvider =
+    FutureProvider.autoDispose<List<AdminChartReport>>((ref) {
   final repo = ref.watch(adminRepoProvider);
   if (repo == null) return Future.value([]);
   return repo.pendingChartReports();
 });
 
 final _pendingCommentReportsProvider =
-    FutureProvider<List<AdminCommentReport>>((ref) {
+    FutureProvider.autoDispose<List<AdminCommentReport>>((ref) {
   final repo = ref.watch(adminRepoProvider);
   if (repo == null) return Future.value([]);
   return repo.pendingCommentReports();
 });
 
-class AdminScreen extends ConsumerWidget {
+class AdminScreen extends ConsumerStatefulWidget {
   const AdminScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminScreen> createState() => _AdminScreenState();
+}
+
+class _AdminScreenState extends ConsumerState<AdminScreen> {
+  /// Ids optimistically removed from the queue while their moderation call
+  /// is in flight (or after it succeeds) — filtered out of every list so
+  /// the row disappears the instant the admin confirms, rather than after
+  /// two network round-trips (the edge-function call, then the refetch).
+  /// Reverted on failure. Ids are UUIDs, unique across all three queues.
+  final Set<String> _removing = {};
+
+  @override
+  Widget build(BuildContext context) {
     final isAdmin = ref.watch(isAdminProvider);
 
     return Scaffold(
@@ -73,16 +91,20 @@ class AdminScreen extends ConsumerWidget {
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Center(child: CircularProgressIndicator())),
             error: (e, _) => Text('Could not load: $e'),
-            data: (items) => items.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text('Nothing pending.',
-                        style:
-                            TextStyle(fontSize: 13, color: KJColors.inkSoft)),
-                  )
-                : Column(children: [
-                    for (final r in items) _requestCard(context, ref, r),
-                  ]),
+            data: (items) {
+              final visible =
+                  items.where((r) => !_removing.contains(r.id)).toList();
+              return visible.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text('Nothing pending.',
+                          style:
+                              TextStyle(fontSize: 13, color: KJColors.inkSoft)),
+                    )
+                  : Column(children: [
+                      for (final r in visible) _requestCard(context, ref, r),
+                    ]);
+            },
           ),
           const SizedBox(height: 24),
           _label('PENDING CHART REPORTS'),
@@ -91,16 +113,20 @@ class AdminScreen extends ConsumerWidget {
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Center(child: CircularProgressIndicator())),
             error: (e, _) => Text('Could not load: $e'),
-            data: (items) => items.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text('Nothing pending.',
-                        style:
-                            TextStyle(fontSize: 13, color: KJColors.inkSoft)),
-                  )
-                : Column(children: [
-                    for (final r in items) _reportCard(context, ref, r),
-                  ]),
+            data: (items) {
+              final visible =
+                  items.where((r) => !_removing.contains(r.id)).toList();
+              return visible.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text('Nothing pending.',
+                          style:
+                              TextStyle(fontSize: 13, color: KJColors.inkSoft)),
+                    )
+                  : Column(children: [
+                      for (final r in visible) _reportCard(context, ref, r),
+                    ]);
+            },
           ),
           const SizedBox(height: 24),
           _label('PENDING COMMENT REPORTS'),
@@ -109,17 +135,21 @@ class AdminScreen extends ConsumerWidget {
                     padding: EdgeInsets.symmetric(vertical: 16),
                     child: Center(child: CircularProgressIndicator())),
                 error: (e, _) => Text('Could not load: $e'),
-                data: (items) => items.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text('Nothing pending.',
-                            style: TextStyle(
-                                fontSize: 13, color: KJColors.inkSoft)),
-                      )
-                    : Column(children: [
-                        for (final r in items)
-                          _commentReportCard(context, ref, r),
-                      ]),
+                data: (items) {
+                  final visible =
+                      items.where((r) => !_removing.contains(r.id)).toList();
+                  return visible.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text('Nothing pending.',
+                              style: TextStyle(
+                                  fontSize: 13, color: KJColors.inkSoft)),
+                        )
+                      : Column(children: [
+                          for (final r in visible)
+                            _commentReportCard(context, ref, r),
+                        ]);
+                },
               ),
         ],
       ),
@@ -161,7 +191,9 @@ class AdminScreen extends ConsumerWidget {
                   onPressed: () => _moderate(
                     context,
                     ref,
+                    id: r.id,
                     title: 'Reject request',
+                    success: 'Request rejected.',
                     onConfirm: (note) => ref
                         .read(adminRepoProvider)!
                         .moderateRequest(
@@ -175,7 +207,9 @@ class AdminScreen extends ConsumerWidget {
                   onPressed: () => _moderate(
                     context,
                     ref,
+                    id: r.id,
                     title: 'Approve request',
+                    success: 'Request approved — it is live now.',
                     onConfirm: (note) => ref
                         .read(adminRepoProvider)!
                         .moderateRequest(
@@ -219,7 +253,9 @@ class AdminScreen extends ConsumerWidget {
                   onPressed: () => _moderate(
                     context,
                     ref,
+                    id: r.id,
                     title: 'Dismiss report',
+                    success: 'Report dismissed.',
                     onConfirm: (note) => ref
                         .read(adminRepoProvider)!
                         .moderateChartReport(
@@ -235,7 +271,9 @@ class AdminScreen extends ConsumerWidget {
                   onPressed: () => _moderate(
                     context,
                     ref,
+                    id: r.id,
                     title: 'Withdraw chart',
+                    success: 'Chart withdrawn.',
                     onConfirm: (note) => ref
                         .read(adminRepoProvider)!
                         .moderateChartReport(
@@ -293,7 +331,9 @@ class AdminScreen extends ConsumerWidget {
                   onPressed: () => _moderate(
                     context,
                     ref,
+                    id: r.id,
                     title: 'Dismiss report',
+                    success: 'Report dismissed.',
                     onConfirm: (note) => ref
                         .read(adminRepoProvider)!
                         .moderateCommentReport(
@@ -309,7 +349,9 @@ class AdminScreen extends ConsumerWidget {
                   onPressed: () => _moderate(
                     context,
                     ref,
+                    id: r.id,
                     title: 'Remove comment',
+                    success: 'Comment removed.',
                     onConfirm: (note) => ref
                         .read(adminRepoProvider)!
                         .moderateCommentReport(
@@ -329,7 +371,9 @@ class AdminScreen extends ConsumerWidget {
   Future<void> _moderate(
     BuildContext context,
     WidgetRef ref, {
+    required String id,
     required String title,
+    required String success,
     required Future<void> Function(String? note) onConfirm,
     required VoidCallback after,
   }) async {
@@ -355,11 +399,22 @@ class AdminScreen extends ConsumerWidget {
     );
     if (confirmed != true || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
+    // Optimistic: hide the row immediately so feedback is instant, then do
+    // the (slow) edge-function call. Keep it hidden on success; revert on
+    // failure so the row and its buttons come back.
+    setState(() => _removing.add(id));
     try {
       await onConfirm(controller.text.trim());
+      messenger.showSnackBar(SnackBar(content: Text(success)));
+      // Reconcile with true server state (also picks up anything another
+      // admin changed). The row stays hidden via _removing until then.
       after();
     } catch (e) {
+      if (mounted) setState(() => _removing.remove(id));
       messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      // The server may have applied the transition before erroring; refetch
+      // so the list reflects reality rather than our reverted guess.
+      after();
     }
   }
 }
