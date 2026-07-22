@@ -426,6 +426,12 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
     positions.forEach((planet, lon) {
       placements[ZodiacSign.fromLongitude(lon)]!.add(planet);
     });
+    // Zodiacal-progression order within each sign, matching every other
+    // chart (this legacy view carries only bare longitudes, so it sorts
+    // on those directly rather than through sortPlacementsByLongitude).
+    for (final list in placements.values) {
+      list.sort((a, b) => positions[a]!.compareTo(positions[b]!));
+    }
     final lagna = ZodiacSign.fromLongitude(chart.ascendant);
 
     return ListView(
@@ -445,7 +451,15 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
         ),
         const SizedBox(height: 12),
         ChartView(
-            placements: placements, lagna: lagna, style: ChartStyle.north),
+          placements: placements,
+          lagna: lagna,
+          style: ChartStyle.north,
+          ascendantRank: positions.values
+              .where((lon) =>
+                  ZodiacSign.fromLongitude(lon) == lagna &&
+                  lon < chart.ascendant)
+              .length,
+        ),
         const SizedBox(height: 8),
         Text(
           '${context.l10n.labelLagna} ${lagna.label(context.l10n)} · '

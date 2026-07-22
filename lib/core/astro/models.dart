@@ -277,6 +277,44 @@ class AstroSnapshot {
   int houseOfPlanet(Planet p) => houseOf(positions[p]!.longitude);
 }
 
+/// Orders the planets in each bucket of a sign-keyed placement map by
+/// ecliptic longitude, so a chart box reads in degree order (the order
+/// the grahas sit along the zodiac) rather than enum order. Within a
+/// single sign this is exactly ascending degree-in-sign. Mutates the
+/// lists in place and returns the same map for call-site chaining.
+Map<ZodiacSign, List<Planet>> sortPlacementsByLongitude(
+  Map<ZodiacSign, List<Planet>> placements,
+  Map<Planet, PlanetPosition> positions,
+) {
+  for (final list in placements.values) {
+    list.sort((a, b) =>
+        positions[a]!.longitude.compareTo(positions[b]!.longitude));
+  }
+  return placements;
+}
+
+/// "Signs passed" prefix for a sidereal longitude — '11ˢ' for a Pisces
+/// position (11 completed signs). The standard technical notation:
+/// pairing with [formatDegreeInSign] yields 11ˢ11°16'. The superscript
+/// glyph is tiny at annotation sizes, so chart renderers pass strings
+/// containing it through `signsPassedSpans`, which enlarges just the ˢ.
+String signsPassed(double longitude) =>
+    '${(((longitude % 360) + 360) % 360) ~/ 30}ˢ';
+
+/// How many planets in the ascendant's sign precede the ascendant in
+/// zodiacal order — the slot where the "As" marker sits when a rashi
+/// chart lists its house occupants by degree (whole-sign houses only;
+/// chalit computes its own rank along the bhava).
+int ascendantRankIn(
+  Map<Planet, PlanetPosition> positions,
+  double ascendant,
+) {
+  final sign = ZodiacSign.fromLongitude(ascendant);
+  return positions.values
+      .where((p) => p.sign == sign && p.longitude < ascendant)
+      .length;
+}
+
 String formatDegree(double longitude) {
   final inSign = longitude % 30;
   final deg = inSign.floor();

@@ -154,6 +154,12 @@ class _VarshphalDivisionalBody extends ConsumerWidget {
               lagna: viewFrom,
               trueAscendantSign: lagna,
               style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
+              // Only D1 boxes carry a real degree progression to mirror
+              // spatially; higher vargas list in traditional order.
+              directionalStack: varga == Varga.d1,
+              ascendantRank: varga == Varga.d1
+                  ? ascendantRankIn(varsha.positions, varsha.ascendant)
+                  : null,
               onSignSelect: (sign) => ref
                   .read(widgetViewFromProvider(viewKey).notifier)
                   .state = sign == lagna ? null : sign,

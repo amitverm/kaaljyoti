@@ -39,6 +39,7 @@ class SouthChartPainter extends CustomPainter {
     this.transitPlacements,
     this.transitRetrograde = const {},
     this.padaLabels = const {},
+    this.directionalStack = true,
     // Repaint live when the chart text settings change.
   }) : super(repaint: chartTuning);
 
@@ -60,6 +61,12 @@ class SouthChartPainter extends CustomPainter {
   /// Arudha pada codes ('1P' … '12P') per sign, rendered as a light-
   /// grey trailing line in each cell (Parashar Light style).
   final Map<ZodiacSign, List<String>> padaLabels;
+
+  /// Whether planet stacks follow the zodiacal progression spatially
+  /// (left-column cells reversed — that edge runs upward). Divisional
+  /// (D2+) charts pass false: their boxes list planets in traditional
+  /// order, so there is no progression to mirror.
+  final bool directionalStack;
 
   /// Fixed (row, col) for each sign in the 4×4 ring, clockwise from
   /// Pisces at the top-left corner. Public so hit-testing
@@ -195,8 +202,16 @@ class SouthChartPainter extends CustomPainter {
         transitPlanets: transitPlanets,
         transitRetrograde: transitRetrograde,
         padaLabels: padas,
+        // The fixed grid progresses clockwise; its left edge runs UPWARD
+        // (Sagittarius → Capricorn → Aquarius → Pisces), so those cells
+        // stack later-degree planets on top — each planet toward the
+        // neighbouring sign it is actually near.
+        reverseStack: directionalStack && col == 0,
         maxWidth: cellW * 0.82 * tune.contentInflate,
         maxHeight: cellH * 0.7 * tune.contentInflate,
+        // A South cell's hard boundary is the cell itself — crossing it
+        // reads as the neighbouring sign's data.
+        clipWidth: cellW,
         baseFontSize: planetSize,
         showDegrees: showDegrees,
         showKarakas: showKarakas,
@@ -229,6 +244,7 @@ class SouthChartPainter extends CustomPainter {
       oldDelegate.transitPlacements != transitPlacements ||
       oldDelegate.transitRetrograde != transitRetrograde ||
       oldDelegate.padaLabels != padaLabels ||
+      oldDelegate.directionalStack != directionalStack ||
       oldDelegate.l10n != l10n ||
       oldDelegate._palette != _palette;
 }

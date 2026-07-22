@@ -38,6 +38,7 @@ class ChalitData {
     required this.madhya,
     required this.sandhi,
     required this.planetsInHouse,
+    required this.madhyaRank,
   });
 
   final ChalitSystem system;
@@ -52,6 +53,12 @@ class ChalitData {
   /// index 0 = house 1. Two houses may share a sign; a sign may have
   /// no house — exactly why this cannot be a Map<ZodiacSign, …>.
   final List<List<Planet>> planetsInHouse;
+
+  /// How many planets in each house fall BEFORE its madhya (index 0 =
+  /// house 1). Since [planetsInHouse] is ordered along the bhava, this
+  /// is the slot the madhya line occupies in that order: the grahas at
+  /// indices `[0, madhyaRank)` are before the cusp, the rest after.
+  final List<int> madhyaRank;
 
   /// Sign occupying house [house]'s madhya (1-based house).
   ZodiacSign signOfHouse(int house) =>
@@ -102,14 +109,32 @@ ChalitData computeChalit(AstroSnapshot s, ChalitSystem system) {
       ),
   };
   final sandhi = sandhisFromMadhyas(madhya);
-  final houses = [for (var i = 0; i < 12; i++) <Planet>[]];
+  final houses = [for (var i = 0; i < 12; i++) <PlanetPosition>[]];
   for (final p in s.positions.values) {
-    houses[houseOfIn(sandhi, p.longitude) - 1].add(p.planet);
+    houses[houseOfIn(sandhi, p.longitude) - 1].add(p);
+  }
+  // Planets read in the order they sit ALONG the bhava — measured from
+  // its start sandhi — not by enum order or raw degree-in-sign. When a
+  // house straddles a sign boundary this correctly places a late-sign
+  // graha (e.g. 25° Aquarius) ahead of an early-next-sign one (7° Pisces),
+  // so before/after-madhya is legible straight off the box. Same-sign
+  // houses reduce to plain ascending degree order.
+  final planetsInHouse = <List<Planet>>[];
+  final madhyaRank = <int>[];
+  for (var h = 0; h < 12; h++) {
+    houses[h].sort((a, b) => _norm360(a.longitude - sandhi[h])
+        .compareTo(_norm360(b.longitude - sandhi[h])));
+    final madhyaOffset = _norm360(madhya[h] - sandhi[h]);
+    madhyaRank.add(houses[h]
+        .where((p) => _norm360(p.longitude - sandhi[h]) < madhyaOffset)
+        .length);
+    planetsInHouse.add(houses[h].map((p) => p.planet).toList());
   }
   return ChalitData(
     system: system,
     madhya: madhya,
     sandhi: sandhi,
-    planetsInHouse: houses,
+    planetsInHouse: planetsInHouse,
+    madhyaRank: madhyaRank,
   );
 }

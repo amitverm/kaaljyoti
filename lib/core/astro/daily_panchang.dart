@@ -127,7 +127,7 @@ class DailyPanchang {
     for (final p in positions.values) {
       (map[p.sign] ??= []).add(p.planet);
     }
-    return map;
+    return sortPlacementsByLongitude(map, positions);
   }
 }
 

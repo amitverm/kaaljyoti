@@ -3302,6 +3302,18 @@ abstract class AppLocalizations {
   /// **'Madhya & sandhi degrees'**
   String get cfgCuspDegrees;
 
+  /// No description provided for @cfgCuspSigns.
+  ///
+  /// In en, this message translates to:
+  /// **'Madhya & sandhi signs'**
+  String get cfgCuspSigns;
+
+  /// No description provided for @cfgPlanetSigns.
+  ///
+  /// In en, this message translates to:
+  /// **'Planet signs'**
+  String get cfgPlanetSigns;
+
   /// No description provided for @ccMadhyaCol.
   ///
   /// In en, this message translates to:

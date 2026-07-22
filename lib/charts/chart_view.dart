@@ -38,6 +38,8 @@ class ChartView extends StatelessWidget {
     this.transitRetrograde = const {},
     this.padaLabels = const {},
     this.showNakshatras = true,
+    this.directionalStack = true,
+    this.ascendantRank,
     this.onSignSelect,
   });
 
@@ -74,6 +76,17 @@ class ChartView extends StatelessWidget {
   /// Circular style only: outermost ring of the 27 nakshatras.
   /// Ignored by the North/South painters.
   final bool showNakshatras;
+
+  /// Whether planet stacks follow the zodiacal progression spatially
+  /// (see the painters' fields of the same name). Divisional (D2+)
+  /// charts pass false — their boxes list planets in traditional order.
+  final bool directionalStack;
+
+  /// Planets preceding the ascendant in its house's zodiacal order —
+  /// slots the North chart's "As" marker into the progression (see
+  /// [ascendantRankIn]). Null pins As on top. North style only; the
+  /// South/Circular As markers sit outside the planet stack.
+  final int? ascendantRank;
 
   /// When set, double-tapping OR long-pressing a house/cell/sector
   /// reports the SIGN occupying it — the Birth Chart widget uses this
@@ -114,6 +127,8 @@ class ChartView extends StatelessWidget {
           transitPlacements: transitPlacements,
           transitRetrograde: transitRetrograde,
           padaLabels: padaLabels,
+          directionalStack: directionalStack,
+          ascendantRank: ascendantRank,
         ),
       ChartStyle.south => SouthChartPainter(
           l10n: l10n,
@@ -128,6 +143,7 @@ class ChartView extends StatelessWidget {
           transitPlacements: transitPlacements,
           transitRetrograde: transitRetrograde,
           padaLabels: padaLabels,
+          directionalStack: directionalStack,
         ),
       ChartStyle.circular => CircularChartPainter(
           l10n: l10n,
@@ -143,6 +159,7 @@ class ChartView extends StatelessWidget {
           transitRetrograde: transitRetrograde,
           padaLabels: padaLabels,
           showNakshatras: showNakshatras,
+          directionalStack: directionalStack,
         ),
     };
 

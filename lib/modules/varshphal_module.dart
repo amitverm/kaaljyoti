@@ -257,6 +257,7 @@ class _VarshphalBodyState extends ConsumerState<_VarshphalBody> {
           lagna: viewFrom,
           trueAscendantSign: varsha.lagnaSign,
           ascendantDegree: varsha.ascendant,
+          ascendantRank: ascendantRankIn(varsha.positions, varsha.ascendant),
           style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
           retrograde: {
             for (final p in varsha.positions.values) p.planet: p.isRetrograde,

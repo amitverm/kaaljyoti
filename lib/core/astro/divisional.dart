@@ -164,6 +164,14 @@ Map<ZodiacSign, List<Planet>> vargaPlacements(
   for (final pos in snapshot.positions.values) {
     map[vargaSign(varga, pos.longitude)]!.add(pos.planet);
   }
+  // D1 boxes read in zodiacal progression (ascending natal degree — the
+  // charts drawn from this map show natal degrees). Higher vargas keep
+  // the traditional planet listing order: their boxes carry no real
+  // internal progression, so a degree sort would imply one that the
+  // displayed (natal) degrees contradict.
+  if (varga == Varga.d1) {
+    sortPlacementsByLongitude(map, snapshot.positions);
+  }
   return map;
 }
 

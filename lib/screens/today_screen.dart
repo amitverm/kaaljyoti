@@ -427,6 +427,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                           lagna: d.lagnaSign,
                           trueAscendantSign: d.lagnaSign,
                           ascendantDegree: d.ascendant,
+                          ascendantRank:
+                              ascendantRankIn(d.positions, d.ascendant),
                           style: ChartStyle.values.firstWhere(
                             (s) => s.name == _chartStyle,
                             orElse: () => ChartStyle.north,

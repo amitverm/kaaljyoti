@@ -209,6 +209,8 @@ class NorthChartPainter extends CustomPainter {
     this.houseData,
     this.ascendantHouse,
     this.boundaryLabels,
+    this.directionalStack = true,
+    this.ascendantRank,
     // Repaint live when the chart text settings change.
   }) : super(repaint: chartTuning);
 
@@ -232,15 +234,21 @@ class NorthChartPainter extends CustomPainter {
   final Map<ZodiacSign, List<String>> padaLabels;
 
   /// Cusp-bounded (chalit) mode: when set, drawn house n takes ITS OWN
-  /// sign number, planets, and grey annotation lines ([notes] — e.g.
-  /// madhya/sandhi degrees) from `houseData[n-1]` instead of deriving
-  /// them from [lagna]/[placements]. Necessary because chalit houses
-  /// are not sign-aligned — two houses may share a sign and a sign may
-  /// host no house, which a Map<ZodiacSign, …> cannot express. The
-  /// sign-keyed overlays (transit, padas) don't apply in this mode;
-  /// [notes] renders through the same grey channel padas use.
-  final List<({int signNumber, List<Planet> planets, List<String> notes})>?
-      houseData;
+  /// sign number, planets, and bhava-madhya line from `houseData[n-1]`
+  /// instead of deriving them from [lagna]/[placements]. Necessary
+  /// because chalit houses are not sign-aligned — two houses may share a
+  /// sign and a sign may host no house, which a Map<ZodiacSign, …>
+  /// cannot express. The sign-keyed overlays (transit, padas) don't
+  /// apply in this mode. [cuspLabel] (e.g. "M 11°16'") is the grey
+  /// madhya line; it renders slotted into the planet block after
+  /// [cuspAfter] planets, so it reads as a before/after-madhya divider.
+  final List<
+      ({
+        int signNumber,
+        List<Planet> planets,
+        String? cuspLabel,
+        int cuspAfter,
+      })>? houseData;
 
   /// Chalit mode only: which DRAWN house carries the "As" marker and
   /// the ascendant tint (1-based; house 1 unless rotated by cusp).
@@ -252,6 +260,19 @@ class NorthChartPainter extends CustomPainter {
   /// describe. Each pair of adjacent house polygons shares exactly one
   /// edge; the label centers on that edge's midpoint.
   final List<String>? boundaryLabels;
+
+  /// Whether planet stacks follow the zodiacal progression spatially
+  /// (right-flank houses reversed so each planet sits toward the
+  /// neighbouring house it is near). True for charts whose boxes carry a
+  /// real degree progression (D1, chalit, transit); divisional (D2+)
+  /// charts pass false — their boxes list planets in traditional order.
+  final bool directionalStack;
+
+  /// How many planets in the true ascendant's house precede the
+  /// ascendant in zodiacal order — the "As" marker slots there, reading
+  /// like any other body in the progression (Parashar Light style).
+  /// Null pins As as the house's first line instead.
+  final int? ascendantRank;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -311,8 +332,11 @@ class NorthChartPainter extends CustomPainter {
       final transitPlanets = houseData != null
           ? const <Planet>[]
           : transitPlacements?[sign] ?? const <Planet>[];
-      final padas =
-          houseData?[n - 1].notes ?? padaLabels[sign] ?? const <String>[];
+      final padas = houseData != null
+          ? const <String>[]
+          : padaLabels[sign] ?? const <String>[];
+      final cuspLabel = houseData?[n - 1].cuspLabel;
+      final cuspAfter = houseData?[n - 1].cuspAfter ?? 0;
       final deg = ascendantDegree;
       final ascLabel = isTrueAsc
           ? (deg != null ? 'As ${formatDegreeInSign(deg)}' : 'As')
@@ -320,6 +344,7 @@ class NorthChartPainter extends CustomPainter {
       if (planets.isEmpty &&
           transitPlanets.isEmpty &&
           padas.isEmpty &&
+          cuspLabel == null &&
           ascLabel == null) {
         continue;
       }
@@ -342,9 +367,23 @@ class NorthChartPainter extends CustomPainter {
         transitPlanets: transitPlanets,
         transitRetrograde: transitRetrograde,
         padaLabels: padas,
+        cuspLabel: cuspLabel,
+        cuspAfter: cuspAfter,
         ascLabel: ascLabel,
+        ascAfter: ascendantRank,
+        // Houses progress anticlockwise: down the left flank, up the
+        // right. Drawn houses 8–12 (bottom-right corner up through
+        // top-right) enter from below, so their stack reverses — each
+        // planet sits toward the neighbouring house it is nearest.
+        reverseStack: directionalStack && n >= 8,
         maxWidth: content.width,
         maxHeight: content.height,
+        // Room before the chart FRAME, where text is really clipped —
+        // the block is centred, so twice the distance to the nearer
+        // vertical edge. Brushing internal diagonals is tolerated.
+        clipWidth: 2 *
+            math.min(content.center.dx - rect.left,
+                rect.right - content.center.dx),
         baseFontSize: planetSize,
         showDegrees: showDegrees,
         showKarakas: showKarakas,
@@ -381,9 +420,13 @@ class NorthChartPainter extends CustomPainter {
         if (angle > math.pi / 2) angle -= math.pi;
         if (angle <= -math.pi / 2) angle += math.pi;
         final tp = TextPainter(
+          // signsPassedSpans enlarges the ˢ so "10ˢ23°30'" stays
+          // legible at this label size; plain labels pass through.
           text: TextSpan(
-            text: label,
-            style: KJTheme.mono(size: labelSize, color: KJColors.inkSoft),
+            children: signsPassedSpans(
+              label,
+              KJTheme.mono(size: labelSize, color: KJColors.inkSoft),
+            ),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
@@ -431,6 +474,8 @@ class NorthChartPainter extends CustomPainter {
       oldDelegate.houseData != houseData ||
       oldDelegate.ascendantHouse != ascendantHouse ||
       oldDelegate.boundaryLabels != boundaryLabels ||
+      oldDelegate.directionalStack != directionalStack ||
+      oldDelegate.ascendantRank != ascendantRank ||
       oldDelegate.l10n != l10n ||
       oldDelegate._palette != _palette;
 }

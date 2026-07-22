@@ -159,6 +159,12 @@ class _DivisionalChartBody extends ConsumerWidget {
           lagna: viewFrom,
           trueAscendantSign: lagna,
           style: style,
+          // Only D1 boxes carry a real degree progression to mirror
+          // spatially; higher vargas list planets in traditional order.
+          directionalStack: varga == Varga.d1,
+          ascendantRank: varga == Varga.d1
+              ? ascendantRankIn(s.positions, s.ascendant)
+              : null,
           padaLabels: padaLabels,
           onSignSelect: (sign) => ref
               .read(widgetViewFromProvider(viewKey).notifier)

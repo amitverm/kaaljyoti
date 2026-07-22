@@ -27,5 +27,5 @@ Map<ZodiacSign, List<Planet>> transitPlacements(
   for (final p in positions.values) {
     out.putIfAbsent(p.sign, () => []).add(p.planet);
   }
-  return out;
+  return sortPlacementsByLongitude(out, positions);
 }

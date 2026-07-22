@@ -45,8 +45,16 @@ class CircularChartPainter extends CustomPainter {
     this.transitRetrograde = const {},
     this.padaLabels = const {},
     this.showNakshatras = true,
+    this.directionalStack = true,
     // Repaint live when the chart text settings change.
   }) : super(repaint: chartTuning);
+
+  /// Whether planets fan angularly across their sector in zodiacal
+  /// order (earliest degree toward the previous sign's edge). Divisional
+  /// (D2+) charts pass false and keep the classic mid-angle stagger —
+  /// their sectors list planets in traditional order, so an angular fan
+  /// would imply a progression that doesn't exist.
+  final bool directionalStack;
 
   /// Localized strings for the graha/rashi tokens. A painter has no
   /// BuildContext at paint time, so the host widget injects it.
@@ -197,16 +205,25 @@ class CircularChartPainter extends CustomPainter {
       );
       _paintCentered(canvas, signTp, at(mid, (nakInner + bandInner) / 2));
 
-      // Natal planets staggered at ~0.65 / 0.5 / 0.35 of the radius;
-      // overflow beyond three planets nudges the angle to keep labels
-      // apart.
+      // Natal planets fanned ANGULARLY across the sector in zodiacal
+      // order — the earliest degree sits toward the previous sign's
+      // edge, the latest toward the next — with the ~0.65 / 0.5 / 0.35
+      // radius stagger keeping neighbouring labels apart. A lone planet
+      // reduces to the sector's mid-angle, as before.
       final planets = placements[sign] ?? const <Planet>[];
+      const span = math.pi / 6;
+      final startEdge = sectorStart(k) + span; // shared with previous sign
       for (var i = 0; i < planets.length; i++) {
         final p = planets[i];
         final token = tokens[p] ??
             PlanetToken(planet: p, retrograde: retrograde[p] ?? false);
         final radius = planetRadii[i % 3] * r;
-        final angle = mid + (i ~/ 3) * 0.11;
+        // Counter-clockwise progression = decreasing canvas angle. The
+        // non-directional (divisional) form is the classic mid-angle
+        // stagger, nudged every third planet.
+        final angle = directionalStack
+            ? startEdge - span * (i + 1) / (planets.length + 1)
+            : mid + (i ~/ 3) * 0.11;
         final tp = singleTokenPainter(
           token,
           l10n: l10n,
@@ -242,7 +259,10 @@ class CircularChartPainter extends CustomPainter {
           planet: p,
           retrograde: transitRetrograde[p] ?? false,
         );
-        final angle = mid + (i - (transitPlanets.length - 1) / 2) * 0.09;
+        // Same zodiacal direction as the natal fan: later degrees
+        // toward the next sign (counter-clockwise = decreasing angle).
+        final dir = directionalStack ? -1 : 1;
+        final angle = mid + dir * (i - (transitPlanets.length - 1) / 2) * 0.09;
         final tp = singleTokenPainter(tToken,
             l10n: l10n, fontSize: planetSize, isTransit: true)
           ..layout(maxWidth: r);
@@ -285,6 +305,7 @@ class CircularChartPainter extends CustomPainter {
   bool shouldRepaint(covariant CircularChartPainter oldDelegate) =>
       oldDelegate.lagna != lagna ||
       oldDelegate.placements != placements ||
+      oldDelegate.directionalStack != directionalStack ||
       oldDelegate.retrograde != retrograde ||
       oldDelegate.trueAscendantSign != trueAscendantSign ||
       oldDelegate.ascendantDegree != ascendantDegree ||

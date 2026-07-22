@@ -544,6 +544,8 @@
   "ccEqual": "समभाव (लग्न से)",
   "cfgRotateTo": "इस भाव से देखें",
   "cfgCuspDegrees": "मध्य व संधि अंश",
+  "cfgCuspSigns": "मध्य व संधि राशि",
+  "cfgPlanetSigns": "ग्रह राशि",
   "ccMadhyaCol": "मध्य",
   "ccSandhiCol": "आरंभ (संधि)",
   "ccCaption": "भाव संधि से संधि तक, मध्य के चारों ओर",

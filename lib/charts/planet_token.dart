@@ -33,6 +33,7 @@ class PlanetToken {
     this.karaka,
     this.dignity = PlanetDignity.none,
     this.combust = false,
+    this.signTag,
   });
 
   final Planet planet;
@@ -42,11 +43,35 @@ class PlanetToken {
   final PlanetDignity dignity;
   final bool combust;
 
+  /// "Signs passed" prefix (e.g. '10ˢ') gluing onto the degree —
+  /// 10ˢ23°57' reads as 10 completed signs + 23°57' into Aquarius, so
+  /// the graha's rashi is explicit even when its bhava straddles a sign
+  /// boundary (chalit's Planet signs toggle). Null renders nothing.
+  final String? signTag;
+
   /// The lunar nodes are retrograde by definition — never worth
   /// flagging on-chart — so the marker is suppressed regardless of
   /// [retrograde].
   bool get showRetrograde =>
       retrograde && planet != Planet.rahu && planet != Planet.ketu;
+}
+
+/// Renders a signs-passed string ("11ˢ11°16'") as spans, enlarging each
+/// superscript-s so the marker stays legible: the ˢ glyph is genuinely
+/// superscript (small and raised in the font) but nearly invisible at
+/// annotation sizes — scaling just that glyph keeps the raised look
+/// without faking a baseline shift. Text without ˢ passes through as a
+/// single span.
+List<InlineSpan> signsPassedSpans(String text, TextStyle style) {
+  if (!text.contains('ˢ')) return [TextSpan(text: text, style: style)];
+  final sup = style.copyWith(fontSize: (style.fontSize ?? 12) * 1.5);
+  final parts = text.split('ˢ');
+  return [
+    for (var i = 0; i < parts.length; i++) ...[
+      if (parts[i].isNotEmpty) TextSpan(text: parts[i], style: style),
+      if (i < parts.length - 1) TextSpan(text: 'ˢ', style: sup),
+    ],
+  ];
 }
 
 /// Builds a single planet's label (used by the Circular painter, which
@@ -81,6 +106,7 @@ List<InlineSpan> _natalChipSpans(
   double fontSize, {
   required bool showDegrees,
   required bool showKarakas,
+  bool compactDegrees = false,
 }) {
   final tune = chartTuning.value; // Settings > Chart text
   final modSize = fontSize * tune.annotationScale;
@@ -115,12 +141,21 @@ List<InlineSpan> _natalChipSpans(
   if (showDegrees && t.degreeInSign != null) {
     // Non-breaking space: the degree may never wrap away from its planet.
     final d = t.degreeInSign!;
-    final degText =
-        tune.degreeMinutes ? formatDegreeInSign(d) : '${(d % 30).floor()}°';
-    spans.add(TextSpan(text: ' $degText', style: degreeStyle));
+    // [compactDegrees]: the fit ladder's minutes-dropping step — wins
+    // over the Settings-level minutes preference for this house only.
+    final degText = tune.degreeMinutes && !compactDegrees
+        ? formatDegreeInSign(d)
+        : '${(d % 30).floor()}°';
+    spans.addAll(signsPassedSpans(
+        ' ${t.signTag ?? ''}$degText', degreeStyle));
   }
   if (showKarakas && t.karaka != null) {
     spans.add(TextSpan(text: ' ${t.karaka}', style: karakaStyle));
+  }
+  if (t.signTag != null && !(showDegrees && t.degreeInSign != null)) {
+    // Degrees hidden: the signs-passed tag still shows the rashi,
+    // glued with a non-breaking space so it can't wrap away.
+    spans.addAll(signsPassedSpans(' ${t.signTag}', degreeStyle));
   }
   return spans;
 }
@@ -170,9 +205,14 @@ class HouseLabelLayout {
     List<Planet> transitPlanets = const [],
     Map<Planet, bool> transitRetrograde = const {},
     List<String> padaLabels = const [],
+    String? cuspLabel,
+    int cuspAfter = 0,
     String? ascLabel,
+    int? ascAfter,
+    bool reverseStack = false,
     required double maxWidth,
     required double maxHeight,
+    double? clipWidth,
     required double baseFontSize,
     bool showDegrees = false,
     bool showKarakas = false,
@@ -180,18 +220,25 @@ class HouseLabelLayout {
   }) {
     // Shrink floor: explicit arg wins, else Settings > Chart text.
     final floor = minFontScale ?? chartTuning.value.minFontScale;
-    List<TextPainter> pack(double fontSize, {required bool onePerRow}) => _pack(
+    List<TextPainter> pack(double fontSize,
+            {required bool onePerRow, bool compactDegrees = false}) =>
+        _pack(
           l10n: l10n,
           tokens: tokens,
           transitPlanets: transitPlanets,
           transitRetrograde: transitRetrograde,
           padaLabels: padaLabels,
+          cuspLabel: cuspLabel,
+          cuspAfter: cuspAfter,
           ascLabel: ascLabel,
+          ascAfter: ascAfter,
+          reverseStack: reverseStack,
           fontSize: fontSize,
           maxWidth: maxWidth,
           showDegrees: showDegrees,
           showKarakas: showKarakas,
           onePerRow: onePerRow,
+          compactDegrees: compactDegrees,
         );
 
     var scale = 1.0;
@@ -201,10 +248,32 @@ class HouseLabelLayout {
       scale = math.max(floor, scale - 0.1);
       result = pack(baseFontSize * scale, onePerRow: showDegrees);
     }
-    // Last resort for extremely crowded houses: abandon one-per-row and
-    // flow several chips per line at minimum scale.
+    // Houses that still overflow WIDTH at the user's floor drop their
+    // degree MINUTES ("Me 11ˢ7°12'" → "Me 11ˢ7°") — this house only;
+    // full precision stays in the detail table. Only on REAL overflow,
+    // measured against [clipWidth] — the centred block's room before
+    // the CHART FRAME, where text is actually cut off — not against
+    // [maxWidth]: the shape-aware content rects are conservative, and
+    // brushing an internal diagonal has always rendered fine (the
+    // half-diamond houses would otherwise lose their minutes with just
+    // two planets). Without [clipWidth], a 10% grace over [maxWidth]
+    // stands in. The font never shrinks below the floor: at sub-floor
+    // sizes the superscript ˢ collapses into the digits and the
+    // notation stops reading as signs+degree. If even the compact form
+    // overflows, it overflows — the user trades toggles for space at a
+    // size they can still read.
+    final hardWidth = clipWidth ?? maxWidth * 1.1;
+    var compact = false;
+    if (showDegrees && _width(result) > hardWidth) {
+      compact = true;
+      result = pack(baseFontSize * scale,
+          onePerRow: showDegrees, compactDegrees: true);
+    }
+    // Last resort for extremely crowded houses (HEIGHT overflow):
+    // abandon one-per-row and flow several chips per line.
     if (showDegrees && _height(result) > maxHeight) {
-      result = pack(baseFontSize * floor, onePerRow: false);
+      result = pack(baseFontSize * scale,
+          onePerRow: false, compactDegrees: compact);
     }
     rows = result;
     width = _width(rows);
@@ -237,32 +306,59 @@ class HouseLabelLayout {
     required List<Planet> transitPlanets,
     required Map<Planet, bool> transitRetrograde,
     required List<String> padaLabels,
+    String? cuspLabel,
+    int cuspAfter = 0,
     required String? ascLabel,
+    int? ascAfter,
+    bool reverseStack = false,
     required double fontSize,
     required double maxWidth,
     required bool showDegrees,
     required bool showKarakas,
     required bool onePerRow,
+    bool compactDegrees = false,
   }) {
     final gapStyle = KJTheme.mono(size: fontSize);
 
     // Build every chip with its measured width.
-    final chips = <(List<InlineSpan>, double)>[];
+    //
+    // [reverseStack]: houses whose zodiacal progression runs UPWARD on
+    // screen (the North diamond's right side, the South grid's left
+    // column) list later-degree planets first, so each planet still sits
+    // toward the neighbouring house it is actually near. The As marker
+    // and the madhya slot mirror with the planets.
+    //
+    // [ascAfter]: how many planets precede the ascendant in zodiacal
+    // order — the As chip slots there, reading like any other body in
+    // the progression. Null falls back to pinning As on top (callers
+    // without longitude data).
+    final n = tokens.length;
+    final ordered = reverseStack ? tokens.reversed : tokens;
+    final chips = <(List<InlineSpan>, double)>[
+      for (final t in ordered)
+        _measure(_natalChipSpans(l10n, t, fontSize,
+            showDegrees: showDegrees,
+            showKarakas: showKarakas,
+            compactDegrees: compactDegrees)),
+    ];
+    int? ascPos;
     if (ascLabel != null) {
-      chips.add(_measure([
-        TextSpan(
-          text: ascLabel,
-          style: KJTheme.mono(
-              size: fontSize * 0.9,
-              color: KJColors.maroon,
-              weight: FontWeight.w600),
-        ),
-      ]));
+      final a = (ascAfter ?? 0).clamp(0, n);
+      ascPos = ascAfter == null ? 0 : (reverseStack ? n - a : a);
+      chips.insert(
+          ascPos,
+          _measure([
+            TextSpan(
+              text: ascLabel,
+              style: KJTheme.mono(
+                  size: fontSize * 0.9,
+                  color: KJColors.maroon,
+                  weight: FontWeight.w600),
+            ),
+          ]));
     }
-    for (final t in tokens) {
-      chips.add(_measure(_natalChipSpans(l10n, t, fontSize,
-          showDegrees: showDegrees, showKarakas: showKarakas)));
-    }
+    final clampedCuspAfter = cuspAfter.clamp(0, n);
+    final effCuspAfter = reverseStack ? n - clampedCuspAfter : clampedCuspAfter;
     final transitChips = <(List<InlineSpan>, double)>[
       for (final p in transitPlanets)
         _measure(_transitChipSpans(
@@ -278,6 +374,11 @@ class HouseLabelLayout {
       for (final l in padaLabels)
         _measure([TextSpan(text: l, style: padaStyle)]),
     ];
+    // Bhava madhya line — same recessive grey as padas, but it sits
+    // WITHIN the planet block (as its own row) rather than after it.
+    final cuspChip = cuspLabel == null
+        ? null
+        : _measure(signsPassedSpans(cuspLabel, padaStyle));
     final gapW = _measure([TextSpan(text: '  ', style: gapStyle)]).$2;
 
     // Flow chips into rows; a chip is never split.
@@ -301,8 +402,18 @@ class HouseLabelLayout {
       return rows;
     }
 
+    // Split the asc+planet chips at the madhya's slot so the cusp line
+    // lands on its own row between the before- and after-madhya grahas.
+    // An As chip at or before the slot (asc coincides with the madhya in
+    // Sripati house 1) stays ABOVE the cusp line.
+    final splitAt = cuspChip == null
+        ? chips.length
+        : math.min(chips.length,
+            effCuspAfter + (ascPos != null && ascPos <= effCuspAfter ? 1 : 0));
     final rowSpans = [
-      ...flow(chips, onePerRow),
+      ...flow(chips.sublist(0, splitAt), onePerRow),
+      if (cuspChip != null) [cuspChip.$1],
+      ...flow(chips.sublist(splitAt), onePerRow),
       ...flow(padaChips, false), // pada codes always flow compactly
       ...flow(transitChips, false), // transit chips always flow compactly
     ];

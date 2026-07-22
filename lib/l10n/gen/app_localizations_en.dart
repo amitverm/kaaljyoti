@@ -1733,6 +1733,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cfgCuspDegrees => 'Madhya & sandhi degrees';
 
   @override
+  String get cfgCuspSigns => 'Madhya & sandhi signs';
+
+  @override
+  String get cfgPlanetSigns => 'Planet signs';
+
+  @override
   String get ccMadhyaCol => 'Madhya';
 
   @override

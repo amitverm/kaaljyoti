@@ -1735,6 +1735,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get cfgCuspDegrees => 'मध्य व संधि अंश';
 
   @override
+  String get cfgCuspSigns => 'मध्य व संधि राशि';
+
+  @override
+  String get cfgPlanetSigns => 'ग्रह राशि';
+
+  @override
   String get ccMadhyaCol => 'मध्य';
 
   @override

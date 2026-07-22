@@ -92,6 +92,22 @@ class ChalitModule extends AstroModule {
           options: onOffOptions(l10n),
           toggleOnValue: 'on',
         ),
+        // Signs-passed labels, split into two toggles because box space
+        // is cramped: cusp signs upgrade the madhya/sandhi labels to
+        // "M 11ˢ11°16'"; planet signs prefix every graha's degree the
+        // same way ("Ma 10ˢ23°57'").
+        ModuleConfigChoice(
+          key: 'cusp_signs',
+          label: l10n.cfgCuspSigns,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
+        ),
+        ModuleConfigChoice(
+          key: 'planet_signs',
+          label: l10n.cfgPlanetSigns,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
+        ),
       ];
 
   @override
@@ -128,7 +144,13 @@ class ChalitModule extends AstroModule {
               d.signOfHouse(h).label(l10n),
               formatDegree(d.madhya[h - 1]),
               formatDegree(d.sandhi[h - 1]),
-              d.planetsInHouse[h - 1].map((p) => p.abbrLabel(l10n)).join(' '),
+              // Tables list grahas in traditional order; only the chart
+              // boxes read in degree order ([planetsInHouse] is sorted
+              // along the bhava).
+              ([...d.planetsInHouse[h - 1]]
+                    ..sort((a, b) => a.index.compareTo(b.index)))
+                  .map((p) => p.abbrLabel(l10n))
+                  .join(' '),
             ],
         ],
         headerStyle: pdfLabel(),
@@ -157,10 +179,16 @@ class _ChalitBody extends ConsumerWidget {
     final showDegrees = _flag(ctx.config, 'degrees');
     final showExtras = _flag(ctx.config, 'extras');
     final showCuspDegrees = _flag(ctx.config, 'cusp_degrees');
+    final showCuspSigns = _flag(ctx.config, 'cusp_signs');
+    final showPlanetSigns = _flag(ctx.config, 'planet_signs');
     final viewHouse = ref.watch(chalitViewHouseProvider(ctx.kundli.id)) ?? 1;
     final d = computeChalit(s, system);
 
-    // Same annotation set the Birth Chart builds (minus karakas).
+    // Same annotation set the Birth Chart builds (minus karakas), plus
+    // the chalit-only signs-passed prefix: every graha's degree carries
+    // its absolute position ("Ma 10ˢ23°57'"), so a reader never has to
+    // guess which rashi a planet occupies when a bhava straddles a sign
+    // boundary.
     final sun = s.positions[Planet.sun]!;
     final tokens = {
       for (final p in s.positions.values)
@@ -171,8 +199,17 @@ class _ChalitBody extends ConsumerWidget {
           dignity: showExtras ? dignityOf(p) : PlanetDignity.none,
           combust:
               showExtras && p.planet != Planet.sun ? isCombust(p, sun) : false,
+          signTag: showPlanetSigns ? signsPassed(p.longitude) : null,
         ),
     };
+
+    // Cusp label text, per the two toggles. "Signs passed" notation:
+    // 11ˢ11°16' = 11 completed signs + 11°16' into the twelfth (Pisces)
+    // — the compact technical form, which matters most when a sandhi or
+    // madhya falls in a different rashi than the box's sign suggests.
+    final showCusps = showCuspDegrees || showCuspSigns;
+    String cuspText(double lon) =>
+        '${showCuspSigns ? signsPassed(lon) : ''}${formatDegreeInSign(lon % 30)}';
 
     // Rotate by cusp: the chosen house occupies the drawn house-1
     // position; everything else follows in order. The As marker stays
@@ -184,21 +221,21 @@ class _ChalitBody extends ConsumerWidget {
           return (
             signNumber: d.signOfHouse(original).index + 1,
             planets: d.planetsInHouse[original - 1],
-            // Madhya stays inside its house; the sandhi moves onto the
-            // dividing line itself (boundaryLabels below).
-            notes: showCuspDegrees
-                ? <String>[
-                    'M ${formatDegreeInSign(d.madhya[original - 1] % 30)}',
-                  ]
-                : const <String>[],
+            // The madhya line sits INSIDE its house, slotted into the
+            // planet order at its own longitude (cuspAfter = planets
+            // before it), so grahas above it are before the cusp and
+            // those below are after. The sandhi rides the dividing line
+            // itself (boundaryLabels below).
+            cuspLabel:
+                showCusps ? 'M ${cuspText(d.madhya[original - 1])}' : null,
+            cuspAfter: d.madhyaRank[original - 1],
           );
         }(),
     ];
-    final boundaryLabels = showCuspDegrees
+    final boundaryLabels = showCusps
         ? [
             for (var drawn = 1; drawn <= 12; drawn++)
-              formatDegreeInSign(
-                  d.sandhi[((viewHouse - 1 + drawn - 1) % 12)] % 30),
+              cuspText(d.sandhi[((viewHouse - 1 + drawn - 1) % 12)]),
           ]
         : null;
     final ascendantHouse = ((1 - viewHouse + 12) % 12) + 1;
@@ -260,6 +297,9 @@ class _ChalitBody extends ConsumerWidget {
                       showDegrees: showDegrees,
                       houseData: houseData,
                       ascendantHouse: ascendantHouse,
+                      // The ascendant IS house 1's madhya (cusp 1), so
+                      // its slot along the bhava is the madhya's rank.
+                      ascendantRank: d.madhyaRank[0],
                       boundaryLabels: boundaryLabels,
                     ),
                   ),
@@ -303,7 +343,10 @@ class _ChalitBody extends ConsumerWidget {
                     _cell(d.signOfHouse(h).label(l10n)),
                     _mono(formatDegree(d.madhya[h - 1])),
                     _mono(formatDegree(d.sandhi[h - 1])),
-                    _cell(d.planetsInHouse[h - 1]
+                    // Traditional order in the table; degree order is a
+                    // chart-box convention only.
+                    _cell(([...d.planetsInHouse[h - 1]]
+                          ..sort((a, b) => a.index.compareTo(b.index)))
                         .map((p) => p.abbrLabel(l10n))
                         .join(' ')),
                   ],

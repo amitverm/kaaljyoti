@@ -381,6 +381,7 @@ class _BirthChartCardBodyState extends ConsumerState<_BirthChartCardBody> {
           lagna: viewFrom,
           trueAscendantSign: s.lagnaSign,
           ascendantDegree: s.ascendant,
+          ascendantRank: ascendantRankIn(s.positions, s.ascendant),
           style: widget.style,
           retrograde: {
             for (final p in s.positions.values) p.planet: p.isRetrograde,

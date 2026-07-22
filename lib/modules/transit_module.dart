@@ -233,6 +233,8 @@ class _TransitBodyState extends ConsumerState<_TransitBody> {
           lagna: s.lagnaSign,
           trueAscendantSign: s.lagnaSign,
           ascendantDegree: s.ascendant,
+          // Rank among the TRANSIT bodies — they are what share the box.
+          ascendantRank: ascendantRankIn(tPos, s.ascendant),
           style: widget.style,
           retrograde: retro,
           tokens: tokens,

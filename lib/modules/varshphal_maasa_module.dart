@@ -12,6 +12,7 @@ import '../pdf/pw.dart' as pw;
 
 import '../charts/chart_view.dart';
 import '../core/astro/divisional.dart';
+import '../core/astro/models.dart';
 import '../core/astro/varshphal.dart';
 import '../core/astro/varshphal_bala.dart';
 import '../core/date_format.dart';
@@ -132,6 +133,8 @@ class _MaasaBodyState extends ConsumerState<_MaasaBody> {
                   lagna: data.snapshot.lagnaSign,
                   trueAscendantSign: data.snapshot.lagnaSign,
                   ascendantDegree: data.snapshot.ascendant,
+                  ascendantRank: ascendantRankIn(
+                      data.snapshot.positions, data.snapshot.ascendant),
                   style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
                   retrograde: {
                     for (final p in data.snapshot.positions.values)

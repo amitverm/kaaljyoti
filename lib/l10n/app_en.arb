@@ -830,6 +830,8 @@
   "ccEqual": "Equal (from Lagna)",
   "cfgRotateTo": "Rotate to house",
   "cfgCuspDegrees": "Madhya & sandhi degrees",
+  "cfgCuspSigns": "Madhya & sandhi signs",
+  "cfgPlanetSigns": "Planet signs",
   "ccMadhyaCol": "Madhya",
   "ccSandhiCol": "From (sandhi)",
   "ccCaption": "houses run sandhi to sandhi around each madhya",
