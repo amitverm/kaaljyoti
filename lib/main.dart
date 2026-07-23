@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,13 +19,28 @@ Future<void> main() async {
   // build instructions produce a telemetry-free app, and only official
   // store builds carry a DSN. Reports are stack traces + device info;
   // kundli/birth data never leaves the device through this path.
-  if (kSentryDsn.isNotEmpty) {
+  // Debug builds never report: dev/simulator sessions were filling the
+  // dashboard with debug-only assertions (e.g. RenderFlex overflow
+  // banners, KAALJYOTI-STAGING-A) that cannot occur in release.
+  if (kSentryDsn.isNotEmpty && !kDebugMode) {
     await SentryFlutter.init(
       (options) {
         options.dsn = kSentryDsn;
         // Crashes only — no performance tracing, no session replay,
         // no PII (defaults: sendDefaultPii = false).
         options.tracesSampleRate = 0;
+        // Being offline is an everyday state for this audience, not a
+        // crash: drop retryable network errors (Supabase auth refresh,
+        // DNS lookup failures) that escape from library-internal loops
+        // we can't wrap (KAALJYOTI-PROD-A and family). App-level call
+        // sites still handle offline themselves for the UX.
+        options.beforeSend = (event, hint) {
+          final t = event.throwable;
+          final offlineNoise = t is SocketException ||
+              t is AuthRetryableFetchException ||
+              (t != null && t.toString().contains('SocketException'));
+          return offlineNoise ? null : event;
+        };
       },
       appRunner: _run,
     );

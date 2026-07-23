@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../charts/chart_style.dart';
 import '../charts/chart_tuning.dart';
@@ -132,6 +133,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 20),
+          _label(l10n.stSectionKundliData.toUpperCase()),
+          _kundliDataCard(),
+          const SizedBox(height: 20),
           _label(l10n.stSectionChartText),
           _chartTextCard(),
           const SizedBox(height: 6),
@@ -146,6 +150,231 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
   }
+
+  /// Bulk kundli management: sync-all, delete-all, and — when signed
+  /// out — the "device-only" notice. Kundlis otherwise sync one by one
+  /// from their own edit screens.
+  Widget _kundliDataCard() {
+    final l10n = context.l10n;
+    final backendConfigured = ref.watch(supabaseClientProvider) != null;
+    final signedIn = ref.watch(authUserProvider).valueOrNull != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (backendConfigured && !signedIn)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.stSignedOutNotice,
+                      style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/signin'),
+                    child: Text(l10n.signIn),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        Card(
+          child: Column(
+            children: [
+              if (backendConfigured) ...[
+                ListTile(
+                  enabled: signedIn,
+                  title: Text(l10n.stSyncAllTitle,
+                      style: const TextStyle(fontSize: 14.5)),
+                  subtitle: Text(l10n.stSyncAllSubtitle,
+                      style: const TextStyle(fontSize: 12)),
+                  trailing: const Icon(Icons.chevron_right, size: 20),
+                  onTap: signedIn ? _syncAllKundlis : null,
+                ),
+                const Divider(height: 1),
+              ],
+              ListTile(
+                title: Text(l10n.stDeleteAllTitle,
+                    style: TextStyle(fontSize: 14.5, color: KJColors.maroon)),
+                subtitle: Text(l10n.stDeleteAllSubtitle,
+                    style: const TextStyle(fontSize: 12)),
+                onTap: _deleteAllKundlis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _syncAllKundlis() async {
+    // Captured before the awaits — no context use across suspension.
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final kundlis = await ref.read(kundliRepoProvider).all();
+    final toEnable =
+        kundlis.where((k) => !k.isEphemeral && !k.syncEnabled).length;
+    if (!mounted) return;
+    if (kundlis.where((k) => !k.isEphemeral).isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.stNoKundlis)));
+      return;
+    }
+    if (toEnable == 0) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.stSyncAllAlready)));
+      return;
+    }
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(ctx.l10n.stSyncAllConfirmTitle),
+        content: Text(ctx.l10n.stSyncAllConfirmBody(toEnable)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(ctx.l10n.cancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(ctx.l10n.stSyncAllAction)),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await ref.read(kundliRepoProvider).enableSyncAll();
+    ref.invalidate(kundlisProvider);
+    try {
+      await ref.read(syncServiceProvider)?.pushAll();
+      messenger
+          .showSnackBar(SnackBar(content: Text(l10n.stSyncAllDone(toEnable))));
+    } catch (e) {
+      // The flags are set — the next successful sync pushes them — but a
+      // failed first push must surface, not pretend everything uploaded.
+      messenger.showSnackBar(SnackBar(content: Text(l10n.keSyncFailed('$e'))));
+    }
+  }
+
+  Future<void> _deleteAllKundlis() async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final repo = ref.read(kundliRepoProvider);
+    final kundlis = await repo.all();
+    if (!mounted) return;
+    if (kundlis.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.stNoKundlis)));
+      return;
+    }
+    final count = kundlis.length;
+    final signedIn = ref.read(authUserProvider).valueOrNull != null;
+
+    // Scope choice, only meaningful when signed in. The distinction is
+    // load-bearing: sync is tombstone-LWW, so "everywhere" propagates the
+    // deletion to the user's other devices, while "this device only" must
+    // write NO tombstones (selling the phone must not nuke the new one).
+    String? scope = 'device';
+    if (signedIn) {
+      scope = await showDialog<String>(
+        context: context,
+        builder: (ctx) => SimpleDialog(
+          title: Text(ctx.l10n.stDeleteAllScopeTitle),
+          children: [
+            _scopeOption(ctx, 'device', ctx.l10n.stDeleteAllDeviceOption,
+                ctx.l10n.stDeleteAllDeviceNote),
+            _scopeOption(ctx, 'everywhere',
+                ctx.l10n.stDeleteAllEverywhereOption,
+                ctx.l10n.stDeleteAllEverywhereNote),
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(ctx.l10n.cancel,
+                  style: TextStyle(color: KJColors.inkSoft)),
+            ),
+          ],
+        ),
+      );
+    }
+    if (scope == null || !mounted) return;
+
+    // Second confirmation — wording depends on what will actually happen.
+    final (title, body, action) = switch ((scope, signedIn)) {
+      ('everywhere', _) => (
+          l10n.stDeleteAllEverywhereConfirmTitle(count),
+          l10n.stDeleteAllEverywhereConfirmBody,
+          l10n.delete,
+        ),
+      (_, true) => (
+          l10n.stDeleteAllDeviceConfirmTitle(count),
+          l10n.stDeleteAllDeviceConfirmBody,
+          l10n.remove,
+        ),
+      _ => (
+          l10n.stDeleteAllLocalConfirmTitle(count),
+          l10n.stDeleteAllLocalConfirmBody,
+          l10n.delete,
+        ),
+    };
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(ctx.l10n.cancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(action, style: TextStyle(color: KJColors.maroon))),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    if (scope == 'everywhere') {
+      // Tombstone the synced ones FIRST — if the server is unreachable,
+      // abort before touching local data so the user can simply retry.
+      final sync = ref.read(syncServiceProvider);
+      try {
+        for (final k in kundlis.where((k) => k.syncEnabled)) {
+          await sync?.deleteRemote(k.id);
+        }
+      } catch (e) {
+        messenger
+            .showSnackBar(SnackBar(content: Text(l10n.keSyncFailed('$e'))));
+        return;
+      }
+      await repo.deleteAll();
+    } else {
+      // Device-only wipe. Sign out first: a signed-in session would just
+      // pull every cloud copy straight back (and the realtime channel
+      // could re-seed between the wipe and a later sign-out).
+      if (signedIn) {
+        await ref.read(supabaseClientProvider)?.auth.signOut();
+      }
+      await repo.deleteAll();
+    }
+    ref.read(activeKundliIdProvider.notifier).state = null;
+    ref.invalidate(kundlisProvider);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.stDeleteAllDone)));
+  }
+
+  Widget _scopeOption(
+          BuildContext ctx, String value, String title, String note) =>
+      SimpleDialogOption(
+        onPressed: () => Navigator.pop(ctx, value),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 2),
+            Text(note,
+                style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
+          ],
+        ),
+      );
 
   /// Chart text rendering settings. Writes go to the global
   /// [chartTuning] notifier (charts repaint live) and are persisted

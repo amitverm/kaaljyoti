@@ -133,7 +133,14 @@ class SyncService {
     final uid = _userId;
     if (uid == null) return;
 
-    if (await pullAll() > 0) onApplied();
+    // Launching offline is a normal state, not an error — and this pull
+    // failing must NOT abort start(), or the realtime subscription below
+    // never happens and sync stays dead for the whole session even after
+    // connectivity returns (KAALJYOTI-PROD-H). Subscribe regardless; the
+    // channel auto-reconnects and the callback re-pulls on any change.
+    try {
+      if (await pullAll() > 0) onApplied();
+    } catch (_) {}
 
     await _channel?.unsubscribe();
     _channel = _client
@@ -150,7 +157,11 @@ class SyncService {
           callback: (_) async {
             // Re-pull on any server change; pullAll already applies
             // last-write-wins and only touches rows that are new/newer.
-            if (await pullAll() > 0) onApplied();
+            // Same offline guard as the initial pull: an exception here
+            // would escape the realtime callback as an app-level error.
+            try {
+              if (await pullAll() > 0) onApplied();
+            } catch (_) {}
           },
         )
         .subscribe();

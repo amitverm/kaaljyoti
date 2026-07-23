@@ -759,6 +759,127 @@ class AppLocalizationsHi extends AppLocalizations {
   String get stResetDefaults => 'डिफ़ॉल्ट पर लौटाएँ';
 
   @override
+  String get stSectionKundliData => 'कुंडली डेटा';
+
+  @override
+  String get stSignedOutNotice =>
+      'कुंडलियाँ केवल इसी डिवाइस पर संग्रहीत हैं — इन्हें हर डिवाइस पर बनाए रखने के लिए साइन इन करें।';
+
+  @override
+  String get stSyncAllTitle => 'सभी कुंडलियाँ क्लाउड से सिंक करें';
+
+  @override
+  String get stSyncAllSubtitle =>
+      'इस डिवाइस की हर कुंडली के लिए क्लाउड सिंक चालू करें';
+
+  @override
+  String get stSyncAllConfirmTitle => 'सभी कुंडलियाँ सिंक करें?';
+
+  @override
+  String stSyncAllConfirmBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count कुंडलियाँ आपके खाते से सिंक होंगी और हर उस डिवाइस पर दिखेंगी जहाँ आप साइन इन करते हैं।',
+      one:
+          '1 कुंडली आपके खाते से सिंक होगी और हर उस डिवाइस पर दिखेगी जहाँ आप साइन इन करते हैं।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stSyncAllAction => 'सभी सिंक करें';
+
+  @override
+  String stSyncAllDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count कुंडलियाँ अब सिंक हो रही हैं',
+      one: '1 कुंडली अब सिंक हो रही है',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stSyncAllAlready => 'सभी कुंडलियाँ पहले से सिंक हो रही हैं';
+
+  @override
+  String get stNoKundlis => 'इस डिवाइस पर कोई कुंडली नहीं है';
+
+  @override
+  String get stDeleteAllTitle => 'सभी कुंडलियाँ हटाएँ';
+
+  @override
+  String get stDeleteAllSubtitle => 'इस डिवाइस से हर कुंडली हटाएँ';
+
+  @override
+  String get stDeleteAllScopeTitle => 'सभी कुंडलियाँ हटाएँ?';
+
+  @override
+  String get stDeleteAllDeviceOption => 'केवल इस डिवाइस से हटाएँ';
+
+  @override
+  String get stDeleteAllDeviceNote =>
+      'आप साइन आउट भी हो जाएँगे। सिंक की गई कुंडलियाँ आपके खाते और अन्य डिवाइस पर सुरक्षित रहेंगी।';
+
+  @override
+  String get stDeleteAllEverywhereOption => 'हर जगह से हटाएँ';
+
+  @override
+  String get stDeleteAllEverywhereNote =>
+      'सिंक की गई कुंडलियाँ आपके खाते और सभी डिवाइस से भी हट जाएँगी।';
+
+  @override
+  String stDeleteAllDeviceConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'इस डिवाइस से $count कुंडलियाँ हटाएँ?',
+      one: 'इस डिवाइस से 1 कुंडली हटाएँ?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stDeleteAllDeviceConfirmBody =>
+      'इस डिवाइस से सभी कुंडलियाँ हट जाएँगी और आप साइन आउट हो जाएँगे — जैसे फ़ोन बेचने या किसी को सौंपने से पहले। क्लाउड प्रतियाँ सुरक्षित रहेंगी: सिंक की गई कुंडलियाँ वापस पाने के लिए किसी भी डिवाइस पर साइन इन करें।';
+
+  @override
+  String stDeleteAllLocalConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count कुंडलियाँ हटाएँ?',
+      one: '1 कुंडली हटाएँ?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stDeleteAllLocalConfirmBody =>
+      'इस डिवाइस से हर कुंडली स्थायी रूप से हट जाएगी। आप साइन इन नहीं हैं, इसलिए कोई क्लाउड प्रति नहीं है — इसे पूर्ववत नहीं किया जा सकता।';
+
+  @override
+  String stDeleteAllEverywhereConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count कुंडलियाँ हर जगह से हटाएँ?',
+      one: '1 कुंडली हर जगह से हटाएँ?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stDeleteAllEverywhereConfirmBody =>
+      'हर कुंडली इस डिवाइस, आपके खाते के क्लाउड स्टोरेज और आपके अन्य डिवाइस से हट जाएगी। इसे पूर्ववत नहीं किया जा सकता।';
+
+  @override
+  String get stDeleteAllDone => 'सभी कुंडलियाँ हटा दी गईं';
+
+  @override
   String get stTextSize => 'पाठ का आकार';
 
   @override
@@ -4304,6 +4425,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get mnSyncNow => 'अभी सिंक करें';
+
+  @override
+  String get mnSyncFailed =>
+      'सिंक विफल रहा — अपना कनेक्शन जाँचें और फिर से कोशिश करें।';
 
   @override
   String mnSynced(String count) {

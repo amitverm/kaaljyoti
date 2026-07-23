@@ -4,18 +4,72 @@
 /// via flutter_secure_storage.
 library;
 
+import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import '../services/key_backup_service.dart';
+
+/// Signature of the low-level open call. Production uses SQLCipher's
+/// [openDatabase]; tests substitute an FFI factory (the plugin doesn't
+/// exist on the host VM).
+typedef DbOpener = Future<Database> Function(
+  String path, {
+  required String password,
+  required int version,
+  required OnDatabaseConfigureFn onConfigure,
+  required OnDatabaseCreateFn onCreate,
+  required OnDatabaseVersionChangeFn onUpgrade,
+});
+
+Future<Database> _sqlCipherOpener(
+  String path, {
+  required String password,
+  required int version,
+  required OnDatabaseConfigureFn onConfigure,
+  required OnDatabaseCreateFn onCreate,
+  required OnDatabaseVersionChangeFn onUpgrade,
+}) =>
+    openDatabase(
+      path,
+      password: password,
+      version: version,
+      onConfigure: onConfigure,
+      onCreate: onCreate,
+      onUpgrade: onUpgrade,
+    );
+
 class AppDb {
-  AppDb._();
+  AppDb._()
+      : _opener = _sqlCipherOpener,
+        _fixedPath = null,
+        _passphraseOverride = null;
   static final AppDb instance = AppDb._();
 
+  /// Unit tests run on the host VM, where neither path_provider nor the
+  /// SQLCipher plugin exist — they inject a path, an FFI opener and a
+  /// fixed passphrase instead.
+  @visibleForTesting
+  AppDb.forTest({
+    required String path,
+    required DbOpener opener,
+    required String passphrase,
+  })  : _opener = opener,
+        _fixedPath = path,
+        _passphraseOverride = passphrase;
+
   static const _keyName = 'te_db_passphrase_v1';
+  static const _kBlockStoreDone = 'db_key_in_blockstore_v1';
+  final DbOpener _opener;
+  final String? _fixedPath;
+  final String? _passphraseOverride;
   Database? _db;
 
   Future<Database> get database async {
@@ -27,25 +81,113 @@ class AppDb {
     return _db!;
   }
 
+  /// Key lookup order: secure storage (Keystore/Keychain) → Block Store
+  /// (the copy a previous device backed up) → generate new. Whatever wins
+  /// is written back to both stores, so the key is always device-local
+  /// AND rides to the user's next device.
   Future<String> _passphrase() async {
+    if (_passphraseOverride != null) return _passphraseOverride;
     const storage = FlutterSecureStorage();
-    var pass = await storage.read(key: _keyName);
-    if (pass == null) {
-      final rng = Random.secure();
-      pass = List.generate(32, (_) => rng.nextInt(256))
-          .map((b) => b.toRadixString(16).padLeft(2, '0'))
-          .join();
-      await storage.write(key: _keyName, value: pass);
+    String? pass;
+    try {
+      pass = await storage.read(key: _keyName);
+    } catch (_) {
+      // A restored-from-backup prefs file can hold ciphertext the new
+      // device's Keystore can't decrypt — treat as absent, same as null.
+      pass = null;
     }
+    if (pass != null) {
+      await _ensureKeyInBlockStore(pass);
+      return pass;
+    }
+    // Empty Keystore but possibly a restored DB: Block Store may hold the
+    // key from the previous device — the case that used to brick the app.
+    pass = await KeyBackupService().read();
+    final prefs = await SharedPreferences.getInstance();
+    if (pass != null) {
+      await storage.write(key: _keyName, value: pass);
+      await prefs.setBool(_kBlockStoreDone, true);
+      return pass;
+    }
+    final rng = Random.secure();
+    pass = List.generate(32, (_) => rng.nextInt(256))
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
+    await storage.write(key: _keyName, value: pass);
+    // Unconditional write, NOT _ensureKeyInBlockStore: restored prefs can
+    // carry the done-flag from the old device, and this key is brand new.
+    await prefs.setBool(_kBlockStoreDone, await KeyBackupService().write(pass));
     return pass;
   }
 
+  /// Push the key to Block Store once per install (flag set only on a
+  /// successful write, so no-lockscreen / no-Play-Services devices retry
+  /// on later launches). Existing installs migrate here on their next
+  /// launch — their key predates Block Store support.
+  Future<void> _ensureKeyInBlockStore(String pass) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_kBlockStoreDone) ?? false) return;
+    if (await KeyBackupService().write(pass)) {
+      await prefs.setBool(_kBlockStoreDone, true);
+    }
+  }
+
   Future<Database> _open() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final path = p.join(dir.path, 'kaaljyoti.db');
-    return openDatabase(
+    final path = _fixedPath ??
+        p.join((await getApplicationDocumentsDirectory()).path, 'kaaljyoti.db');
+    final pass = await _passphrase();
+    try {
+      return await _openAt(path, pass);
+    } on DatabaseException catch (e, stack) {
+      if (!_isUndecryptable(e)) rethrow;
+      // The DB exists but can't be opened with our key. The known cause:
+      // Android Auto Backup restored kaaljyoti.db to a new device, but the
+      // SQLCipher passphrase lives in the Keystore, which never leaves the
+      // old device — every launch then died here (KAALJYOTI-PROD-E) and
+      // the app was permanently bricked. Quarantine the file and start
+      // fresh; signed-in users get their synced kundlis back via pullAll.
+      _quarantine(path);
+      // Countable in Sentry (no-op in DSN-less AGPL builds).
+      await Sentry.captureMessage(
+        'Local DB undecryptable — quarantined and recreated '
+        '(backup-restored without key?): $e',
+        level: SentryLevel.warning,
+        withScope: (scope) => scope.setContexts('db_recovery', {
+          'error': '$e',
+          'stack': '$stack',
+        }),
+      );
+      return _openAt(path, pass);
+    }
+  }
+
+  /// True for the failure modes of "this file cannot be read with this
+  /// key" (wrong SQLCipher key / not a database). Deliberately narrow:
+  /// transient errors (locked, disk full…) must NOT wipe user data.
+  bool _isUndecryptable(DatabaseException e) =>
+      e.isOpenFailedError() ||
+      e.toString().contains('not a database') ||
+      e.getResultCode() == 26 /* SQLITE_NOTADB */;
+
+  /// Move the unreadable DB aside (keeping one generation for forensics)
+  /// and drop journal/WAL leftovers so the fresh DB starts clean.
+  void _quarantine(String path) {
+    final db = File(path);
+    if (db.existsSync()) {
+      final quarantined = File('$path.quarantined');
+      if (quarantined.existsSync()) quarantined.deleteSync();
+      db.renameSync(quarantined.path);
+    }
+    for (final suffix in const ['-wal', '-shm', '-journal']) {
+      final f = File('$path$suffix');
+      if (f.existsSync()) f.deleteSync();
+    }
+  }
+
+  Future<Database> _openAt(String path, String password) {
+    return _opener(
       path,
-      password: await _passphrase(),
+      password: password,
       version: 7,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onUpgrade: (db, oldVersion, newVersion) async {

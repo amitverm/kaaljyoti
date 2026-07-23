@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Backup rules for Android 12+ (backup_rules.xml covers 11 and below —
+     keep the two files' exclude lists identical; its comment carries the full
+     rationale). The encrypted DB is included; the SQLCipher key travels
+     separately via Google Block Store, which serves both cloud backup and
+     device-to-device transfer — hence identical sections. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" path="app_flutter/flutter_assets" />
+        <exclude domain="root" path="app_flutter/kaaljyoti.db-wal" />
+        <exclude domain="root" path="app_flutter/kaaljyoti.db-shm" />
+        <exclude domain="root" path="app_flutter/kaaljyoti.db-journal" />
+        <exclude domain="root" path="app_flutter/kaaljyoti.db.quarantined" />
+        <exclude domain="sharedpref" path="FlutterSecureStorage.xml" />
+        <exclude domain="sharedpref" path="FlutterSecureKeyStorage.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" path="app_flutter/flutter_assets" />
+        <exclude domain="root" path="app_flutter/kaaljyoti.db-wal" />
+        <exclude domain="root" path="app_flutter/kaaljyoti.db-shm" />
+        <exclude domain="root" path="app_flutter/kaaljyoti.db-journal" />
+        <exclude domain="root" path="app_flutter/kaaljyoti.db.quarantined" />
+        <exclude domain="sharedpref" path="FlutterSecureStorage.xml" />
+        <exclude domain="sharedpref" path="FlutterSecureKeyStorage.xml" />
+    </device-transfer>
+</data-extraction-rules>

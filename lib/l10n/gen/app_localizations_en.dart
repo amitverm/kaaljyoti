@@ -758,6 +758,127 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stResetDefaults => 'Reset to defaults';
 
   @override
+  String get stSectionKundliData => 'Kundli data';
+
+  @override
+  String get stSignedOutNotice =>
+      'Kundlis are stored only on this device — sign in to keep them across devices.';
+
+  @override
+  String get stSyncAllTitle => 'Sync all kundlis to cloud';
+
+  @override
+  String get stSyncAllSubtitle =>
+      'Turn on cloud sync for every kundli on this device';
+
+  @override
+  String get stSyncAllConfirmTitle => 'Sync all kundlis?';
+
+  @override
+  String stSyncAllConfirmBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count kundlis will sync to your account and appear on every device you sign in to.',
+      one:
+          '1 kundli will sync to your account and appear on every device you sign in to.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stSyncAllAction => 'Sync all';
+
+  @override
+  String stSyncAllDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kundlis now syncing',
+      one: '1 kundli now syncing',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stSyncAllAlready => 'All kundlis are already syncing';
+
+  @override
+  String get stNoKundlis => 'There are no kundlis on this device';
+
+  @override
+  String get stDeleteAllTitle => 'Delete all kundlis';
+
+  @override
+  String get stDeleteAllSubtitle => 'Remove every kundli from this device';
+
+  @override
+  String get stDeleteAllScopeTitle => 'Delete all kundlis?';
+
+  @override
+  String get stDeleteAllDeviceOption => 'Remove from this device only';
+
+  @override
+  String get stDeleteAllDeviceNote =>
+      'Also signs you out. Synced kundlis stay safe in your account and on your other devices.';
+
+  @override
+  String get stDeleteAllEverywhereOption => 'Delete everywhere';
+
+  @override
+  String get stDeleteAllEverywhereNote =>
+      'Deletes synced kundlis from your account and all your devices too.';
+
+  @override
+  String stDeleteAllDeviceConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Remove $count kundlis from this device?',
+      one: 'Remove 1 kundli from this device?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stDeleteAllDeviceConfirmBody =>
+      'This device will be wiped of all kundlis and signed out — for example before selling or handing over the phone. Cloud copies are untouched: sign in on any device to get your synced kundlis back.';
+
+  @override
+  String stDeleteAllLocalConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $count kundlis?',
+      one: 'Delete 1 kundli?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stDeleteAllLocalConfirmBody =>
+      'Every kundli will be permanently deleted from this device. You are not signed in, so there are no cloud copies — this cannot be undone.';
+
+  @override
+  String stDeleteAllEverywhereConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $count kundlis everywhere?',
+      one: 'Delete 1 kundli everywhere?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stDeleteAllEverywhereConfirmBody =>
+      'Every kundli will be deleted from this device, from your account\'s cloud storage, and from your other devices. This cannot be undone.';
+
+  @override
+  String get stDeleteAllDone => 'All kundlis deleted';
+
+  @override
   String get stTextSize => 'Text size';
 
   @override
@@ -4310,6 +4431,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mnSyncNow => 'Sync now';
+
+  @override
+  String get mnSyncFailed =>
+      'Sync failed — check your connection and try again.';
 
   @override
   String mnSynced(String count) {

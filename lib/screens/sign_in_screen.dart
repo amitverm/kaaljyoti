@@ -38,7 +38,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   bool get _showApple => !kIsWeb && Platform.isIOS;
 
   Future<void> _afterSignIn() async {
-    await ref.read(syncServiceProvider)?.pullAll();
+    // Auth just succeeded but the network can still drop out from under
+    // the first pull — liveSyncProvider re-pulls anyway, so a failure
+    // here must not crash the sign-in flow.
+    try {
+      await ref.read(syncServiceProvider)?.pullAll();
+    } catch (_) {}
     ref.invalidate(kundlisProvider);
     if (mounted) context.pop();
   }
@@ -46,6 +51,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   Future<void> _social(Future<void> Function(SocialAuth) run) async {
     final client = ref.read(supabaseClientProvider);
     if (client == null) return;
+    // Captured before the awaits: the user can back out of this screen
+    // while the request is in flight, after which context has no
+    // localizations (that null-check crash was KAALJYOTI-PROD-G).
+    final l10n = context.l10n;
     setState(() {
       _busy = true;
       _error = null;
@@ -60,8 +69,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       // diagnosing provider misconfiguration - log it, show the calm
       // message.
       debugPrint('social sign-in failed: $e');
-      setState(
-          () => _error = e is StateError ? e.message : context.l10n.siError);
+      if (mounted) {
+        setState(() => _error = e is StateError ? e.message : l10n.siError);
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -70,6 +80,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   Future<void> _sendCode() async {
     final client = ref.read(supabaseClientProvider);
     if (client == null || _email.isEmpty) return;
+    final l10n = context.l10n;
     setState(() {
       _busy = true;
       _error = null;
@@ -80,7 +91,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       await client.auth.signInWithOtp(email: _email);
       setState(() => _codeSent = true);
     } catch (e) {
-      setState(() => _error = _friendly(e));
+      if (mounted) setState(() => _error = _friendly(e, l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -90,6 +101,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final client = ref.read(supabaseClientProvider);
     final code = _codeController.text.trim();
     if (client == null || code.isEmpty) return;
+    final l10n = context.l10n;
     setState(() {
       _busy = true;
       _error = null;
@@ -102,21 +114,21 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       );
       await _afterSignIn();
     } catch (e) {
-      setState(() => _error = _friendly(e));
+      if (mounted) setState(() => _error = _friendly(e, l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  String _friendly(Object e) {
+  String _friendly(Object e, AppLocalizations l10n) {
     final msg = e.toString();
     if (msg.contains('rate limit') || msg.contains('429')) {
-      return context.l10n.siErrorRateLimit;
+      return l10n.siErrorRateLimit;
     }
     if (msg.contains('expired') || msg.contains('invalid')) {
-      return context.l10n.siErrorBadCode;
+      return l10n.siErrorBadCode;
     }
-    return context.l10n.siErrorGeneric;
+    return l10n.siErrorGeneric;
   }
 
   @override

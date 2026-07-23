@@ -81,3 +81,11 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Google Block Store — carries the SQLCipher passphrase to the user's
+    // next device (E2E-encrypted with the lockscreen, rides cloud backup
+    // and device-to-device transfer), unlike the Keystore, which is
+    // device-bound. See MainActivity's kaaljyoti/blockstore channel.
+    implementation("com.google.android.gms:play-services-auth-blockstore:16.4.0")
+}

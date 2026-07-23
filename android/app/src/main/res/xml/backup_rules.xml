@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup rules for Android 11 and below (see data_extraction_rules.xml
+     for 12+). kaaljyoti.db DOES ride backups: it's SQLCipher-encrypted and the
+     passphrase reaches the next device via Google Block Store (see
+     key_backup_service.dart), so offline users' kundlis survive a phone
+     change with the encryption promise intact. What must NOT ride:
+     - flutter_secure_storage's prefs: Keystore-wrapped ciphertext, unreadable
+       on any other device (restoring it bricked the app: KAALJYOTI-PROD-E).
+       AppDb re-fills it from Block Store on first launch.
+     - WAL/journal sidecars: a checkpoint-inconsistent pair could corrupt the
+       restored DB; the main file alone is always a valid database.
+     - The quarantined copy of a previously unreadable DB.
+     - flutter_assets: ~134 MB of engine-extracted APK assets. Backing it up
+       blows the 25 MB Auto Backup quota, which fails the WHOLE backup pass
+       ("Size quota exceeded") — the DB then never reaches the cloud at all.
+       It is recreated from the APK on first run.
+     If Block Store can't deliver the key (no lockscreen / no Play Services),
+     AppDb's quarantine-and-recreate recovery still makes the app usable. -->
+<full-backup-content>
+    <exclude domain="root" path="app_flutter/flutter_assets" />
+    <exclude domain="root" path="app_flutter/kaaljyoti.db-wal" />
+    <exclude domain="root" path="app_flutter/kaaljyoti.db-shm" />
+    <exclude domain="root" path="app_flutter/kaaljyoti.db-journal" />
+    <exclude domain="root" path="app_flutter/kaaljyoti.db.quarantined" />
+    <exclude domain="sharedpref" path="FlutterSecureStorage.xml" />
+    <exclude domain="sharedpref" path="FlutterSecureKeyStorage.xml" />
+</full-backup-content>

@@ -3,10 +3,15 @@
          requested only as the OS pairs them. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!-- Backup rules keep device-bound secrets (SQLCipher DB + Keystore-
+         wrapped key material) out of Auto Backup — restoring them to a new
+         device bricked the app (KAALJYOTI-PROD-E). -->
     <application
         android:label="Kaal Jyoti"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <activity
             android:name=".MainActivity"
             android:exported="true"

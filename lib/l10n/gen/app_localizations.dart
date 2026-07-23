@@ -1400,6 +1400,150 @@ abstract class AppLocalizations {
   /// **'Reset to defaults'**
   String get stResetDefaults;
 
+  /// No description provided for @stSectionKundliData.
+  ///
+  /// In en, this message translates to:
+  /// **'Kundli data'**
+  String get stSectionKundliData;
+
+  /// No description provided for @stSignedOutNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Kundlis are stored only on this device — sign in to keep them across devices.'**
+  String get stSignedOutNotice;
+
+  /// No description provided for @stSyncAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync all kundlis to cloud'**
+  String get stSyncAllTitle;
+
+  /// No description provided for @stSyncAllSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on cloud sync for every kundli on this device'**
+  String get stSyncAllSubtitle;
+
+  /// No description provided for @stSyncAllConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync all kundlis?'**
+  String get stSyncAllConfirmTitle;
+
+  /// No description provided for @stSyncAllConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 kundli will sync to your account and appear on every device you sign in to.} other{{count} kundlis will sync to your account and appear on every device you sign in to.}}'**
+  String stSyncAllConfirmBody(int count);
+
+  /// No description provided for @stSyncAllAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync all'**
+  String get stSyncAllAction;
+
+  /// No description provided for @stSyncAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 kundli now syncing} other{{count} kundlis now syncing}}'**
+  String stSyncAllDone(int count);
+
+  /// No description provided for @stSyncAllAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'All kundlis are already syncing'**
+  String get stSyncAllAlready;
+
+  /// No description provided for @stNoKundlis.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no kundlis on this device'**
+  String get stNoKundlis;
+
+  /// No description provided for @stDeleteAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all kundlis'**
+  String get stDeleteAllTitle;
+
+  /// No description provided for @stDeleteAllSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove every kundli from this device'**
+  String get stDeleteAllSubtitle;
+
+  /// No description provided for @stDeleteAllScopeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all kundlis?'**
+  String get stDeleteAllScopeTitle;
+
+  /// Scope choice for bulk delete. The device/everywhere distinction is load-bearing: sync uses tombstones, so 'everywhere' propagates deletion to the user's other devices, while 'this device only' must leave cloud copies untouched (the selling-the-phone case).
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from this device only'**
+  String get stDeleteAllDeviceOption;
+
+  /// No description provided for @stDeleteAllDeviceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Also signs you out. Synced kundlis stay safe in your account and on your other devices.'**
+  String get stDeleteAllDeviceNote;
+
+  /// No description provided for @stDeleteAllEverywhereOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everywhere'**
+  String get stDeleteAllEverywhereOption;
+
+  /// No description provided for @stDeleteAllEverywhereNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes synced kundlis from your account and all your devices too.'**
+  String get stDeleteAllEverywhereNote;
+
+  /// No description provided for @stDeleteAllDeviceConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Remove 1 kundli from this device?} other{Remove {count} kundlis from this device?}}'**
+  String stDeleteAllDeviceConfirmTitle(int count);
+
+  /// No description provided for @stDeleteAllDeviceConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This device will be wiped of all kundlis and signed out — for example before selling or handing over the phone. Cloud copies are untouched: sign in on any device to get your synced kundlis back.'**
+  String get stDeleteAllDeviceConfirmBody;
+
+  /// No description provided for @stDeleteAllLocalConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Delete 1 kundli?} other{Delete {count} kundlis?}}'**
+  String stDeleteAllLocalConfirmTitle(int count);
+
+  /// No description provided for @stDeleteAllLocalConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every kundli will be permanently deleted from this device. You are not signed in, so there are no cloud copies — this cannot be undone.'**
+  String get stDeleteAllLocalConfirmBody;
+
+  /// No description provided for @stDeleteAllEverywhereConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Delete 1 kundli everywhere?} other{Delete {count} kundlis everywhere?}}'**
+  String stDeleteAllEverywhereConfirmTitle(int count);
+
+  /// No description provided for @stDeleteAllEverywhereConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every kundli will be deleted from this device, from your account\'s cloud storage, and from your other devices. This cannot be undone.'**
+  String get stDeleteAllEverywhereConfirmBody;
+
+  /// No description provided for @stDeleteAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'All kundlis deleted'**
+  String get stDeleteAllDone;
+
   /// No description provided for @stTextSize.
   ///
   /// In en, this message translates to:
@@ -7814,6 +7958,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync now'**
   String get mnSyncNow;
+
+  /// No description provided for @mnSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed — check your connection and try again.'**
+  String get mnSyncFailed;
 
   /// No description provided for @mnSynced.
   ///

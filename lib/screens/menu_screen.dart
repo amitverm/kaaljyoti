@@ -146,14 +146,22 @@ class MenuScreen extends ConsumerWidget {
                     children: [
                       OutlinedButton(
                         onPressed: () async {
-                          await ref.read(syncServiceProvider)?.pushAll();
-                          final pulled =
-                              await ref.read(syncServiceProvider)?.pullAll();
-                          ref.invalidate(kundlisProvider);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text(
-                                    context.l10n.mnSynced('${pulled ?? 0}'))));
+                          // Captured before the awaits — context must not be
+                          // used across suspension points.
+                          final l10n = context.l10n;
+                          final messenger = ScaffoldMessenger.of(context);
+                          try {
+                            await ref.read(syncServiceProvider)?.pushAll();
+                            final pulled =
+                                await ref.read(syncServiceProvider)?.pullAll();
+                            ref.invalidate(kundlisProvider);
+                            messenger.showSnackBar(SnackBar(
+                                content: Text(l10n.mnSynced('${pulled ?? 0}'))));
+                          } catch (_) {
+                            // Offline is the common cause — a user-initiated
+                            // sync must say it failed, not crash or go silent.
+                            messenger.showSnackBar(
+                                SnackBar(content: Text(l10n.mnSyncFailed)));
                           }
                         },
                         child: Text(context.l10n.mnSyncNow),
