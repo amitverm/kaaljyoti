@@ -3,19 +3,28 @@
 /// input shape differs from Vimshottari/Yogini — but it emits the same
 /// period-tree output.
 ///
-/// Implementation follows the widely used K.N. Rao variant:
-/// - Dasha sequence starts from the lagna sign.
-/// - Direction: counted zodiacally (forward) if the 9th from lagna is
-///   an odd-footed sign group, reverse otherwise. Odd-footed groups:
-///   Aries–Virgo forward logic per classical rule — here we use the
-///   standard rule that signs Aries, Taurus, Gemini, Libra, Scorpio,
-///   Sagittarius are "savya" (forward) and the rest "apasavya".
-/// - Period length of a sign = count (exclusive) from the sign to its
-///   lord, forward for odd (savya) signs and reverse for even, minus 1;
-///   if the lord is in the sign itself → 12 years. Scorpio uses the
-///   stronger of Mars/Ketu, Aquarius the stronger of Saturn/Rahu
-///   (v1 strength rule: the co-lord accompanied by more planets, then
-///   the one with higher degrees in its sign).
+/// Implementation follows K.N. Rao, "Predicting through Jaimini's Chara
+/// Dasha" (Vani Publications), chapters 3, 4 and 6. Two DISTINCT
+/// direct/indirect groupings are in play and must not be conflated:
+///
+/// - ORDER grouping (ch. 3, from the 9th house of each rashi): Aries,
+///   Leo, Virgo, Libra, Aquarius, Pisces are "direct lagna" rashis —
+///   their mahadasha sequence runs zodiacally forward, the remaining
+///   six run backward. The same grouping (of the running mahadasha
+///   rashi) sets the antardasha direction (ch. 4).
+/// - COUNTING grouping (ch. 6): Aries, Taurus, Gemini, Libra, Scorpio,
+///   Sagittarius count forward from themselves to their lord; the rest
+///   count backward. Inclusive count minus one = dasha years; lord in
+///   its own rashi → 12 years (so years span 1–12, never 0).
+///
+/// Sub-periods (ch. 4): the 12 rashis from the one AFTER the mahadasha
+/// rashi, own rashi LAST, each an equal 1/12 of the parent.
+///
+/// Scorpio (Mars/Ketu) and Aquarius (Saturn/Rahu) dual lordship
+/// (ch. 6 special rules): a co-lord placed in the rashi itself is
+/// ignored and the count goes to the other; both in the rashi → 12
+/// years; both outside → the stronger one counts (more planets
+/// associated, then higher degrees in sign).
 library;
 
 import '../models.dart';
@@ -25,7 +34,18 @@ class JaiminiCharaCalculator implements DashaCalculator {
   @override
   DashaSystem get system => DashaSystem.jaimini;
 
-  static const _savya = {
+  /// ORDER grouping (ch. 3): mahadasha/antardasha sequence direction.
+  static const _orderDirect = {
+    ZodiacSign.aries,
+    ZodiacSign.leo,
+    ZodiacSign.virgo,
+    ZodiacSign.libra,
+    ZodiacSign.aquarius,
+    ZodiacSign.pisces,
+  };
+
+  /// COUNTING grouping (ch. 6): direction of the count to the lord.
+  static const _countDirect = {
     ZodiacSign.aries,
     ZodiacSign.taurus,
     ZodiacSign.gemini,
@@ -39,8 +59,8 @@ class JaiminiCharaCalculator implements DashaCalculator {
     final birth = snapshot.birth.dateTimeUtc;
     final lagna = snapshot.lagnaSign;
 
-    // Sequence of 12 signs from lagna; direction from lagna's group.
-    final forward = _savya.contains(lagna);
+    // Sequence of 12 signs from lagna; direction from lagna's ORDER group.
+    final forward = _orderDirect.contains(lagna);
     final signs = <ZodiacSign>[
       for (var i = 0; i < 12; i++)
         ZodiacSign.values[(lagna.index + (forward ? i : -i) + 144) % 12],
@@ -60,14 +80,15 @@ class JaiminiCharaCalculator implements DashaCalculator {
   }
 
   /// Chara years for [sign]: distance to its lord, counted forward for
-  /// savya signs and reverse for apasavya, exclusive of the sign itself;
-  /// lord in own sign → 12.
+  /// COUNTING-direct signs and backward for the rest, exclusive of the
+  /// sign itself (the classical inclusive-count-minus-one); lord in own
+  /// sign → 12.
   int _charaYears(ZodiacSign sign, AstroSnapshot snapshot) {
     final lord = _effectiveLord(sign, snapshot);
     final lordSign = snapshot.positions[lord]!.sign;
     if (lordSign == sign) return 12;
 
-    final forward = _savya.contains(sign);
+    final forward = _countDirect.contains(sign);
     final int count;
     if (forward) {
       count = (lordSign.index - sign.index + 12) % 12;
@@ -81,8 +102,11 @@ class JaiminiCharaCalculator implements DashaCalculator {
     return count;
   }
 
-  /// Scorpio: Mars/Ketu; Aquarius: Saturn/Rahu. Stronger co-lord =
-  /// the one placed with more planets; tie → higher degrees in sign.
+  /// Scorpio: Mars/Ketu; Aquarius: Saturn/Rahu (ch. 6 special rules).
+  /// (a)/(b) a co-lord sitting in the rashi itself is ignored — count
+  /// goes to the OTHER lord; (c) both in the rashi → either (12 years);
+  /// (d) both outside → stronger co-lord: the one placed with more
+  /// planets, tie → higher degrees in sign.
   Planet _effectiveLord(ZodiacSign sign, AstroSnapshot snapshot) {
     final (Planet a, Planet b)? pair = switch (sign) {
       ZodiacSign.scorpio => (Planet.mars, Planet.ketu),
@@ -90,6 +114,12 @@ class JaiminiCharaCalculator implements DashaCalculator {
       _ => null,
     };
     if (pair == null) return sign.lord;
+
+    final aInSign = snapshot.positions[pair.$1]!.sign == sign;
+    final bInSign = snapshot.positions[pair.$2]!.sign == sign;
+    if (aInSign && bInSign) return pair.$1; // (c) → own sign → 12 years
+    if (aInSign) return pair.$2; // (a) ignore occupant, count to other
+    if (bInSign) return pair.$1; // (b)
 
     int companions(Planet p) {
       final s = snapshot.positions[p]!.sign;
@@ -107,8 +137,8 @@ class JaiminiCharaCalculator implements DashaCalculator {
   }
 
   /// Antardashas: the 12 signs starting from the sign AFTER the
-  /// mahadasha sign (classical Chara sub-period scheme), each equal
-  /// to parentYears/12; direction follows the mahadasha sign's group.
+  /// mahadasha sign, own sign last (ch. 4), each equal to
+  /// parentYears/12; direction follows the mahadasha sign's ORDER group.
   /// Children attached as a LAZY builder down to [kDashaMaxLevel] (pran).
   DashaPeriod _buildPeriod(
     ZodiacSign sign,
@@ -127,7 +157,7 @@ class JaiminiCharaCalculator implements DashaCalculator {
       childBuilder: level >= kDashaMaxLevel
           ? null
           : (parent) {
-              final forward = _savya.contains(sign);
+              final forward = _orderDirect.contains(sign);
               final subLength = years / 12;
               final children = <DashaPeriod>[];
               var cursor = parent.start;

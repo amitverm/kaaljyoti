@@ -1,7 +1,7 @@
 name: kaaljyoti
 description: "Kaal Jyoti — Horoscope Calculator. High-precision Vedic astrology & kundali platform, deeply customizable, mobile-native."
 publish_to: "none"
-version: 0.1.1+15
+version: 0.1.1+16
 
 # Requires Flutter 3.27+ (Color.withValues) / Dart 3.6+.
 environment:
