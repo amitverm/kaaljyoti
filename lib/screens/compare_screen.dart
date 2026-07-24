@@ -389,6 +389,10 @@ class _CompareTabsState extends ConsumerState<_CompareTabs>
   late TabController _tab;
   late List<ScrollController> _scrolls;
   double _offset = 0;
+  // Which tab's content the IndexedStack currently shows. Tracked
+  // separately so a real index change triggers exactly one instant swap
+  // (no interpolated slide) rather than rebuilding on every animation tick.
+  int _shownIndex = 0;
 
   bool get _showSim => widget.slots.length >= 2;
   int get _tabCount => widget.slots.length + (_showSim ? 1 : 0);
@@ -413,11 +417,13 @@ class _CompareTabsState extends ConsumerState<_CompareTabs>
   }
 
   void _build({required int initialIndex}) {
+    final start = initialIndex.clamp(0, math.max(0, _tabCount - 1)).toInt();
     _tab = TabController(
       length: _tabCount,
       vsync: this,
-      initialIndex: initialIndex.clamp(0, math.max(0, _tabCount - 1)),
+      initialIndex: start,
     );
+    _shownIndex = start;
     _scrolls = [
       for (var i = 0; i < widget.slots.length; i++)
         ScrollController(initialScrollOffset: _offset),
@@ -433,7 +439,13 @@ class _CompareTabsState extends ConsumerState<_CompareTabs>
   }
 
   void _onTabChanged() {
-    if (_tab.index < _scrolls.length) _syncScroll(_tab.index);
+    // TabController notifies on every animation frame of the indicator;
+    // act only when the target tab actually changes so the content swaps
+    // in a single frame with no interpolated transition.
+    final i = _tab.index;
+    if (i == _shownIndex) return;
+    setState(() => _shownIndex = i);
+    if (i < _scrolls.length) _syncScroll(i);
   }
 
   void _syncScroll(int index) {
@@ -491,8 +503,17 @@ class _CompareTabsState extends ConsumerState<_CompareTabs>
           ],
         ),
         Expanded(
-          child: TabBarView(
-            controller: _tab,
+          // IndexedStack, not TabBarView: the whole point of Compare is
+          // visual diffing — flipping between charts must be an INSTANT
+          // content swap (like blinking between two overlaid images), with
+          // no slide/fade. IndexedStack keeps every tab alive and laid out,
+          // so revealing a tab is a one-frame swap and its scroll offset can
+          // be synced to the shared offset (via [_onTabChanged]). Horizontal
+          // swipe paging is intentionally dropped for the same reason — a
+          // drag that slides one chart over another reintroduces the
+          // transition. The TabBar indicator keeps its own small animation.
+          child: IndexedStack(
+            index: _shownIndex,
             children: [
               for (var i = 0; i < widget.slots.length; i++)
                 _chartTab(i, widget.slots[i], activeView),

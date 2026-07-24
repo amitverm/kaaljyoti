@@ -207,6 +207,37 @@ void main() {
         reason: 'active view is locked across tabs');
   });
 
+  testWidgets(
+      'chart tabs swap instantly via IndexedStack, not a sliding TabBarView '
+      '(spec §3.3 visual-diff)', (tester) async {
+    final container = ProviderContainer(overrides: [
+      ..._dashboardOverrides(),
+      compareSubjectsProvider.overrideWith(
+          (ref) async => [_fullSlot('k1', 'Alice'), _fullSlot('k2', 'Bob')]),
+      compareFindingsProvider.overrideWith((ref) async => const []),
+    ]);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: _wrap(const CompareScreen()),
+    ));
+    await tester.pumpAndSettle();
+
+    // The compare content lives in an IndexedStack (a single-frame swap),
+    // never a TabBarView — a TabBarView would slide one chart over the
+    // other and destroy the blink-comparison the feature depends on.
+    expect(find.byType(IndexedStack), findsOneWidget);
+    expect(find.byType(TabBarView), findsNothing);
+
+    // Tapping a tab reveals its content in the very next frame: a single
+    // pump (no settle) is enough for the target chart's view chips to be
+    // present, i.e. there is no interpolated content transition to wait on.
+    await tester.tap(find.widgetWithText(Tab, 'Bob'));
+    await tester.pump();
+    expect(find.widgetWithText(ChoiceChip, 'Overview'), findsWidgets);
+  });
+
   testWidgets('DashboardBody drives the externally-owned scroll controller '
       '(shared offset mechanism, spec §3.3)', (tester) async {
     final controller = ScrollController();
