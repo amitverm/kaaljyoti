@@ -166,7 +166,7 @@ void main() {
       final rp = KpRulingPlanets.compute(
         ascendant: 0, // Aries / Ashwini / Ketu sub
         moonLongitude: 100, // Cancer / Pushya (Saturn star)
-        localWeekday: DateTime.thursday,
+        vedicWeekday: DateTime.thursday,
       );
       expect(rp.dayLord, Planet.jupiter);
       expect(rp.lagnaSignLord, Planet.mars);
@@ -175,6 +175,28 @@ void main() {
       expect(rp.moonSignLord, Planet.moon);
       expect(rp.moonStarLord, Planet.saturn);
       expect(rp.distinct.toSet().length, rp.distinct.length);
+    });
+
+    test('day lord is sunrise-bounded: 03:00 (civil Tue) → Monday → Moon', () {
+      // 2026-07-07 is a Tuesday; sunrise ~06:00. A 03:00 judgment is
+      // before sunrise, so it is still the Monday Vedic day → Moon.
+      final tue3am = DateTime(2026, 7, 7, 3, 0);
+      final sunrise = DateTime(2026, 7, 7, 6, 0);
+      final vw = vedicWeekday(tue3am, sunrise);
+      expect(vw, DateTime.monday);
+      final rp = KpRulingPlanets.compute(
+          ascendant: 0, moonLongitude: 100, vedicWeekday: vw);
+      expect(rp.dayLord, Planet.moon);
+    });
+
+    test('day lord post-sunrise unchanged: 08:00 (civil Tue) → Mars', () {
+      final tue8am = DateTime(2026, 7, 7, 8, 0);
+      final sunrise = DateTime(2026, 7, 7, 6, 0);
+      final vw = vedicWeekday(tue8am, sunrise);
+      expect(vw, DateTime.tuesday);
+      final rp = KpRulingPlanets.compute(
+          ascendant: 0, moonLongitude: 100, vedicWeekday: vw);
+      expect(rp.dayLord, Planet.mars);
     });
   });
 

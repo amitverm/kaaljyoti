@@ -140,13 +140,16 @@ class KpRulingPlanets {
   final Planet moonSubLord;
 
   /// [ascendant]/[moonLongitude] sidereal at the judgment instant;
-  /// [localWeekday] is DateTime.weekday (1 = Monday … 7 = Sunday).
-  /// Day-lord convention: civil weekday (matches the panchang vara
-  /// convention used elsewhere in the app).
+  /// [vedicWeekday] is the sunrise-bounded weekday (DateTime.weekday
+  /// convention, 1 = Monday … 7 = Sunday) — the Vedic day runs
+  /// sunrise → sunrise, so a pre-dawn judgment uses the PREVIOUS
+  /// weekday's day lord. Callers derive it with [vedicWeekday] (the
+  /// panchang helper) from the judgment instant and the place's
+  /// sunrise, matching the vara convention used elsewhere in the app.
   factory KpRulingPlanets.compute({
     required double ascendant,
     required double moonLongitude,
-    required int localWeekday,
+    required int vedicWeekday,
   }) {
     const byWeekday = {
       DateTime.sunday: Planet.sun,
@@ -160,7 +163,7 @@ class KpRulingPlanets {
     final asc = KpLords.fromLongitude(ascendant);
     final moon = KpLords.fromLongitude(moonLongitude);
     return KpRulingPlanets(
-      dayLord: byWeekday[localWeekday]!,
+      dayLord: byWeekday[vedicWeekday]!,
       lagnaSignLord: asc.signLord,
       lagnaStarLord: asc.starLord,
       lagnaSubLord: asc.subLord,

@@ -191,13 +191,16 @@ class EphemerisService {
   /// [dayUtc] falls on, at the given place — the Muhurta screen's
   /// single entry point for a chosen date+place (the Today screen's
   /// "now"-anchored [sunriseBefore]/[sunEventAfter] pair predate this
-  /// and are left as-is). Anchored at local noon so [dayUtc] can be
-  /// any instant on the intended calendar day. Throws in degenerate
-  /// (circumpolar) cases where no rise/set exists.
+  /// and are left as-is). Anchored at approximate LOCAL solar noon
+  /// (12:00 UT − longitude/15 hours, [longitude] in degrees east) so
+  /// the search stays on the intended calendar day at any longitude —
+  /// anchoring at UTC noon instead returns the previous day's sunrise
+  /// for western longitudes (e.g. UTC noon is 07:00 EST, before
+  /// sunrise). Throws in degenerate (circumpolar) cases where no
+  /// rise/set exists.
   ({DateTime rise, DateTime set}) sunRiseSet(
       DateTime dayUtc, double latitude, double longitude) {
-    final noon = DateTime.utc(dayUtc.year, dayUtc.month, dayUtc.day, 12);
-    final jdNoon = julianDayUt(noon);
+    final jdNoon = julianDayUt(localSolarNoonUt(dayUtc, longitude));
     final riseJd = sunriseBefore(jdNoon, latitude, longitude) ??
         sunriseBefore(jdNoon - 1, latitude, longitude);
     final setJd = riseJd == null
@@ -211,6 +214,17 @@ class EphemerisService {
       set: dateTimeFromJdUt(setJd).toLocal(),
     );
   }
+
+  /// The UT instant of approximate LOCAL solar noon on the calendar
+  /// day [dayUtc] falls on, at [longitude] degrees east: 12:00 UT −
+  /// longitude/15 hours. This is the day-anchor for [sunRiseSet] — a
+  /// UTC-noon anchor drifts onto the wrong calendar day for far
+  /// eastern/western longitudes (New York at −74° would otherwise
+  /// resolve the PREVIOUS day's sunrise). Pure and side-effect-free so
+  /// it is unit-testable without the native ephemeris.
+  static DateTime localSolarNoonUt(DateTime dayUtc, double longitude) =>
+      DateTime.utc(dayUtc.year, dayUtc.month, dayUtc.day, 12)
+          .subtract(Duration(milliseconds: (longitude / 15.0 * 3600000).round()));
 
   /// Inverse of [julianDayUt] — a Julian day (UT) back to a UTC
   /// DateTime.

@@ -323,7 +323,10 @@ class _MahakoshChartScreenState extends ConsumerState<MahakoshChartScreen> {
                   ],
                 ),
               ),
-            if (chart.events.isNotEmpty) _eventsCard(chart),
+            if (chart.events.isNotEmpty) ...[
+              _eventsCard(chart),
+              const SizedBox(height: 12),
+            ],
             _discussionCard(),
           ],
         );

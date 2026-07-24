@@ -94,11 +94,31 @@ const List<String> _varaNames = [
   'Ravivara',
 ];
 
+/// The Vedic weekday (Mon=1 … Sun=7, `DateTime.weekday` convention) for
+/// a local instant, bounded by sunrise: the Vedic day runs sunrise →
+/// sunrise, so an instant BEFORE sunrise on its own civil date still
+/// belongs to the PREVIOUS weekday — a 03:00 "Tuesday" birth is
+/// Somavara (Monday). [localInstant] and [sunriseOnItsDate] must be in
+/// the same zone, and [sunriseOnItsDate] is the sunrise on
+/// [localInstant]'s own civil date.
+int vedicWeekday(DateTime localInstant, DateTime sunriseOnItsDate) {
+  if (localInstant.isBefore(sunriseOnItsDate)) {
+    return (localInstant.weekday + 5) % 7 + 1; // previous weekday, 1..7
+  }
+  return localInstant.weekday;
+}
+
 PanchangData computePanchang({
   required double sunLongitude,
   required double moonLongitude,
   required DateTime localDateTime,
+  int? vedicWeekday,
 }) {
+  // The vara is a Vedic (sunrise → sunrise) limb, so callers that know
+  // the birth-place sunrise pass the sunrise-bounded [vedicWeekday]
+  // (Mon=1 … Sun=7); sunrise-less callers fall back to the civil
+  // weekday of [localDateTime].
+  final weekday = vedicWeekday ?? localDateTime.weekday;
   final elong = _norm(moonLongitude - sunLongitude);
 
   final tithiIndex = (elong / 12).floor().clamp(0, 29);
@@ -130,8 +150,8 @@ PanchangData computePanchang({
     yogaName: _yogaNames[yogaIndex],
     karanaIndex: karanaIndex,
     karanaName: karana,
-    varaIndex: localDateTime.weekday - 1,
-    vara: _varaNames[localDateTime.weekday - 1],
+    varaIndex: weekday - 1,
+    vara: _varaNames[weekday - 1],
   );
 }
 

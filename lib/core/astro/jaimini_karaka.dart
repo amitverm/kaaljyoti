@@ -14,7 +14,7 @@ enum Karaka {
   amatyakaraka('AmK', 'Amatyakaraka', 'career, counsel'),
   bhratrukaraka('BK', 'Bhratrukaraka', 'siblings, courage'),
   matrukaraka('MK', 'Matrukaraka', 'mother, home'),
-  pitrukaraka('PiK', 'Pitrukaraka', 'father, guru'),
+  putrakaraka('PK', 'Putrakaraka', 'children'),
   gnatikaraka('GK', 'Gnatikaraka', 'relatives, obstacles'),
   darakaraka('DK', 'Darakaraka', 'spouse, partnerships');
 

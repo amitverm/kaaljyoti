@@ -342,6 +342,84 @@ void main() {
     });
   });
 
+  group('repeated cycles for long lifespans (K.N. Rao p.42)', () {
+    // "If a person lives beyond it, the second cycle is to be repeated
+    // in exactly the same way" — identical signs/years, appended until
+    // coverage reaches ~100 years.
+    const illTwoLongs = {
+      Planet.sun: 105.0,
+      Planet.moon: 345.0,
+      Planet.mars: 75.0,
+      Planet.mercury: 125.0,
+      Planet.jupiter: 340.0,
+      Planet.venus: 130.0,
+      Planet.saturn: 165.0,
+      Planet.rahu: 315.0,
+      Planet.ketu: 145.0,
+    };
+
+    double coverageYears(DashaResult r, DateTime birth) =>
+        r.periods.last.end.difference(birth).inSeconds / 86400.0 / 365.25;
+
+    test('Illustration Two (56y cycle) repeats identically, coverage ≥100y',
+        () {
+      final birth = DateTime.utc(1990, 1, 1, 6, 0);
+      final result = calc.calculate(_snapshot(ascendant: 165, longs: illTwoLongs));
+
+      // First cycle is 12 mahadashas totalling 56 years.
+      final firstCycle = result.periods.take(12).toList();
+      final firstTotal = firstCycle.fold<int>(0, (a, p) => a + _years(p));
+      expect(firstTotal, 56);
+
+      // A second cycle exists, contiguous, repeating the same sequence.
+      expect(result.periods.length, greaterThanOrEqualTo(24));
+      final secondCycle = result.periods.skip(12).take(12).toList();
+      expect(
+        secondCycle.map((p) => p.sign).toList(),
+        firstCycle.map((p) => p.sign).toList(),
+      );
+      expect(
+        secondCycle.map((p) => _years(p)).toList(),
+        firstCycle.map((p) => _years(p)).toList(),
+      );
+      // Contiguous: cycle 2 begins exactly where cycle 1 ends.
+      expect(result.periods[12].start, result.periods[11].end);
+
+      // Coverage spans a full lifespan.
+      expect(coverageYears(result, birth), greaterThanOrEqualTo(100));
+
+      // The dasha at age 60 equals the one that ruled at age 60−56 = 4.
+      final atAge4 = result.currentMahadasha(addYears(birth, 4))!.sign;
+      final atAge60 = result.currentMahadasha(addYears(birth, 60))!.sign;
+      expect(atAge60, atAge4);
+    });
+
+    test('Illustration One (86y cycle) still gets a second cycle beyond', () {
+      final birth = DateTime.utc(1990, 1, 1, 6, 0);
+      final result = calc.calculate(_snapshot(ascendant: 15, longs: {
+        Planet.sun: 15.0,
+        Planet.moon: 195.0,
+        Planet.mars: 40.0,
+        Planet.mercury: 335.0,
+        Planet.jupiter: 20.0,
+        Planet.venus: 35.0,
+        Planet.saturn: 10.0,
+        Planet.rahu: 165.0,
+        Planet.ketu: 356.53,
+      }));
+      final firstTotal =
+          result.periods.take(12).fold<int>(0, (a, p) => a + _years(p));
+      expect(firstTotal, 86);
+      // 86y < 100y target → a second cycle is appended, continuing past 86.
+      expect(result.periods.length, 24);
+      expect(result.periods[12].sign, result.periods[0].sign);
+      expect(result.periods[12].start, result.periods[11].end);
+      expect(coverageYears(result, birth), greaterThanOrEqualTo(100));
+      // Active dasha exists well beyond the first cycle (age 90).
+      expect(result.currentMahadasha(addYears(birth, 90)), isNotNull);
+    });
+  });
+
   group('antardasha order (ch. 4)', () {
     List<ZodiacSign> subsOf(ZodiacSign maha) {
       final result =

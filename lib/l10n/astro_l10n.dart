@@ -357,7 +357,7 @@ extension KarakaL10n on Karaka {
         Karaka.amatyakaraka => l10n.karakaAmatyakaraka,
         Karaka.bhratrukaraka => l10n.karakaBhratrukaraka,
         Karaka.matrukaraka => l10n.karakaMatrukaraka,
-        Karaka.pitrukaraka => l10n.karakaPitrukaraka,
+        Karaka.putrakaraka => l10n.karakaPutrakaraka,
         Karaka.gnatikaraka => l10n.karakaGnatikaraka,
         Karaka.darakaraka => l10n.karakaDarakaraka,
       };
@@ -368,7 +368,7 @@ extension KarakaL10n on Karaka {
         Karaka.amatyakaraka => l10n.karakaSignifiesAmatya,
         Karaka.bhratrukaraka => l10n.karakaSignifiesBhratru,
         Karaka.matrukaraka => l10n.karakaSignifiesMatru,
-        Karaka.pitrukaraka => l10n.karakaSignifiesPitru,
+        Karaka.putrakaraka => l10n.karakaSignifiesPutra,
         Karaka.gnatikaraka => l10n.karakaSignifiesGnati,
         Karaka.darakaraka => l10n.karakaSignifiesDara,
       };

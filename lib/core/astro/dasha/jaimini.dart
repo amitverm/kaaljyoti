@@ -66,15 +66,30 @@ class JaiminiCharaCalculator implements DashaCalculator {
         ZodiacSign.values[(lagna.index + (forward ? i : -i) + 144) % 12],
     ];
 
+    // Each sign's Chara years are fixed by the chart, so a first cycle
+    // whose total is under a full lifespan (e.g. ~56y) leaves older
+    // natives with no active dasha. K.N. Rao (Predicting through
+    // Jaimini's Chara Dasha, p.42): "If a person lives beyond it, the
+    // second cycle is to be repeated in exactly the same way." So we
+    // append IDENTICAL cycles (same signs, same years, same antardasha
+    // rules) until coverage reaches ~100 years — mirroring how Yogini
+    // runs extra cycles for long lifespans.
+    final cycleYears = [for (final s in signs) _charaYears(s, snapshot)];
+    final cycleTotal = cycleYears.fold<int>(0, (a, b) => a + b);
+    const targetYears = 100;
+    final cycles = cycleTotal <= 0 ? 1 : (targetYears / cycleTotal).ceil();
+
     var cursor = birth;
     final periods = <DashaPeriod>[];
-    for (final sign in signs) {
-      final years = _charaYears(sign, snapshot);
-      final start = cursor;
-      final end = addYears(start, years.toDouble());
-      periods
-          .add(_buildPeriod(sign, years.toDouble(), start, end, 1, snapshot));
-      cursor = end;
+    for (var cycle = 0; cycle < cycles; cycle++) {
+      for (var i = 0; i < signs.length; i++) {
+        final sign = signs[i];
+        final years = cycleYears[i].toDouble();
+        final start = cursor;
+        final end = addYears(start, years);
+        periods.add(_buildPeriod(sign, years, start, end, 1, snapshot));
+        cursor = end;
+      }
     }
     return DashaResult(system: system, periods: periods);
   }

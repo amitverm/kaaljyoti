@@ -32,10 +32,23 @@ class SnapshotBuilder {
       ayanamsaId,
     );
 
+    // Vara is sunrise-bounded: a pre-sunrise birth belongs to the
+    // previous Vedic day. Take the weekday of the sunrise that begins
+    // the birth's Vedic day (the last sunrise at/before the birth
+    // instant), in birth-place local time. Falls back to the civil
+    // weekday in degenerate (circumpolar) cases.
+    final riseJd = _eph.sunriseBefore(jd, birth.latitude, birth.longitude);
+    final vedicWeekday = riseJd == null
+        ? birth.localDateTime.weekday
+        : EphemerisService.dateTimeFromJdUt(riseJd)
+            .add(Duration(minutes: birth.utcOffsetMinutes))
+            .weekday;
+
     final panchang = computePanchang(
       sunLongitude: positions[Planet.sun]!.longitude,
       moonLongitude: positions[Planet.moon]!.longitude,
       localDateTime: birth.localDateTime,
+      vedicWeekday: vedicWeekday,
     );
 
     final yogas = detectYogas(

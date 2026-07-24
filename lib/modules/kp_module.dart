@@ -20,6 +20,7 @@ import '../core/astro/ayanamsa.dart';
 import '../core/astro/ephemeris_service.dart';
 import '../core/astro/kp.dart';
 import '../core/astro/models.dart';
+import '../core/astro/panchang.dart' show vedicWeekday;
 import '../core/theme/theme.dart';
 import '../l10n/astro_l10n.dart';
 import '../widgetsystem/astro_module.dart';
@@ -593,10 +594,15 @@ class _RulingPlanetsView extends StatelessWidget {
         snapshot.birth.longitude,
         snapshot.ayanamsaId,
       );
+      // Sunrise-bounded (Vedic) weekday for the day lord: before this
+      // place's sunrise the ruling day is still the previous weekday.
+      final sunrise = eph
+          .sunRiseSet(now, snapshot.birth.latitude, snapshot.birth.longitude)
+          .rise;
       rp = KpRulingPlanets.compute(
         ascendant: houses.ascendant,
         moonLongitude: moon,
-        localWeekday: now.weekday,
+        vedicWeekday: vedicWeekday(now, sunrise),
       );
     } catch (_) {
       return Text(

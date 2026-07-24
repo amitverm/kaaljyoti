@@ -77,22 +77,33 @@ const Map<int, Choghadiya> kChoghadiyaFirstByWeekday = {
 };
 
 /// Day (sunrise→sunset) and night (sunset→next sunrise) Choghadiya,
-/// 8 segments each. The night's first segment is the 5th name from
-/// the day's first, counted around the 7-name cycle.
+/// 8 segments each.
+///
+/// Day segments walk the 7-name cycle forward (+1 per slot) from the
+/// weekday's first name. The night starts at the 6th name from the
+/// day's first (offset +5 around the cycle) and walks the cycle
+/// BACKWARD, two names per slot (−2). Verified against DrikPanchang:
+/// e.g. Sunday night = Shubh, Amrit, Char, Rog, Kaal, Labh, Udveg,
+/// Shubh; Friday night = Rog, Kaal, Labh, Udveg, Shubh, Amrit, Char,
+/// Rog (the 8th slot repeats the first).
 ({List<MuhurtaSegment> day, List<MuhurtaSegment> night}) choghadiyaSegments({
   required DateTime sunrise,
   required DateTime sunset,
   required DateTime nextSunrise,
 }) {
   final dayStartIdx = kChoghadiyaFirstByWeekday[sunrise.weekday]!.index;
-  final nightStartIdx = (dayStartIdx + 4) % 7; // "5th from the day's first"
+  // Night's first name is +5 from the day's first around the cycle.
+  final nightStartIdx = (dayStartIdx + 5) % 7;
 
-  List<MuhurtaSegment> build(DateTime from, DateTime to, int cycleStart) {
+  List<MuhurtaSegment> build(DateTime from, DateTime to, int cycleStart,
+      {required int step}) {
     final len = to.difference(from) ~/ 8;
     return [
       for (var i = 0; i < 8; i++)
         MuhurtaSegment(
-          choghadiya: Choghadiya.values[(cycleStart + i) % 7],
+          // Dart % is non-negative for a positive modulus, so a
+          // negative step (night, −2) still lands in 0..6.
+          choghadiya: Choghadiya.values[(cycleStart + i * step) % 7],
           start: from.add(len * i),
           end: i == 7 ? to : from.add(len * (i + 1)),
         ),
@@ -100,8 +111,8 @@ const Map<int, Choghadiya> kChoghadiyaFirstByWeekday = {
   }
 
   return (
-    day: build(sunrise, sunset, dayStartIdx),
-    night: build(sunset, nextSunrise, nightStartIdx),
+    day: build(sunrise, sunset, dayStartIdx, step: 1),
+    night: build(sunset, nextSunrise, nightStartIdx, step: -2),
   );
 }
 

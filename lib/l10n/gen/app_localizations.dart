@@ -5258,11 +5258,11 @@ abstract class AppLocalizations {
   /// **'Matrukaraka'**
   String get karakaMatrukaraka;
 
-  /// No description provided for @karakaPitrukaraka.
+  /// No description provided for @karakaPutrakaraka.
   ///
   /// In en, this message translates to:
-  /// **'Pitrukaraka'**
-  String get karakaPitrukaraka;
+  /// **'Putrakaraka'**
+  String get karakaPutrakaraka;
 
   /// No description provided for @karakaGnatikaraka.
   ///
@@ -5300,11 +5300,11 @@ abstract class AppLocalizations {
   /// **'mother, home'**
   String get karakaSignifiesMatru;
 
-  /// No description provided for @karakaSignifiesPitru.
+  /// No description provided for @karakaSignifiesPutra.
   ///
   /// In en, this message translates to:
-  /// **'father, guru'**
-  String get karakaSignifiesPitru;
+  /// **'children'**
+  String get karakaSignifiesPutra;
 
   /// No description provided for @karakaSignifiesGnati.
   ///
@@ -7518,7 +7518,7 @@ abstract class AppLocalizations {
   /// Footnote under the KP ruling-planets rows; {place} is the kundli's place name or the localized 'the birth place' fallback.
   ///
   /// In en, this message translates to:
-  /// **'Now, at {place}. Day lord follows the civil weekday.'**
+  /// **'Now, at {place}. Day lord follows the Vedic (sunrise-bounded) weekday.'**
   String kpRulingPlanetsFootnote(String place);
 
   /// No description provided for @kpBirthPlaceFallback.

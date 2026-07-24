@@ -2844,7 +2844,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get karakaMatrukaraka => 'मातृकारक';
 
   @override
-  String get karakaPitrukaraka => 'पितृकारक';
+  String get karakaPutrakaraka => 'पुत्रकारक';
 
   @override
   String get karakaGnatikaraka => 'ज्ञातिकारक';
@@ -2865,7 +2865,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get karakaSignifiesMatru => 'माता, गृह';
 
   @override
-  String get karakaSignifiesPitru => 'पिता, गुरु';
+  String get karakaSignifiesPutra => 'संतान';
 
   @override
   String get karakaSignifiesGnati => 'संबंधी, बाधाएँ';
@@ -4152,7 +4152,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String kpRulingPlanetsFootnote(String place) {
-    return 'अभी, $place पर। वार स्वामी नागरिक सप्ताह-दिन के अनुसार है।';
+    return 'अभी, $place पर। वार स्वामी वैदिक (सूर्योदय-आधारित) सप्ताह-दिन के अनुसार है।';
   }
 
   @override

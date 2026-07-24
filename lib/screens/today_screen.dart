@@ -7,6 +7,7 @@ import '../charts/chart_style.dart';
 import '../charts/chart_view.dart';
 import '../charts/planet_token.dart';
 import '../core/astro/daily_panchang.dart';
+import '../core/astro/muhurta.dart' show abhijitApplies;
 import '../core/astro/models.dart';
 import '../core/astro/vikram_samvat.dart';
 import '../modules/common.dart';
@@ -394,11 +395,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                       children: [
                         _timeRow(l10n.mhBrahmaMuhurta, d.brahmaMuhurta,
                             good: true),
+                        // Abhijit is skipped on the VEDIC Wednesday
+                        // (sunrise-bounded), so reuse the Muhurta screen's
+                        // abhijitApplies(sunrise); fall back to the civil
+                        // weekday only if sunrise couldn't be resolved.
                         _timeRow(
                             '${l10n.mhAbhijitMuhurta}'
-                            '${d.at.weekday == DateTime.wednesday ? l10n.mhAbhijitAvoidWednesday : ''}',
+                            '${_abhijitOnWednesday(d) ? l10n.mhAbhijitAvoidWednesday : ''}',
                             d.abhijitMuhurta,
-                            good: d.at.weekday != DateTime.wednesday),
+                            good: !_abhijitOnWednesday(d)),
                         _timeRow(l10n.mhRahuKaal, d.rahuKalam, good: false),
                         _timeRow(l10n.mhYamaganda, d.yamaganda, good: false),
                         _timeRow(l10n.mhGulikaKaal, d.gulikaKalam, good: false),
@@ -478,6 +483,13 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             ),
     );
   }
+
+  // Whether Abhijit falls on a (Vedic) Wednesday, when tradition skips
+  // it. Uses the sunrise-bounded weekday via abhijitApplies(sunrise);
+  // only if sunrise is unresolved does it fall back to the civil day.
+  bool _abhijitOnWednesday(DailyPanchang d) => d.sunrise != null
+      ? !abhijitApplies(d.sunrise!)
+      : d.at.weekday == DateTime.wednesday;
 
   // Label/value rows share the dashboard Panchang widget's style — label
   // left in soft ink, value right-aligned — so the Today cards read the

@@ -67,6 +67,27 @@ class VikramMasa {
   String get displayName => isAdhik ? 'Adhik $monthName' : monthName;
 }
 
+/// Resolves the final month index from the amanta [amantaMonthIndex]
+/// (the month named for the Sun's sign at the starting amavasya).
+///
+/// Under purnimanta the waning (Krishna) fortnight is relabelled to the
+/// FOLLOWING month — the North-Indian convention — EXCEPT for an adhik
+/// (leap) month, which keeps its own name in BOTH systems (verified on
+/// DrikPanchang: Adhika Shravana 2023's Krishna paksha reads "Adhika
+/// Shravana" purnimanta as well as amanta). Pure so the naming rule is
+/// unit-testable without the ephemeris.
+int resolveMonthIndex(
+  int amantaMonthIndex, {
+  required bool krishnaPaksha,
+  required bool isAdhik,
+  required MasaSystem system,
+}) {
+  if (system == MasaSystem.purnimanta && krishnaPaksha && !isAdhik) {
+    return (amantaMonthIndex + 1) % 12;
+  }
+  return amantaMonthIndex;
+}
+
 double _norm(double d) {
   var x = d % 360;
   if (x < 0) x += 360;
@@ -132,14 +153,16 @@ VikramMasa computeVikramMasa(
   final endNM = _newMoonNear(svc, ayanamsaId, jd + (360 - e) / _elongRate);
 
   final startRashi = _rashi(svc, startNM, ayanamsaId);
-  var monthIndex = (startRashi + 1) % 12;
+  final amantaMonthIndex = (startRashi + 1) % 12;
   // No solar ingress within the month → adhik (leap) maasa.
   final isAdhik = startRashi == _rashi(svc, endNM, ayanamsaId);
 
-  // Purnimanta: the waning fortnight belongs to the *next* month.
-  if (system == MasaSystem.purnimanta && krishnaPaksha) {
-    monthIndex = (monthIndex + 1) % 12;
-  }
+  final monthIndex = resolveMonthIndex(
+    amantaMonthIndex,
+    krishnaPaksha: krishnaPaksha,
+    isAdhik: isAdhik,
+    system: system,
+  );
 
   // Year rolls at Chaitra (Sun in Meena at its starting amavasya).
   // Walk new moons back to that Chaitra; its Gregorian year + 57 = V.S.

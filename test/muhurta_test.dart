@@ -31,14 +31,50 @@ void main() {
       expect(chog.day.last.end, sunset);
     });
 
-    test('night starts the 5th name from the day\'s first', () {
+    test('Sunday night follows the fixed backward-stepping sequence', () {
+      // DrikPanchang reference (Delhi): the night starts at the 6th
+      // name from the day's first and steps −2 through the cycle; the
+      // 8th slot repeats the first.
       final chog = choghadiyaSegments(
           sunrise: sunrise, sunset: sunset, nextSunrise: nextSunrise);
-      // Day first = Udveg (index 0); 5th from it (offset +4) = Kaal.
       expect(chog.night.length, 8);
-      expect(chog.night.first.choghadiya, Choghadiya.kaal);
+      expect(
+        chog.night.map((s) => s.choghadiya).toList(),
+        [
+          Choghadiya.shubh,
+          Choghadiya.amrit,
+          Choghadiya.char,
+          Choghadiya.rog,
+          Choghadiya.kaal,
+          Choghadiya.labh,
+          Choghadiya.udveg,
+          Choghadiya.shubh,
+        ],
+      );
       expect(chog.night.first.start, sunset);
       expect(chog.night.last.end, nextSunrise);
+    });
+
+    test('Friday night follows the fixed backward-stepping sequence', () {
+      // 2026-07-10 is a Friday. DrikPanchang reference (Delhi).
+      final friSunrise = DateTime(2026, 7, 10, 6, 0);
+      final friSunset = DateTime(2026, 7, 10, 18, 0);
+      final friNextSunrise = DateTime(2026, 7, 11, 6, 12);
+      final chog = choghadiyaSegments(
+          sunrise: friSunrise, sunset: friSunset, nextSunrise: friNextSunrise);
+      expect(
+        chog.night.map((s) => s.choghadiya).toList(),
+        [
+          Choghadiya.rog,
+          Choghadiya.kaal,
+          Choghadiya.labh,
+          Choghadiya.udveg,
+          Choghadiya.shubh,
+          Choghadiya.amrit,
+          Choghadiya.char,
+          Choghadiya.rog,
+        ],
+      );
     });
 
     test('good/bad flags match Amrit/Shubh/Labh/Char = good', () {

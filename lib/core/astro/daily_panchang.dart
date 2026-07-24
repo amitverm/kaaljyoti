@@ -228,10 +228,25 @@ DailyPanchang computeDailyPanchang({
 
   final sun = positions[Planet.sun]!.longitude;
   final moon = positions[Planet.moon]!.longitude;
+
+  DateTime? local(double? jdUt) =>
+      jdUt == null ? null : EphemerisService.dateTimeFromJdUt(jdUt).toLocal();
+
+  // Vedic day anchor: the sunrise at/before now, and the following
+  // sunset. Resolved before the panchang so the vara can be
+  // sunrise-bounded (riseL.weekday is the Vedic weekday; the muhurta
+  // windows below already index off it).
+  final rise = svc.sunriseBefore(jd, latitude, longitude);
+  final set =
+      svc.sunEventAfter(rise ?? (jd - 0.5), latitude, longitude, rise: false);
+  final riseL = local(rise);
+  final setL = local(set);
+
   final panchang = computePanchang(
     sunLongitude: sun,
     moonLongitude: moon,
     localDateTime: now,
+    vedicWeekday: riseL?.weekday,
   );
 
   final masa = computeVikramMasa(
@@ -268,17 +283,6 @@ DailyPanchang computeDailyPanchang({
     final (s, m) = sunMoon(t);
     return (_norm(m - s) / 6).floorToDouble();
   }
-
-  DateTime? local(double? jdUt) =>
-      jdUt == null ? null : EphemerisService.dateTimeFromJdUt(jdUt).toLocal();
-
-  // Vedic day anchor: the sunrise at/before now, and the following
-  // sunset.
-  final rise = svc.sunriseBefore(jd, latitude, longitude);
-  final set =
-      svc.sunEventAfter(rise ?? (jd - 0.5), latitude, longitude, rise: false);
-  final riseL = local(rise);
-  final setL = local(set);
 
   // Every tithi spanning the Vedic day (this sunrise → next sunrise),
   // with kshaya/vriddhi flags. Day-2 vriddhi needs the tithi at the
