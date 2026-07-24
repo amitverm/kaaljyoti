@@ -5294,4 +5294,236 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get mnHiddenChartsSubtitle =>
       'महाकोश में अपनी दृष्टि से छिपाई गई कुंडलियाँ';
+
+  @override
+  String get mnCompare => 'Compare Kundlis';
+
+  @override
+  String get mnCompareSubtitle => 'Study up to 4 charts with instant switching';
+
+  @override
+  String get cmpTitle => 'Compare Kundlis';
+
+  @override
+  String get cmpCustomizeView => 'Customize this view';
+
+  @override
+  String get cmpNewComparison => 'New comparison';
+
+  @override
+  String get cmpPickHint => 'Add two or more charts to compare.';
+
+  @override
+  String get cmpChipRowHint => 'No charts yet — add one to begin.';
+
+  @override
+  String get cmpAddChart => 'Add chart';
+
+  @override
+  String get cmpLimitedBadge => 'limited';
+
+  @override
+  String get cmpLimitedTooltip =>
+      'Legacy Mahakosh chart — no birth time, so dasha and time-based factors can\'t be computed.';
+
+  @override
+  String get cmpMaxCharts =>
+      '4 charts max — research beyond that belongs in Mahakosh filters.';
+
+  @override
+  String get cmpMyKundlis => 'My Kundlis';
+
+  @override
+  String get cmpBookmarks => 'Bookmarks';
+
+  @override
+  String get cmpSearchKundlis => 'Search kundlis';
+
+  @override
+  String get cmpNoKundlis => 'No kundlis found.';
+
+  @override
+  String get cmpBookmarksOffline => 'Bookmarks are unavailable offline.';
+
+  @override
+  String get cmpNoBookmarks => 'No bookmarked charts yet.';
+
+  @override
+  String get cmpBookmarkGone => 'No longer on Mahakosh';
+
+  @override
+  String get cmpSimilarities => 'Similarities';
+
+  @override
+  String get cmpChartUnavailable => 'This chart is no longer available.';
+
+  @override
+  String get cmpNotAvailable => 'Not available for this chart';
+
+  @override
+  String get cmpDashaSystem => 'Dasha system';
+
+  @override
+  String cmpAyanamsaNotice(String code) {
+    return '$code uses a different ayanamsa; sign-level comparisons unaffected, degree-level may differ.';
+  }
+
+  @override
+  String get cmpBetaNotice =>
+      'Beta — findings are computed hints, not verified analysis. Please confirm against the charts before drawing conclusions.';
+
+  @override
+  String get cmpNoEvents =>
+      'Add life events to at least two kundlis to see event patterns.';
+
+  @override
+  String get cmpNoOverlaps => 'No notable overlaps in the selected dimensions.';
+
+  @override
+  String get cmpNoneInGroup => 'No shared factors in this group.';
+
+  @override
+  String get cmpGroupLagnaMoon => 'Lagna & Moon';
+
+  @override
+  String get cmpGroupPlacements => 'Placements';
+
+  @override
+  String get cmpGroupDignity => 'Dignities & Motion';
+
+  @override
+  String get cmpGroupEvents => 'Life Events';
+
+  @override
+  String get cmpApprox => 'approx';
+
+  @override
+  String get cmpMahadasha => 'Mahadasha';
+
+  @override
+  String get cmpAntardasha => 'Antardasha';
+
+  @override
+  String get cmpSadeSati => 'Sade Sati';
+
+  @override
+  String get cmpTransitGrid => 'Transit houses';
+
+  @override
+  String cmpAge(String age) {
+    return 'Age $age';
+  }
+
+  @override
+  String get cmpFromMoon => 'Moon';
+
+  @override
+  String get cmpFromLagna => 'Lagna';
+
+  @override
+  String get cmpMoonDayLevel => 'Moon transit is day-level (approximate)';
+
+  @override
+  String cmpFndLagnaSign(String sign) {
+    return 'Lagna in $sign';
+  }
+
+  @override
+  String cmpFndLagnaNak(String nakshatra) {
+    return 'Lagna nakshatra: $nakshatra';
+  }
+
+  @override
+  String cmpFndMoonSign(String sign) {
+    return 'Moon in $sign';
+  }
+
+  @override
+  String cmpFndMoonNak(String nakshatra) {
+    return 'Moon nakshatra: $nakshatra';
+  }
+
+  @override
+  String cmpFndMoonPada(String nakshatra, String pada) {
+    return 'Moon in $nakshatra pada $pada';
+  }
+
+  @override
+  String cmpFndGrahaSign(String planet, String sign) {
+    return '$planet in $sign';
+  }
+
+  @override
+  String cmpFndGrahaHouse(String planet, String house) {
+    return '$planet in house $house';
+  }
+
+  @override
+  String cmpFndDignity(String planet, String dignity) {
+    return '$planet $dignity';
+  }
+
+  @override
+  String cmpFndRetro(String planet) {
+    return '$planet retrograde';
+  }
+
+  @override
+  String cmpFndDashaToday(String lord) {
+    return 'Current mahadasha: $lord';
+  }
+
+  @override
+  String cmpFndEventMd(String category, String lord) {
+    return '$category under $lord mahadasha';
+  }
+
+  @override
+  String cmpFndEventAd(String category, String lord) {
+    return '$category under $lord antardasha';
+  }
+
+  @override
+  String cmpFndEventSade(String category, String phase) {
+    return '$category during Sade Sati ($phase)';
+  }
+
+  @override
+  String cmpFndEventAxis(
+      String category, String rahuHouse, String ketuHouse, String frame) {
+    return 'Rahu–Ketu across $rahuHouse/$ketuHouse from $frame at $category';
+  }
+
+  @override
+  String cmpFndEventTransit(
+      String planet, String house, String frame, String category) {
+    return '$planet in ${house}th from $frame at $category';
+  }
+
+  @override
+  String cmpFndNeutral(String category) {
+    return '$category: no common dasha/transit factor';
+  }
+
+  @override
+  String get cmpDignExalted => 'exalted';
+
+  @override
+  String get cmpDignDebilitated => 'debilitated';
+
+  @override
+  String get cmpDignOwn => 'in own sign';
+
+  @override
+  String klSelected(String count) {
+    return '$count selected';
+  }
+
+  @override
+  String klCompareN(String count) {
+    return 'Compare ($count)';
+  }
+
+  @override
+  String get klCompareCap => 'Compare up to 4 charts at a time.';
 }

@@ -3266,5 +3266,127 @@
   "mnSectionMahakosh": "MAHAKOSH",
   "mnSectionAdmin": "ADMIN",
   "mnSectionAbout": "ABOUT",
-  "mnHiddenChartsSubtitle": "Charts you've hidden from your own Mahakosh view"
+  "mnHiddenChartsSubtitle": "Charts you've hidden from your own Mahakosh view",
+  "mnCompare": "Compare Kundlis",
+  "mnCompareSubtitle": "Study up to 4 charts with instant switching",
+  "cmpTitle": "Compare Kundlis",
+  "cmpCustomizeView": "Customize this view",
+  "cmpNewComparison": "New comparison",
+  "cmpPickHint": "Add two or more charts to compare.",
+  "cmpChipRowHint": "No charts yet — add one to begin.",
+  "cmpAddChart": "Add chart",
+  "cmpLimitedBadge": "limited",
+  "cmpLimitedTooltip": "Legacy Mahakosh chart — no birth time, so dasha and time-based factors can't be computed.",
+  "cmpMaxCharts": "4 charts max — research beyond that belongs in Mahakosh filters.",
+  "cmpMyKundlis": "My Kundlis",
+  "cmpBookmarks": "Bookmarks",
+  "cmpSearchKundlis": "Search kundlis",
+  "cmpNoKundlis": "No kundlis found.",
+  "cmpBookmarksOffline": "Bookmarks are unavailable offline.",
+  "cmpNoBookmarks": "No bookmarked charts yet.",
+  "cmpBookmarkGone": "No longer on Mahakosh",
+  "cmpSimilarities": "Similarities",
+  "cmpChartUnavailable": "This chart is no longer available.",
+  "cmpNotAvailable": "Not available for this chart",
+  "cmpDashaSystem": "Dasha system",
+  "cmpAyanamsaNotice": "{code} uses a different ayanamsa; sign-level comparisons unaffected, degree-level may differ.",
+  "@cmpAyanamsaNotice": {
+    "placeholders": { "code": { "type": "String" } }
+  },
+  "cmpBetaNotice": "Beta — findings are computed hints, not verified analysis. Please confirm against the charts before drawing conclusions.",
+  "cmpNoEvents": "Add life events to at least two kundlis to see event patterns.",
+  "cmpNoOverlaps": "No notable overlaps in the selected dimensions.",
+  "cmpNoneInGroup": "No shared factors in this group.",
+  "cmpGroupLagnaMoon": "Lagna & Moon",
+  "cmpGroupPlacements": "Placements",
+  "cmpGroupDignity": "Dignities & Motion",
+  "cmpGroupEvents": "Life Events",
+  "cmpApprox": "approx",
+  "cmpMahadasha": "Mahadasha",
+  "cmpAntardasha": "Antardasha",
+  "cmpSadeSati": "Sade Sati",
+  "cmpTransitGrid": "Transit houses",
+  "cmpAge": "Age {age}",
+  "@cmpAge": {
+    "placeholders": { "age": { "type": "String" } }
+  },
+  "cmpFromMoon": "Moon",
+  "cmpFromLagna": "Lagna",
+  "cmpMoonDayLevel": "Moon transit is day-level (approximate)",
+  "cmpFndLagnaSign": "Lagna in {sign}",
+  "@cmpFndLagnaSign": {
+    "placeholders": { "sign": { "type": "String" } }
+  },
+  "cmpFndLagnaNak": "Lagna nakshatra: {nakshatra}",
+  "@cmpFndLagnaNak": {
+    "placeholders": { "nakshatra": { "type": "String" } }
+  },
+  "cmpFndMoonSign": "Moon in {sign}",
+  "@cmpFndMoonSign": {
+    "placeholders": { "sign": { "type": "String" } }
+  },
+  "cmpFndMoonNak": "Moon nakshatra: {nakshatra}",
+  "@cmpFndMoonNak": {
+    "placeholders": { "nakshatra": { "type": "String" } }
+  },
+  "cmpFndMoonPada": "Moon in {nakshatra} pada {pada}",
+  "@cmpFndMoonPada": {
+    "placeholders": { "nakshatra": { "type": "String" }, "pada": { "type": "String" } }
+  },
+  "cmpFndGrahaSign": "{planet} in {sign}",
+  "@cmpFndGrahaSign": {
+    "placeholders": { "planet": { "type": "String" }, "sign": { "type": "String" } }
+  },
+  "cmpFndGrahaHouse": "{planet} in house {house}",
+  "@cmpFndGrahaHouse": {
+    "placeholders": { "planet": { "type": "String" }, "house": { "type": "String" } }
+  },
+  "cmpFndDignity": "{planet} {dignity}",
+  "@cmpFndDignity": {
+    "placeholders": { "planet": { "type": "String" }, "dignity": { "type": "String" } }
+  },
+  "cmpFndRetro": "{planet} retrograde",
+  "@cmpFndRetro": {
+    "placeholders": { "planet": { "type": "String" } }
+  },
+  "cmpFndDashaToday": "Current mahadasha: {lord}",
+  "@cmpFndDashaToday": {
+    "placeholders": { "lord": { "type": "String" } }
+  },
+  "cmpFndEventMd": "{category} under {lord} mahadasha",
+  "@cmpFndEventMd": {
+    "placeholders": { "category": { "type": "String" }, "lord": { "type": "String" } }
+  },
+  "cmpFndEventAd": "{category} under {lord} antardasha",
+  "@cmpFndEventAd": {
+    "placeholders": { "category": { "type": "String" }, "lord": { "type": "String" } }
+  },
+  "cmpFndEventSade": "{category} during Sade Sati ({phase})",
+  "@cmpFndEventSade": {
+    "placeholders": { "category": { "type": "String" }, "phase": { "type": "String" } }
+  },
+  "cmpFndEventAxis": "Rahu–Ketu across {rahuHouse}/{ketuHouse} from {frame} at {category}",
+  "@cmpFndEventAxis": {
+    "placeholders": { "category": { "type": "String" }, "rahuHouse": { "type": "String" }, "ketuHouse": { "type": "String" }, "frame": { "type": "String" } }
+  },
+  "cmpFndEventTransit": "{planet} in {house}th from {frame} at {category}",
+  "@cmpFndEventTransit": {
+    "placeholders": { "planet": { "type": "String" }, "house": { "type": "String" }, "frame": { "type": "String" }, "category": { "type": "String" } }
+  },
+  "cmpFndNeutral": "{category}: no common dasha/transit factor",
+  "@cmpFndNeutral": {
+    "placeholders": { "category": { "type": "String" } }
+  },
+  "cmpDignExalted": "exalted",
+  "cmpDignDebilitated": "debilitated",
+  "cmpDignOwn": "in own sign",
+  "klSelected": "{count} selected",
+  "@klSelected": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "klCompareN": "Compare ({count})",
+  "@klCompareN": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "klCompareCap": "Compare up to 4 charts at a time."
 }

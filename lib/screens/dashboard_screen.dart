@@ -4,12 +4,20 @@
 /// per-instance widget menu (size / configure / duplicate / remove) —
 /// all driven by the widget registry; the host never knows what's
 /// inside a module.
+///
+/// The view-chips + widget-grid are extracted into [DashboardBody] so a
+/// second host (the Kundli Compare screen) can embed the exact same
+/// dashboard for a different chart with externally-owned view + scroll
+/// state. DashboardScreen keeps its own state and behaviour — it wires
+/// the global [activeViewIdProvider] and an internal per-view scroll
+/// controller into the body, matching the pre-refactor behaviour.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/astro/compare.dart' show CompareChart;
 import '../core/date_format.dart';
 import '../core/theme/theme.dart';
 import '../data/dashboard_repository.dart';
@@ -28,7 +36,6 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final kundliAsync = ref.watch(kundliByIdProvider(kundliId));
-    final viewsAsync = ref.watch(dashboardViewsProvider);
     final ctxAsync = ref.watch(moduleContextProvider(kundliId));
 
     return Scaffold(
@@ -84,68 +91,29 @@ class DashboardScreen extends ConsumerWidget {
       ),
       // No nav pill inside a kundli — the pill belongs to the five
       // landing screens only; back returns to the kundli list.
-      body: viewsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(message: context.l10n.dbViewsError('$e')),
-        data: (views) {
-          final activeId = ref.watch(activeViewIdProvider) ??
-              (views.isEmpty ? null : views.first.id);
-          final activeView = views.where((v) => v.id == activeId).isEmpty
-              ? (views.isEmpty ? null : views.first)
-              : views.firstWhere((v) => v.id == activeId);
-          if (activeView == null) {
-            return EmptyState(message: context.l10n.dbNoViews);
-          }
-          return Column(
-            children: [
-              // Instant Prashna: not kept yet — offer Keep / Discard.
-              if (kundliAsync.value?.isEphemeral ?? false)
-                _ephemeralBanner(context, ref, kundliAsync.value!),
-              _viewChips(context, ref, views, activeView),
-              Expanded(
-                child: ctxAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e, _) =>
-                      EmptyState(message: context.l10n.dbCalcFailed('$e')),
-                  data: (moduleCtx) =>
-                      _WidgetGrid(view: activeView, moduleCtx: moduleCtx),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _viewChips(BuildContext context, WidgetRef ref,
-      List<DashboardView> views, DashboardView active) {
-    return SizedBox(
-      height: 46,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+      body: Column(
         children: [
-          for (final v in views)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: GestureDetector(
-                // Long-press a view chip for rename/delete.
-                onLongPress: () => _viewActions(context, ref, views, v),
-                child: ChoiceChip(
-                  label: Text(v.name),
-                  selected: v.id == active.id,
-                  labelStyle: TextStyle(
-                      color: v.id == active.id ? KJColors.paper : KJColors.ink),
-                  onSelected: (_) =>
-                      ref.read(activeViewIdProvider.notifier).state = v.id,
-                ),
-              ),
+          // Instant Prashna: not kept yet — offer Keep / Discard.
+          if (kundliAsync.value?.isEphemeral ?? false)
+            _ephemeralBanner(context, ref, kundliAsync.value!),
+          Expanded(
+            child: ctxAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) =>
+                  EmptyState(message: context.l10n.dbCalcFailed('$e')),
+              data: (moduleCtx) => Consumer(builder: (context, ref, _) {
+                final views = ref.watch(dashboardViewsProvider).value;
+                final activeViewId = ref.watch(activeViewIdProvider) ??
+                    (views == null || views.isEmpty ? null : views.first.id);
+                return DashboardBody(
+                  kundliId: kundliId,
+                  moduleCtx: moduleCtx,
+                  activeViewId: activeViewId,
+                  onSelectView: (id) =>
+                      ref.read(activeViewIdProvider.notifier).state = id,
+                );
+              }),
             ),
-          ActionChip(
-            label: Text(context.l10n.dbNewView),
-            onPressed: () => _newView(context, ref),
           ),
         ],
       ),
@@ -216,6 +184,138 @@ class DashboardScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// The reusable dashboard body: the named view chips + the span-aware
+/// widget grid for one chart. Extracted from [DashboardScreen] so the
+/// Kundli Compare screen can embed it per subject with SHARED view +
+/// scroll state (spec §3.3 "locked context").
+///
+/// State ownership is external: [activeViewId] and [onSelectView] hold
+/// the selected view at the host level (the home dashboard uses the
+/// global [activeViewIdProvider]; compare uses its own screen-level
+/// state so all tabs move together). [scrollController], when supplied,
+/// is host-owned and shared across tabs; when null the body keeps its
+/// own per-view controller (the home dashboard's behaviour).
+///
+/// When [moduleCtx] is null the body renders in LIMITED mode (a legacy
+/// Mahakosh subject with no full snapshot): the same view's grid, same
+/// spans, but each card comes from [limitedCardBuilder] — placeholders
+/// or a positions-only card — so the grid geometry is identical across
+/// tabs and visual scanning still works (spec §3.3).
+class DashboardBody extends ConsumerWidget {
+  const DashboardBody({
+    super.key,
+    required this.kundliId,
+    required this.activeViewId,
+    required this.onSelectView,
+    this.moduleCtx,
+    this.limitedCardBuilder,
+    this.scrollController,
+    this.onOpenModule,
+    this.readOnly = false,
+  });
+
+  final String kundliId;
+  final String? activeViewId;
+  final ValueChanged<String> onSelectView;
+
+  /// Read-only mode: the view chips become pure switchers (no "new view"
+  /// chip, no long-press rename/delete) and cards lose their editing
+  /// affordances (per-widget menu, drag-rearrange, drop targets, the
+  /// add/edit-widgets button). Set by the Kundli Compare hosts — in
+  /// compare, editing happens only from the main kundli area (spec §3.3).
+  final bool readOnly;
+
+  /// The chart's data. Null → limited mode (see class doc).
+  final ModuleContext? moduleCtx;
+
+  /// Builds one card for a placed widget in LIMITED mode. Ignored when
+  /// [moduleCtx] is non-null.
+  final Widget Function(BuildContext context, PlacedWidget pwd)?
+      limitedCardBuilder;
+
+  /// Host-owned scroll controller shared across tabs. Null → the body
+  /// keeps its own per-view controller (home dashboard behaviour).
+  final ScrollController? scrollController;
+
+  /// Overrides what a card's "open detail" tap does. Null → the default
+  /// home-dashboard behaviour (push the single-kundli [ModuleDetailScreen]
+  /// route). The compare screen supplies this to open the compare-aware
+  /// module detail host with the tapped subject instead.
+  final void Function(PlacedWidget pwd)? onOpenModule;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewsAsync = ref.watch(dashboardViewsProvider);
+    return viewsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => EmptyState(message: context.l10n.dbViewsError('$e')),
+      data: (views) {
+        final activeId = activeViewId ?? (views.isEmpty ? null : views.first.id);
+        final activeView = views.where((v) => v.id == activeId).isEmpty
+            ? (views.isEmpty ? null : views.first)
+            : views.firstWhere((v) => v.id == activeId);
+        if (activeView == null) {
+          return EmptyState(message: context.l10n.dbNoViews);
+        }
+        return Column(
+          children: [
+            _viewChips(context, ref, views, activeView),
+            Expanded(
+              child: _WidgetGrid(
+                key: ValueKey('grid:$kundliId'),
+                view: activeView,
+                kundliId: kundliId,
+                moduleCtx: moduleCtx,
+                limitedCardBuilder: limitedCardBuilder,
+                externalScroll: scrollController,
+                onOpenModule: onOpenModule,
+                readOnly: readOnly,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _viewChips(BuildContext context, WidgetRef ref,
+      List<DashboardView> views, DashboardView active) {
+    return SizedBox(
+      height: 46,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          for (final v in views)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: GestureDetector(
+                // Long-press a view chip for rename/delete — suppressed in
+                // read-only (compare) mode, where chips are pure switchers.
+                onLongPress:
+                    readOnly ? null : () => _viewActions(context, ref, views, v),
+                child: ChoiceChip(
+                  label: Text(v.name),
+                  selected: v.id == active.id,
+                  labelStyle: TextStyle(
+                      color: v.id == active.id ? KJColors.paper : KJColors.ink),
+                  onSelected: (_) => onSelectView(v.id),
+                ),
+              ),
+            ),
+          // The "new view" affordance is hidden in read-only (compare)
+          // mode — views are created/edited only from the main kundli area.
+          if (!readOnly)
+            ActionChip(
+              label: Text(context.l10n.dbNewView),
+              onPressed: () => _newView(context, ref),
+            ),
+        ],
+      ),
+    );
+  }
 
   /// Long-press menu on a view chip: rename / delete.
   Future<void> _viewActions(BuildContext context, WidgetRef ref,
@@ -276,7 +376,7 @@ class DashboardScreen extends ConsumerWidget {
               subtitle: views.length > 1
                   ? null
                   : Text(context.l10n.dbOnlyViewCannotDelete,
-                      style: TextStyle(fontSize: 11.5)),
+                      style: const TextStyle(fontSize: 11.5)),
               onTap: views.length <= 1
                   ? null
                   : () async {
@@ -299,8 +399,10 @@ class DashboardScreen extends ConsumerWidget {
                       );
                       if (ok == true) {
                         await repo.deleteView(view.id);
-                        ref.read(activeViewIdProvider.notifier).state =
-                            views.firstWhere((v) => v.id != view.id).id;
+                        // Fall off the deleted view via the host's own
+                        // selection wiring (home → activeViewIdProvider);
+                        // no direct provider write here.
+                        onSelectView(views.firstWhere((v) => v.id != view.id).id);
                         ref.invalidate(dashboardViewsProvider);
                       }
                     },
@@ -376,14 +478,30 @@ class DashboardScreen extends ConsumerWidget {
         .read(dashboardRepoProvider)
         .createView(name, seed: template.widgets);
     ref.invalidate(dashboardViewsProvider);
-    ref.read(activeViewIdProvider.notifier).state = view.id;
+    // Select the new view through the host's own wiring (home →
+    // activeViewIdProvider); no direct provider write here.
+    onSelectView(view.id);
   }
 }
 
 class _WidgetGrid extends ConsumerStatefulWidget {
-  const _WidgetGrid({required this.view, required this.moduleCtx});
+  const _WidgetGrid({
+    super.key,
+    required this.view,
+    required this.kundliId,
+    required this.moduleCtx,
+    required this.limitedCardBuilder,
+    required this.externalScroll,
+    required this.onOpenModule,
+    required this.readOnly,
+  });
   final DashboardView view;
-  final ModuleContext moduleCtx;
+  final String kundliId;
+  final ModuleContext? moduleCtx;
+  final Widget Function(BuildContext, PlacedWidget)? limitedCardBuilder;
+  final ScrollController? externalScroll;
+  final void Function(PlacedWidget pwd)? onOpenModule;
+  final bool readOnly;
 
   @override
   ConsumerState<_WidgetGrid> createState() => _WidgetGridState();
@@ -391,23 +509,35 @@ class _WidgetGrid extends ConsumerStatefulWidget {
 
 class _WidgetGridState extends ConsumerState<_WidgetGrid> {
   DashboardView get view => widget.view;
-  ModuleContext get moduleCtx => widget.moduleCtx;
+  ModuleContext? get moduleCtx => widget.moduleCtx;
+  bool get limited => widget.moduleCtx == null;
 
-  // Restores the board's scroll position when the grid remounts (e.g.
-  // returning from a module detail screen recreates this subtree) —
+  /// Layout editing is available only for a full chart that isn't hosted
+  /// read-only (compare). Limited subjects and compare tabs are view-only.
+  bool get editable => !limited && !widget.readOnly;
+
+  // The board's scroll controller. When the host owns one (compare's
+  // shared per-tab controller) we use it directly; otherwise we keep an
+  // internal controller that restores the board's scroll position when
+  // the grid remounts (e.g. returning from a module detail screen) —
   // the offset is persisted per view in [dashboardScrollOffsetProvider].
-  late final ScrollController _scroll = ScrollController(
-    initialScrollOffset: ref.read(dashboardScrollOffsetProvider(view.id)),
-  )..addListener(_saveOffset);
+  ScrollController? _internalScroll;
+
+  ScrollController get _scroll =>
+      widget.externalScroll ?? (_internalScroll ??= _makeInternal());
+
+  ScrollController _makeInternal() => ScrollController(
+        initialScrollOffset: ref.read(dashboardScrollOffsetProvider(view.id)),
+      )..addListener(_saveOffset);
 
   void _saveOffset() {
     ref.read(dashboardScrollOffsetProvider(view.id).notifier).state =
-        _scroll.offset;
+        _internalScroll!.offset;
   }
 
   @override
   void dispose() {
-    _scroll.dispose();
+    _internalScroll?.dispose();
     super.dispose();
   }
 
@@ -419,6 +549,12 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
       error: (e, _) => EmptyState(message: context.l10n.dbWidgetsError('$e')),
       data: (placed) {
         if (placed.isEmpty) {
+          // Limited subjects and read-only (compare) hosts get a plain
+          // empty state (no seeding/arrange affordances — layout is edited
+          // on a full chart from the main kundli area).
+          if (!editable) {
+            return EmptyState(message: context.l10n.dbViewEmpty);
+          }
           return EmptyState(
             message: context.l10n.dbViewEmpty,
             actionLabel: context.l10n.dbAddStarterWidgets,
@@ -429,8 +565,8 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
               ref.invalidate(viewWidgetsProvider(view.id));
             },
             secondaryLabel: context.l10n.dbChooseWidgets,
-            onSecondary: () => context
-                .push('/kundli/${moduleCtx.kundli.id}/arrange/${view.id}'),
+            onSecondary: () =>
+                context.push('/kundli/${widget.kundliId}/arrange/${view.id}'),
           );
         }
         return LayoutBuilder(builder: (context, constraints) {
@@ -477,7 +613,16 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
                         if (i > 0) const SizedBox(width: 10),
                         Expanded(
                           flex: units(row[i].span),
-                          child: _draggableCard(context, ref, row[i], placed),
+                          child: limited
+                              ? widget.limitedCardBuilder!(context, row[i])
+                              : editable
+                                  ? _draggableCard(context, ref, row[i], placed)
+                                  // Read-only (compare) full tab: no drag
+                                  // handle and no structural edits, but the
+                                  // per-instance CONFIGURE path stays — the
+                                  // card's menu shows configure options only.
+                                  : _card(context, ref, row[i],
+                                      configOnly: true),
                         ),
                       ],
                       // Empty remainder of an incomplete row: also a
@@ -489,30 +634,37 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
                         Expanded(
                           flex: 6 -
                               row.fold<int>(0, (sum, p) => sum + units(p.span)),
-                          child: _emptySlotTarget(
-                              ref, placed, row.last.instanceId),
+                          child: editable
+                              ? _emptySlotTarget(
+                                  ref, placed, row.last.instanceId)
+                              : const SizedBox(),
                         ),
                       ],
                     ],
                   ),
                 ),
-              // Drop zone at the end of the board: move to last.
-              _emptySlotTarget(
-                  ref, placed, placed.isEmpty ? null : placed.last.instanceId,
-                  height: 56, label: context.l10n.dbMoveToEnd),
-              // Always-visible entry point to the widget library — the
-              // header tune icon alone isn't discoverable for
-              // non-technical users.
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: OutlinedButton.icon(
-                  icon:
-                      const Icon(Icons.dashboard_customize_outlined, size: 18),
-                  label: Text(context.l10n.dbAddEditWidgets),
-                  onPressed: () => context.push(
-                      '/kundli/${moduleCtx.kundli.id}/arrange/${view.id}'),
+              // Layout-editing affordances only on a full chart that isn't
+              // hosted read-only — compare is view-only (edits happen on
+              // the main kundli dashboard).
+              if (editable) ...[
+                // Drop zone at the end of the board: move to last.
+                _emptySlotTarget(ref, placed,
+                    placed.isEmpty ? null : placed.last.instanceId,
+                    height: 56, label: context.l10n.dbMoveToEnd),
+                // Always-visible entry point to the widget library — the
+                // header tune icon alone isn't discoverable for
+                // non-technical users.
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.dashboard_customize_outlined,
+                        size: 18),
+                    label: Text(context.l10n.dbAddEditWidgets),
+                    onPressed: () => context.push(
+                        '/kundli/${widget.kundliId}/arrange/${view.id}'),
+                  ),
                 ),
-              ),
+              ],
             ],
           );
         });
@@ -614,28 +766,124 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
   }
 
   Widget _card(BuildContext context, WidgetRef ref, PlacedWidget pwd,
-      {Widget Function(Widget header)? wrapHeader}) {
+      {Widget Function(Widget header)? wrapHeader, bool configOnly = false}) {
     final module = moduleById(pwd.widgetId);
     if (module == null) return const SizedBox();
-    final ctx = moduleCtx.withConfig(pwd.config);
+    final ctx = moduleCtx!.withConfig(pwd.config);
+    // Read-only (compare) cards keep ONLY the per-instance CONFIGURE path —
+    // structural edits (size / duplicate / remove) are gone. The settings
+    // affordance therefore appears only when the module actually has config
+    // choices to offer; a card with nothing to configure shows no menu.
+    // Editable (home) cards always show the full menu.
+    final showMenu =
+        configOnly ? module.configChoices(context.l10n).isNotEmpty : true;
     return ModuleCard(
       title: moduleInstanceTitle(module, pwd.config, context.l10n),
       onDetail: module.meta.hasDetailView
-          ? () => context.push(
-              '/kundli/${moduleCtx.kundli.id}/module/${module.meta.id}'
-              '?instance=${Uri.encodeComponent(pwd.instanceId)}'
-              '&view=${Uri.encodeComponent(pwd.viewId)}',
-              // Carry this card's own per-instance config (e.g. which
-              // varga a Divisional Chart card is set to) so the detail
-              // view shows the SAME thing the card does — otherwise it
-              // has no way to tell which of possibly several instances
-              // of this module was tapped. The instance/view ids let the
-              // detail view persist config changes back to this card.
-              extra: pwd.config)
+          ? () => widget.onOpenModule != null
+              ? widget.onOpenModule!(pwd)
+              : context.push(
+                  '/kundli/${moduleCtx!.kundli.id}/module/${module.meta.id}'
+                  '?instance=${Uri.encodeComponent(pwd.instanceId)}'
+                  '&view=${Uri.encodeComponent(pwd.viewId)}',
+                  // Carry this card's own per-instance config (e.g. which
+                  // varga a Divisional Chart card is set to) so the detail
+                  // view shows the SAME thing the card does — otherwise it
+                  // has no way to tell which of possibly several instances
+                  // of this module was tapped. The instance/view ids let the
+                  // detail view persist config changes back to this card.
+                  extra: pwd.config)
           : null,
-      onSettings: () => showWidgetMenu(context, ref, module, pwd),
+      // In read-only (compare) mode the menu is configure-only (size /
+      // duplicate / remove suppressed); config still writes back per
+      // instance via the same dashboard repo path as the home dashboard.
+      onSettings: showMenu
+          ? () => showWidgetMenu(context, ref, module, pwd,
+              configOnly: configOnly)
+          : null,
       wrapHeader: wrapHeader,
       child: module.cardView(context, ctx),
+    );
+  }
+}
+
+/// Whether a module needs data a positions-only (legacy Mahakosh)
+/// subject lacks — a full snapshot, dasha trees, events, or the birth
+/// instant. Such modules render the "Not available for this chart"
+/// placeholder in a compare limited tab (spec §3.3 / §4.4). Only the
+/// pure-position modules (birth chart D1 and the planetary positions
+/// table) can render from stored longitudes; conservatively, everything
+/// else is a placeholder. Used by the Compare screen.
+bool moduleNeedsFullChart(String moduleId) =>
+    moduleId != 'planetary_positions';
+
+/// A compact "Not available for this chart" card, sized to fill its
+/// grid slot so the compare grid geometry stays identical across tabs
+/// (spec §3.3). [CompareChart] is unused here but the signature mirrors
+/// the positions card so hosts can swap freely.
+class CompareUnavailableCard extends StatelessWidget {
+  const CompareUnavailableCard({super.key, required this.title});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return ModuleCard(
+      title: title,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lock_outline,
+              size: 16, color: KJColors.inkSoft.withValues(alpha: 0.6)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              context.l10n.cmpNotAvailable,
+              style: TextStyle(fontSize: 12, color: KJColors.inkSoft),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A minimal planetary-positions card rendered straight from a
+/// [CompareChart]'s longitudes — the one module a positions-only
+/// (legacy) subject can still show (spec §4.4).
+class ComparePositionsCard extends StatelessWidget {
+  const ComparePositionsCard({super.key, required this.title, required this.chart});
+  final String title;
+  final CompareChart chart;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ModuleCard(
+      title: title,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final p in chart.longitudes.keys) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 74,
+                    child: Text(p.label(l10n),
+                        style: const TextStyle(fontSize: 12.5)),
+                  ),
+                  Text(
+                    '${chart.signOf(p).label(l10n)} '
+                    '${(chart.lonOf(p) % 30).toStringAsFixed(1)}°',
+                    style: KJTheme.mono(size: 11.5, color: KJColors.inkSoft),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -645,12 +893,19 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
 /// instantly; the pinned Done button (and swipe-down on the drag
 /// handle) closes the panel. Height is capped so the dashboard stays
 /// visible behind the sheet.
+///
+/// When [configOnly] is true (read-only compare hosts) the STRUCTURAL
+/// controls — the SIZE selector and the duplicate / remove actions — are
+/// suppressed, leaving only the module's own config choices. Config still
+/// persists per instance via the shared dashboard repo, exactly as on the
+/// home dashboard and the compare module detail screen.
 Future<void> showWidgetMenu(
   BuildContext context,
   WidgetRef ref,
   AstroModule module,
-  PlacedWidget pwd,
-) async {
+  PlacedWidget pwd, {
+  bool configOnly = false,
+}) async {
   final repo = ref.read(dashboardRepoProvider);
   // Mutable copy OUTSIDE the sheet builder — StatefulBuilder re-runs
   // the builder on every selection, which would otherwise reset it.
@@ -681,28 +936,33 @@ Future<void> showWidgetMenu(
                       Text(module.meta.titleFor(ctx.l10n),
                           style: KJTheme.serif(size: 18)),
                       const SizedBox(height: 14),
-                      sectionLabel('SIZE'),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          for (final s in CardSpan.values)
-                            ChoiceChip(
-                              label: Text(s.label),
-                              selected: pwd.span == s,
-                              labelStyle: TextStyle(
-                                  fontSize: 12.5,
-                                  color: pwd.span == s
-                                      ? KJColors.paper
-                                      : KJColors.ink),
-                              onSelected: (_) async {
-                                await repo.setSpan(pwd.instanceId, s);
-                                ref.invalidate(viewWidgetsProvider(pwd.viewId));
-                                if (ctx.mounted) Navigator.pop(ctx);
-                              },
-                            ),
-                        ],
-                      ),
+                      // SIZE changes the global grid layout — a structural
+                      // edit, so it's hidden in read-only (compare) hosts.
+                      if (!configOnly) ...[
+                        sectionLabel('SIZE'),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            for (final s in CardSpan.values)
+                              ChoiceChip(
+                                label: Text(s.label),
+                                selected: pwd.span == s,
+                                labelStyle: TextStyle(
+                                    fontSize: 12.5,
+                                    color: pwd.span == s
+                                        ? KJColors.paper
+                                        : KJColors.ink),
+                                onSelected: (_) async {
+                                  await repo.setSpan(pwd.instanceId, s);
+                                  ref.invalidate(
+                                      viewWidgetsProvider(pwd.viewId));
+                                  if (ctx.mounted) Navigator.pop(ctx);
+                                },
+                              ),
+                          ],
+                        ),
+                      ],
                       // Multi-value choices (e.g. Chart Style) keep their
                       // own labelled section of single-select chips.
                       for (final choice in module.configChoices(ctx.l10n))
@@ -785,33 +1045,37 @@ Future<void> showWidgetMenu(
                           ],
                         ),
                       ],
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          OutlinedButton.icon(
-                            icon: const Icon(Icons.copy, size: 16),
-                            label: Text(context.l10n.duplicate),
-                            onPressed: () async {
-                              await repo.duplicate(pwd);
-                              ref.invalidate(viewWidgetsProvider(pwd.viewId));
-                              if (ctx.mounted) Navigator.pop(ctx);
-                            },
-                          ),
-                          const SizedBox(width: 10),
-                          OutlinedButton.icon(
-                            icon: const Icon(Icons.delete_outline, size: 16),
-                            style: OutlinedButton.styleFrom(
-                                foregroundColor: KJColors.maroon,
-                                side: BorderSide(color: KJColors.maroon)),
-                            label: Text(context.l10n.remove),
-                            onPressed: () async {
-                              await repo.removeInstance(pwd.instanceId);
-                              ref.invalidate(viewWidgetsProvider(pwd.viewId));
-                              if (ctx.mounted) Navigator.pop(ctx);
-                            },
-                          ),
-                        ],
-                      ),
+                      // Duplicate / remove add and delete widget instances —
+                      // structural edits, hidden in read-only (compare) hosts.
+                      if (!configOnly) ...[
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.copy, size: 16),
+                              label: Text(context.l10n.duplicate),
+                              onPressed: () async {
+                                await repo.duplicate(pwd);
+                                ref.invalidate(viewWidgetsProvider(pwd.viewId));
+                                if (ctx.mounted) Navigator.pop(ctx);
+                              },
+                            ),
+                            const SizedBox(width: 10),
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.delete_outline, size: 16),
+                              style: OutlinedButton.styleFrom(
+                                  foregroundColor: KJColors.maroon,
+                                  side: BorderSide(color: KJColors.maroon)),
+                              label: Text(context.l10n.remove),
+                              onPressed: () async {
+                                await repo.removeInstance(pwd.instanceId);
+                                ref.invalidate(viewWidgetsProvider(pwd.viewId));
+                                if (ctx.mounted) Navigator.pop(ctx);
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
