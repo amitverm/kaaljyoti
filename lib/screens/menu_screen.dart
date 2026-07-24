@@ -49,6 +49,13 @@ class MenuScreen extends ConsumerWidget {
             subtitle: context.l10n.mnAshtakootaSubtitle,
             onTap: () => context.push('/ashtakoota'),
           ),
+          _tile(
+            context,
+            icon: Icons.compare_arrows,
+            title: context.l10n.mnCompare,
+            subtitle: context.l10n.mnCompareSubtitle,
+            onTap: () => context.push('/compare'),
+          ),
           const SizedBox(height: 18),
           _label(context.l10n.mnSectionAccount),
           _accountCard(context, ref, user),

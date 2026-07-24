@@ -69,6 +69,9 @@ class SettingsRepository {
   static const _kChartTextAnnot = 'chart_text_annotation_scale';
   static const _kChartTextSign = 'chart_text_sign_scale';
   static const _kChartTextInflate = 'chart_text_content_inflate';
+  static const _kCompareSet = 'compare_set_refs';
+  static const _kCompareDasha = 'compare_dasha_system';
+  static const _kCompareView = 'compare_view_id';
 
   /// Chart text rendering settings (Settings ▸ Chart text). Loaded in
   /// main() into the global [chartTuning] notifier the painters read.
@@ -161,6 +164,45 @@ class SettingsRepository {
     await prefs.setDouble(_kTextScale, a.textScale);
     await prefs.setBool(_kSerif, a.serifHeadings);
     await prefs.setString(_kPalette, a.paletteName);
+  }
+
+  /// Kundli Compare session state (spec §3.3) — the ordered subject
+  /// refs (local kundli id | 'mk:CODE'), the chosen dasha system, and
+  /// the active dashboard view — all persisted so reopening /compare
+  /// restores the last comparison. Refs are stored as a newline-joined
+  /// list (kundli ids and MK codes never contain newlines).
+  Future<List<String>> compareSet() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kCompareSet) ?? const [];
+  }
+
+  Future<void> setCompareSet(List<String> refs) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kCompareSet, refs);
+  }
+
+  Future<String> compareDashaSystem() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kCompareDasha) ?? 'vimshottari';
+  }
+
+  Future<void> setCompareDashaSystem(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kCompareDasha, name);
+  }
+
+  Future<String?> compareViewId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kCompareView);
+  }
+
+  Future<void> setCompareViewId(String? viewId) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (viewId == null) {
+      await prefs.remove(_kCompareView);
+    } else {
+      await prefs.setString(_kCompareView, viewId);
+    }
   }
 
   Future<int> defaultAyanamsaId() async {

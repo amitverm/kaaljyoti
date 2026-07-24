@@ -8,6 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../admin/admin_repository.dart';
 import '../charts/chart_style.dart';
 import '../core/astro/bhava_bala.dart';
+import '../core/astro/compare.dart';
+import '../core/astro/dasha/dasha.dart';
 import '../core/astro/ephemeris_service.dart';
 import '../core/astro/models.dart';
 import '../core/astro/shadbala.dart';
@@ -22,6 +24,7 @@ import '../data/kundli_event_repository.dart';
 import '../data/kundli_repository.dart';
 import '../data/models.dart';
 import '../data/settings_repository.dart';
+import '../mahakosh/compare_subject.dart';
 import '../mahakosh/discussion_repository.dart';
 import '../mahakosh/mahakosh_repository.dart';
 import '../mahakosh/models.dart';
@@ -645,3 +648,246 @@ final activeViewIdProvider = StateProvider<String?>((ref) => null);
 final viewWidgetsProvider = FutureProvider.family<List<PlacedWidget>, String>(
   (ref, viewId) => ref.watch(dashboardRepoProvider).widgetsFor(viewId),
 );
+
+// --- Kundli Compare (spec §3–§5) --------------------------------------------
+
+/// One selected chart in the comparison, resolved to what it can
+/// contribute (spec §4.4). [subject] is null when the chart is
+/// unavailable (a removed local kundli or an unreachable/withdrawn
+/// bookmark) — the screen still renders, showing the chip/tab disabled.
+/// [kundliId] is the id used to build a full [ModuleContext] for the
+/// chart tab (a local id, or 'mk_<code>' for a full-birth bookmark);
+/// null for a legacy (positions-only) bookmark, which renders [chart]
+/// instead. [limited] marks that positions-only case.
+class CompareSlot {
+  const CompareSlot({
+    required this.ref,
+    required this.label,
+    required this.isMahakosh,
+    this.subject,
+    this.kundliId,
+    this.chart,
+    this.ayanamsaId,
+    this.limited = false,
+    this.unavailable = false,
+  });
+
+  final String ref; // local kundli id | 'mk:<code>'
+  final String label; // kundli name | MK code
+  final bool isMahakosh;
+  final CompareSubject? subject;
+  final String? kundliId;
+  final CompareChart? chart;
+  final int? ayanamsaId;
+  final bool limited;
+  final bool unavailable;
+}
+
+/// Encode a Mahakosh bookmark reference for the compare set.
+String compareMkRef(String mkCode) => 'mk:$mkCode';
+
+bool isCompareMkRef(String ref) => ref.startsWith('mk:');
+
+/// The ordered set of subject refs in the current comparison (spec
+/// §3.2), prefs-persisted so reopening /compare restores it. Capped at
+/// four charts, enforced at add time.
+class CompareSetNotifier extends StateNotifier<List<String>> {
+  CompareSetNotifier(this._repo) : super(const []) {
+    _repo.compareSet().then((refs) {
+      // Don't clobber refs added before prefs finished loading.
+      if (state.isEmpty) state = refs;
+    });
+  }
+
+  final SettingsRepository _repo;
+  static const maxCharts = 4;
+
+  /// Adds a ref; returns false (and no-ops) when the 4-chart cap is hit.
+  bool add(String ref) {
+    if (state.contains(ref)) return true;
+    if (state.length >= maxCharts) return false;
+    _set([...state, ref]);
+    return true;
+  }
+
+  /// Adds several refs, stopping at the cap; returns how many were added.
+  int addAll(Iterable<String> refs) {
+    final next = [...state];
+    var added = 0;
+    for (final r in refs) {
+      if (next.length >= maxCharts) break;
+      if (next.contains(r)) continue;
+      next.add(r);
+      added++;
+    }
+    if (added > 0) _set(next);
+    return added;
+  }
+
+  void remove(String ref) => _set(state.where((r) => r != ref).toList());
+
+  void reorder(int oldIndex, int newIndex) {
+    final next = [...state];
+    if (newIndex > oldIndex) newIndex--;
+    next.insert(newIndex.clamp(0, next.length), next.removeAt(oldIndex));
+    _set(next);
+  }
+
+  void clear() => _set(const []);
+
+  void _set(List<String> refs) {
+    state = refs;
+    _repo.setCompareSet(refs);
+  }
+}
+
+final compareSetProvider =
+    StateNotifierProvider<CompareSetNotifier, List<String>>(
+  (ref) => CompareSetNotifier(ref.watch(settingsRepoProvider)),
+);
+
+/// The dasha system used for event correlation + "current mahadasha"
+/// (spec §2, §4.2.7), prefs-persisted per the resolution in §8.2.
+class CompareDashaNotifier extends StateNotifier<DashaSystem> {
+  CompareDashaNotifier(this._repo) : super(DashaSystem.vimshottari) {
+    _repo.compareDashaSystem().then((name) => state = DashaSystem.values
+        .firstWhere((s) => s.name == name,
+            orElse: () => DashaSystem.vimshottari));
+  }
+
+  final SettingsRepository _repo;
+
+  void select(DashaSystem system) {
+    state = system;
+    _repo.setCompareDashaSystem(system.name);
+  }
+}
+
+final compareDashaSystemProvider =
+    StateNotifierProvider<CompareDashaNotifier, DashaSystem>(
+  (ref) => CompareDashaNotifier(ref.watch(settingsRepoProvider)),
+);
+
+/// The active dashboard view SHARED across all compare tabs (spec §3.3
+/// locked context), prefs-persisted so a comparison reopens on the same
+/// view. Distinct from [activeViewIdProvider] so opening compare doesn't
+/// disturb the home dashboard's own selection.
+class CompareViewNotifier extends StateNotifier<String?> {
+  CompareViewNotifier(this._repo) : super(null) {
+    _repo.compareViewId().then((v) {
+      if (state == null) state = v;
+    });
+  }
+
+  final SettingsRepository _repo;
+
+  void select(String? viewId) {
+    state = viewId;
+    _repo.setCompareViewId(viewId);
+  }
+}
+
+final compareViewIdProvider =
+    StateNotifierProvider<CompareViewNotifier, String?>(
+  (ref) => CompareViewNotifier(ref.watch(settingsRepoProvider)),
+);
+
+/// Resolves the compare set's refs into [CompareSlot]s (spec §4.4):
+/// local kundlis via [kundlisProvider] + [snapshotProvider] +
+/// [kundliEventsProvider]; Mahakosh codes via [mahakoshChartProvider]
+/// (fetched on selection, session-cached), with full-birth charts
+/// getting a snapshot built through the existing [snapshotProvider]
+/// path (which pins the chart's own ayanamsa). Unreachable charts and
+/// removed kundlis become disabled slots rather than failing the screen.
+final compareSubjectsProvider =
+    FutureProvider<List<CompareSlot>>((ref) async {
+  final refs = ref.watch(compareSetProvider);
+  final slots = <CompareSlot>[];
+  for (final r in refs) {
+    if (isCompareMkRef(r)) {
+      final code = r.substring(3);
+      try {
+        final chart = await ref.watch(mahakoshChartProvider(code).future);
+        if (chart.hasBirthData) {
+          final id = '$kMahakoshKundliPrefix$code';
+          final snap = await ref.watch(snapshotProvider(id).future);
+          slots.add(CompareSlot(
+            ref: r,
+            label: code,
+            isMahakosh: true,
+            subject: MahakoshSubject(mkChart: chart, snapshot: snap),
+            kundliId: id,
+            ayanamsaId: chart.ayanamsaId,
+          ));
+        } else {
+          final subject = MahakoshSubject(mkChart: chart);
+          slots.add(CompareSlot(
+            ref: r,
+            label: code,
+            isMahakosh: true,
+            subject: subject,
+            chart: subject.chart,
+            limited: true,
+            ayanamsaId: chart.ayanamsaId,
+          ));
+        }
+      } catch (_) {
+        slots.add(CompareSlot(
+            ref: r, label: code, isMahakosh: true, unavailable: true));
+      }
+    } else {
+      final all = await ref.watch(kundlisProvider.future);
+      final k = all.where((x) => x.id == r).firstOrNull;
+      if (k == null) {
+        slots.add(CompareSlot(
+            ref: r, label: r, isMahakosh: false, unavailable: true));
+        continue;
+      }
+      try {
+        final snap = await ref.watch(snapshotProvider(r).future);
+        final events = await ref.watch(kundliEventsProvider(r).future);
+        slots.add(CompareSlot(
+          ref: r,
+          label: k.name,
+          isMahakosh: false,
+          subject: LocalSubject(
+              kundli: k, snapshot: snap, kundliEvents: events),
+          kundliId: r,
+          ayanamsaId: snap.ayanamsaId,
+        ));
+      } catch (_) {
+        slots.add(CompareSlot(
+            ref: r, label: k.name, isMahakosh: false, unavailable: true));
+      }
+    }
+  }
+  return slots;
+});
+
+/// The similarity findings for the current comparison (spec §4.5) —
+/// async so tab switching never jank-blocks, memoized by Riverpod on
+/// its dependencies (the subject set + dasha system; event lists ride
+/// inside the subjects). `now` is read here at the provider layer, and
+/// [ephemerisPositionsAt] samples the sky at each event date. Returns
+/// empty for fewer than two computable subjects (the screen shows the
+/// empty state).
+final compareFindingsProvider =
+    FutureProvider<List<CompareFinding>>((ref) async {
+  final slots = await ref.watch(compareSubjectsProvider.future);
+  final system = ref.watch(compareDashaSystemProvider);
+  final subjects = [
+    for (final s in slots)
+      if (s.subject != null) s.subject!,
+  ];
+  if (subjects.length < 2) return const [];
+  // One transit ayanamsa for the whole set — the viewer's default. Signs
+  // (and thus houses-from-Moon/lagna) are stable across the small ayanamsa
+  // spread; degree-level differences are flagged on the Similarities tab.
+  final ayanamsaId = await ref.watch(defaultAyanamsaProvider.future);
+  return computeCompareFindings(
+    subjects: [for (final s in subjects) s.toEntry()],
+    dashaSystem: system,
+    now: DateTime.now(),
+    transitPositions: ephemerisPositionsAt(ayanamsaId),
+  );
+});

@@ -16,6 +16,11 @@ import '../services/location_service.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
 
+/// Multi-select state for the "Compare (n)" entry (spec §3.1). Null =
+/// not in select mode; a non-null set holds the chosen kundli ids. Cap
+/// four (mirrors the compare-set cap).
+final kundliMultiSelectProvider = StateProvider<Set<String>?>((ref) => null);
+
 class KundliListScreen extends ConsumerWidget {
   const KundliListScreen({super.key});
 
@@ -24,31 +29,34 @@ class KundliListScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final kundlis = ref.watch(kundlisProvider);
     final user = ref.watch(authUserProvider).value;
+    final selection = ref.watch(kundliMultiSelectProvider);
 
     return KJScaffold(
       section: KJSection.kundlis,
-      appBar: AppBar(
-        title: Text(l10n.kundlisTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () => context.push('/notifications'),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onLongPress: () => _castPrashna(context, ref),
-              child: FilledButton(
-                onPressed: () => context.push('/new'),
-                style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 8)),
-                child: Text(l10n.plusNew),
-              ),
+      appBar: selection != null
+          ? _selectAppBar(context, ref, selection)
+          : AppBar(
+              title: Text(l10n.kundlisTitle),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_none),
+                  onPressed: () => context.push('/notifications'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: GestureDetector(
+                    onLongPress: () => _castPrashna(context, ref),
+                    child: FilledButton(
+                      onPressed: () => context.push('/new'),
+                      style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 8)),
+                      child: Text(l10n.plusNew),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       body: kundlis.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(message: l10n.klLoadError('$e')),
@@ -110,6 +118,43 @@ class KundliListScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+
+  /// The multi-select app bar (spec §3.1): "n selected", a Compare
+  /// action enabled at 2–4, and a close button that exits select mode.
+  PreferredSizeWidget _selectAppBar(
+      BuildContext context, WidgetRef ref, Set<String> selection) {
+    final l10n = context.l10n;
+    final canCompare = selection.length >= 2;
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: () =>
+            ref.read(kundliMultiSelectProvider.notifier).state = null,
+      ),
+      title: Text(l10n.klSelected('${selection.length}')),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: FilledButton(
+            onPressed: canCompare
+                ? () {
+                    ref.read(compareSetProvider.notifier).clear();
+                    ref
+                        .read(compareSetProvider.notifier)
+                        .addAll(selection.toList());
+                    ref.read(kundliMultiSelectProvider.notifier).state = null;
+                    context.push('/compare');
+                  }
+                : null,
+            style: FilledButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+            child: Text(l10n.klCompareN('${selection.length}')),
+          ),
+        ),
+      ],
     );
   }
 
@@ -188,15 +233,40 @@ class _KundliRow extends ConsumerWidget {
     final l10n = context.l10n;
     final snapshot = ref.watch(snapshotProvider(kundli.id));
     final birthFmt = DateFormat('${KJDate.pref.datePattern} · HH:mm');
+    final selection = ref.watch(kundliMultiSelectProvider);
+    final selecting = selection != null;
+    final isSelected = selection?.contains(kundli.id) ?? false;
+
+    void toggleSelection() {
+      final current = {...?ref.read(kundliMultiSelectProvider)};
+      if (current.contains(kundli.id)) {
+        current.remove(kundli.id);
+      } else {
+        if (current.length >= 4) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(l10n.klCompareCap)));
+          return;
+        }
+        current.add(kundli.id);
+      }
+      ref.read(kundliMultiSelectProvider.notifier).state = current;
+    }
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
+      color: isSelected ? KJColors.maroon.withValues(alpha: 0.06) : null,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          ref.read(activeKundliIdProvider.notifier).state = kundli.id;
-          context.push('/kundli/${kundli.id}');
+        onLongPress: () {
+          // Enter multi-select mode with this row chosen (spec §3.1).
+          ref.read(kundliMultiSelectProvider.notifier).state = {kundli.id};
         },
+        onTap: selecting
+            ? toggleSelection
+            : () {
+                ref.read(activeKundliIdProvider.notifier).state = kundli.id;
+                context.push('/kundli/${kundli.id}');
+              },
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -204,16 +274,30 @@ class _KundliRow extends ConsumerWidget {
             children: [
               Row(
                 children: [
+                  if (selecting)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Icon(
+                        isSelected
+                            ? Icons.check_circle
+                            : Icons.radio_button_unchecked,
+                        size: 20,
+                        color:
+                            isSelected ? KJColors.maroon : KJColors.inkSoft,
+                      ),
+                    ),
                   Expanded(
                     child: Text(kundli.name, style: KJTheme.serif(size: 18)),
                   ),
                   KJTag(relationTagLabel(l10n, kundli.relationTag)),
-                  IconButton(
-                    icon: Icon(Icons.edit_outlined,
-                        size: 18, color: KJColors.inkSoft),
-                    onPressed: () => context.push('/kundli/${kundli.id}/edit'),
-                    visualDensity: VisualDensity.compact,
-                  ),
+                  if (!selecting)
+                    IconButton(
+                      icon: Icon(Icons.edit_outlined,
+                          size: 18, color: KJColors.inkSoft),
+                      onPressed: () =>
+                          context.push('/kundli/${kundli.id}/edit'),
+                      visualDensity: VisualDensity.compact,
+                    ),
                 ],
               ),
               Text(

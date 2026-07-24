@@ -11,6 +11,7 @@ import 'screens/admin_screen.dart';
 import 'screens/arrange_screen.dart';
 import 'screens/ashtakoota_screen.dart';
 import 'screens/birth_entry_screen.dart';
+import 'screens/compare_screen.dart';
 import 'screens/contribute_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/discussion_screen.dart';
@@ -176,6 +177,7 @@ final _router = GoRouter(
         builder: (_, __) => const NotificationsScreen()),
     GoRoute(path: '/muhurta', builder: (_, __) => const MuhurtaScreen()),
     GoRoute(path: '/ashtakoota', builder: (_, __) => const AshtakootaScreen()),
+    GoRoute(path: '/compare', builder: (_, __) => const CompareScreen()),
     GoRoute(path: '/signin', builder: (_, __) => const SignInScreen()),
     GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
     // Not in KJNavPill/any visible nav — reachable only via the

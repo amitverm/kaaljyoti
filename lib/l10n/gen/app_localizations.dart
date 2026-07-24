@@ -9416,6 +9416,368 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Charts you\'ve hidden from your own Mahakosh view'**
   String get mnHiddenChartsSubtitle;
+
+  /// No description provided for @mnCompare.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare Kundlis'**
+  String get mnCompare;
+
+  /// No description provided for @mnCompareSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Study 2–4 charts together with locked context'**
+  String get mnCompareSubtitle;
+
+  /// No description provided for @cmpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare Kundlis'**
+  String get cmpTitle;
+
+  /// No description provided for @cmpCustomizeView.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize this view'**
+  String get cmpCustomizeView;
+
+  /// No description provided for @cmpNewComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'New comparison'**
+  String get cmpNewComparison;
+
+  /// No description provided for @cmpPickHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add two or more charts to compare.'**
+  String get cmpPickHint;
+
+  /// No description provided for @cmpChipRowHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No charts yet — add one to begin.'**
+  String get cmpChipRowHint;
+
+  /// No description provided for @cmpAddChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Add chart'**
+  String get cmpAddChart;
+
+  /// No description provided for @cmpLimitedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'limited'**
+  String get cmpLimitedBadge;
+
+  /// No description provided for @cmpLimitedTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Legacy Mahakosh chart — no birth time, so dasha and time-based factors can\'t be computed.'**
+  String get cmpLimitedTooltip;
+
+  /// No description provided for @cmpMaxCharts.
+  ///
+  /// In en, this message translates to:
+  /// **'4 charts max — research beyond that belongs in Mahakosh filters.'**
+  String get cmpMaxCharts;
+
+  /// No description provided for @cmpMyKundlis.
+  ///
+  /// In en, this message translates to:
+  /// **'My Kundlis'**
+  String get cmpMyKundlis;
+
+  /// No description provided for @cmpBookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmarks'**
+  String get cmpBookmarks;
+
+  /// No description provided for @cmpSearchKundlis.
+  ///
+  /// In en, this message translates to:
+  /// **'Search kundlis'**
+  String get cmpSearchKundlis;
+
+  /// No description provided for @cmpNoKundlis.
+  ///
+  /// In en, this message translates to:
+  /// **'No kundlis found.'**
+  String get cmpNoKundlis;
+
+  /// No description provided for @cmpBookmarksOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmarks are unavailable offline.'**
+  String get cmpBookmarksOffline;
+
+  /// No description provided for @cmpNoBookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookmarked charts yet.'**
+  String get cmpNoBookmarks;
+
+  /// No description provided for @cmpBookmarkGone.
+  ///
+  /// In en, this message translates to:
+  /// **'No longer on Mahakosh'**
+  String get cmpBookmarkGone;
+
+  /// No description provided for @cmpSimilarities.
+  ///
+  /// In en, this message translates to:
+  /// **'Similarities'**
+  String get cmpSimilarities;
+
+  /// No description provided for @cmpChartUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This chart is no longer available.'**
+  String get cmpChartUnavailable;
+
+  /// No description provided for @cmpNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available for this chart'**
+  String get cmpNotAvailable;
+
+  /// No description provided for @cmpDashaSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Dasha system'**
+  String get cmpDashaSystem;
+
+  /// No description provided for @cmpAyanamsaNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'{code} uses a different ayanamsa; sign-level comparisons unaffected, degree-level may differ.'**
+  String cmpAyanamsaNotice(String code);
+
+  /// No description provided for @cmpNoEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Add life events to at least two kundlis to see event patterns.'**
+  String get cmpNoEvents;
+
+  /// No description provided for @cmpNoOverlaps.
+  ///
+  /// In en, this message translates to:
+  /// **'No notable overlaps in the selected dimensions.'**
+  String get cmpNoOverlaps;
+
+  /// No description provided for @cmpNoneInGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'No shared factors in this group.'**
+  String get cmpNoneInGroup;
+
+  /// No description provided for @cmpGroupLagnaMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Lagna & Moon'**
+  String get cmpGroupLagnaMoon;
+
+  /// No description provided for @cmpGroupPlacements.
+  ///
+  /// In en, this message translates to:
+  /// **'Placements'**
+  String get cmpGroupPlacements;
+
+  /// No description provided for @cmpGroupDignity.
+  ///
+  /// In en, this message translates to:
+  /// **'Dignities & Motion'**
+  String get cmpGroupDignity;
+
+  /// No description provided for @cmpGroupEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Life Events'**
+  String get cmpGroupEvents;
+
+  /// No description provided for @cmpApprox.
+  ///
+  /// In en, this message translates to:
+  /// **'approx'**
+  String get cmpApprox;
+
+  /// No description provided for @cmpMahadasha.
+  ///
+  /// In en, this message translates to:
+  /// **'Mahadasha'**
+  String get cmpMahadasha;
+
+  /// No description provided for @cmpAntardasha.
+  ///
+  /// In en, this message translates to:
+  /// **'Antardasha'**
+  String get cmpAntardasha;
+
+  /// No description provided for @cmpSadeSati.
+  ///
+  /// In en, this message translates to:
+  /// **'Sade Sati'**
+  String get cmpSadeSati;
+
+  /// No description provided for @cmpTransitGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Transit houses'**
+  String get cmpTransitGrid;
+
+  /// No description provided for @cmpAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age {age}'**
+  String cmpAge(String age);
+
+  /// No description provided for @cmpFromMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Moon'**
+  String get cmpFromMoon;
+
+  /// No description provided for @cmpFromLagna.
+  ///
+  /// In en, this message translates to:
+  /// **'Lagna'**
+  String get cmpFromLagna;
+
+  /// No description provided for @cmpFndLagnaSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Lagna in {sign}'**
+  String cmpFndLagnaSign(String sign);
+
+  /// No description provided for @cmpFndLagnaNak.
+  ///
+  /// In en, this message translates to:
+  /// **'Lagna nakshatra: {nakshatra}'**
+  String cmpFndLagnaNak(String nakshatra);
+
+  /// No description provided for @cmpFndMoonSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Moon in {sign}'**
+  String cmpFndMoonSign(String sign);
+
+  /// No description provided for @cmpFndMoonNak.
+  ///
+  /// In en, this message translates to:
+  /// **'Moon nakshatra: {nakshatra}'**
+  String cmpFndMoonNak(String nakshatra);
+
+  /// No description provided for @cmpFndMoonPada.
+  ///
+  /// In en, this message translates to:
+  /// **'Moon in {nakshatra} pada {pada}'**
+  String cmpFndMoonPada(String nakshatra, String pada);
+
+  /// No description provided for @cmpFndGrahaSign.
+  ///
+  /// In en, this message translates to:
+  /// **'{planet} in {sign}'**
+  String cmpFndGrahaSign(String planet, String sign);
+
+  /// No description provided for @cmpFndGrahaHouse.
+  ///
+  /// In en, this message translates to:
+  /// **'{planet} in house {house}'**
+  String cmpFndGrahaHouse(String planet, String house);
+
+  /// No description provided for @cmpFndDignity.
+  ///
+  /// In en, this message translates to:
+  /// **'{planet} {dignity}'**
+  String cmpFndDignity(String planet, String dignity);
+
+  /// No description provided for @cmpFndRetro.
+  ///
+  /// In en, this message translates to:
+  /// **'{planet} retrograde'**
+  String cmpFndRetro(String planet);
+
+  /// No description provided for @cmpFndDashaToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Current mahadasha: {lord}'**
+  String cmpFndDashaToday(String lord);
+
+  /// No description provided for @cmpFndEventMd.
+  ///
+  /// In en, this message translates to:
+  /// **'{category} under {lord} mahadasha'**
+  String cmpFndEventMd(String category, String lord);
+
+  /// No description provided for @cmpFndEventAd.
+  ///
+  /// In en, this message translates to:
+  /// **'{category} under {lord} antardasha'**
+  String cmpFndEventAd(String category, String lord);
+
+  /// No description provided for @cmpFndEventSade.
+  ///
+  /// In en, this message translates to:
+  /// **'{category} during Sade Sati ({phase})'**
+  String cmpFndEventSade(String category, String phase);
+
+  /// No description provided for @cmpFndEventAxis.
+  ///
+  /// In en, this message translates to:
+  /// **'Rahu–Ketu across {rahuHouse}/{ketuHouse} from {frame} at {category}'**
+  String cmpFndEventAxis(
+      String category, String rahuHouse, String ketuHouse, String frame);
+
+  /// No description provided for @cmpFndEventTransit.
+  ///
+  /// In en, this message translates to:
+  /// **'{planet} in {house}th from {frame} at {category}'**
+  String cmpFndEventTransit(
+      String planet, String house, String frame, String category);
+
+  /// No description provided for @cmpFndNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'{category}: no common dasha/transit factor'**
+  String cmpFndNeutral(String category);
+
+  /// No description provided for @cmpDignExalted.
+  ///
+  /// In en, this message translates to:
+  /// **'exalted'**
+  String get cmpDignExalted;
+
+  /// No description provided for @cmpDignDebilitated.
+  ///
+  /// In en, this message translates to:
+  /// **'debilitated'**
+  String get cmpDignDebilitated;
+
+  /// No description provided for @cmpDignOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'in own sign'**
+  String get cmpDignOwn;
+
+  /// No description provided for @klSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String klSelected(String count);
+
+  /// No description provided for @klCompareN.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare ({count})'**
+  String klCompareN(String count);
+
+  /// No description provided for @klCompareCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare up to 4 charts at a time.'**
+  String get klCompareCap;
 }
 
 class _AppLocalizationsDelegate
