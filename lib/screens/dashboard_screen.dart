@@ -617,10 +617,12 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
                               ? widget.limitedCardBuilder!(context, row[i])
                               : editable
                                   ? _draggableCard(context, ref, row[i], placed)
-                                  // Read-only (compare) full tab: a plain
-                                  // card — no drag handle, no settings menu.
+                                  // Read-only (compare) full tab: no drag
+                                  // handle and no structural edits, but the
+                                  // per-instance CONFIGURE path stays — the
+                                  // card's menu shows configure options only.
                                   : _card(context, ref, row[i],
-                                      showSettings: false),
+                                      configOnly: true),
                         ),
                       ],
                       // Empty remainder of an incomplete row: also a
@@ -764,10 +766,17 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
   }
 
   Widget _card(BuildContext context, WidgetRef ref, PlacedWidget pwd,
-      {Widget Function(Widget header)? wrapHeader, bool showSettings = true}) {
+      {Widget Function(Widget header)? wrapHeader, bool configOnly = false}) {
     final module = moduleById(pwd.widgetId);
     if (module == null) return const SizedBox();
     final ctx = moduleCtx!.withConfig(pwd.config);
+    // Read-only (compare) cards keep ONLY the per-instance CONFIGURE path —
+    // structural edits (size / duplicate / remove) are gone. The settings
+    // affordance therefore appears only when the module actually has config
+    // choices to offer; a card with nothing to configure shows no menu.
+    // Editable (home) cards always show the full menu.
+    final showMenu =
+        configOnly ? module.configChoices(context.l10n).isNotEmpty : true;
     return ModuleCard(
       title: moduleInstanceTitle(module, pwd.config, context.l10n),
       onDetail: module.meta.hasDetailView
@@ -785,10 +794,13 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
                   // detail view persist config changes back to this card.
                   extra: pwd.config)
           : null,
-      // No per-widget menu (size / configure / duplicate / remove) in
-      // read-only (compare) cards — editing happens on the main dashboard.
-      onSettings:
-          showSettings ? () => showWidgetMenu(context, ref, module, pwd) : null,
+      // In read-only (compare) mode the menu is configure-only (size /
+      // duplicate / remove suppressed); config still writes back per
+      // instance via the same dashboard repo path as the home dashboard.
+      onSettings: showMenu
+          ? () => showWidgetMenu(context, ref, module, pwd,
+              configOnly: configOnly)
+          : null,
       wrapHeader: wrapHeader,
       child: module.cardView(context, ctx),
     );
@@ -881,12 +893,19 @@ class ComparePositionsCard extends StatelessWidget {
 /// instantly; the pinned Done button (and swipe-down on the drag
 /// handle) closes the panel. Height is capped so the dashboard stays
 /// visible behind the sheet.
+///
+/// When [configOnly] is true (read-only compare hosts) the STRUCTURAL
+/// controls — the SIZE selector and the duplicate / remove actions — are
+/// suppressed, leaving only the module's own config choices. Config still
+/// persists per instance via the shared dashboard repo, exactly as on the
+/// home dashboard and the compare module detail screen.
 Future<void> showWidgetMenu(
   BuildContext context,
   WidgetRef ref,
   AstroModule module,
-  PlacedWidget pwd,
-) async {
+  PlacedWidget pwd, {
+  bool configOnly = false,
+}) async {
   final repo = ref.read(dashboardRepoProvider);
   // Mutable copy OUTSIDE the sheet builder — StatefulBuilder re-runs
   // the builder on every selection, which would otherwise reset it.
@@ -917,28 +936,33 @@ Future<void> showWidgetMenu(
                       Text(module.meta.titleFor(ctx.l10n),
                           style: KJTheme.serif(size: 18)),
                       const SizedBox(height: 14),
-                      sectionLabel('SIZE'),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          for (final s in CardSpan.values)
-                            ChoiceChip(
-                              label: Text(s.label),
-                              selected: pwd.span == s,
-                              labelStyle: TextStyle(
-                                  fontSize: 12.5,
-                                  color: pwd.span == s
-                                      ? KJColors.paper
-                                      : KJColors.ink),
-                              onSelected: (_) async {
-                                await repo.setSpan(pwd.instanceId, s);
-                                ref.invalidate(viewWidgetsProvider(pwd.viewId));
-                                if (ctx.mounted) Navigator.pop(ctx);
-                              },
-                            ),
-                        ],
-                      ),
+                      // SIZE changes the global grid layout — a structural
+                      // edit, so it's hidden in read-only (compare) hosts.
+                      if (!configOnly) ...[
+                        sectionLabel('SIZE'),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            for (final s in CardSpan.values)
+                              ChoiceChip(
+                                label: Text(s.label),
+                                selected: pwd.span == s,
+                                labelStyle: TextStyle(
+                                    fontSize: 12.5,
+                                    color: pwd.span == s
+                                        ? KJColors.paper
+                                        : KJColors.ink),
+                                onSelected: (_) async {
+                                  await repo.setSpan(pwd.instanceId, s);
+                                  ref.invalidate(
+                                      viewWidgetsProvider(pwd.viewId));
+                                  if (ctx.mounted) Navigator.pop(ctx);
+                                },
+                              ),
+                          ],
+                        ),
+                      ],
                       // Multi-value choices (e.g. Chart Style) keep their
                       // own labelled section of single-select chips.
                       for (final choice in module.configChoices(ctx.l10n))
@@ -1021,33 +1045,37 @@ Future<void> showWidgetMenu(
                           ],
                         ),
                       ],
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          OutlinedButton.icon(
-                            icon: const Icon(Icons.copy, size: 16),
-                            label: Text(context.l10n.duplicate),
-                            onPressed: () async {
-                              await repo.duplicate(pwd);
-                              ref.invalidate(viewWidgetsProvider(pwd.viewId));
-                              if (ctx.mounted) Navigator.pop(ctx);
-                            },
-                          ),
-                          const SizedBox(width: 10),
-                          OutlinedButton.icon(
-                            icon: const Icon(Icons.delete_outline, size: 16),
-                            style: OutlinedButton.styleFrom(
-                                foregroundColor: KJColors.maroon,
-                                side: BorderSide(color: KJColors.maroon)),
-                            label: Text(context.l10n.remove),
-                            onPressed: () async {
-                              await repo.removeInstance(pwd.instanceId);
-                              ref.invalidate(viewWidgetsProvider(pwd.viewId));
-                              if (ctx.mounted) Navigator.pop(ctx);
-                            },
-                          ),
-                        ],
-                      ),
+                      // Duplicate / remove add and delete widget instances —
+                      // structural edits, hidden in read-only (compare) hosts.
+                      if (!configOnly) ...[
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.copy, size: 16),
+                              label: Text(context.l10n.duplicate),
+                              onPressed: () async {
+                                await repo.duplicate(pwd);
+                                ref.invalidate(viewWidgetsProvider(pwd.viewId));
+                                if (ctx.mounted) Navigator.pop(ctx);
+                              },
+                            ),
+                            const SizedBox(width: 10),
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.delete_outline, size: 16),
+                              style: OutlinedButton.styleFrom(
+                                  foregroundColor: KJColors.maroon,
+                                  side: BorderSide(color: KJColors.maroon)),
+                              label: Text(context.l10n.remove),
+                              onPressed: () async {
+                                await repo.removeInstance(pwd.instanceId);
+                                ref.invalidate(viewWidgetsProvider(pwd.viewId));
+                                if (ctx.mounted) Navigator.pop(ctx);
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

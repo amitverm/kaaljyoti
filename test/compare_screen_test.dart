@@ -105,9 +105,28 @@ List<PlacedWidget> _placed(String viewId) => [
           span: CardSpan.half),
     ];
 
+// A config-bearing placed-widget set: the Yogas module exposes a
+// dasha-basis config choice, so a read-only host can still surface the
+// per-instance CONFIGURE path while hiding structural edits.
+List<PlacedWidget> _configPlaced(String viewId) => [
+      PlacedWidget(
+          instanceId: '$viewId-y',
+          viewId: viewId,
+          widgetId: 'yogas',
+          position: 0,
+          span: CardSpan.half),
+    ];
+
 List<Override> _dashboardOverrides() => [
       dashboardViewsProvider.overrideWith((ref) async => _views),
       viewWidgetsProvider.overrideWith((ref, viewId) async => _placed(viewId)),
+      moduleContextProvider.overrideWith((ref, id) async => _moduleCtx()),
+    ];
+
+List<Override> _configDashboardOverrides() => [
+      dashboardViewsProvider.overrideWith((ref) async => _views),
+      viewWidgetsProvider
+          .overrideWith((ref, viewId) async => _configPlaced(viewId)),
       moduleContextProvider.overrideWith((ref, id) async => _moduleCtx()),
     ];
 
@@ -269,10 +288,11 @@ void main() {
   });
 
   testWidgets(
-      'compare chart tabs are read-only: no add-view chip, no widget menu / '
-      'drag handle (spec §3.3)', (tester) async {
+      'compare chart tabs are read-only for STRUCTURE but keep the per-widget '
+      'CONFIGURE path (spec §3.3)', (tester) async {
     final container = ProviderContainer(overrides: [
-      ..._dashboardOverrides(),
+      // Config-bearing cards (Yogas) so the configure affordance can appear.
+      ..._configDashboardOverrides(),
       compareSubjectsProvider.overrideWith(
           (ref) async => [_fullSlot('k1', 'Alice'), _fullSlot('k2', 'Bob')]),
       compareFindingsProvider.overrideWith((ref) async => const []),
@@ -287,11 +307,10 @@ void main() {
 
     // The chart tabs render real cards…
     expect(find.byType(ModuleCard), findsWidgets);
-    // …but none of the editing affordances the home dashboard shows:
+
+    // …STRUCTURAL editing affordances stay absent:
     expect(find.widgetWithText(ActionChip, '+ New view'), findsNothing,
         reason: 'no "new view" chip in a read-only compare host');
-    expect(find.byIcon(Icons.more_horiz), findsNothing,
-        reason: 'no per-widget settings menu on compare cards');
     expect(find.byIcon(Icons.drag_indicator), findsNothing,
         reason: 'no drag-to-rearrange handle on compare cards');
     // The trailing "Add / edit widgets" button is structurally removed in
@@ -299,6 +318,26 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, 'Add / edit widgets'),
         findsNothing,
         reason: 'no add/edit-widgets button in a read-only compare host');
+
+    // …but the per-widget settings (configure) affordance IS restored:
+    expect(find.byIcon(Icons.more_horiz), findsWidgets,
+        reason: 'configure menu is available on read-only compare cards');
+
+    // Opening it exposes ONLY configure — the module's own config choices,
+    // with the structural controls (resize / duplicate / remove) gone.
+    await tester.tap(find.byIcon(Icons.more_horiz).first);
+    await tester.pumpAndSettle();
+    // A real config choice from the module is offered (Yogas' dasha basis).
+    expect(find.text('Vimshottari'), findsWidgets,
+        reason: 'configure options are present in the menu');
+    expect(find.text('Done'), findsOneWidget);
+    // Structural controls are suppressed in the read-only menu:
+    expect(find.text('SIZE'), findsNothing,
+        reason: 'no resize (SIZE) in a read-only configure menu');
+    expect(find.widgetWithText(OutlinedButton, 'Duplicate'), findsNothing,
+        reason: 'no duplicate in a read-only configure menu');
+    expect(find.widgetWithText(OutlinedButton, 'Remove'), findsNothing,
+        reason: 'no remove in a read-only configure menu');
   });
 
   testWidgets(
