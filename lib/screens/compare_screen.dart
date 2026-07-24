@@ -555,7 +555,27 @@ class _CompareTabsState extends ConsumerState<_CompareTabs>
         activeViewId: activeView,
         onSelectView: onSelect,
         scrollController: _scrolls[index],
+        // Drilling into a card opens the compare-aware module detail host
+        // (not the plain single-kundli one), carrying the whole subject
+        // set + THIS subject so the detail opens on the same chart with a
+        // subject tab bar to flip the module across every chart.
+        onOpenModule: (pwd) => _openCompareModule(slot, pwd),
       ),
+    );
+  }
+
+  /// Opens the compare module detail host for [pwd]'s module, pre-selected
+  /// on [slot]'s chart. The subject set itself is read back from
+  /// [compareSubjectsProvider] by the host; we pass the tapped subject
+  /// ref plus the card's config + originating row so config edits persist
+  /// back exactly like the single-kundli detail screen.
+  void _openCompareModule(CompareSlot slot, PlacedWidget pwd) {
+    context.push(
+      '/compare/module/${pwd.widgetId}'
+      '?subject=${Uri.encodeComponent(slot.ref)}'
+      '&instance=${Uri.encodeComponent(pwd.instanceId)}'
+      '&view=${Uri.encodeComponent(pwd.viewId)}',
+      extra: pwd.config,
     );
   }
 

@@ -11,6 +11,7 @@ import 'screens/admin_screen.dart';
 import 'screens/arrange_screen.dart';
 import 'screens/ashtakoota_screen.dart';
 import 'screens/birth_entry_screen.dart';
+import 'screens/compare_module_detail_screen.dart';
 import 'screens/compare_screen.dart';
 import 'screens/contribute_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -178,6 +179,21 @@ final _router = GoRouter(
     GoRoute(path: '/muhurta', builder: (_, __) => const MuhurtaScreen()),
     GoRoute(path: '/ashtakoota', builder: (_, __) => const AshtakootaScreen()),
     GoRoute(path: '/compare', builder: (_, __) => const CompareScreen()),
+    GoRoute(
+      path: '/compare/module/:moduleId',
+      builder: (_, state) => CompareModuleDetailScreen(
+        moduleId: state.pathParameters['moduleId']!,
+        // Which compare subject to pre-select (the chart tab the drill-in
+        // came from); the full subject set is read from the compare
+        // providers by the host.
+        subjectRef: state.uri.queryParameters['subject']!,
+        // Same trio the single-kundli module detail route carries, so
+        // config edits persist back to the (global) dashboard card.
+        initialConfig: state.extra as Map<String, dynamic>?,
+        instanceId: state.uri.queryParameters['instance'],
+        viewId: state.uri.queryParameters['view'],
+      ),
+    ),
     GoRoute(path: '/signin', builder: (_, __) => const SignInScreen()),
     GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
     // Not in KJNavPill/any visible nav — reachable only via the

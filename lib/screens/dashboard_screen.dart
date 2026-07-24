@@ -212,6 +212,7 @@ class DashboardBody extends ConsumerWidget {
     this.moduleCtx,
     this.limitedCardBuilder,
     this.scrollController,
+    this.onOpenModule,
   });
 
   final String kundliId;
@@ -229,6 +230,12 @@ class DashboardBody extends ConsumerWidget {
   /// Host-owned scroll controller shared across tabs. Null → the body
   /// keeps its own per-view controller (home dashboard behaviour).
   final ScrollController? scrollController;
+
+  /// Overrides what a card's "open detail" tap does. Null → the default
+  /// home-dashboard behaviour (push the single-kundli [ModuleDetailScreen]
+  /// route). The compare screen supplies this to open the compare-aware
+  /// module detail host with the tapped subject instead.
+  final void Function(PlacedWidget pwd)? onOpenModule;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -255,6 +262,7 @@ class DashboardBody extends ConsumerWidget {
                 moduleCtx: moduleCtx,
                 limitedCardBuilder: limitedCardBuilder,
                 externalScroll: scrollController,
+                onOpenModule: onOpenModule,
               ),
             ),
           ],
@@ -468,12 +476,14 @@ class _WidgetGrid extends ConsumerStatefulWidget {
     required this.moduleCtx,
     required this.limitedCardBuilder,
     required this.externalScroll,
+    required this.onOpenModule,
   });
   final DashboardView view;
   final String kundliId;
   final ModuleContext? moduleCtx;
   final Widget Function(BuildContext, PlacedWidget)? limitedCardBuilder;
   final ScrollController? externalScroll;
+  final void Function(PlacedWidget pwd)? onOpenModule;
 
   @override
   ConsumerState<_WidgetGrid> createState() => _WidgetGridState();
@@ -732,17 +742,19 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
     return ModuleCard(
       title: moduleInstanceTitle(module, pwd.config, context.l10n),
       onDetail: module.meta.hasDetailView
-          ? () => context.push(
-              '/kundli/${moduleCtx!.kundli.id}/module/${module.meta.id}'
-              '?instance=${Uri.encodeComponent(pwd.instanceId)}'
-              '&view=${Uri.encodeComponent(pwd.viewId)}',
-              // Carry this card's own per-instance config (e.g. which
-              // varga a Divisional Chart card is set to) so the detail
-              // view shows the SAME thing the card does — otherwise it
-              // has no way to tell which of possibly several instances
-              // of this module was tapped. The instance/view ids let the
-              // detail view persist config changes back to this card.
-              extra: pwd.config)
+          ? () => widget.onOpenModule != null
+              ? widget.onOpenModule!(pwd)
+              : context.push(
+                  '/kundli/${moduleCtx!.kundli.id}/module/${module.meta.id}'
+                  '?instance=${Uri.encodeComponent(pwd.instanceId)}'
+                  '&view=${Uri.encodeComponent(pwd.viewId)}',
+                  // Carry this card's own per-instance config (e.g. which
+                  // varga a Divisional Chart card is set to) so the detail
+                  // view shows the SAME thing the card does — otherwise it
+                  // has no way to tell which of possibly several instances
+                  // of this module was tapped. The instance/view ids let the
+                  // detail view persist config changes back to this card.
+                  extra: pwd.config)
           : null,
       onSettings: () => showWidgetMenu(context, ref, module, pwd),
       wrapHeader: wrapHeader,
