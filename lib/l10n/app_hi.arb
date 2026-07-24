@@ -2625,6 +2625,7 @@
   "cmpAge": "Age {age}",
   "cmpFromMoon": "Moon",
   "cmpFromLagna": "Lagna",
+  "cmpMoonDayLevel": "Moon transit is day-level (approximate)",
   "cmpFndLagnaSign": "Lagna in {sign}",
   "cmpFndLagnaNak": "Lagna nakshatra: {nakshatra}",
   "cmpFndMoonSign": "Moon in {sign}",

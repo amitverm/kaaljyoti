@@ -5417,6 +5417,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get cmpFromLagna => 'Lagna';
 
   @override
+  String get cmpMoonDayLevel => 'Moon transit is day-level (approximate)';
+
+  @override
   String cmpFndLagnaSign(String sign) {
     return 'Lagna in $sign';
   }

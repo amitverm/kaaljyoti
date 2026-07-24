@@ -185,8 +185,10 @@ final _router = GoRouter(
         moduleId: state.pathParameters['moduleId']!,
         // Which compare subject to pre-select (the chart tab the drill-in
         // came from); the full subject set is read from the compare
-        // providers by the host.
-        subjectRef: state.uri.queryParameters['subject']!,
+        // providers by the host. Null-safe: a missing `subject` param (a
+        // malformed/stale deep link) falls back to the first subject in the
+        // host rather than throwing.
+        subjectRef: state.uri.queryParameters['subject'],
         // Same trio the single-kundli module detail route carries, so
         // config edits persist back to the (global) dashboard card.
         initialConfig: state.extra as Map<String, dynamic>?,

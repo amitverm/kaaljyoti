@@ -45,26 +45,14 @@ class CompareScreen extends ConsumerWidget {
           if (refs.isNotEmpty)
             PopupMenuButton<String>(
               onSelected: (v) {
-                if (v == 'customize') {
-                  final slots = slotsAsync.value ?? const [];
-                  final activeView = ref.read(compareViewIdProvider);
-                  // Any resolvable chart id works for the Arrange route
-                  // (views are global); prefer a full subject's id.
-                  final id = slots
-                      .where((s) => s.kundliId != null)
-                      .map((s) => s.kundliId)
-                      .firstOrNull;
-                  if (id != null && activeView != null) {
-                    context.push('/kundli/$id/arrange/$activeView');
-                  }
-                } else if (v == 'new') {
+                // Compare is read-only: editing views happens only from the
+                // main kundli area, so the only action here is "New
+                // comparison" (clears the set).
+                if (v == 'new') {
                   ref.read(compareSetProvider.notifier).clear();
                 }
               },
               itemBuilder: (ctx) => [
-                PopupMenuItem(
-                    value: 'customize',
-                    child: Text(ctx.l10n.cmpCustomizeView)),
                 PopupMenuItem(
                     value: 'new', child: Text(ctx.l10n.cmpNewComparison)),
               ],
@@ -540,6 +528,7 @@ class _CompareTabsState extends ConsumerState<_CompareTabs>
         activeViewId: activeView,
         onSelectView: onSelect,
         scrollController: _scrolls[index],
+        readOnly: true,
         limitedCardBuilder: (ctx, pwd) => _limitedCard(ctx, slot, pwd),
       );
     }
@@ -555,6 +544,7 @@ class _CompareTabsState extends ConsumerState<_CompareTabs>
         activeViewId: activeView,
         onSelectView: onSelect,
         scrollController: _scrolls[index],
+        readOnly: true,
         // Drilling into a card opens the compare-aware module detail host
         // (not the plain single-kundli one), carrying the whole subject
         // set + THIS subject so the detail opens on the same chart with a
@@ -910,25 +900,49 @@ class _EventDetailSheet extends StatelessWidget {
 
   Widget _transitGrid(BuildContext context, CompareEventDetail d) {
     final l10n = context.l10n;
-    return Table(
-      columnWidths: const {
-        0: FlexColumnWidth(2),
-        1: FlexColumnWidth(1.4),
-        2: FlexColumnWidth(1.4),
-      },
+    // The Moon appears in the grid but never as a finding — event dates are
+    // date-only and the Moon moves ~13°/day, so its house is day-level
+    // approximate. Mark its cells with "~" and footnote the grid.
+    final hasMoon = d.transitHousesFromMoon[Planet.moon] != null ||
+        d.transitHousesFromLagna[Planet.moon] != null;
+    String cell(Planet p, int? house) {
+      if (house == null) return '—';
+      return p == Planet.moon ? '~$house' : '$house';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TableRow(children: [
-          _th(''),
-          _th(l10n.cmpFromMoon),
-          _th(l10n.cmpFromLagna),
-        ]),
-        for (final p in Planet.values)
-          if (d.transitHousesFromMoon[p] != null)
+        Table(
+          columnWidths: const {
+            0: FlexColumnWidth(2),
+            1: FlexColumnWidth(1.4),
+            2: FlexColumnWidth(1.4),
+          },
+          children: [
             TableRow(children: [
-              _td(p.label(l10n)),
-              _td('${d.transitHousesFromMoon[p]}'),
-              _td('${d.transitHousesFromLagna[p]}'),
+              _th(''),
+              _th(l10n.cmpFromMoon),
+              _th(l10n.cmpFromLagna),
             ]),
+            for (final p in Planet.values)
+              if (d.transitHousesFromMoon[p] != null ||
+                  d.transitHousesFromLagna[p] != null)
+                TableRow(children: [
+                  _td(p.label(l10n)),
+                  _td(cell(p, d.transitHousesFromMoon[p])),
+                  _td(cell(p, d.transitHousesFromLagna[p])),
+                ]),
+          ],
+        ),
+        if (hasMoon)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              l10n.cmpMoonDayLevel,
+              style: KJTheme.mono(size: 10, color: KJColors.inkSoft),
+            ),
+          ),
       ],
     );
   }

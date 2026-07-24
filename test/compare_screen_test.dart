@@ -268,6 +268,66 @@ void main() {
     expect(controller.offset, 80);
   });
 
+  testWidgets(
+      'compare chart tabs are read-only: no add-view chip, no widget menu / '
+      'drag handle (spec §3.3)', (tester) async {
+    final container = ProviderContainer(overrides: [
+      ..._dashboardOverrides(),
+      compareSubjectsProvider.overrideWith(
+          (ref) async => [_fullSlot('k1', 'Alice'), _fullSlot('k2', 'Bob')]),
+      compareFindingsProvider.overrideWith((ref) async => const []),
+    ]);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: _wrap(const CompareScreen()),
+    ));
+    await tester.pumpAndSettle();
+
+    // The chart tabs render real cards…
+    expect(find.byType(ModuleCard), findsWidgets);
+    // …but none of the editing affordances the home dashboard shows:
+    expect(find.widgetWithText(ActionChip, '+ New view'), findsNothing,
+        reason: 'no "new view" chip in a read-only compare host');
+    expect(find.byIcon(Icons.more_horiz), findsNothing,
+        reason: 'no per-widget settings menu on compare cards');
+    expect(find.byIcon(Icons.drag_indicator), findsNothing,
+        reason: 'no drag-to-rearrange handle on compare cards');
+    // The trailing "Add / edit widgets" button is structurally removed in
+    // read-only mode (the whole editing block is gated out).
+    expect(find.widgetWithText(OutlinedButton, 'Add / edit widgets'),
+        findsNothing,
+        reason: 'no add/edit-widgets button in a read-only compare host');
+  });
+
+  testWidgets(
+      'home dashboard (non-read-only) keeps the editing affordances (spec §3.3)',
+      (tester) async {
+    final container = ProviderContainer(overrides: _dashboardOverrides());
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: _wrap(DashboardBody(
+        kundliId: 'k1',
+        moduleCtx: _moduleCtx(),
+        activeViewId: 'v1',
+        onSelectView: (_) {},
+        // readOnly defaults to false — the home-dashboard contract.
+      )),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ModuleCard), findsWidgets);
+    // The full editing surface is present (the same affordances the
+    // read-only compare host suppresses): the new-view chip, the per-widget
+    // settings menu, and the drag-to-rearrange handle.
+    expect(find.widgetWithText(ActionChip, '+ New view'), findsOneWidget);
+    expect(find.byIcon(Icons.more_horiz), findsWidgets);
+    expect(find.byIcon(Icons.drag_indicator), findsWidgets);
+  });
+
   testWidgets('Similarities tab renders findings from a fake provider '
       '(spec §3.4)', (tester) async {
     final findings = <CompareFinding>[

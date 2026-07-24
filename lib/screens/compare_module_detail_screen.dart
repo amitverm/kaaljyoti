@@ -43,8 +43,10 @@ class CompareModuleDetailScreen extends ConsumerStatefulWidget {
   final String moduleId;
 
   /// The compare-set ref (local kundli id or `mk:<code>`) whose chart tab
-  /// the user drilled in from — pre-selected on entry.
-  final String subjectRef;
+  /// the user drilled in from — pre-selected on entry. Null when the deep
+  /// link omitted it (malformed/stale link); the host then pre-selects the
+  /// first subject rather than throwing.
+  final String? subjectRef;
 
   /// The tapped card's per-instance config, and the dashboard row it came
   /// from — same trio [ModuleDetailScreen] receives, so config edits here
@@ -120,7 +122,7 @@ class _CompareModuleTabs extends ConsumerStatefulWidget {
 
   final List<CompareSlot> slots;
   final String moduleId;
-  final String preselectRef;
+  final String? preselectRef;
   final Map<String, dynamic>? configOverride;
   final void Function(Map<String, dynamic> config) onConfigChanged;
 

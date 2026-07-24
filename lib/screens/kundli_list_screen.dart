@@ -242,7 +242,7 @@ class _KundliRow extends ConsumerWidget {
       if (current.contains(kundli.id)) {
         current.remove(kundli.id);
       } else {
-        if (current.length >= 4) {
+        if (current.length >= CompareSetNotifier.maxCharts) {
           ScaffoldMessenger.of(context)
               .showSnackBar(SnackBar(content: Text(l10n.klCompareCap)));
           return;

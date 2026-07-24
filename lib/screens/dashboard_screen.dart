@@ -213,11 +213,19 @@ class DashboardBody extends ConsumerWidget {
     this.limitedCardBuilder,
     this.scrollController,
     this.onOpenModule,
+    this.readOnly = false,
   });
 
   final String kundliId;
   final String? activeViewId;
   final ValueChanged<String> onSelectView;
+
+  /// Read-only mode: the view chips become pure switchers (no "new view"
+  /// chip, no long-press rename/delete) and cards lose their editing
+  /// affordances (per-widget menu, drag-rearrange, drop targets, the
+  /// add/edit-widgets button). Set by the Kundli Compare hosts — in
+  /// compare, editing happens only from the main kundli area (spec §3.3).
+  final bool readOnly;
 
   /// The chart's data. Null → limited mode (see class doc).
   final ModuleContext? moduleCtx;
@@ -263,6 +271,7 @@ class DashboardBody extends ConsumerWidget {
                 limitedCardBuilder: limitedCardBuilder,
                 externalScroll: scrollController,
                 onOpenModule: onOpenModule,
+                readOnly: readOnly,
               ),
             ),
           ],
@@ -283,8 +292,10 @@ class DashboardBody extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
-                // Long-press a view chip for rename/delete.
-                onLongPress: () => _viewActions(context, ref, views, v),
+                // Long-press a view chip for rename/delete — suppressed in
+                // read-only (compare) mode, where chips are pure switchers.
+                onLongPress:
+                    readOnly ? null : () => _viewActions(context, ref, views, v),
                 child: ChoiceChip(
                   label: Text(v.name),
                   selected: v.id == active.id,
@@ -294,10 +305,13 @@ class DashboardBody extends ConsumerWidget {
                 ),
               ),
             ),
-          ActionChip(
-            label: Text(context.l10n.dbNewView),
-            onPressed: () => _newView(context, ref),
-          ),
+          // The "new view" affordance is hidden in read-only (compare)
+          // mode — views are created/edited only from the main kundli area.
+          if (!readOnly)
+            ActionChip(
+              label: Text(context.l10n.dbNewView),
+              onPressed: () => _newView(context, ref),
+            ),
         ],
       ),
     );
@@ -385,8 +399,9 @@ class DashboardBody extends ConsumerWidget {
                       );
                       if (ok == true) {
                         await repo.deleteView(view.id);
-                        ref.read(activeViewIdProvider.notifier).state =
-                            views.firstWhere((v) => v.id != view.id).id;
+                        // Fall off the deleted view via the host's own
+                        // selection wiring (home → activeViewIdProvider);
+                        // no direct provider write here.
                         onSelectView(views.firstWhere((v) => v.id != view.id).id);
                         ref.invalidate(dashboardViewsProvider);
                       }
@@ -463,7 +478,8 @@ class DashboardBody extends ConsumerWidget {
         .read(dashboardRepoProvider)
         .createView(name, seed: template.widgets);
     ref.invalidate(dashboardViewsProvider);
-    ref.read(activeViewIdProvider.notifier).state = view.id;
+    // Select the new view through the host's own wiring (home →
+    // activeViewIdProvider); no direct provider write here.
     onSelectView(view.id);
   }
 }
@@ -477,6 +493,7 @@ class _WidgetGrid extends ConsumerStatefulWidget {
     required this.limitedCardBuilder,
     required this.externalScroll,
     required this.onOpenModule,
+    required this.readOnly,
   });
   final DashboardView view;
   final String kundliId;
@@ -484,6 +501,7 @@ class _WidgetGrid extends ConsumerStatefulWidget {
   final Widget Function(BuildContext, PlacedWidget)? limitedCardBuilder;
   final ScrollController? externalScroll;
   final void Function(PlacedWidget pwd)? onOpenModule;
+  final bool readOnly;
 
   @override
   ConsumerState<_WidgetGrid> createState() => _WidgetGridState();
@@ -493,6 +511,10 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
   DashboardView get view => widget.view;
   ModuleContext? get moduleCtx => widget.moduleCtx;
   bool get limited => widget.moduleCtx == null;
+
+  /// Layout editing is available only for a full chart that isn't hosted
+  /// read-only (compare). Limited subjects and compare tabs are view-only.
+  bool get editable => !limited && !widget.readOnly;
 
   // The board's scroll controller. When the host owns one (compare's
   // shared per-tab controller) we use it directly; otherwise we keep an
@@ -527,9 +549,10 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
       error: (e, _) => EmptyState(message: context.l10n.dbWidgetsError('$e')),
       data: (placed) {
         if (placed.isEmpty) {
-          // Limited subjects get a plain empty state (no seeding/arrange
-          // affordances — layout is edited on a full chart).
-          if (limited) {
+          // Limited subjects and read-only (compare) hosts get a plain
+          // empty state (no seeding/arrange affordances — layout is edited
+          // on a full chart from the main kundli area).
+          if (!editable) {
             return EmptyState(message: context.l10n.dbViewEmpty);
           }
           return EmptyState(
@@ -592,7 +615,12 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
                           flex: units(row[i].span),
                           child: limited
                               ? widget.limitedCardBuilder!(context, row[i])
-                              : _draggableCard(context, ref, row[i], placed),
+                              : editable
+                                  ? _draggableCard(context, ref, row[i], placed)
+                                  // Read-only (compare) full tab: a plain
+                                  // card — no drag handle, no settings menu.
+                                  : _card(context, ref, row[i],
+                                      showSettings: false),
                         ),
                       ],
                       // Empty remainder of an incomplete row: also a
@@ -604,18 +632,19 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
                         Expanded(
                           flex: 6 -
                               row.fold<int>(0, (sum, p) => sum + units(p.span)),
-                          child: limited
-                              ? const SizedBox()
-                              : _emptySlotTarget(
-                                  ref, placed, row.last.instanceId),
+                          child: editable
+                              ? _emptySlotTarget(
+                                  ref, placed, row.last.instanceId)
+                              : const SizedBox(),
                         ),
                       ],
                     ],
                   ),
                 ),
-              // Layout-editing affordances only on a full chart — compare
-              // is read-only layout-wise (edits happen on the dashboard).
-              if (!limited) ...[
+              // Layout-editing affordances only on a full chart that isn't
+              // hosted read-only — compare is view-only (edits happen on
+              // the main kundli dashboard).
+              if (editable) ...[
                 // Drop zone at the end of the board: move to last.
                 _emptySlotTarget(ref, placed,
                     placed.isEmpty ? null : placed.last.instanceId,
@@ -735,7 +764,7 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
   }
 
   Widget _card(BuildContext context, WidgetRef ref, PlacedWidget pwd,
-      {Widget Function(Widget header)? wrapHeader}) {
+      {Widget Function(Widget header)? wrapHeader, bool showSettings = true}) {
     final module = moduleById(pwd.widgetId);
     if (module == null) return const SizedBox();
     final ctx = moduleCtx!.withConfig(pwd.config);
@@ -756,7 +785,10 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
                   // detail view persist config changes back to this card.
                   extra: pwd.config)
           : null,
-      onSettings: () => showWidgetMenu(context, ref, module, pwd),
+      // No per-widget menu (size / configure / duplicate / remove) in
+      // read-only (compare) cards — editing happens on the main dashboard.
+      onSettings:
+          showSettings ? () => showWidgetMenu(context, ref, module, pwd) : null,
       wrapHeader: wrapHeader,
       child: module.cardView(context, ctx),
     );

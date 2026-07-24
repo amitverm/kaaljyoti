@@ -374,6 +374,97 @@ void main() {
     expect(neutral!.eventDetails!.every((d) => d.mdLord == null), isTrue);
   });
 
+  test('chart missing a graha participates without crashing (§4.2 guard)', () {
+    // Both charts omit Ketu entirely (a legacy/partial chart). The engine
+    // must not throw, must still emit findings for present grahas, and must
+    // simply have no Ketu finding.
+    final longs = {..._baseLongs, Planet.moon: 14.0, Planet.saturn: 340.0}
+      ..remove(Planet.ketu);
+
+    late final List<CompareFinding> findings;
+    expect(() {
+      findings = computeCompareFindings(
+        subjects: [
+          _entry('A', ascendant: 15, longs: longs),
+          _entry('B', ascendant: 15, longs: longs),
+        ],
+        dashaSystem: DashaSystem.vimshottari,
+        now: _now,
+        transitPositions: _fixedSky(_baseLongs),
+      );
+    }, returnsNormally);
+
+    // Present grahas still match…
+    expect(_find(findings, 'graha-sign:saturn:pisces')?.strength, 2);
+    // …but the absent Ketu never yields a placement/dignity finding.
+    expect(findings.where((f) => f.key.contains(':ketu:')), isEmpty);
+  });
+
+  test('chart missing the Moon skips Moon rules but keeps the rest (§4.2 guard)',
+      () {
+    // A has no Moon; B has one. Moon-based findings simply don't appear,
+    // and nothing throws.
+    final aLongs = {..._baseLongs, Planet.saturn: 340.0}..remove(Planet.moon);
+    final bLongs = {..._baseLongs, Planet.saturn: 340.0, Planet.moon: 14.0};
+
+    late final List<CompareFinding> findings;
+    expect(() {
+      findings = computeCompareFindings(
+        subjects: [
+          _entry('A', ascendant: 15, longs: aLongs, withSnapshot: false),
+          _entry('B', ascendant: 15, longs: bLongs, withSnapshot: false),
+        ],
+        dashaSystem: DashaSystem.vimshottari,
+        now: _now,
+        transitPositions: _fixedSky(_baseLongs),
+      );
+    }, returnsNormally);
+
+    // Saturn still matches; no Moon sign/nakshatra finding (only one has it).
+    expect(_find(findings, 'graha-sign:saturn:pisces')?.strength, 2);
+    expect(findings.where((f) => f.key.startsWith('moon-')), isEmpty);
+  });
+
+  test('Moon never emits an event-transit finding, even on a unanimous exact '
+      'match — but stays in the detail grid (§4.3)', () {
+    final longs = {..._baseLongs, Planet.moon: 5.0}; // Aries
+    // Identical charts, same exact-dated marriage, and a fixed sky: this is
+    // the unanimous, exact-dated case that WOULD surface a fast mover.
+    final findings = computeCompareFindings(
+      subjects: [
+        _entry('A',
+            ascendant: 15,
+            longs: longs,
+            withSnapshot: false,
+            events: [_marriage(date: DateTime(1998, 6, 15))]),
+        _entry('B',
+            ascendant: 15,
+            longs: longs,
+            withSnapshot: false,
+            events: [_marriage(date: DateTime(1998, 6, 15))]),
+      ],
+      dashaSystem: DashaSystem.vimshottari,
+      now: _now,
+      transitPositions: _fixedSky({
+        ..._baseLongs,
+        Planet.moon: 5.0, // transiting Moon → 1st from natal Aries Moon
+        Planet.venus: 45.0, // Taurus → 2nd (a fast mover that DOES surface)
+      }),
+    );
+
+    // A fast mover still surfaces on the unanimous exact match…
+    expect(_find(findings, 'event-transit:marriage:venus:moon:2')?.strength, 2);
+    // …but the Moon-as-planet never does, in either frame.
+    expect(findings.where((f) => f.key.startsWith('event-transit:marriage:moon:')),
+        isEmpty);
+
+    // The Moon still appears in the per-event detail grid (day-level).
+    final venus = _find(findings, 'event-transit:marriage:venus:moon:2')!;
+    final detail = venus.eventDetails!.first;
+    expect(detail.transitHousesFromMoon.containsKey(Planet.moon), isTrue);
+    expect(detail.transitHousesFromLagna.containsKey(Planet.moon), isTrue);
+  });
+
   test('sanity: Sade Sati phase surfaces on shared category', () {
     // Saturn in the 8th (Scorpio) from an Aries Moon is the 4th/8th
     // dhaiya — a shared "smallPanoti" finding.

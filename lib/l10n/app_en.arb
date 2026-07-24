@@ -3311,6 +3311,7 @@
   },
   "cmpFromMoon": "Moon",
   "cmpFromLagna": "Lagna",
+  "cmpMoonDayLevel": "Moon transit is day-level (approximate)",
   "cmpFndLagnaSign": "Lagna in {sign}",
   "@cmpFndLagnaSign": {
     "placeholders": { "sign": { "type": "String" } }

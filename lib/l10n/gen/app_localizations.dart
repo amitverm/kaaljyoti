@@ -9645,6 +9645,12 @@ abstract class AppLocalizations {
   /// **'Lagna'**
   String get cmpFromLagna;
 
+  /// No description provided for @cmpMoonDayLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Moon transit is day-level (approximate)'**
+  String get cmpMoonDayLevel;
+
   /// No description provided for @cmpFndLagnaSign.
   ///
   /// In en, this message translates to:

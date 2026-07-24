@@ -68,26 +68,56 @@ class CompareChart {
   ZodiacSign get lagnaSign => ZodiacSign.fromLongitude(ascendant);
   Nakshatra get lagnaNakshatra => Nakshatra.fromLongitude(ascendant);
 
+  // Non-null accessors for callers that already know the graha is present
+  // (e.g. iterating [longitudes].keys in the positions card).
   double lonOf(Planet p) => longitudes[p]!;
   ZodiacSign signOf(Planet p) => ZodiacSign.fromLongitude(longitudes[p]!);
-  Nakshatra nakOf(Planet p) => Nakshatra.fromLongitude(longitudes[p]!);
-  int padaOf(Planet p) => Nakshatra.padaFromLongitude(longitudes[p]!);
 
-  ZodiacSign get moonSign => signOf(Planet.moon);
-  Nakshatra get moonNakshatra => nakOf(Planet.moon);
+  // ---- Nullable lookups (spec: "never throws on missing data") ----------
+  // A subject whose chart lacks a graha simply doesn't participate in that
+  // graha's rules — the engine skips nulls rather than throwing.
+  double? lonOrNull(Planet p) => longitudes[p];
+  ZodiacSign? signOrNull(Planet p) {
+    final l = longitudes[p];
+    return l == null ? null : ZodiacSign.fromLongitude(l);
+  }
+
+  Nakshatra? nakOrNull(Planet p) {
+    final l = longitudes[p];
+    return l == null ? null : Nakshatra.fromLongitude(l);
+  }
+
+  int? padaOrNull(Planet p) {
+    final l = longitudes[p];
+    return l == null ? null : Nakshatra.padaFromLongitude(l);
+  }
+
+  /// Moon sign / nakshatra, null when the Moon is absent from this chart
+  /// (Moon rules then skip for this subject).
+  ZodiacSign? get moonSignOrNull => signOrNull(Planet.moon);
+  Nakshatra? get moonNakshatraOrNull => nakOrNull(Planet.moon);
 
   /// Whole-sign house (1–12) a sidereal longitude falls in, counted from
   /// the lagna sign (Vedic default) — mirrors [AstroSnapshot.houseOf].
   int houseOf(double longitude) =>
       _wholeSignHouse(longitude, lagnaSign);
 
-  int houseOfPlanet(Planet p) => houseOf(longitudes[p]!);
+  int? houseOfPlanetOrNull(Planet p) {
+    final l = longitudes[p];
+    return l == null ? null : houseOf(l);
+  }
 
-  /// Dignity via [dignityOf] as-is (§4.2 rule 5) — carries the same
-  /// value users see elsewhere in the app; speed is irrelevant to it.
-  PlanetDignity dignity(Planet p) => dignityOf(
-        PlanetPosition(planet: p, longitude: longitudes[p]!, latitude: 0, speed: 0),
-      );
+  /// Dignity via [dignityOf] as-is (§4.2 rule 5) — carries the same value
+  /// users see elsewhere in the app; speed is irrelevant to it. Null when
+  /// the graha is absent.
+  PlanetDignity? dignityOrNull(Planet p) {
+    final l = longitudes[p];
+    return l == null
+        ? null
+        : dignityOf(
+            PlanetPosition(planet: p, longitude: l, latitude: 0, speed: 0),
+          );
+  }
 
   /// Retrograde state, or null when unknown (no stored speed).
   bool? isRetrograde(Planet p) {
@@ -303,13 +333,16 @@ List<CompareFinding> _lagnaMoonFindings(List<CompareEntry> subjects) {
       (s) => s.chart.lagnaNakshatra,
       (v) => 'lagna-nak:${v.name}', (v) => {'nakshatra': v.displayName}));
   out.addAll(_byValue<ZodiacSign>(subjects, 'lagnaMoon',
-      (s) => s.chart.moonSign,
+      (s) => s.chart.moonSignOrNull,
       (v) => 'moon-sign:${v.name}', (v) => {'sign': v.western}));
 
   // Moon nakshatra, then pada ONLY within a shared nakshatra (§4.2.2).
+  // A subject with no Moon simply doesn't join the Moon-nakshatra buckets.
   final nakBuckets = <Nakshatra, List<CompareEntry>>{};
   for (final s in subjects) {
-    nakBuckets.putIfAbsent(s.chart.moonNakshatra, () => []).add(s);
+    final nak = s.chart.moonNakshatraOrNull;
+    if (nak == null) continue;
+    nakBuckets.putIfAbsent(nak, () => []).add(s);
   }
   nakBuckets.forEach((nak, group) {
     if (group.length < 2) return;
@@ -322,7 +355,7 @@ List<CompareFinding> _lagnaMoonFindings(List<CompareEntry> subjects) {
     ));
     // Pada sub-groups within this shared nakshatra.
     out.addAll(_byValue<int>(group, 'lagnaMoon',
-        (s) => s.chart.padaOf(Planet.moon),
+        (s) => s.chart.padaOrNull(Planet.moon),
         (p) => 'moon-pada:${nak.name}:$p',
         (p) => {'nakshatra': nak.displayName, 'pada': '$p'}));
   });
@@ -336,11 +369,11 @@ List<CompareFinding> _placementFindings(List<CompareEntry> subjects) {
   final out = <CompareFinding>[];
   for (final p in Planet.values) {
     out.addAll(_byValue<ZodiacSign>(subjects, 'placements',
-        (s) => s.chart.signOf(p),
+        (s) => s.chart.signOrNull(p),
         (v) => 'graha-sign:${p.name}:${v.name}',
         (v) => {'planet': p.displayName, 'sign': v.western}));
     out.addAll(_byValue<int>(subjects, 'placements',
-        (s) => s.chart.houseOfPlanet(p),
+        (s) => s.chart.houseOfPlanetOrNull(p),
         (h) => 'graha-house:${p.name}:$h',
         (h) => {'planet': p.displayName, 'house': '$h'}));
   }
@@ -368,8 +401,8 @@ List<CompareFinding> _dignityFindings(List<CompareEntry> subjects) {
     // Shared dignity state (exalted / debilitated / own sign); 'none'
     // (and the nodes, always none) are not a finding.
     out.addAll(_byValue<PlanetDignity>(subjects, 'dignity', (s) {
-      final d = s.chart.dignity(p);
-      return d == PlanetDignity.none ? null : d;
+      final d = s.chart.dignityOrNull(p);
+      return (d == null || d == PlanetDignity.none) ? null : d;
     }, (d) => 'graha-dignity:${p.name}:${d.name}',
         (d) => {'planet': p.displayName, 'dignity': d.name}));
 
@@ -398,12 +431,16 @@ List<CompareFinding> _dignityFindings(List<CompareEntry> subjects) {
 /// Rahu/Ketu are a single axis (§4.3.5), handled via [Planet.rahu].
 const _slowSingles = [Planet.saturn, Planet.jupiter];
 
-/// Fast movers (Sun→Venus, Mars included — spec lists slow movers as
-/// Saturn/Jupiter/nodes only) surface as findings ONLY on a unanimous,
-/// exact-dated match across every selected chart.
+/// Fast movers (Sun, Mars, Mercury, Venus) surface as findings ONLY on a
+/// unanimous, exact-dated match across every selected chart.
+///
+/// The Moon is deliberately EXCLUDED: event dates are stored date-only and
+/// the Moon moves ~13°/day, so a Moon-house match is pseudo-precision. It
+/// never emits an event-transit finding — it still appears in the per-event
+/// detail grid ([CompareEventDetail.transitHousesFromMoon]/[…FromLagna]),
+/// where the UI marks it day-level-approximate.
 const _fastMovers = [
   Planet.sun,
-  Planet.moon,
   Planet.mars,
   Planet.mercury,
   Planet.venus,
@@ -590,9 +627,11 @@ CompareEventDetail _buildDetail(
   }
 
   // Transits (§4.3): the sky at the event date, as whole-sign houses from
-  // the natal Moon and lagna. Works for legacy charts too.
+  // the natal Moon and lagna. Works for legacy charts too. If this chart
+  // has no natal Moon, the house-from-Moon frame (and Sade Sati) are simply
+  // omitted for this subject rather than throwing.
   final sky = transitPositions(resolved.date);
-  final moonSign = s.chart.moonSign;
+  final moonSign = s.chart.moonSignOrNull;
   final lagnaSign = s.chart.lagnaSign;
   final fromMoon = <Planet, int>{};
   final fromLagna = <Planet, int>{};
@@ -600,11 +639,11 @@ CompareEventDetail _buildDetail(
     final lon = sky[p];
     if (lon == null) continue;
     final sign = ZodiacSign.fromLongitude(lon);
-    fromMoon[p] = _relHouse(sign, moonSign);
+    if (moonSign != null) fromMoon[p] = _relHouse(sign, moonSign);
     fromLagna[p] = _relHouse(sign, lagnaSign);
   }
   final satLon = sky[Planet.saturn];
-  final sade = satLon == null
+  final sade = (satLon == null || moonSign == null)
       ? null
       : _sadePhase(ZodiacSign.fromLongitude(satLon), moonSign);
 
