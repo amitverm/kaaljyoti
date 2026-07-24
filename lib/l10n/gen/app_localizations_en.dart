@@ -4711,10 +4711,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get akPdfDisclaimer =>
-      'Checks Mars in 1/2/4/7/8/12 from both Lagna and Moon. Ashtakoota tables per guna_milan.dart doc comments — not validated against a printed reference; cross-check before relying on this for consultations.';
+      'Checks Mars in 1/2/4/7/8/12 from both Lagna and Moon. Ashtakoota tables follow the classical chakra as printed in Saral Jyotish (matching Parashara\'s Light); some sources follow variant tables, so totals can differ.';
 
   @override
   String get akKootaBreakdown => 'Koota breakdown';
+
+  @override
+  String get akTableConvention =>
+      'Yoni and other koota tables follow the classical chakra as printed in Saral Jyotish (matches Parashara\'s Light); some sources (e.g. DrikPanchang) follow variant tables.';
 
   @override
   String get akMangalDosha => 'Mangal Dosha';

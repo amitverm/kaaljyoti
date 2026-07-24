@@ -4705,10 +4705,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get akPdfDisclaimer =>
-      'लग्न और चंद्र दोनों से 1/2/4/7/8/12 में मंगल की जाँच करता है। अष्टकूट तालिकाएँ guna_milan.dart के दस्तावेज़ अनुसार — किसी मुद्रित संदर्भ से सत्यापित नहीं; परामर्श हेतु उपयोग से पहले क्रॉस-चेक करें।';
+      'लग्न और चंद्र दोनों से 1/2/4/7/8/12 में मंगल की जाँच करता है। अष्टकूट तालिकाएँ सरल ज्योतिष में मुद्रित शास्त्रीय चक्र के अनुसार हैं (पराशर लाइट से मेल); कुछ स्रोत भिन्न तालिकाएँ अपनाते हैं, अतः कुल अंक भिन्न हो सकते हैं।';
 
   @override
   String get akKootaBreakdown => 'कूट विश्लेषण';
+
+  @override
+  String get akTableConvention =>
+      'Yoni and other koota tables follow the classical chakra as printed in Saral Jyotish (matches Parashara\'s Light); some sources (e.g. DrikPanchang) follow variant tables.';
 
   @override
   String get akMangalDosha => 'मंगल दोष';

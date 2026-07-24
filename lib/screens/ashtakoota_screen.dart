@@ -162,7 +162,18 @@ class _MatchBody extends ConsumerWidget {
         const SizedBox(height: 12),
         ModuleCard(
           title: context.l10n.akKootaBreakdown,
-          child: _KootaTable(result: result),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _KootaTable(result: result),
+              const SizedBox(height: 10),
+              Text(
+                context.l10n.akTableConvention,
+                style: TextStyle(
+                    fontSize: 11, color: KJColors.inkSoft, height: 1.35),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         ModuleCard(

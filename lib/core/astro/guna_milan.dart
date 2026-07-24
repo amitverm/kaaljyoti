@@ -1,14 +1,15 @@
 /// Ashtakoota Guna Milan — the classical 8-koota (36-point) marriage
 /// compatibility match between two Moon positions.
 ///
-/// SOURCES: all eight tables below are transcribed from the Saravali
-/// project's from-source documentation of each koota (the same
-/// project whose Shadbala pages this codebase's shadbala.dart cross-
-/// checked against), itself citing the Maitreya implementation for
-/// the handful of kootas (Vashya, Yoni, Gana) that have more than one
-/// published variant. Cross-check totals against 2–3 published
-/// matches (e.g. DrikPanchang) before trusting them — see
-/// guna_milan_test.dart for what was checked in this environment.
+/// SOURCES: the eight koota tables below are transcribed page-by-page
+/// from two printed Hindi references, both checked against scans:
+///   Book S = "Saral Jyotish" (melapak chapter, pp.143–152), and
+///   Book F = "Saral Asht-Koot Milan" (Future Point, chapters 3–10).
+/// All matrices use rows = BRIDE (कन्या), columns = GROOM (वर) — the
+/// orientation both books print. Where the two books publish variant
+/// tables (Yoni, Gana), the chosen source is called out at that table,
+/// preferring the reading that also agrees with Parashara's Light.
+/// See guna_milan_test.dart for the worked examples checked here.
 library;
 
 import 'dignity.dart' show PlanetDignity, dignityOf;
@@ -20,11 +21,13 @@ import 'shadbala.dart' show PlanetaryRel, naturalRelOf;
 // =============================================================================
 
 const Map<ZodiacSign, int> _varnaRank = {
-  // 4 = Brahmin (highest) … 1 = Shudra (lowest).
-  ZodiacSign.cancer: 4, ZodiacSign.scorpio: 4, ZodiacSign.pisces: 4,
-  ZodiacSign.aries: 3, ZodiacSign.leo: 3, ZodiacSign.sagittarius: 3,
-  ZodiacSign.gemini: 2, ZodiacSign.libra: 2, ZodiacSign.aquarius: 2,
-  ZodiacSign.taurus: 1, ZodiacSign.virgo: 1, ZodiacSign.capricorn: 1,
+  // 4 = Brahmin (highest) … 1 = Shudra (lowest). By element (Book S
+  // p.147, Book F p.7): WATER = Brahmin, FIRE = Kshatriya, EARTH =
+  // Vaishya, AIR = Shudra.
+  ZodiacSign.cancer: 4, ZodiacSign.scorpio: 4, ZodiacSign.pisces: 4, // water
+  ZodiacSign.aries: 3, ZodiacSign.leo: 3, ZodiacSign.sagittarius: 3, // fire
+  ZodiacSign.taurus: 2, ZodiacSign.virgo: 2, ZodiacSign.capricorn: 2, // earth
+  ZodiacSign.gemini: 1, ZodiacSign.libra: 1, ZodiacSign.aquarius: 1, // air
 };
 
 const List<String> kVarnaNames = [
@@ -65,24 +68,28 @@ VashyaGroup vashyaGroupOf(ZodiacSign sign, double degreeInSign) {
     case ZodiacSign.scorpio:
       return VashyaGroup.scorpio;
     case ZodiacSign.capricorn:
+      // Book F p.9–10: first half quadruped, second half jalachara.
       return degreeInSign < 15 ? VashyaGroup.quadruped : VashyaGroup.jalachara;
     case ZodiacSign.sagittarius:
-      // Sagittarius is not explicitly listed by Saravali's table (an
-      // omission in the source) — classically it is half-quadruped
-      // (Dhanu's front half, horse) / half-human (rear half); treated
-      // as Human here (the more commonly cited default) since no
-      // authoritative split degree was found in this environment.
-      return VashyaGroup.human;
+      // Book F p.9–10 splits Dhanu: first half Human (Manav), second
+      // half quadruped (Chatushpad).
+      return degreeInSign < 15 ? VashyaGroup.human : VashyaGroup.quadruped;
   }
 }
 
+// Row = bride, column = groom, order Chatushpad/Manav/Jalchar/Vanchar/
+// Keet (this enum's order — Leo=Vanchar, Scorpio=Keet). The classical
+// चक्र as printed in Book F p.10 (max 2); note the two 0.5 half-points
+// and the asymmetry (e.g. Manav-bride×Jalchar-groom = 0.5 vs
+// Jalchar-bride×Manav-groom = 0.5 — here symmetric, but Manav×Vanchar
+// is 0 one way only via the Vanchar row).
 const List<List<double>> _vashyaMatrix = [
-  // Quadruped, Human, Jalachara, Leo, Scorpio  (row = bride, col = groom)
-  [2, 0, 0, 0.5, 0],
-  [1, 2, 1, 0.5, 1],
-  [0.5, 1, 2, 1, 1],
-  [0, 0, 0, 2, 0],
-  [1, 1, 1, 0, 2],
+  // Chatushpad, Manav, Jalchar, Vanchar(Leo), Keet(Scorpio)
+  [2, 1, 1, 0.5, 1], // Chatushpad (quadruped)
+  [1, 2, 0.5, 0, 1], // Manav (human)
+  [1, 0.5, 2, 1, 1], // Jalchar (jalachara)
+  [0, 0, 1, 2, 0], // Vanchar (leo)
+  [1, 0, 1, 0, 2], // Keet (scorpio)
 ];
 
 double vashyaKoota(
@@ -187,21 +194,28 @@ const Map<Nakshatra, Yoni> _yoniOfNakshatra = {
 Yoni yoniOf(Nakshatra n) => _yoniOfNakshatra[n]!;
 
 // Row = bride's Yoni, column = groom's Yoni; order matches [Yoni.values].
+// This is Book S's chakra (p.150), which Parashara's Light matches
+// (e.g. bride-Horse × groom-Serpent = 2 in both). The previous table
+// followed Future Point's chakra (Book F p.22); it was replaced here
+// per Saral Jyotish p.150. The matrix is genuinely ASYMMETRIC in a
+// few cells as printed (e.g. Sheep-bride×Buffalo-groom = 0 but
+// Buffalo-bride×Sheep-groom = 3; Deer-bride×Lion-groom = 3 but
+// Lion-bride×Deer-groom = 1) — implemented as printed, not symmetrized.
 const List<List<int>> _yoniMatrix = [
-  [4, 2, 2, 3, 2, 2, 2, 1, 0, 1, 3, 3, 2, 1], // Horse
-  [2, 4, 3, 3, 2, 2, 2, 2, 3, 1, 2, 3, 2, 0], // Elephant
-  [2, 3, 4, 2, 1, 2, 1, 3, 3, 1, 2, 0, 3, 1], // Sheep
-  [3, 3, 2, 4, 2, 1, 1, 1, 1, 2, 2, 2, 0, 2], // Serpent
-  [2, 2, 1, 2, 4, 2, 1, 2, 2, 1, 0, 2, 1, 1], // Dog
-  [2, 2, 2, 1, 2, 4, 0, 2, 2, 1, 3, 3, 2, 1], // Cat
-  [2, 2, 1, 1, 1, 0, 4, 2, 2, 2, 2, 2, 1, 2], // Rat
-  [1, 2, 3, 1, 2, 2, 2, 4, 3, 0, 3, 2, 2, 1], // Cow
-  [0, 3, 3, 1, 2, 2, 2, 3, 4, 1, 2, 2, 2, 1], // Buffalo
-  [1, 1, 1, 2, 1, 1, 2, 0, 1, 4, 1, 1, 2, 1], // Tiger
-  [1, 2, 2, 2, 0, 3, 2, 3, 2, 1, 4, 2, 2, 1], // Deer
-  [3, 3, 0, 2, 2, 3, 2, 2, 2, 1, 2, 4, 3, 2], // Monkey
-  [2, 2, 3, 0, 1, 2, 1, 2, 2, 2, 2, 3, 4, 2], // Mongoose
-  [1, 0, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 2, 4], // Lion
+  [4, 2, 3, 2, 2, 3, 3, 3, 0, 1, 3, 2, 2, 1], // Horse
+  [2, 4, 3, 2, 2, 3, 3, 3, 3, 1, 3, 2, 2, 0], // Elephant
+  [3, 3, 4, 2, 2, 3, 3, 3, 0, 1, 3, 0, 2, 1], // Sheep
+  [2, 2, 2, 4, 2, 1, 1, 2, 2, 2, 2, 1, 0, 2], // Serpent
+  [2, 2, 2, 2, 4, 1, 2, 2, 2, 2, 0, 2, 2, 2], // Dog
+  [3, 3, 3, 1, 1, 4, 0, 3, 3, 2, 3, 2, 2, 2], // Cat
+  [3, 3, 3, 1, 2, 0, 4, 3, 3, 2, 3, 2, 1, 1], // Rat
+  [3, 3, 3, 2, 2, 3, 3, 4, 3, 0, 3, 2, 2, 1], // Cow
+  [0, 3, 3, 2, 2, 3, 3, 3, 4, 1, 1, 2, 2, 1], // Buffalo
+  [1, 1, 1, 2, 2, 2, 2, 1, 1, 4, 1, 2, 2, 1], // Tiger
+  [3, 3, 3, 2, 0, 3, 2, 3, 3, 1, 4, 2, 2, 3], // Deer
+  [2, 2, 0, 1, 2, 2, 2, 2, 2, 2, 2, 4, 2, 2], // Monkey
+  [2, 2, 2, 0, 2, 2, 1, 2, 2, 2, 2, 2, 4, 2], // Mongoose
+  [1, 0, 1, 2, 2, 2, 2, 1, 1, 2, 1, 2, 2, 4], // Lion
 ];
 
 double yoniKoota(Nakshatra brideNakshatra, Nakshatra groomNakshatra) =>
@@ -220,11 +234,14 @@ double grahaMaitriKoota(ZodiacSign brideMoonSign, ZodiacSign groomMoonSign) {
   final rel2 = naturalRelOf(gLord, bLord);
   final friends = [rel1, rel2].where((r) => r == PlanetaryRel.friend).length;
   final enemies = [rel1, rel2].where((r) => r == PlanetaryRel.enemy).length;
+  // Scale per Book S p.151 (chakra) and Book F p.26 (explicit list):
+  // both friends / same lord = 5; friend + neutral = 4; both neutral =
+  // 3; friend + enemy = 1; neutral + enemy = 0.5; both enemies = 0.
   if (friends == 2) return 5;
   if (enemies == 2) return 0;
-  if (friends == 1 && enemies == 1) return 2;
+  if (friends == 1 && enemies == 1) return 1; // friend + enemy
   if (friends == 1) return 4; // friend + neutral
-  if (enemies == 1) return 1; // neutral + enemy
+  if (enemies == 1) return 0.5; // neutral + enemy
   return 3; // both neutral
 }
 
@@ -266,16 +283,15 @@ const Map<Nakshatra, Gana> _ganaOfNakshatra = {
 
 Gana ganaOf(Nakshatra n) => _ganaOfNakshatra[n]!;
 
-// Row = bride's Gana, column = groom's Gana. The only asymmetric pair
-// is Deva/Manushya (Manushya-groom + Deva-bride scores 6, but
-// Deva-groom + Manushya-bride scores only 5) — Deva/Rakshasa and
-// Manushya/Rakshasa are each symmetric. Verified against multiple
-// independent published tables agreeing on this exact 3x3 shape
-// (corrected here from an earlier transcription that had the
-// Deva/Rakshasa cell wrong — see guna_milan_test.dart).
+// Row = bride's Gana, column = groom's Gana (order Deva/Manushya/
+// Rakshasa). Book S p.152 and Book F p.29. The only asymmetric pair is
+// Deva/Manushya (Deva-bride × Manushya-groom = 5, but Manushya-bride ×
+// Deva-groom = 6). Deva/Rakshasa is symmetric at 1: Book F prints
+// Rakshasa-bride × Deva-groom = 1, where Book S prints 0 — Book F's 1
+// is adopted (kept symmetric with the Deva-bride × Rakshasa-groom cell).
 const List<List<int>> _ganaMatrix = [
-  [6, 6, 1], // Deva
-  [5, 6, 0], // Manushya
+  [6, 5, 1], // Deva
+  [6, 6, 0], // Manushya
   [1, 0, 6], // Rakshasa
 ];
 
