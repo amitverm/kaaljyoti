@@ -2610,6 +2610,7 @@
   "cmpNotAvailable": "Not available for this chart",
   "cmpDashaSystem": "Dasha system",
   "cmpAyanamsaNotice": "{code} uses a different ayanamsa; sign-level comparisons unaffected, degree-level may differ.",
+  "cmpBetaNotice": "Beta — findings are computed hints, not verified analysis. Please confirm against the charts before drawing conclusions.",
   "cmpNoEvents": "Add life events to at least two kundlis to see event patterns.",
   "cmpNoOverlaps": "No notable overlaps in the selected dimensions.",
   "cmpNoneInGroup": "No shared factors in this group.",

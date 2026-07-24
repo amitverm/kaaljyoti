@@ -9555,6 +9555,12 @@ abstract class AppLocalizations {
   /// **'{code} uses a different ayanamsa; sign-level comparisons unaffected, degree-level may differ.'**
   String cmpAyanamsaNotice(String code);
 
+  /// No description provided for @cmpBetaNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Beta — findings are computed hints, not verified analysis. Please confirm against the charts before drawing conclusions.'**
+  String get cmpBetaNotice;
+
   /// No description provided for @cmpNoEvents.
   ///
   /// In en, this message translates to:

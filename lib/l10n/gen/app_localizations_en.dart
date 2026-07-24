@@ -5371,6 +5371,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get cmpBetaNotice =>
+      'Beta — findings are computed hints, not verified analysis. Please confirm against the charts before drawing conclusions.';
+
+  @override
   String get cmpNoEvents =>
       'Add life events to at least two kundlis to see event patterns.';
 

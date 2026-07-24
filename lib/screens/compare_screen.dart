@@ -643,6 +643,23 @@ class _SimilaritiesTab extends ConsumerWidget {
                 style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
               ),
             ),
+        // Beta disclaimer: findings are computed hints, shown in every state.
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.science_outlined, size: 14, color: KJColors.inkSoft),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l10n.cmpBetaNotice,
+                  style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 16),
         findingsAsync.when(
           loading: () => const Padding(
