@@ -5301,8 +5301,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mnCompare => 'Compare Kundlis';
 
   @override
-  String get mnCompareSubtitle =>
-      'Study 2–4 charts together with locked context';
+  String get mnCompareSubtitle => 'Study up to 4 charts with instant switching';
 
   @override
   String get cmpTitle => 'Compare Kundlis';

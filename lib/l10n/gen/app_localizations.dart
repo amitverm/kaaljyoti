@@ -9426,7 +9426,7 @@ abstract class AppLocalizations {
   /// No description provided for @mnCompareSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Study 2–4 charts together with locked context'**
+  /// **'Study up to 4 charts with instant switching'**
   String get mnCompareSubtitle;
 
   /// No description provided for @cmpTitle.
