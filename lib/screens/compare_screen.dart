@@ -649,12 +649,16 @@ class _SimilaritiesTab extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.science_outlined, size: 14, color: KJColors.inkSoft),
+              Icon(Icons.science_outlined, size: 14, color: KJColors.maroon),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   l10n.cmpBetaNotice,
-                  style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                    color: KJColors.maroon,
+                  ),
                 ),
               ),
             ],
