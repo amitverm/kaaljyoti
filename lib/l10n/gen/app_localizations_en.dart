@@ -596,11 +596,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get peSavedReportNote =>
-      'Your saved report for this kundli — kept separate from the dashboard.';
+      'One report layout for every kundli — blocks follow your dashboard until you change them here, and Reset puts them back.';
 
   @override
   String get peFirstExportNote =>
-      'First export starts from your dashboard; after that the report is remembered separately.';
+      'One report layout for every kundli, starting from your dashboard.';
 
   @override
   String get peReset => 'Reset';
@@ -915,6 +915,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dbLifeEvents => 'Life events';
+
+  @override
+  String get dbShareScreenshot => 'Share screenshot';
+
+  @override
+  String get dbScreenshotFailed => 'Couldn\'t create the screenshot';
 
   @override
   String get dbExportPrint => 'Export / Print';
@@ -1611,6 +1617,45 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dashaSystemJaiminiSubtitle =>
       'Sign-based · rashi periods from lord placement';
+
+  @override
+  String get dashaSystemSthira => 'Jaimini Sthira';
+
+  @override
+  String get dashaSystemSthiraSubtitle =>
+      'Sign-based · fixed 7/8/9-year periods from Brahma';
+
+  @override
+  String dmSthiraDeities(Object brahma, Object rudra, Object maheshwara) {
+    return 'Brahma $brahma · Rudra $rudra · Maheshwara $maheshwara';
+  }
+
+  @override
+  String get dmGrahaBala => 'Graha Bala';
+
+  @override
+  String get dmRashiBala => 'Rashi Bala';
+
+  @override
+  String get dmColMula => 'Mula';
+
+  @override
+  String get dmColAmsa => 'Amsa';
+
+  @override
+  String get dmColKendra => 'Kendra';
+
+  @override
+  String get dmColChara => 'Chara';
+
+  @override
+  String get dmColSthira => 'Sthira';
+
+  @override
+  String get dmColDrishti => 'Drishti';
+
+  @override
+  String get dmColTotal => 'Total';
 
   @override
   String get dashaLevelMaha => 'Mahadasha';
@@ -4039,6 +4084,72 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get ssMethodLabel => 'Method';
+
+  @override
+  String get ssMethodSigns => 'Classical (signs)';
+
+  @override
+  String get ssMethodDegrees => 'Degree-based (45°)';
+
+  @override
+  String get ssDegCaption => 'Saturn within 45° either side of the natal Moon';
+
+  @override
+  String ssDegStatusInPast(String sep, String date) {
+    return 'In Sade Sati — Saturn $sep past the natal Moon · ends $date';
+  }
+
+  @override
+  String ssDegStatusInBefore(String sep, String date) {
+    return 'In Sade Sati — Saturn $sep before the natal Moon · ends $date';
+  }
+
+  @override
+  String ssDegStatusNext(String date) {
+    return 'Not in Sade Sati — next begins $date';
+  }
+
+  @override
+  String get ssDegStatusNone =>
+      'Not in Sade Sati — none upcoming in the computed lifetime.';
+
+  @override
+  String get ssDegColEntry => 'Entry';
+
+  @override
+  String get ssDegColExit => 'Exit';
+
+  @override
+  String get ssDegColConjunction => 'Exact conjunction';
+
+  @override
+  String get ssDegLegendApproaching => 'Approaching';
+
+  @override
+  String get ssDegLegendConjunction => 'Conjunction';
+
+  @override
+  String get ssDegLegendSeparating => 'Separating';
+
+  @override
+  String get ssDegLegendOutOfArc => 'Out of arc';
+
+  @override
+  String ssDegOutOfArc(String start, String end, String len) {
+    return '↳ out of arc (retrograde): $start – $end ($len)';
+  }
+
+  @override
+  String ssDegConjunctionRow(String date) {
+    return '↳ exact conjunction: $date';
+  }
+
+  @override
+  String get ssDegNoWindows =>
+      'Saturn never comes within 45° of the natal Moon in the computed lifetime.';
+
+  @override
   String get ssTooltipRetroNote => '(includes a retrograde re-entry)';
 
   @override
@@ -5532,4 +5643,279 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get klCompareCap => 'Compare up to 4 charts at a time.';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get klSearchHint => 'Search name, note, place, label';
+
+  @override
+  String get klClearSearch => 'Clear search';
+
+  @override
+  String get klFilterAll => 'All';
+
+  @override
+  String get klPinned => 'Pinned';
+
+  @override
+  String get klAllKundlis => 'All kundlis';
+
+  @override
+  String get klRecent => 'Recent';
+
+  @override
+  String get klListOptions => 'Sort and detail';
+
+  @override
+  String get klSortLabel => 'Sort';
+
+  @override
+  String get klSortRecent => 'Recently opened';
+
+  @override
+  String get klSortAdded => 'Recently added';
+
+  @override
+  String get klSortName => 'Name (A–Z)';
+
+  @override
+  String get klSortBirth => 'Birth date';
+
+  @override
+  String get klDensityLabel => 'Row detail';
+
+  @override
+  String get klDensityCompact => 'Compact';
+
+  @override
+  String get klDensityComfortable => 'Comfortable';
+
+  @override
+  String get klDensityDetailed => 'Detailed';
+
+  @override
+  String klShowingCount(String visible, String total) {
+    return '$visible of $total kundlis';
+  }
+
+  @override
+  String get klNoMatches => 'No kundlis match that search.';
+
+  @override
+  String get klClearFilters => 'Clear search and filters';
+
+  @override
+  String get klPin => 'Pin';
+
+  @override
+  String get klUnpin => 'Unpin';
+
+  @override
+  String klPinnedN(String count) {
+    return '$count pinned';
+  }
+
+  @override
+  String klUnpinnedN(String count) {
+    return '$count unpinned';
+  }
+
+  @override
+  String klDeleteNTitle(String count) {
+    return 'Delete $count kundlis?';
+  }
+
+  @override
+  String get klDeleteNBody =>
+      'This removes them from this device. Synced copies are deleted on your other devices too.';
+
+  @override
+  String get klLabels => 'Labels';
+
+  @override
+  String get klAddLabel => 'Add label';
+
+  @override
+  String get klLabelHint => 'e.g. 2026 clients';
+
+  @override
+  String get klExistingLabels => 'Existing labels';
+
+  @override
+  String get klEditKundli => 'Edit kundli';
+
+  @override
+  String get moduleGrahaDrishtiTitle => 'Graha Drishti';
+
+  @override
+  String get gdHeading => 'Parashari Graha Drishti';
+
+  @override
+  String get gdBlurb =>
+      'Every graha aspects the 7th from its own sign. Mars adds the 4th and 8th, Jupiter the 5th and 9th, Saturn the 3rd and 10th. Counting is whole-sign and inclusive.';
+
+  @override
+  String get gdNodesOffNote =>
+      'Rahu and Ketu cast no drishti, per classical practice. Turn on \"Rahu/Ketu drishti\" to give them the 5th, 7th and 9th.';
+
+  @override
+  String get gdNodesOnNote =>
+      'Rahu and Ketu are casting the 5th, 7th and 9th. Classical practice does not reckon nodal drishti.';
+
+  @override
+  String get gdCfgDirection => 'Direction';
+
+  @override
+  String get gdReceived => 'Received';
+
+  @override
+  String get gdCast => 'Cast';
+
+  @override
+  String get gdCfgNodes => 'Rahu/Ketu drishti';
+
+  @override
+  String get gdReceivedHeading => 'Aspects received';
+
+  @override
+  String get gdCastHeading => 'Aspects cast';
+
+  @override
+  String get gdRulesHeading => 'Which houses each graha aspects';
+
+  @override
+  String get gdCastsNothing => 'casts no drishti';
+
+  @override
+  String get gdNone => 'none';
+
+  @override
+  String get gdHouseHeading => 'Aspects on houses';
+
+  @override
+  String get gdHouseColumn => 'House';
+
+  @override
+  String get gdAspectsColumn => 'Aspects';
+
+  @override
+  String gdHouseN(String house) {
+    return 'H$house';
+  }
+
+  @override
+  String get modulePaceTitle => 'PACE';
+
+  @override
+  String get paceHeading => 'Position, Aspect, Conjunction, Exchange';
+
+  @override
+  String get paceBlurb =>
+      'The four channels through which one graha influences another. Only the channels actually acting on a graha are listed — strongest first: exchange, then conjunction, then aspect.';
+
+  @override
+  String get pacePosition => 'Position';
+
+  @override
+  String get paceAspect => 'Aspect';
+
+  @override
+  String get paceConjunction => 'Conjunction';
+
+  @override
+  String get paceExchange => 'Exchange';
+
+  @override
+  String get paceA => 'A';
+
+  @override
+  String get paceC => 'C';
+
+  @override
+  String get paceE => 'E';
+
+  @override
+  String get paceKendra => 'kendra';
+
+  @override
+  String get paceTrikona => 'trikona';
+
+  @override
+  String get paceDusthana => 'dusthana';
+
+  @override
+  String get paceUpachaya => 'upachaya';
+
+  @override
+  String get paceUntouched => 'no aspect, conjunction or exchange';
+
+  @override
+  String get paceExchangeHeading => 'Parivartana (sign exchange)';
+
+  @override
+  String get paceP => 'P';
+
+  @override
+  String paceLordOf(String houses) {
+    return 'lord of $houses';
+  }
+
+  @override
+  String get paceBhavaLordsHeading => 'Bhava lords — where each went';
+
+  @override
+  String get paceOwnBhava => 'own bhava';
+
+  @override
+  String get paceCfgLayout => 'Card detail';
+
+  @override
+  String get paceLayoutCompact => 'Compact';
+
+  @override
+  String get paceLayoutBlocks => 'Detailed';
+
+  @override
+  String get msLoadMore => 'Load more';
+
+  @override
+  String msShowingOf(String shown, String total) {
+    return 'Showing $shown of $total';
+  }
+
+  @override
+  String msLoadMoreError(String error) {
+    return 'Couldn\'t load more: $error';
+  }
+
+  @override
+  String get msRecent => 'Recent';
+
+  @override
+  String msRecentCount(String count) {
+    return '$count recently opened';
+  }
+
+  @override
+  String get msNoRecent => 'Charts you open will appear here.';
+
+  @override
+  String msYogaCount(String count) {
+    return '$count yogas';
+  }
+
+  @override
+  String msEventCount(String count) {
+    return '$count events';
+  }
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String msBrowseError(String error) {
+    return 'Couldn\'t load community charts: $error';
+  }
 }

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../pdf/pw.dart' as pw;
 
 import '../core/astro/dasha/dasha.dart';
+import '../core/astro/dasha/sthira.dart';
 import '../core/astro/models.dart';
 import '../core/date_format.dart';
 import '../core/theme/theme.dart';
@@ -61,6 +62,14 @@ String _lenText(AppLocalizations l10n, Duration d) {
         : l10n.dmUnitYears('$y');
   }
   if (days >= 45) {
+    // A whole-calendar-month period must READ as whole months: a
+    // 7-month Sthira antardasha spans 212–215 real days, which the
+    // floor-based split rendered as the baffling "6m 29d". Within a
+    // day and a half of a round month count, say just the months.
+    final mRound = (days / 30.44).round();
+    if ((days - mRound * 30.44).abs() <= 1.5) {
+      return l10n.dmUnitMonths('$mRound');
+    }
     final m = (days / 30.44).floor();
     final rem = (days - m * 30.44).round();
     return rem > 0
@@ -457,121 +466,206 @@ class DashaModule extends AstroModule {
     final systems = ctx.config['system'] == null
         ? DashaSystem.values
         : [_configuredSystem(ctx)];
-    // Every header/table is a top-level widget so MultiPage can break
-    // pages between and inside the tables.
-    final blocks = <pw.Widget>[
-      pdfSectionHeader(systems.length == 1
-          ? l10n.dmPdfHeaderWithSystem(systems.first.label(l10n))
-          : l10n.moduleDashaPeriodsTitle),
-    ];
-    for (final system in systems) {
+    // Every long table is its own top-level widget so MultiPage can
+    // break pages between and inside them; the intro of each system is
+    // glued (see pdfSection).
+    final blocks = <pw.Widget>[];
+    for (var i = 0; i < systems.length; i++) {
+      final system = systems[i];
       final result = ctx.dasha(system);
       final chain = result.chainAt(now);
       final maha = chain.elementAtOrNull(0);
-      blocks.addAll([
-        pw.Padding(
-          padding: const pw.EdgeInsets.only(top: 8, bottom: 2),
-          child: pw.Text(system.label(l10n),
-              style:
-                  pdfBody(size: 10.5).copyWith(fontWeight: pw.FontWeight.bold)),
-        ),
-        pw.Text(system.subtitleLabel(l10n), style: pdfLabel()),
-        // Active chain down to pran, as of print time.
-        if (chain.isNotEmpty) ...[
+      // Each system's name + subtitle + "active chain as of" caption is
+      // glued to the chain table's first rows; the long tables below it
+      // flow and split freely (repeating their column headers).
+      blocks.addAll(pdfSection(
+        header: i == 0
+            ? pdfSectionHeader(systems.length == 1
+                ? l10n.dmPdfHeaderWithSystem(systems.first.label(l10n))
+                : l10n.moduleDashaPeriodsTitle)
+            : pw.SizedBox(height: kPdfSectionGap),
+        lead: pdfStack([
           pw.Padding(
-            padding: const pw.EdgeInsets.only(top: 4, bottom: 2),
-            child: pw.Text(
-              l10n.dmPdfActiveChain(_fmtTime.format(now.toLocal())),
-              style: pdfLabel(),
+            padding: const pw.EdgeInsets.only(bottom: 2),
+            child: pw.Text(system.label(l10n),
+                style: pdfBody(size: 10.5)
+                    .copyWith(fontWeight: pw.FontWeight.bold)),
+          ),
+          pw.Text(system.subtitleLabel(l10n), style: pdfLabel()),
+          // Sthira context: the three computed deities — Brahma names
+          // the start sign, so the sequence below is verifiable.
+          if (system == DashaSystem.sthira)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 2),
+              child: () {
+                final bala = computeSthiraBala(ctx.snapshot);
+                return pw.Text(
+                  l10n.dmSthiraDeities(
+                    bala.brahma.label(l10n),
+                    bala.rudra.label(l10n),
+                    bala.maheshwara.label(l10n),
+                  ),
+                  style: pdfBody(size: 9.5),
+                );
+              }(),
             ),
-          ),
-          pw.TableHelper.fromTextArray(
-            headers: [
-              l10n.dmColLevel,
-              l10n.dmColLord,
-              l10n.dmColFrom,
-              l10n.dmColTo,
-              l10n.dmColLength,
-            ],
-            data: [
-              for (final p in chain)
-                [
-                  dashaLevelLabel(l10n, p.level),
-                  dashaLordLabel(l10n, p),
-                  (p.length < _clockThreshold ? _fmtTime : _fmt)
-                      .format(p.start.toLocal()),
-                  (p.length < _clockThreshold ? _fmtTime : _fmt)
-                      .format(p.end.toLocal()),
-                  _lenText(l10n, p.length),
-                ],
-            ],
-            headerStyle: pdfLabel(),
-            cellStyle: pdfBody(size: 9),
-            border: null,
-            cellAlignment: pw.Alignment.centerLeft,
-            headerAlignment: pw.Alignment.centerLeft,
-          ),
-          pw.SizedBox(height: 4),
-        ],
-        // All mahadashas.
-        pw.TableHelper.fromTextArray(
-          headers: [
-            l10n.dashaLevelMaha,
-            l10n.dmColFrom,
-            l10n.dmColTo,
-            l10n.dmColLength,
-            l10n.ssColAge,
-          ],
-          data: [
-            for (final p in result.periods.take(12))
-              [
-                '${p.contains(now) ? '» ' : ''}${dashaLordLabel(l10n, p)}',
-                _fmt.format(p.start.toLocal()),
-                _fmt.format(p.end.toLocal()),
-                _lenText(l10n, p.length),
-                _ageSpanBare(birth, p),
+          // Active chain down to pran, as of print time. Glued rather
+          // than flowed: it is five rows at most, and it is the one
+          // table that is meaningless without the "as of" caption
+          // directly above it.
+          if (chain.isNotEmpty) ...[
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 4, bottom: 2),
+              child: pw.Text(
+                l10n.dmPdfActiveChain(_fmtTime.format(now.toLocal())),
+                style: pdfLabel(),
+              ),
+            ),
+            pdfDataTable(
+              headers: [
+                l10n.dmColLevel,
+                l10n.dmColLord,
+                l10n.dmColFrom,
+                l10n.dmColTo,
+                l10n.dmColLength,
               ],
-          ],
-          headerStyle: pdfLabel(),
-          cellStyle: pdfBody(size: 9),
-          border: null,
-          cellAlignment: pw.Alignment.centerLeft,
-          headerAlignment: pw.Alignment.centerLeft,
-        ),
-        // Antardashas of the running mahadasha.
-        if (maha != null) ...[
-          pw.Padding(
-            padding: const pw.EdgeInsets.only(top: 4, bottom: 2),
-            child: pw.Text(
-              l10n.dmPdfAntardashasOf(dashaLordLabel(l10n, maha)),
-              style: pdfLabel(),
+              rows: [
+                for (final p in chain)
+                  [
+                    dashaLevelLabel(l10n, p.level),
+                    dashaLordLabel(l10n, p),
+                    (p.length < _clockThreshold ? _fmtTime : _fmt)
+                        .format(p.start.toLocal()),
+                    (p.length < _clockThreshold ? _fmtTime : _fmt)
+                        .format(p.end.toLocal()),
+                    _lenText(l10n, p.length),
+                  ],
+              ],
+              // The Lord column in each graha's traditional ink, as on
+              // screen. Sign-based systems tint by the sign's lord.
+              cellInk: (row, column) =>
+                  column == 1 ? pdfDashaInk(chain[row]) : null,
             ),
-          ),
-          pw.TableHelper.fromTextArray(
-            headers: [
-              l10n.dashaLevelAntar,
-              l10n.dmColFrom,
-              l10n.dmColTo,
-              l10n.dmColLength,
-            ],
-            data: [
-              for (final a in maha.children)
-                [
-                  '${a.contains(now) ? '» ' : ''}${dashaLordLabel(l10n, a)}',
-                  _fmt.format(a.start.toLocal()),
-                  _fmt.format(a.end.toLocal()),
-                  _lenText(l10n, a.length),
-                ],
-            ],
-            headerStyle: pdfLabel(),
-            cellStyle: pdfBody(size: 9),
-            border: null,
-            cellAlignment: pw.Alignment.centerLeft,
-            headerAlignment: pw.Alignment.centerLeft,
-          ),
+            pw.SizedBox(height: 8),
+          ],
+        ]),
+        rest: [
+          // All mahadashas.
+          () {
+            final mahas = result.periods.take(12).toList();
+            return pdfDataTable(
+              headers: [
+                l10n.dashaLevelMaha,
+                l10n.dmColFrom,
+                l10n.dmColTo,
+                l10n.dmColLength,
+                l10n.ssColAge,
+              ],
+              rows: [
+                for (final p in mahas)
+                  [
+                    '${p.contains(now) ? '» ' : ''}${dashaLordLabel(l10n, p)}',
+                    _fmt.format(p.start.toLocal()),
+                    _fmt.format(p.end.toLocal()),
+                    _lenText(l10n, p.length),
+                    _ageSpanBare(birth, p),
+                  ],
+              ],
+              cellInk: (row, column) =>
+                  column == 0 ? pdfDashaInk(mahas[row]) : null,
+            );
+          }(),
+          // Antardashas of the running mahadasha.
+          if (maha != null) ...[
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 8, bottom: 2),
+              child: pw.Text(
+                l10n.dmPdfAntardashasOf(dashaLordLabel(l10n, maha)),
+                style: pdfLabel(),
+              ),
+            ),
+            pdfDataTable(
+              headers: [
+                l10n.dashaLevelAntar,
+                l10n.dmColFrom,
+                l10n.dmColTo,
+                l10n.dmColLength,
+              ],
+              rows: [
+                for (final a in maha.children)
+                  [
+                    '${a.contains(now) ? '» ' : ''}${dashaLordLabel(l10n, a)}',
+                    _fmt.format(a.start.toLocal()),
+                    _fmt.format(a.end.toLocal()),
+                    _lenText(l10n, a.length),
+                  ],
+              ],
+              cellInk: (row, column) =>
+                  column == 0 ? pdfDashaInk(maha.children[row]) : null,
+            ),
+          ],
+          // The Sthira working, as the book prints it — both bala
+          // tables, so the reader can verify Brahma unit by unit.
+          if (system == DashaSystem.sthira) ...[
+            () {
+              final bala = computeSthiraBala(ctx.snapshot);
+              return pdfStack([
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 8, bottom: 2),
+                  child: pw.Text(l10n.dmGrahaBala, style: pdfLabel()),
+                ),
+                pdfDataTable(
+                  headers: [
+                    l10n.labelGraha,
+                    l10n.dmColMula,
+                    l10n.dmColAmsa,
+                    l10n.dmColKendra,
+                    l10n.dmColTotal,
+                  ],
+                  rows: [
+                    for (final p in kSthiraGrahas)
+                      [
+                        p.label(l10n),
+                        '${bala.mulatrikonadiBala[p]}',
+                        '${bala.amsaBala[p]}',
+                        '${bala.kendradiBala[p]}',
+                        '${bala.grahaBala[p]}',
+                      ],
+                  ],
+                  cellInk: (row, column) =>
+                      column == 0 ? pdfPlanetInk(kSthiraGrahas[row]) : null,
+                ),
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 8, bottom: 2),
+                  child: pw.Text(l10n.dmRashiBala, style: pdfLabel()),
+                ),
+                pdfDataTable(
+                  headers: [
+                    l10n.labelSign,
+                    l10n.dmColLord,
+                    l10n.dmColChara,
+                    l10n.dmColSthira,
+                    l10n.dmColDrishti,
+                    l10n.dmColTotal,
+                  ],
+                  rows: [
+                    for (final sign in ZodiacSign.values)
+                      [
+                        sign.label(l10n),
+                        '${bala.lordBala[sign]}',
+                        '${bala.charaBala[sign]}',
+                        '${bala.sthiraBala[sign]}',
+                        '${bala.drishtiBala[sign]}',
+                        '${bala.rashiBala[sign]}',
+                      ],
+                  ],
+                ),
+              ]);
+            }(),
+          ],
+          pdfSectionGap(),
         ],
-        pw.SizedBox(height: 6),
-      ]);
+      ));
     }
     return blocks;
   }
@@ -872,28 +966,51 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
-        // System selector
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: [
-            for (final s in DashaSystem.values)
-              ChoiceChip(
-                label: Text(s.label(context.l10n)),
-                selected: _system == s,
-                labelStyle: TextStyle(
-                    color: _system == s ? KJColors.paper : KJColors.ink),
-                onSelected: (_) => setState(() {
-                  _system = s;
-                  _path.clear();
-                  _persist('system', s.name);
-                }),
-              ),
-          ],
+        // System selector — ONE horizontally scrolling row, like the
+        // dashboard's view chips. A Wrap here grew a line per few
+        // systems and ate the prime top of the screen.
+        SizedBox(
+          height: 40,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              for (final s in DashaSystem.values)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(s.label(context.l10n)),
+                    selected: _system == s,
+                    labelStyle: TextStyle(
+                        color: _system == s ? KJColors.paper : KJColors.ink),
+                    onSelected: (_) => setState(() {
+                      _system = s;
+                      _path.clear();
+                      _persist('system', s.name);
+                    }),
+                  ),
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: 4),
         Text(_system.subtitleLabel(context.l10n),
             style: KJTheme.mono(size: 11, color: KJColors.inkSoft)),
+        // Sthira context: the three computed deities. Brahma is what the
+        // dasha runs from, so the reader can verify the start sign.
+        if (_system == DashaSystem.sthira) ...[
+          const SizedBox(height: 6),
+          Builder(builder: (context) {
+            final bala = computeSthiraBala(widget.ctx.snapshot);
+            return Text(
+              context.l10n.dmSthiraDeities(
+                bala.brahma.label(context.l10n),
+                bala.rudra.label(context.l10n),
+                bala.maheshwara.label(context.l10n),
+              ),
+              style: TextStyle(fontSize: 12.5, color: KJColors.ink),
+            );
+          }),
+        ],
         const SizedBox(height: 14),
 
         // As-of control (dasha on a date)
@@ -987,6 +1104,13 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
                 : const [],
             sandhi: _showSandhi ? _sandhiText(context.l10n, p, asOf) : null,
           ),
+
+        // The Sthira working, the way the book prints it — the reader
+        // can verify Brahma (and so the start sign) from these tables.
+        if (_system == DashaSystem.sthira) ...[
+          const SizedBox(height: 20),
+          _SthiraBalaTables(snapshot: widget.ctx.snapshot),
+        ],
       ],
     );
   }
@@ -1406,6 +1530,105 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The Sthira strength working — Graha Bala with its three components
+/// and Rashi Bala with its four — laid out the way the book prints them
+/// so a practitioner can check every unit (Akhila Kumar, "Predicting
+/// through Jaimini's Sthira Dasha", pp. 15–19). Data only; deriving
+/// Brahma from it is the reader's craft.
+class _SthiraBalaTables extends StatelessWidget {
+  const _SthiraBalaTables({required this.snapshot});
+  final AstroSnapshot snapshot;
+
+  Widget _head(String text, {bool start = false}) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Text(
+          text,
+          textAlign: start ? TextAlign.start : TextAlign.end,
+          style: TextStyle(
+              fontSize: 10.5,
+              color: KJColors.inkSoft,
+              fontWeight: FontWeight.w600),
+        ),
+      );
+
+  Widget _cell(String text,
+          {Color? color, bool start = false, bool strong = false}) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Text(
+          text,
+          textAlign: start ? TextAlign.start : TextAlign.end,
+          style: KJTheme.mono(size: 11, color: color ?? KJColors.ink)
+              .copyWith(fontWeight: strong ? FontWeight.w600 : null),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final bala = computeSthiraBala(snapshot);
+    final border = TableBorder(
+        horizontalInside: BorderSide(color: KJColors.hairline, width: 0.7));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.dmGrahaBala.toUpperCase(), style: KJType.kicker()),
+        const SizedBox(height: 4),
+        Table(
+          border: border,
+          columnWidths: const {0: FlexColumnWidth(1.8)},
+          defaultColumnWidth: const FlexColumnWidth(1),
+          children: [
+            TableRow(children: [
+              _head(l10n.labelGraha, start: true),
+              _head(l10n.dmColMula),
+              _head(l10n.dmColAmsa),
+              _head(l10n.dmColKendra),
+              _head(l10n.dmColTotal),
+            ]),
+            for (final p in kSthiraGrahas)
+              TableRow(children: [
+                _cell(p.label(l10n), color: planetInk(p), start: true),
+                _cell('${bala.mulatrikonadiBala[p]}'),
+                _cell('${bala.amsaBala[p]}'),
+                _cell('${bala.kendradiBala[p]}'),
+                _cell('${bala.grahaBala[p]}', strong: true),
+              ]),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(l10n.dmRashiBala.toUpperCase(), style: KJType.kicker()),
+        const SizedBox(height: 4),
+        Table(
+          border: border,
+          columnWidths: const {0: FlexColumnWidth(1.8)},
+          defaultColumnWidth: const FlexColumnWidth(1),
+          children: [
+            TableRow(children: [
+              _head(l10n.labelSign, start: true),
+              _head(l10n.dmColLord),
+              _head(l10n.dmColChara),
+              _head(l10n.dmColSthira),
+              _head(l10n.dmColDrishti),
+              _head(l10n.dmColTotal),
+            ]),
+            for (final sign in ZodiacSign.values)
+              TableRow(children: [
+                _cell(sign.label(l10n), start: true),
+                _cell('${bala.lordBala[sign]}'),
+                _cell('${bala.charaBala[sign]}'),
+                _cell('${bala.sthiraBala[sign]}'),
+                _cell('${bala.drishtiBala[sign]}'),
+                _cell('${bala.rashiBala[sign]}', strong: true),
+              ]),
+          ],
+        ),
+      ],
     );
   }
 }

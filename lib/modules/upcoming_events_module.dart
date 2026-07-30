@@ -254,33 +254,28 @@ class UpcomingEventsModule extends AstroModule {
       ...sadeSatiEvents,
     ]..sort((a, b) => a.time.compareTo(b.time));
 
-    return [
-      pdfSectionHeader(l10n.uePdfHeader('$months')),
-      pw.TableHelper.fromTextArray(
-        headers: [l10n.ueColDate, l10n.ueColSource, l10n.ueColEvent],
-        data: [
-          for (final e in all)
-            [
-              _dateTimeFmt.format(e.time.toLocal()),
-              e.sourceLabel(l10n),
-              e.label,
-            ],
-        ],
-        headerStyle: pw.TextStyle(
-            fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: pdfInkSoft),
-        cellStyle: pdfBody(size: 9.5),
-        border: null,
-        headerDecoration: const pw.BoxDecoration(
-          border: pw.Border(bottom: pw.BorderSide(color: pdfInk, width: 0.8)),
+    return pdfSection(
+      header: pdfSectionHeader(l10n.uePdfHeader('$months')),
+      rest: [
+        pdfDataTable(
+          headers: [l10n.ueColDate, l10n.ueColSource, l10n.ueColEvent],
+          columnWidths: const {
+            0: pw.FlexColumnWidth(1.1),
+            1: pw.FlexColumnWidth(0.8),
+            2: pw.FlexColumnWidth(2.4),
+          },
+          rows: [
+            for (final e in all)
+              [
+                _dateTimeFmt.format(e.time.toLocal()),
+                e.sourceLabel(l10n),
+                e.label,
+              ],
+          ],
         ),
-        rowDecoration: const pw.BoxDecoration(
-          border:
-              pw.Border(bottom: pw.BorderSide(color: pdfHairline, width: 0.5)),
-        ),
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-    ];
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 

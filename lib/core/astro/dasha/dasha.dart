@@ -8,7 +8,8 @@ import '../models.dart';
 enum DashaSystem {
   vimshottari('Vimshottari', 'Nakshatra-based · 120-year cycle · 9 lords'),
   yogini('Yogini', 'Nakshatra-based · 36-year cycle · 8 Yoginis'),
-  jaimini('Jaimini Chara', 'Sign-based · rashi periods from lord placement');
+  jaimini('Jaimini Chara', 'Sign-based · rashi periods from lord placement'),
+  sthira('Jaimini Sthira', 'Sign-based · fixed 7/8/9-year periods from Brahma');
 
   const DashaSystem(this.displayName, this.subtitle);
   final String displayName;
@@ -137,6 +138,13 @@ abstract interface class DashaCalculator {
   /// levels deep) from the shared snapshot.
   DashaResult calculate(AstroSnapshot snapshot);
 }
+
+/// Where dasha listings stop: no period STARTS at or after this age.
+/// Cyclic sign dashas (Chara, Sthira) repeat their cycle only this far —
+/// a full second 96-year Sthira cycle would run to age 192, which reads
+/// as noise past any lifespan. Vimshottari's single 120-year cycle and
+/// Yogini's three 36-year cycles already sit inside the horizon.
+const int kDashaHorizonYears = 120;
 
 /// Solar year length used by classical dasha arithmetic.
 const double kDashaYearDays = 365.25;

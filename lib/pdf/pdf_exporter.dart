@@ -58,7 +58,7 @@ class PdfExporter {
     ModuleContext ctx,
     PdfExportOptions options,
   ) async {
-    final doc = await _build(ctx, options);
+    final doc = await buildDocument(ctx, options);
     await Printing.sharePdf(
       bytes: await doc.save(),
       filename: '${ctx.kundli.name.replaceAll(RegExp(r'\s+'), '_')}_kundli.pdf',
@@ -70,23 +70,30 @@ class PdfExporter {
     PdfExportOptions options,
   ) async {
     await Printing.layoutPdf(
-      onLayout: (_) async => (await _build(ctx, options)).save(),
+      onLayout: (_) async => (await buildDocument(ctx, options)).save(),
     );
   }
 
-  Future<pw.Document> _build(
+  /// The whole document, assembled but not yet saved.
+  ///
+  /// Exposed so tests can compose a realistic multi-section export and
+  /// check its pagination without a printer, a simulator or a share
+  /// sheet (see test/pdf_layout_test.dart).
+  @visibleForTesting
+  Future<pw.Document> buildDocument(
       ModuleContext ctx, PdfExportOptions options) async {
     // User content may be in any script regardless of the export
     // language (a Devanagari name or branding line in an English export
     // is ordinary, not an edge case) — see [pdfScriptSample].
     final theme = await pdfTheme(scriptSample: pdfScriptSample(ctx, options));
-    // Marcellus is the cover's display face only — its own fetch, so
-    // losing it doesn't cost us the body theme.
+    // Marcellus is the cover's display face only — bundled like the
+    // body faces (see kjPdfDisplay), and loaded on its own so losing it
+    // could never cost us the body theme.
     pw.Font? display;
     try {
-      display = await PdfGoogleFonts.marcellusRegular();
+      display = await kjPdfDisplay();
     } catch (_) {
-      // Offline without cached fonts — export still works.
+      // Asset unreadable — the cover falls back to the body face.
     }
     // The app emblem (same art as the launcher icon) crowns the cover.
     final emblem = pw.MemoryImage(
@@ -149,6 +156,12 @@ class PdfExporter {
     // as the dashboard and customizer, config-aware per instance. Each
     // module hands back a LIST of top-level widgets so MultiPage can
     // paginate between them and split long tables.
+    //
+    // The exporter stays deliberately dumb about what those widgets
+    // are: a module decides for itself what must stay together, by
+    // fusing a header with its lead content via `pdfSection`. That is
+    // what stops a section title stranding at the foot of a page while
+    // its chart floats, untitled, onto the next.
     final blocks = <pw.Widget>[
       for (final block in options.blocks)
         if (moduleRegistry.containsKey(block.widgetId))

@@ -4,6 +4,7 @@
 /// via flutter_secure_storage.
 library;
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -188,7 +189,7 @@ class AppDb {
     return _opener(
       path,
       password: password,
-      version: 7,
+      version: 9,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -228,8 +229,8 @@ class AppDb {
         if (oldVersion < 3) {
           // v3: instant Prashna kundlis are created immediately and
           // marked ephemeral until the user keeps them.
-          await db.execute('ALTER TABLE kundlis '
-              'ADD COLUMN is_ephemeral INTEGER NOT NULL DEFAULT 0');
+          await _addColumnIfMissing(
+              db, 'kundlis', 'is_ephemeral', 'INTEGER NOT NULL DEFAULT 0');
         }
         if (oldVersion < 5 && oldVersion >= 1) {
           // v5: dashboard layouts become GLOBAL (a layout is a lens,
@@ -259,22 +260,20 @@ class AppDb {
           await db.execute(
               'ALTER TABLE dashboard_views_v2 RENAME TO dashboard_views');
         }
-        if (oldVersion < 6) {
-          // v6: optional free-text note on a kundli — lets the astrologer
-          // record who the person is ("Ramesh's daughter — marriage match").
-          await db.execute('ALTER TABLE kundlis ADD COLUMN note TEXT');
-        }
-        if (oldVersion < 7) {
-          // v7: life events are first-class per-kundli data (previously they
-          // existed only transiently in the Mahakosh contribute form).
-          await db.execute(_createKundliEventsSql);
-        }
+        // v4 runs HERE, in version order. It used to sit after the v8
+        // block, which is how this whole path became a trap: a device
+        // upgrading from v3 or earlier applied v8's ALTER first and only
+        // then tried v4's CREATE TABLE. If that CREATE failed, the
+        // upgrade aborted with user_version never bumped — but the ALTER
+        // had already stuck, so every later launch retried it and died
+        // on "duplicate column name". A permanent brick, unrecoverable
+        // by reinstalling, because the database outlives the app.
         if (oldVersion < 4) {
           // v4: the PDF report composition lives separately from the
           // dashboard — what a jyotish works with is not what they
           // hand to a client.
           await db.execute('''
-            CREATE TABLE export_configs (
+            CREATE TABLE IF NOT EXISTS export_configs (
               kundli_id TEXT PRIMARY KEY
                 REFERENCES kundlis(id) ON DELETE CASCADE,
               blocks TEXT NOT NULL,
@@ -284,6 +283,29 @@ class AppDb {
             )
           ''');
         }
+        if (oldVersion < 6) {
+          // v6: optional free-text note on a kundli — lets the astrologer
+          // record who the person is ("Ramesh's daughter — marriage match").
+          await _addColumnIfMissing(db, 'kundlis', 'note', 'TEXT');
+        }
+        if (oldVersion < 7) {
+          // v7: life events are first-class per-kundli data (previously they
+          // existed only transiently in the Mahakosh contribute form).
+          await db.execute(_createKundliEventsSql);
+        }
+        if (oldVersion < 8) {
+          // v8: user-defined labels for grouping a large library — a
+          // JSON list on the row, so it rides the existing sync payload.
+          await _addColumnIfMissing(db, 'kundlis', 'labels', 'TEXT');
+        }
+        if (oldVersion < 9) {
+          // v9: the report composition becomes GLOBAL, exactly as the
+          // dashboard layout did in v5 — deselecting Panchang once should
+          // apply to every client's report, not just the kundli that
+          // happened to be open. One row replaces the per-kundli table.
+          await db.execute(_createExportTemplateSql);
+          await _migrateLegacyExportConfigs(db);
+        }
       },
       onCreate: (db, version) async {
         await db.execute('''
@@ -292,6 +314,7 @@ class AppDb {
             name TEXT NOT NULL,
             relation_tag TEXT NOT NULL DEFAULT 'Self',
             note TEXT,
+            labels TEXT,
             birth_utc INTEGER NOT NULL,
             lat REAL NOT NULL,
             lon REAL NOT NULL,
@@ -333,18 +356,22 @@ class AppDb {
             created_at INTEGER NOT NULL
           )
         ''');
-        await db.execute('''
-          CREATE TABLE export_configs (
-            kundli_id TEXT PRIMARY KEY
-              REFERENCES kundlis(id) ON DELETE CASCADE,
-            blocks TEXT NOT NULL,
-            paper TEXT NOT NULL DEFAULT 'a4',
-            cover_page INTEGER NOT NULL DEFAULT 1,
-            branding TEXT NOT NULL DEFAULT ''
-          )
-        ''');
+        await db.execute(_createExportTemplateSql);
       },
     );
+  }
+
+  /// Flushes the WAL into the main DB file and truncates it, so
+  /// kaaljyoti.db alone holds every committed write. Called on app
+  /// backgrounding: an app-update container migration or a backup can
+  /// copy the main file without its -wal sidecar (Android backup rules
+  /// exclude it, and simctl updates have been observed dropping it —
+  /// the dashboard-config revert on the iOS simulator), silently losing
+  /// whatever still lived only in the WAL. No-op when the DB isn't open.
+  Future<void> checkpoint() async {
+    final db = _db;
+    if (db == null || !db.isOpen) return;
+    await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
   }
 
   Future<void> close() async {
@@ -353,11 +380,86 @@ class AppDb {
   }
 }
 
+/// Adds a column only when it isn't already there.
+///
+/// SQLite has no `ADD COLUMN IF NOT EXISTS`, and sqflite's onUpgrade is
+/// not reliably atomic — a step that lands before a later step throws
+/// stays applied while user_version is left behind. Re-running the
+/// upgrade then hits "duplicate column name" and the app can never open
+/// its database again. Reinstalling doesn't help: the database file
+/// outlives the app. Every schema step here must therefore be safe to
+/// run twice.
+Future<void> _addColumnIfMissing(
+    Database db, String table, String column, String definition) async {
+  final columns = await db.rawQuery('PRAGMA table_info($table)');
+  final exists = columns.any((c) => c['name'] == column);
+  if (exists) return;
+  await db.execute('ALTER TABLE $table ADD COLUMN $column $definition');
+}
+
+/// The one-row global report template (v9+). `id` is pinned to 1 by the
+/// CHECK, so an accidental second row is a database error rather than a
+/// silently ignored duplicate. Shared between onCreate and the v9
+/// migration so the schema stays identical on both paths.
+const _createExportTemplateSql = '''
+  CREATE TABLE IF NOT EXISTS export_template (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    blocks TEXT NOT NULL,
+    paper TEXT NOT NULL DEFAULT 'a4',
+    cover_page INTEGER NOT NULL DEFAULT 1,
+    branding TEXT NOT NULL DEFAULT ''
+  )
+''';
+
+/// Folds the legacy per-kundli `export_configs` into the single global
+/// row, then drops the old table.
+///
+/// There is no principled way to merge N per-kundli compositions into
+/// one, so the first row (by kundli_id, for determinism) wins — the same
+/// "keep one, discard the rest" call v5 made when dashboard layouts went
+/// global. Every migrated block is marked `overridden`: legacy rows
+/// recorded no instance link, so they cannot follow a dashboard widget
+/// and must keep the config they were saved with.
+///
+/// Safe to run twice: the insert replaces, and the drop is skipped once
+/// the legacy table is gone.
+Future<void> _migrateLegacyExportConfigs(Database db) async {
+  final legacyTable = await db.rawQuery(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='export_configs'",
+  );
+  if (legacyTable.isEmpty) return;
+  final rows = await db.query('export_configs', orderBy: 'kundli_id ASC');
+  if (rows.isNotEmpty) {
+    final r = rows.first;
+    final decoded = jsonDecode(r['blocks'] as String) as List;
+    await db.insert(
+      'export_template',
+      {
+        'id': 1,
+        'blocks': jsonEncode([
+          for (final b in decoded)
+            {
+              'widget_id': (b as Map)['widget_id'],
+              'instance_id': null,
+              'overridden': true,
+              'config': b['config'] ?? <String, dynamic>{},
+            },
+        ]),
+        'paper': r['paper'],
+        'cover_page': r['cover_page'],
+        'branding': r['branding'],
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+  await db.execute('DROP TABLE export_configs');
+}
+
 /// Per-kundli life events. FK CASCADE means deleting a kundli removes its
 /// events automatically (foreign_keys pragma is ON). Shared between onCreate
 /// and the v7 migration so the schema stays identical on both paths.
 const _createKundliEventsSql = '''
-  CREATE TABLE kundli_events (
+  CREATE TABLE IF NOT EXISTS kundli_events (
     id TEXT PRIMARY KEY,
     kundli_id TEXT NOT NULL REFERENCES kundlis(id) ON DELETE CASCADE,
     category TEXT NOT NULL DEFAULT 'other',

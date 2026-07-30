@@ -1124,16 +1124,16 @@ abstract class AppLocalizations {
   /// **'MODULES IN THIS EXPORT'**
   String get peModulesSection;
 
-  /// No description provided for @peSavedReportNote.
+  /// Shown above the block list once a report template exists. 'Reset' must match the peReset button label.
   ///
   /// In en, this message translates to:
-  /// **'Your saved report for this kundli — kept separate from the dashboard.'**
+  /// **'One report layout for every kundli — blocks follow your dashboard until you change them here, and Reset puts them back.'**
   String get peSavedReportNote;
 
-  /// No description provided for @peFirstExportNote.
+  /// Shown above the block list before any report template is saved — the list is seeded from the dashboard.
   ///
   /// In en, this message translates to:
-  /// **'First export starts from your dashboard; after that the report is remembered separately.'**
+  /// **'One report layout for every kundli, starting from your dashboard.'**
   String get peFirstExportNote;
 
   /// No description provided for @peReset.
@@ -1615,6 +1615,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Life events'**
   String get dbLifeEvents;
+
+  /// Dashboard header action: renders the whole scrolling board as one tall image and opens the system share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Share screenshot'**
+  String get dbShareScreenshot;
+
+  /// No description provided for @dbScreenshotFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the screenshot'**
+  String get dbScreenshotFailed;
 
   /// No description provided for @dbExportPrint.
   ///
@@ -2965,6 +2977,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign-based · rashi periods from lord placement'**
   String get dashaSystemJaiminiSubtitle;
+
+  /// No description provided for @dashaSystemSthira.
+  ///
+  /// In en, this message translates to:
+  /// **'Jaimini Sthira'**
+  String get dashaSystemSthira;
+
+  /// No description provided for @dashaSystemSthiraSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-based · fixed 7/8/9-year periods from Brahma'**
+  String get dashaSystemSthiraSubtitle;
+
+  /// Sthira dasha context line: the three computed deities (K.N. Rao school). Brahma/Rudra/Maheshwara are fixed Sanskrit terms — transliterate, never translate.
+  ///
+  /// In en, this message translates to:
+  /// **'Brahma {brahma} · Rudra {rudra} · Maheshwara {maheshwara}'**
+  String dmSthiraDeities(Object brahma, Object rudra, Object maheshwara);
+
+  /// No description provided for @dmGrahaBala.
+  ///
+  /// In en, this message translates to:
+  /// **'Graha Bala'**
+  String get dmGrahaBala;
+
+  /// No description provided for @dmRashiBala.
+  ///
+  /// In en, this message translates to:
+  /// **'Rashi Bala'**
+  String get dmRashiBala;
+
+  /// Sthira bala table column: Mulatrikonadi (dignity) units. Keep short — six columns share a phone width.
+  ///
+  /// In en, this message translates to:
+  /// **'Mula'**
+  String get dmColMula;
+
+  /// No description provided for @dmColAmsa.
+  ///
+  /// In en, this message translates to:
+  /// **'Amsa'**
+  String get dmColAmsa;
+
+  /// No description provided for @dmColKendra.
+  ///
+  /// In en, this message translates to:
+  /// **'Kendra'**
+  String get dmColKendra;
+
+  /// No description provided for @dmColChara.
+  ///
+  /// In en, this message translates to:
+  /// **'Chara'**
+  String get dmColChara;
+
+  /// No description provided for @dmColSthira.
+  ///
+  /// In en, this message translates to:
+  /// **'Sthira'**
+  String get dmColSthira;
+
+  /// No description provided for @dmColDrishti.
+  ///
+  /// In en, this message translates to:
+  /// **'Drishti'**
+  String get dmColDrishti;
+
+  /// No description provided for @dmColTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get dmColTotal;
 
   /// No description provided for @dashaLevelMaha.
   ///
@@ -7311,6 +7395,114 @@ abstract class AppLocalizations {
   /// **'↳ retrograde re-entry: {start} – {end} ({len})'**
   String ssRetroReentry(String start, String end, String len);
 
+  /// No description provided for @ssMethodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get ssMethodLabel;
+
+  /// No description provided for @ssMethodSigns.
+  ///
+  /// In en, this message translates to:
+  /// **'Classical (signs)'**
+  String get ssMethodSigns;
+
+  /// No description provided for @ssMethodDegrees.
+  ///
+  /// In en, this message translates to:
+  /// **'Degree-based (45°)'**
+  String get ssMethodDegrees;
+
+  /// No description provided for @ssDegCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturn within 45° either side of the natal Moon'**
+  String get ssDegCaption;
+
+  /// Degree-method status when Saturn has already crossed the natal Moon (separating). Mirrors ssStatusInPhase's shape so both methods read alike.
+  ///
+  /// In en, this message translates to:
+  /// **'In Sade Sati — Saturn {sep} past the natal Moon · ends {date}'**
+  String ssDegStatusInPast(String sep, String date);
+
+  /// Degree-method status when Saturn has not yet reached the natal Moon (applying).
+  ///
+  /// In en, this message translates to:
+  /// **'In Sade Sati — Saturn {sep} before the natal Moon · ends {date}'**
+  String ssDegStatusInBefore(String sep, String date);
+
+  /// No description provided for @ssDegStatusNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in Sade Sati — next begins {date}'**
+  String ssDegStatusNext(String date);
+
+  /// No description provided for @ssDegStatusNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in Sade Sati — none upcoming in the computed lifetime.'**
+  String get ssDegStatusNone;
+
+  /// No description provided for @ssDegColEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry'**
+  String get ssDegColEntry;
+
+  /// No description provided for @ssDegColExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get ssDegColExit;
+
+  /// No description provided for @ssDegColConjunction.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact conjunction'**
+  String get ssDegColConjunction;
+
+  /// Degree-method bar legend: Saturn inside the 45-degree arc and not yet at the natal Moon.
+  ///
+  /// In en, this message translates to:
+  /// **'Approaching'**
+  String get ssDegLegendApproaching;
+
+  /// No description provided for @ssDegLegendConjunction.
+  ///
+  /// In en, this message translates to:
+  /// **'Conjunction'**
+  String get ssDegLegendConjunction;
+
+  /// No description provided for @ssDegLegendSeparating.
+  ///
+  /// In en, this message translates to:
+  /// **'Separating'**
+  String get ssDegLegendSeparating;
+
+  /// No description provided for @ssDegLegendOutOfArc.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of arc'**
+  String get ssDegLegendOutOfArc;
+
+  /// Degree method: the gap between two windows of one passage, when Saturn retrogrades back out of the 45-degree arc and later re-enters. Mirrors ssRetroReentry's shape.
+  ///
+  /// In en, this message translates to:
+  /// **'↳ out of arc (retrograde): {start} – {end} ({len})'**
+  String ssDegOutOfArc(String start, String end, String len);
+
+  /// No description provided for @ssDegConjunctionRow.
+  ///
+  /// In en, this message translates to:
+  /// **'↳ exact conjunction: {date}'**
+  String ssDegConjunctionRow(String date);
+
+  /// No description provided for @ssDegNoWindows.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturn never comes within 45° of the natal Moon in the computed lifetime.'**
+  String get ssDegNoWindows;
+
   /// No description provided for @ssTooltipRetroNote.
   ///
   /// In en, this message translates to:
@@ -9796,6 +9988,498 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Compare up to 4 charts at a time.'**
   String get klCompareCap;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @klSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search name, note, place, label'**
+  String get klSearchHint;
+
+  /// No description provided for @klClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get klClearSearch;
+
+  /// No description provided for @klFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get klFilterAll;
+
+  /// No description provided for @klPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get klPinned;
+
+  /// No description provided for @klAllKundlis.
+  ///
+  /// In en, this message translates to:
+  /// **'All kundlis'**
+  String get klAllKundlis;
+
+  /// No description provided for @klRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get klRecent;
+
+  /// No description provided for @klListOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort and detail'**
+  String get klListOptions;
+
+  /// No description provided for @klSortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get klSortLabel;
+
+  /// No description provided for @klSortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently opened'**
+  String get klSortRecent;
+
+  /// No description provided for @klSortAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently added'**
+  String get klSortAdded;
+
+  /// No description provided for @klSortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (A–Z)'**
+  String get klSortName;
+
+  /// No description provided for @klSortBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth date'**
+  String get klSortBirth;
+
+  /// No description provided for @klDensityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Row detail'**
+  String get klDensityLabel;
+
+  /// No description provided for @klDensityCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get klDensityCompact;
+
+  /// No description provided for @klDensityComfortable.
+  ///
+  /// In en, this message translates to:
+  /// **'Comfortable'**
+  String get klDensityComfortable;
+
+  /// No description provided for @klDensityDetailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed'**
+  String get klDensityDetailed;
+
+  /// No description provided for @klShowingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{visible} of {total} kundlis'**
+  String klShowingCount(String visible, String total);
+
+  /// No description provided for @klNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No kundlis match that search.'**
+  String get klNoMatches;
+
+  /// No description provided for @klClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search and filters'**
+  String get klClearFilters;
+
+  /// No description provided for @klPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get klPin;
+
+  /// No description provided for @klUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get klUnpin;
+
+  /// No description provided for @klPinnedN.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pinned'**
+  String klPinnedN(String count);
+
+  /// No description provided for @klUnpinnedN.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unpinned'**
+  String klUnpinnedN(String count);
+
+  /// No description provided for @klDeleteNTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} kundlis?'**
+  String klDeleteNTitle(String count);
+
+  /// No description provided for @klDeleteNBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes them from this device. Synced copies are deleted on your other devices too.'**
+  String get klDeleteNBody;
+
+  /// No description provided for @klLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'Labels'**
+  String get klLabels;
+
+  /// No description provided for @klAddLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add label'**
+  String get klAddLabel;
+
+  /// No description provided for @klLabelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 2026 clients'**
+  String get klLabelHint;
+
+  /// No description provided for @klExistingLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing labels'**
+  String get klExistingLabels;
+
+  /// No description provided for @klEditKundli.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit kundli'**
+  String get klEditKundli;
+
+  /// No description provided for @moduleGrahaDrishtiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Graha Drishti'**
+  String get moduleGrahaDrishtiTitle;
+
+  /// No description provided for @gdHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Parashari Graha Drishti'**
+  String get gdHeading;
+
+  /// No description provided for @gdBlurb.
+  ///
+  /// In en, this message translates to:
+  /// **'Every graha aspects the 7th from its own sign. Mars adds the 4th and 8th, Jupiter the 5th and 9th, Saturn the 3rd and 10th. Counting is whole-sign and inclusive.'**
+  String get gdBlurb;
+
+  /// No description provided for @gdNodesOffNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Rahu and Ketu cast no drishti, per classical practice. Turn on \"Rahu/Ketu drishti\" to give them the 5th, 7th and 9th.'**
+  String get gdNodesOffNote;
+
+  /// No description provided for @gdNodesOnNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Rahu and Ketu are casting the 5th, 7th and 9th. Classical practice does not reckon nodal drishti.'**
+  String get gdNodesOnNote;
+
+  /// No description provided for @gdCfgDirection.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction'**
+  String get gdCfgDirection;
+
+  /// No description provided for @gdReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get gdReceived;
+
+  /// No description provided for @gdCast.
+  ///
+  /// In en, this message translates to:
+  /// **'Cast'**
+  String get gdCast;
+
+  /// No description provided for @gdCfgNodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Rahu/Ketu drishti'**
+  String get gdCfgNodes;
+
+  /// No description provided for @gdReceivedHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Aspects received'**
+  String get gdReceivedHeading;
+
+  /// No description provided for @gdCastHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Aspects cast'**
+  String get gdCastHeading;
+
+  /// No description provided for @gdRulesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Which houses each graha aspects'**
+  String get gdRulesHeading;
+
+  /// No description provided for @gdCastsNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'casts no drishti'**
+  String get gdCastsNothing;
+
+  /// No description provided for @gdNone.
+  ///
+  /// In en, this message translates to:
+  /// **'none'**
+  String get gdNone;
+
+  /// No description provided for @gdHouseHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Aspects on houses'**
+  String get gdHouseHeading;
+
+  /// No description provided for @gdHouseColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'House'**
+  String get gdHouseColumn;
+
+  /// No description provided for @gdAspectsColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Aspects'**
+  String get gdAspectsColumn;
+
+  /// No description provided for @gdHouseN.
+  ///
+  /// In en, this message translates to:
+  /// **'H{house}'**
+  String gdHouseN(String house);
+
+  /// No description provided for @modulePaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PACE'**
+  String get modulePaceTitle;
+
+  /// No description provided for @paceHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Position, Aspect, Conjunction, Exchange'**
+  String get paceHeading;
+
+  /// No description provided for @paceBlurb.
+  ///
+  /// In en, this message translates to:
+  /// **'The four channels through which one graha influences another. Only the channels actually acting on a graha are listed — strongest first: exchange, then conjunction, then aspect.'**
+  String get paceBlurb;
+
+  /// No description provided for @pacePosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Position'**
+  String get pacePosition;
+
+  /// No description provided for @paceAspect.
+  ///
+  /// In en, this message translates to:
+  /// **'Aspect'**
+  String get paceAspect;
+
+  /// No description provided for @paceConjunction.
+  ///
+  /// In en, this message translates to:
+  /// **'Conjunction'**
+  String get paceConjunction;
+
+  /// No description provided for @paceExchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange'**
+  String get paceExchange;
+
+  /// No description provided for @paceA.
+  ///
+  /// In en, this message translates to:
+  /// **'A'**
+  String get paceA;
+
+  /// No description provided for @paceC.
+  ///
+  /// In en, this message translates to:
+  /// **'C'**
+  String get paceC;
+
+  /// No description provided for @paceE.
+  ///
+  /// In en, this message translates to:
+  /// **'E'**
+  String get paceE;
+
+  /// No description provided for @paceKendra.
+  ///
+  /// In en, this message translates to:
+  /// **'kendra'**
+  String get paceKendra;
+
+  /// No description provided for @paceTrikona.
+  ///
+  /// In en, this message translates to:
+  /// **'trikona'**
+  String get paceTrikona;
+
+  /// No description provided for @paceDusthana.
+  ///
+  /// In en, this message translates to:
+  /// **'dusthana'**
+  String get paceDusthana;
+
+  /// No description provided for @paceUpachaya.
+  ///
+  /// In en, this message translates to:
+  /// **'upachaya'**
+  String get paceUpachaya;
+
+  /// No description provided for @paceUntouched.
+  ///
+  /// In en, this message translates to:
+  /// **'no aspect, conjunction or exchange'**
+  String get paceUntouched;
+
+  /// No description provided for @paceExchangeHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Parivartana (sign exchange)'**
+  String get paceExchangeHeading;
+
+  /// No description provided for @paceP.
+  ///
+  /// In en, this message translates to:
+  /// **'P'**
+  String get paceP;
+
+  /// No description provided for @paceLordOf.
+  ///
+  /// In en, this message translates to:
+  /// **'lord of {houses}'**
+  String paceLordOf(String houses);
+
+  /// No description provided for @paceBhavaLordsHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Bhava lords — where each went'**
+  String get paceBhavaLordsHeading;
+
+  /// No description provided for @paceOwnBhava.
+  ///
+  /// In en, this message translates to:
+  /// **'own bhava'**
+  String get paceOwnBhava;
+
+  /// No description provided for @paceCfgLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Card detail'**
+  String get paceCfgLayout;
+
+  /// No description provided for @paceLayoutCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get paceLayoutCompact;
+
+  /// No description provided for @paceLayoutBlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed'**
+  String get paceLayoutBlocks;
+
+  /// No description provided for @msLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get msLoadMore;
+
+  /// No description provided for @msShowingOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {shown} of {total}'**
+  String msShowingOf(String shown, String total);
+
+  /// No description provided for @msLoadMoreError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load more: {error}'**
+  String msLoadMoreError(String error);
+
+  /// No description provided for @msRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get msRecent;
+
+  /// No description provided for @msRecentCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} recently opened'**
+  String msRecentCount(String count);
+
+  /// No description provided for @msNoRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Charts you open will appear here.'**
+  String get msNoRecent;
+
+  /// No description provided for @msYogaCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} yogas'**
+  String msYogaCount(String count);
+
+  /// No description provided for @msEventCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} events'**
+  String msEventCount(String count);
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @msBrowseError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load community charts: {error}'**
+  String msBrowseError(String error);
 }
 
 class _AppLocalizationsDelegate

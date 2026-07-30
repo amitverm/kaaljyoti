@@ -87,11 +87,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // ---- notify the requester ----------------------------------------------
     const payload: Record<string, unknown> = { request_id: request.id, title: request.title };
     if (note) payload.review_note = note;
+    // ::jsonb is load-bearing. Without it the driver binds the
+    // stringified payload as a json parameter and encodes it a
+    // SECOND time, so the jsonb column ends up holding the string
+    // "{\"mk_code\":…}" rather than an object — and the app's
+    // `as Map` cast then blew up the whole notifications screen.
+    // The SQL triggers use jsonb_build_object and were never affected.
     await sql`
       insert into public.notifications (user_id, type, payload)
       values (${request.requester_id},
               ${action === "approve" ? "request_approved" : "request_rejected"},
-              ${JSON.stringify(payload)})
+              ${JSON.stringify(payload)}::jsonb)
     `;
 
     if (action === "reject") {

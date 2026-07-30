@@ -10,6 +10,7 @@ import 'package:printing/printing.dart';
 
 import '../charts/chart_style.dart';
 import '../core/astro/ayanamsa.dart';
+import '../core/astro/dasha/dasha.dart';
 import '../core/astro/models.dart';
 import '../core/date_format.dart';
 import '../core/theme/theme.dart';
@@ -319,6 +320,55 @@ const pdfInkSoft = PdfColor.fromInt(0xFF56503F);
 const pdfMaroon = PdfColor.fromInt(0xFF7A1F2B);
 const pdfHairline = PdfColor.fromInt(0xFFEAE5D8);
 
+PdfColor _pdfColor(Color c) => PdfColor.fromInt(c.toARGB32());
+
+/// Traditional per-graha label ink (Parashar Light convention: Sun dark
+/// red/golden, Mars red, Mercury green, Jupiter saffron, Venus pink,
+/// Saturn blue, Rahu grey, Ketu dark brown) — so a printed chart reads
+/// in the same colours as the screen.
+///
+/// Pinned to the CLASSIC palette whatever palette the app is running.
+/// The page is always cream — the cover paints 0xFFFCFAF4, which IS
+/// classic's paper, and the four ink constants above are classic's
+/// values — so the grahas must use the hues tuned for that ground. A
+/// dark palette's planet inks are chosen to glow on a dark surface and
+/// would print washed out; worse, the chart a practitioner hands a
+/// client would change colour because they flipped the app to dark
+/// mode at some point.
+///
+/// Read from [KJPalette.classic] rather than re-typed, so the two can
+/// never drift apart. Moon has no colour of its own there (white is
+/// illegible on paper) and falls back to the palette's ink, exactly as
+/// `planetInk` does on screen.
+PdfColor pdfPlanetInk(Planet planet) {
+  final c = KJPalette.classic.planets;
+  final color = switch (planet) {
+    Planet.sun => c.sun,
+    Planet.moon => c.moon,
+    Planet.mars => c.mars,
+    Planet.mercury => c.mercury,
+    Planet.jupiter => c.jupiter,
+    Planet.venus => c.venus,
+    Planet.saturn => c.saturn,
+    Planet.rahu => c.rahu,
+    Planet.ketu => c.ketu,
+  };
+  return color == null ? pdfInk : _pdfColor(color);
+}
+
+/// A rashi takes its lord's ink, mirroring `signInk` on screen.
+PdfColor pdfSignInk(ZodiacSign sign) => pdfPlanetInk(sign.lord);
+
+/// A dasha period's ink: its lord graha, or for the sign-based systems
+/// (Chara and friends) the ruling graha of its sign — the same rule
+/// `signInk` follows. Null when a period names neither.
+PdfColor? pdfDashaInk(DashaPeriod period) {
+  final planet = period.planet;
+  if (planet != null) return pdfPlanetInk(planet);
+  final sign = period.sign;
+  return sign == null ? null : pdfSignInk(sign);
+}
+
 pw.TextStyle pdfHeading() => pw.TextStyle(
     fontSize: 14, color: pdfMaroon, fontWeight: pw.FontWeight.bold);
 
@@ -335,13 +385,49 @@ pw.Widget kjPdfCredit(AppLocalizations l10n) => pw.Text(
 
 typedef _FontLoader = Future<pw.Font> Function();
 
+/// A bundled TTF as a PDF font.
+Future<pw.Font> _assetFont(String path) async =>
+    pw.Font.ttf(await rootBundle.load(path));
+
 /// Devanagari uses the bundled pre-shaped font, not a Noto fetch: its
 /// PUA range carries the baked conjunct glyphs that
 /// `devanagariVisualOrder` substitutes (see lib/pdf/devanagari.dart and
 /// tool/gen_devanagari_font.py), so the two ship and version together.
 /// Being an asset it also works offline on first export.
-Future<pw.Font> kjDevanagariPdfFont() async => pw.Font.ttf(
-    await rootBundle.load('assets/kj_devanagari_pdf.ttf'));
+Future<pw.Font> kjDevanagariPdfFont() =>
+    _assetFont('assets/kj_devanagari_pdf.ttf');
+
+/// The brand faces, read from the copies the app already SHIPS
+/// (`google_fonts/` in pubspec.yaml) rather than fetched from Google's
+/// CDN at export time — the same no-runtime-fetch rule main.dart sets
+/// for the on-screen text via `GoogleFonts.config.allowRuntimeFetching`.
+///
+/// This is not just tidiness. `PdfGoogleFonts` SWALLOWS a failed
+/// download and quietly returns `Font.helvetica()` (printing's
+/// lib/src/fonts/font.dart) — it does not throw, so the try/catch below
+/// never fires and the export ships a theme whose bold face is a
+/// non-Unicode Type1 Helvetica while its regular face is real IBM Plex.
+/// Every BOLD string then loses everything past Latin-1, which is how a
+/// section header came out as "Dasha Periods ▯ Vimshottari": the em
+/// dash had no glyph, and `fontFallback` (script faces only) has
+/// nothing to offer an all-Latin document. Reading the bytes we already
+/// ship makes the failure impossible instead of intermittent, and makes
+/// the FIRST export on a fresh offline install correct rather than
+/// Helvetica.
+///
+/// Semibold stands in for bold, matching the app's own headings
+/// (KJTheme uses w600) — it is the heaviest weight bundled. Italic has
+/// no bundled face, so the regular one stands in: an upright glyph is a
+/// far smaller loss than a missing one, and nothing in the export sets
+/// italic today.
+Future<pw.Font> kjPdfSans() =>
+    _assetFont('google_fonts/IBMPlexSans-Regular.ttf');
+Future<pw.Font> kjPdfSansBold() =>
+    _assetFont('google_fonts/IBMPlexSans-SemiBold.ttf');
+
+/// Display face for the PDF cover, likewise bundled.
+Future<pw.Font> kjPdfDisplay() =>
+    _assetFont('google_fonts/Marcellus-Regular.ttf');
 
 /// Unicode block → the Noto face covering it.
 ///
@@ -430,9 +516,12 @@ List<Future<pw.Font> Function()> scriptFacesFor(String sample) {
 /// The shared document theme: every `pw.Document` in the app should take
 /// this. The built-in Helvetica is a non-Unicode Type1 font (console
 /// warnings for — · etc.) with no coverage beyond Latin-1, and embedding
-/// IBM Plex makes exports match the app's brand. Fonts are cached by
-/// `printing` after the first fetch; offline on a fresh install this
-/// returns null and the export falls back to the defaults.
+/// IBM Plex makes exports match the app's brand.
+///
+/// The Latin faces are BUNDLED (see [kjPdfSans]) so they can neither
+/// fail nor silently degrade; only the non-Latin script fallbacks are
+/// fetched, and each of those degrades on its own without costing the
+/// rest.
 ///
 /// [scriptSample] should contain any non-Latin text the document might
 /// render — the caller's `l10n.languageEndonym` (which is by definition
@@ -441,10 +530,11 @@ List<Future<pw.Font> Function()> scriptFacesFor(String sample) {
 /// an English export of an English chart still fetches nothing extra.
 Future<pw.ThemeData?> pdfTheme({String scriptSample = ''}) async {
   try {
+    final base = await kjPdfSans();
     return pw.ThemeData.withFont(
-      base: await PdfGoogleFonts.iBMPlexSansRegular(),
-      bold: await PdfGoogleFonts.iBMPlexSansBold(),
-      italic: await PdfGoogleFonts.iBMPlexSansItalic(),
+      base: base,
+      bold: await kjPdfSansBold(),
+      italic: base,
       fontFallback: await _scriptFallback(scriptSample),
     );
   } catch (_) {
@@ -458,10 +548,21 @@ pw.TextStyle pdfBody({double size = 10}) =>
 pw.TextStyle pdfLabel() =>
     pw.TextStyle(fontSize: 8, color: pdfInkSoft, letterSpacing: 0.5);
 
-/// Section header emitted as its own top-level widget so following
-/// tables remain splittable across pages.
+/// Air above a section's rule and below its last element. One constant
+/// so every module breathes the same amount — sections used to set
+/// their own trailing gap (0, 4 or 6pt) and read as unevenly crowded.
+const double kPdfSectionGap = 14;
+
+/// Trailing gap after a section's content, before the next header's own
+/// [kPdfSectionGap]. Emitted by the module, since only it knows where
+/// its content ends.
+pw.Widget pdfSectionGap() => pw.SizedBox(height: 8);
+
+/// Section header. Not a standalone top-level widget any more: pass it
+/// to [pdfSection], which glues it to whatever must never be separated
+/// from it.
 pw.Widget pdfSectionHeader(String title) => pw.Container(
-      margin: const pw.EdgeInsets.only(top: 14, bottom: 8),
+      margin: const pw.EdgeInsets.only(top: kPdfSectionGap, bottom: 8),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
@@ -470,6 +571,138 @@ pw.Widget pdfSectionHeader(String title) => pw.Container(
           pw.Container(height: 0.8, color: pdfHairline),
         ],
       ),
+    );
+
+/// A section as MultiPage-friendly top-level widgets: [header] and
+/// [lead] fused into ONE unbreakable block, then [rest] flowing after
+/// it.
+///
+/// [lead] takes everything that is meaningless without the title — the
+/// intro or lagna line, and for chart modules the chart itself (a chart
+/// is atomic; it cannot be split, so it must travel with its caption).
+/// Long tables belong in [rest]: they SHOULD break across pages, and
+/// [pdfDataTable] repeats their column headers when they do.
+///
+/// The [pw.Inseparable] wrapper is load-bearing, not decoration. A
+/// vertical `pw.Column` reports `canSpan == true`, so MultiPage happily
+/// breaks one mid-way — which is precisely how the export came to
+/// strand a "Navamsa · D9" header at the foot of a page with its chart
+/// floating, untitled, onto the next. `Inseparable` defaults to
+/// `canSpan: false`, so the whole group moves to the next page
+/// together.
+///
+/// A glued block therefore has to FIT on one page: keep [lead] to a
+/// caption and at most one chart.
+List<pw.Widget> pdfSection({
+  required pw.Widget header,
+  pw.Widget? lead,
+  List<pw.Widget> rest = const [],
+}) =>
+    [
+      pw.Inseparable(
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [header, if (lead != null) lead],
+        ),
+      ),
+      ...rest,
+    ];
+
+/// Convenience for a [pdfSection] lead built from several widgets —
+/// they stack into the single Column the glue needs.
+pw.Widget pdfStack(List<pw.Widget> children) => pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: children,
+    );
+
+/// THE table of this document. Every module's PDF table goes through
+/// here so the export reads as one publication instead of twenty
+/// separately-styled fragments (header sizes, rules and paddings had
+/// drifted apart module by module).
+///
+/// Passing [headers] is what makes a table that splits across pages
+/// repeat its column headings on the next one — `TableHelper` handles
+/// that automatically for its header row.
+///
+/// Omitting [headers] gives a headerless label/value table (Panchang):
+/// no heading row, no repeat, every row styled as body. `headerCount`
+/// MUST be zeroed for that to hold. `TableHelper` counts the header row
+/// it emits and the data rows in one running index, so with the
+/// default `headerCount: 1` and no headers to emit, the first DATA row
+/// lands in the header slot — it takes [headerStyle], the heavy rule
+/// and `repeat: true`. That is exactly how Panchang's first reading
+/// ("Tithi · Shukla Panchami") printed as though it were a column
+/// heading.
+///
+/// [fontSize] exists for the genuinely wide grids (Shadbala's ten
+/// columns, Ashtakavarga's fourteen); everything else should take the
+/// default.
+///
+/// [cellInk] tints individual body cells — used to give a graha's name
+/// its traditional colour (the Dasha lord columns). It is indexed by
+/// DATA row, header excluded, so a caller can line it up with the list
+/// it built [rows] from without knowing about the header slot.
+pw.Widget pdfDataTable({
+  List<String>? headers,
+  required List<List<String>> rows,
+  Map<int, pw.Alignment>? alignments,
+  Map<int, pw.TableColumnWidth>? columnWidths,
+  pw.Alignment defaultAlignment = pw.Alignment.centerLeft,
+  double fontSize = 9.5,
+  double? headerFontSize,
+  PdfColor? Function(int row, int column)? cellInk,
+}) {
+  final headerCount = headers == null ? 0 : 1;
+  final body = pdfBody(size: fontSize);
+  return pw.TableHelper.fromTextArray(
+    headers: headers,
+    headerCount: headerCount,
+    data: rows,
+    headerStyle: pw.TextStyle(
+      fontSize: headerFontSize ?? 8.5,
+      fontWeight: pw.FontWeight.bold,
+      color: pdfInkSoft,
+    ),
+    cellStyle: body,
+    // Styles the cell's text only — the header row and the split /
+    // repeat behaviour are untouched, so a tinted table still breaks
+    // across pages exactly like a plain one.
+    textStyleBuilder: cellInk == null
+        ? null
+        : (column, _, rowNum) {
+            if (rowNum < headerCount) return null;
+            final ink = cellInk(rowNum - headerCount, column);
+            return ink == null ? null : body.copyWith(color: ink);
+          },
+    cellPadding: kPdfCellPadding,
+    // No box and no zebra: horizontal hairlines alone separate the
+    // rows, which is what keeps a dense grid readable on paper.
+    border: null,
+    headerDecoration: kPdfHeaderRule,
+    rowDecoration: kPdfRowRule,
+    cellAlignment: defaultAlignment,
+    cellAlignments: alignments,
+    headerAlignment: defaultAlignment,
+    headerAlignments: alignments,
+    columnWidths: columnWidths,
+  );
+}
+
+/// The house table style, in one place so [pdfDataTable] and the one
+/// hand-built table ([pdfPositionsTable]) cannot drift apart.
+const kPdfCellPadding = pw.EdgeInsets.symmetric(vertical: 4, horizontal: 6);
+const kPdfHeaderRule = pw.BoxDecoration(
+  border: pw.Border(bottom: pw.BorderSide(color: pdfInk, width: 0.7)),
+);
+const kPdfRowRule = pw.BoxDecoration(
+  border:
+      pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.4)),
+);
+
+/// A short caption/footnote under a table or chart.
+pw.Widget pdfNote(String text) => pw.Padding(
+      padding: const pw.EdgeInsets.only(top: 5),
+      child: pw.Text(text, style: pdfLabel()),
     );
 
 // ---------------------------------------------------------------------------
@@ -581,36 +814,29 @@ class TransitTimeBar extends StatelessWidget {
   }
 }
 
-pw.Widget pdfPositionsTable(AstroSnapshot snapshot, AppLocalizations l10n) =>
-    pw.TableHelper.fromTextArray(
-      headers: [
-        l10n.labelGraha,
-        l10n.labelSign,
-        l10n.labelDegree,
-        l10n.labelNakshatra,
-        l10n.labelPada,
-      ],
-      data: [
-        for (final p in snapshot.positions.values)
-          [
-            '${p.planet.label(l10n)}${p.isRetrograde ? ' (R)' : ''}',
-            p.sign.label(l10n),
-            formatDegree(p.longitude),
-            p.nakshatra.label(l10n),
-            '${p.pada}',
-          ],
-      ],
-      headerStyle: pw.TextStyle(
-          fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: pdfInkSoft),
-      cellStyle: pdfBody(size: 9.5),
-      border: null,
-      headerDecoration: const pw.BoxDecoration(
-        border: pw.Border(bottom: pw.BorderSide(color: pdfInk, width: 0.8)),
-      ),
-      rowDecoration: const pw.BoxDecoration(
-        border:
-            pw.Border(bottom: pw.BorderSide(color: pdfHairline, width: 0.5)),
-      ),
-      cellAlignment: pw.Alignment.centerLeft,
-      headerAlignment: pw.Alignment.centerLeft,
-    );
+pw.Widget pdfPositionsTable(AstroSnapshot snapshot, AppLocalizations l10n) {
+  final positions = snapshot.positions.values.toList();
+  return pdfDataTable(
+    headers: [
+      l10n.labelGraha,
+      l10n.labelSign,
+      l10n.labelDegree,
+      l10n.labelNakshatra,
+      l10n.labelPada,
+    ],
+    rows: [
+      for (final p in positions)
+        [
+          '${p.planet.label(l10n)}${p.isRetrograde ? ' (R)' : ''}',
+          p.sign.label(l10n),
+          formatDegree(p.longitude),
+          p.nakshatra.label(l10n),
+          '${p.pada}',
+        ],
+    ],
+    // Only the Graha column is tinted — matching the on-screen
+    // [PositionsTable], which leaves the sign column plain ink.
+    cellInk: (row, column) =>
+        column == 0 ? pdfPlanetInk(positions[row].planet) : null,
+  );
+}

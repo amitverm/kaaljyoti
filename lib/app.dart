@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'core/theme/theme.dart';
+import 'data/db.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'state/providers.dart';
 import 'screens/admin_screen.dart';
@@ -214,7 +217,8 @@ class KaalJyotiApp extends ConsumerStatefulWidget {
   ConsumerState<KaalJyotiApp> createState() => _KaalJyotiAppState();
 }
 
-class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp> {
+class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp>
+    with WidgetsBindingObserver {
   /// Routes the nav pill treats as top-level; restoring one of these
   /// uses `go` (no artificial back stack), anything deeper is pushed on
   /// top of Today so back behaves normally.
@@ -228,6 +232,7 @@ class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Read BEFORE attaching the persist listener: go_router notifies
     // once while setting up the initial '/today', and attaching first
     // let that overwrite the saved route before restore could read it
@@ -238,8 +243,21 @@ class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _router.routerDelegate.removeListener(_persistRoute);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Backgrounding is the last moment we run before the OS may copy or
+    // migrate our container (app update, backup) — flush the WAL so the
+    // main DB file is complete on its own. Fire-and-forget: a failed
+    // checkpoint just means the WAL replays on next open, and it must
+    // never take down backgrounding.
+    if (state == AppLifecycleState.paused) {
+      unawaited(AppDb.instance.checkpoint().catchError((_) {}));
+    }
   }
 
   void _persistRoute() {

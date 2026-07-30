@@ -47,56 +47,45 @@ class ShadbalaModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final results = computeShadbalaSync(ctx.snapshot);
     final l10n = ctx.l10n;
-    return [
-      pdfSectionHeader(l10n.moduleShadbalaTitle),
-      pw.TableHelper.fromTextArray(
-        headers: [
-          l10n.labelGraha,
-          l10n.sbSthana,
-          l10n.sbDig,
-          l10n.sbKala,
-          l10n.sbCheshta,
-          l10n.sbNaisargika,
-          l10n.sbDrik,
-          l10n.sbRupas,
-          l10n.sbReqd,
-          l10n.sbRatioHeader,
-        ],
-        data: [
-          for (final r in results)
-            [
-              r.planet.label(l10n),
-              _fmt1(r.sthana),
-              _fmt1(r.dig),
-              _fmt1(r.kala),
-              _fmt1(r.cheshta),
-              _fmt1(r.naisargika),
-              _fmt1(r.drik),
-              _fmt1(r.rupas),
-              _fmt1(r.requiredMinimum / 60),
-              r.ratio.toStringAsFixed(2),
-            ],
-        ],
-        headerStyle: pw.TextStyle(
-            fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: pdfInkSoft),
-        cellStyle: pdfBody(size: 8.5),
-        border: null,
-        headerDecoration: const pw.BoxDecoration(
-          border: pw.Border(bottom: pw.BorderSide(color: pdfInk, width: 0.8)),
+    return pdfSection(
+      header: pdfSectionHeader(l10n.moduleShadbalaTitle),
+      rest: [
+        pdfDataTable(
+          headers: [
+            l10n.labelGraha,
+            l10n.sbSthana,
+            l10n.sbDig,
+            l10n.sbKala,
+            l10n.sbCheshta,
+            l10n.sbNaisargika,
+            l10n.sbDrik,
+            l10n.sbRupas,
+            l10n.sbReqd,
+            l10n.sbRatioHeader,
+          ],
+          rows: [
+            for (final r in results)
+              [
+                r.planet.label(l10n),
+                _fmt1(r.sthana),
+                _fmt1(r.dig),
+                _fmt1(r.kala),
+                _fmt1(r.cheshta),
+                _fmt1(r.naisargika),
+                _fmt1(r.drik),
+                _fmt1(r.rupas),
+                _fmt1(r.requiredMinimum / 60),
+                r.ratio.toStringAsFixed(2),
+              ],
+          ],
+          // Ten columns of numbers: the one table that needs to shrink.
+          fontSize: 8.5,
+          headerFontSize: 7.5,
         ),
-        rowDecoration: const pw.BoxDecoration(
-          border:
-              pw.Border(bottom: pw.BorderSide(color: pdfHairline, width: 0.5)),
-        ),
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-      pw.SizedBox(height: 4),
-      pw.Text(
-        l10n.sbPdfNote,
-        style: pw.TextStyle(fontSize: 7.5, color: pdfInkSoft),
-      ),
-    ];
+        pdfNote(l10n.sbPdfNote),
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 

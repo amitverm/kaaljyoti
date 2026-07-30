@@ -67,35 +67,32 @@ class PanchadhaMaitriModule extends AstroModule {
     final legend = PanchadhaMaitri.values
         .map((m) => '${m.abbrLabel(l10n)} ${m.tierLabel(l10n)}')
         .join(' · ');
-    return [
-      pdfSectionHeader(l10n.modulePanchadhaMaitriTitle),
-      pw.TableHelper.fromTextArray(
-        headers: [
-          l10n.maitriFromTo,
-          ...kShadbalaPlanets.map((p) => p.abbrLabel(l10n)),
-        ],
-        data: [
-          for (final from in kShadbalaPlanets)
-            [
-              from.abbrLabel(l10n),
-              for (final to in kShadbalaPlanets)
-                from == to
-                    ? '—'
-                    : maitriBetween(from, to, s).compound.abbrLabel(l10n),
-            ],
-        ],
-        headerStyle: pdfLabel(),
-        cellStyle: pdfBody(size: 9),
-        border: null,
-        cellAlignment: pw.Alignment.center,
-        headerAlignment: pw.Alignment.center,
-      ),
-      pw.SizedBox(height: 4),
-      pw.Text(
-        '${l10n.maitriPdfLegendPrefix} $legend.',
-        style: pdfLabel(),
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(l10n.modulePanchadhaMaitriTitle),
+      rest: [
+        pdfDataTable(
+          headers: [
+            l10n.maitriFromTo,
+            ...kShadbalaPlanets.map((p) => p.abbrLabel(l10n)),
+          ],
+          rows: [
+            for (final from in kShadbalaPlanets)
+              [
+                from.abbrLabel(l10n),
+                for (final to in kShadbalaPlanets)
+                  from == to
+                      ? '—'
+                      : maitriBetween(from, to, s).compound.abbrLabel(l10n),
+              ],
+          ],
+          // A symmetric matrix reads as a grid, not a list — centred.
+          defaultAlignment: pw.Alignment.center,
+          fontSize: 9,
+        ),
+        pdfNote('${l10n.maitriPdfLegendPrefix} $legend.'),
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 

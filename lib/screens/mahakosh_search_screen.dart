@@ -6,7 +6,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../core/theme/theme.dart';
 import '../core/theme/type_scale.dart';
@@ -42,8 +41,23 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
   int? _communityTotal;
   List<MahakoshChartSummary> _recent = [];
 
-  // Which browse tab is showing when not searching: 'browse' | 'bookmarks'.
+  /// Why the browse list is empty, when it's empty because of a failure
+  /// rather than because the community is.
+  String? _browseError;
+
+  // Which browse tab is showing when not searching:
+  // 'browse' | 'bookmarks' | 'recent'.
   String _tab = 'browse';
+
+  /// Paging. Both lists are capped server-side, so before this the
+  /// screen would announce "312 charts match" and then show 25 with no
+  /// way to reach the rest.
+  static const _pageSize = 25;
+  bool _loadingMore = false;
+
+  bool get _moreResults => _total != null && _results.length < _total!;
+  bool get _moreCommunity =>
+      _communityTotal != null && _recent.length < _communityTotal!;
 
   @override
   void initState() {
@@ -55,17 +69,89 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
     final repo = ref.read(mahakoshRepoProvider);
     if (repo == null || !repo.isSignedIn) return;
     try {
-      final res = await repo.recent();
+      final res = await repo.recent(limit: _pageSize);
       if (mounted) {
         setState(() {
+          _browseError = null;
           _communityTotal = res.total;
           _recent = res.results;
         });
       }
-    } catch (_) {
-      // Browse state is best-effort; search still works without it.
+    } catch (e) {
+      // This used to swallow everything as "best-effort", which meant a
+      // hard backend failure rendered as "no charts yet" — indisputably
+      // worse than an error, because it looks like an empty community
+      // rather than a broken screen.
+      if (mounted) setState(() => _browseError = '$e');
     }
   }
+
+  /// Fetches the next page of whichever list is showing and APPENDS it.
+  /// Guarded against re-entry so a double tap can't duplicate a page.
+  Future<void> _loadMore() async {
+    final repo = ref.read(mahakoshRepoProvider);
+    if (repo == null || _loadingMore) return;
+    setState(() => _loadingMore = true);
+    try {
+      if (_searched) {
+        final res = await repo.search(_buildTree(),
+            limit: _pageSize, offset: _results.length);
+        if (mounted) {
+          setState(() {
+            _total = res.total;
+            // Guard against a shifting corpus handing back a row we
+            // already show — a duplicate key would be visible.
+            final seen = {for (final r in _results) r.mkCode};
+            _results.addAll(res.results.where((r) => !seen.contains(r.mkCode)));
+          });
+        }
+      } else {
+        final res =
+            await repo.recent(limit: _pageSize, offset: _recent.length);
+        if (mounted) {
+          setState(() {
+            _communityTotal = res.total;
+            final seen = {for (final r in _recent) r.mkCode};
+            _recent.addAll(res.results.where((r) => !seen.contains(r.mkCode)));
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.msLoadMoreError('$e'))));
+      }
+    } finally {
+      if (mounted) setState(() => _loadingMore = false);
+    }
+  }
+
+  /// "Showing n of N" plus the button that fetches the next page.
+  Widget _loadMoreFooter(int shown, int total) => Padding(
+        padding: const EdgeInsets.only(top: 4, bottom: 8),
+        child: Column(
+          children: [
+            Text(
+              context.l10n.msShowingOf('$shown', '$total'),
+              style: KJTheme.mono(size: 11, color: KJColors.inkSoft),
+            ),
+            const SizedBox(height: 6),
+            if (_loadingMore)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2)),
+              )
+            else
+              OutlinedButton(
+                onPressed: _loadMore,
+                child: Text(context.l10n.msLoadMore),
+              ),
+          ],
+        ),
+      );
 
   FilterNode _buildTree() {
     final nodes = <FilterNode>[
@@ -80,7 +166,8 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
     final repo = ref.read(mahakoshRepoProvider);
     if (repo == null || _filters.isEmpty) return;
     try {
-      final res = await repo.search(_buildTree());
+      // A fresh search always starts at page one.
+      final res = await repo.search(_buildTree(), limit: _pageSize);
       setState(() {
         _searched = true;
         _total = res.total;
@@ -163,6 +250,7 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
         ),
         const SizedBox(height: 4),
         for (final r in _results) _chartRow(r, bookmarked),
+        if (_moreResults) _loadMoreFooter(_results.length, _total!),
       ];
 
   List<Widget> _browseSection(Set<String> bookmarked) => [
@@ -171,6 +259,7 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
             for (final t in [
               ('browse', context.l10n.msBrowse),
               ('bookmarks', context.l10n.msBookmarks),
+              ('recent', context.l10n.msRecent),
             ])
               Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -187,9 +276,58 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
         const SizedBox(height: 14),
         if (_tab == 'browse')
           ..._communityChildren(bookmarked)
+        else if (_tab == 'recent')
+          ..._recentChildren(bookmarked)
         else
           ..._bookmarkChildren(bookmarked),
       ];
+
+  /// Charts opened on this device, most recent first. The codes are
+  /// device-local; the summaries are whatever the already-loaded browse
+  /// and search lists happen to hold, so this costs no extra fetch.
+  /// A code we have no summary for is shown as a plain code row rather
+  /// than dropped — it is still a real chart the user can open.
+  List<Widget> _recentChildren(Set<String> bookmarked) {
+    final codes = ref.watch(recentMahakoshProvider);
+    if (codes.isEmpty) {
+      return [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(context.l10n.msNoRecent,
+              style: TextStyle(fontSize: 13, color: KJColors.inkSoft)),
+        ),
+      ];
+    }
+    final known = {
+      for (final r in [..._recent, ..._results]) r.mkCode: r,
+    };
+    return [
+      Text(context.l10n.msRecentCount('${codes.length}'),
+          style: _sectionLabelStyle),
+      const SizedBox(height: 10),
+      for (final code in codes)
+        known[code] != null
+            ? _chartRow(known[code]!, bookmarked)
+            : _codeOnlyRow(code),
+    ];
+  }
+
+  /// A recently-opened chart we hold no summary for — still openable.
+  Widget _codeOnlyRow(String mkCode) => Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
+          title: Text(context.l10n.msChartCode(mkCode),
+              style:
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          onTap: () => _openChart(mkCode),
+        ),
+      );
+
+  /// Opens a community chart and records the visit for the Recent tab.
+  void _openChart(String mkCode) {
+    ref.read(recentMahakoshProvider.notifier).touch(mkCode);
+    context.push('/mahakosh/chart/$mkCode');
+  }
 
   List<Widget> _communityChildren(Set<String> bookmarked) => [
         Text(
@@ -199,7 +337,25 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
           style: _sectionLabelStyle,
         ),
         const SizedBox(height: 10),
-        if (_recent.isEmpty)
+        if (_browseError != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.msBrowseError(_browseError!),
+                  style: TextStyle(fontSize: 13, color: KJColors.inkSoft),
+                ),
+                const SizedBox(height: 6),
+                OutlinedButton(
+                  onPressed: _loadRecent,
+                  child: Text(context.l10n.retry),
+                ),
+              ],
+            ),
+          )
+        else if (_recent.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
@@ -208,6 +364,7 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
             ),
           ),
         for (final r in _recent) _chartRow(r, bookmarked),
+        if (_moreCommunity) _loadMoreFooter(_recent.length, _communityTotal!),
       ];
 
   List<Widget> _bookmarkChildren(Set<String> bookmarked) {
@@ -288,21 +445,28 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
         ),
       );
 
+  /// A result row. Every chart in this corpus is anonymous, so the
+  /// per-row "(anonymized)" suffix said nothing that the screen doesn't
+  /// already say once — and the upload month and general location did
+  /// no work in choosing between charts either. What's left is the code
+  /// and the birth year, plus the yoga/event counts when a chart has
+  /// them: in a research corpus those counts are the one thing that
+  /// makes one record worth more than another.
   Widget _chartRow(MahakoshChartSummary r, Set<String> bookmarked) {
     final isBm = bookmarked.contains(r.mkCode);
     final parts = [
       if (r.birthYear != null) 'b. ${r.birthYear}',
-      if (r.locationGeneral.isNotEmpty) r.locationGeneral,
-      if (r.yogaCount > 0) '${r.yogaCount} yogas',
-      if (r.eventCount > 0) '${r.eventCount} events',
-      DateFormat('MMM yyyy').format(r.createdAt),
+      if (r.yogaCount > 0) context.l10n.msYogaCount('${r.yogaCount}'),
+      if (r.eventCount > 0) context.l10n.msEventCount('${r.eventCount}'),
     ];
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        title: Text(context.l10n.hcChartAnonymized(r.mkCode),
+        title: Text(context.l10n.msChartCode(r.mkCode),
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-        subtitle: Text(parts.join(' · '), style: const TextStyle(fontSize: 12)),
+        subtitle: parts.isEmpty
+            ? null
+            : Text(parts.join(' · '), style: const TextStyle(fontSize: 12)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -330,10 +494,12 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
                 ),
               ],
             ),
-            Icon(Icons.chevron_right, size: 20, color: KJColors.inkSoft),
+            // No chevron: the tile is tappable, which already reads as
+            // navigable, and a third trailing glyph on every row only
+            // crowded the two that do something.
           ],
         ),
-        onTap: () => context.push('/mahakosh/chart/${r.mkCode}'),
+        onTap: () => _openChart(r.mkCode),
       ),
     );
   }
@@ -344,6 +510,9 @@ class _MahakoshSearchScreenState extends ConsumerState<MahakoshSearchScreen> {
   /// right list.
   bool _removeRow(MahakoshChartSummary r) {
     final inSearchResults = _searched && _results.contains(r);
+    // A chart the user hid or reported must not survive in the Recent
+    // tab, which would otherwise hand it straight back to them.
+    ref.read(recentMahakoshProvider.notifier).forget([r.mkCode]);
     setState(() {
       if (inSearchResults) {
         _results.remove(r);

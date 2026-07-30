@@ -6,6 +6,7 @@
 /// Pure Dart, no Flutter.
 library;
 
+import 'graha_drishti.dart';
 import 'models.dart';
 
 class ChartFacts {
@@ -33,20 +34,21 @@ class ChartFacts {
       a != b && positions[a]!.sign == positions[b]!.sign;
 
   /// Graha drishti (whole-sign): every graha aspects the 7th from
-  /// itself; Mars adds 4/8, Jupiter 5/9, Saturn 3/10.
-  static const Map<Planet, List<int>> _special = {
-    Planet.mars: [4, 8],
-    Planet.jupiter: [5, 9],
-    Planet.saturn: [3, 10],
-  };
-
+  /// itself; Mars adds 4/8, Jupiter 5/9, Saturn 3/10. The rule lives in
+  /// graha_drishti.dart so the yoga engine and the Graha Drishti widget
+  /// can never drift apart.
+  ///
+  /// Rahu and Ketu cast nothing here. That is not a change in behaviour:
+  /// this method is only reachable via [connection], which yogas.dart
+  /// calls exclusively with house LORDS, and [ZodiacSign.lord] never
+  /// returns a node — so nodal drishti was already unreachable. It is
+  /// now excluded on purpose rather than by accident.
   bool aspects(Planet a, Planet b) {
     if (a == b) return false;
-    final from = positions[a]!.sign.index;
-    final to = positions[b]!.sign.index;
-    final count = ((to - from + 12) % 12) + 1;
-    if (count == 7) return true;
-    return (_special[a] ?? const []).contains(count);
+    if (!castsDrishti(a)) return false;
+    final count = drishtiDistance(
+        positions[a]!.sign.index, positions[b]!.sign.index);
+    return drishtiHousesOf(a).contains(count);
   }
 
   bool mutualAspect(Planet a, Planet b) => aspects(a, b) && aspects(b, a);

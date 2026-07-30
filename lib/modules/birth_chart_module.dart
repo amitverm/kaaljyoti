@@ -7,7 +7,6 @@ import '../pdf/pw.dart' as pw;
 import '../charts/chart_style.dart';
 import '../charts/chart_view.dart';
 import '../charts/planet_token.dart';
-import '../core/astro/dignity.dart';
 import '../core/astro/divisional.dart';
 import '../core/astro/jaimini_karaka.dart';
 import '../core/astro/jaimini_pada.dart';
@@ -140,46 +139,31 @@ class BirthChartModule extends AstroModule {
     return value[0].toUpperCase() + value.substring(1);
   }
 
-  /// Builds per-planet annotations from the natal snapshot according to
-  /// the instance's config — degrees, Sapta Karakas, dignity, and
+  /// Per-planet annotations from the natal snapshot according to the
+  /// instance's config — degrees, Sapta Karakas, dignity, and
   /// combustion. Cheap enough to recompute per build (no ephemeris
   /// calls; those only happen for the optional transit overlay).
+  ///
+  /// Shared with [pdfView] so the exported chart honours exactly the
+  /// toggles the card does.
   Map<Planet, PlanetToken> _tokens(
-    AstroSnapshot s, {
-    required bool showDegrees,
-    required bool showKarakas,
-    required bool showExtras,
-  }) {
-    final karakas =
-        showKarakas ? saptaKarakas(s.positions) : const <Planet, Karaka>{};
-    final sun = s.positions[Planet.sun]!;
-    return {
-      for (final p in s.positions.values)
-        p.planet: PlanetToken(
-          planet: p.planet,
-          retrograde: p.isRetrograde,
-          degreeInSign: showDegrees ? p.degreesInSign : null,
-          karaka: karakas[p.planet]?.code,
-          dignity: showExtras ? dignityOf(p) : PlanetDignity.none,
-          combust:
-              showExtras && p.planet != Planet.sun ? isCombust(p, sun) : false,
-        ),
-    };
-  }
+          AstroSnapshot s, Map<String, dynamic> config) =>
+      chartTokens(
+        s.positions,
+        showDegrees: _flag(config, 'degrees'),
+        showKarakas: _flag(config, 'karakas'),
+        showExtras: _flag(config, 'extras'),
+      );
 
   @override
   Widget cardView(BuildContext context, ModuleContext ctx) {
     final s = ctx.snapshot;
     final showDegrees = _flag(ctx.config, 'degrees');
     final showKarakas = _flag(ctx.config, 'karakas');
-    final showExtras = _flag(ctx.config, 'extras');
     final showTransit = _flag(ctx.config, 'transit');
     final viewFrom = _viewFromSign(ctx.config, s);
 
-    final tokens = _tokens(s,
-        showDegrees: showDegrees,
-        showKarakas: showKarakas,
-        showExtras: showExtras);
+    final tokens = _tokens(s, ctx.config);
 
     return _BirthChartCardBody(
       kundliId: ctx.kundli.id,
@@ -271,30 +255,40 @@ class BirthChartModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
     final s = ctx.snapshot;
-    return [
-      pdfSectionHeader(l10n.bcPdfHeader),
-      pw.Text(
-        ctx.l10n.bcLagnaLine(
-            s.lagnaSign.label(ctx.l10n), formatDegree(s.ascendant)),
-        style: pdfBody(),
-      ),
-      pw.SizedBox(height: 10),
-      pw.Center(
-        child: pdfChart(
-          l10n: l10n,
-          placements: vargaPlacements(s, Varga.d1),
-          lagna: s.lagnaSign,
-          style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
-          retrograde: {
-            for (final p in s.positions.values) p.planet: p.isRetrograde,
-          },
-          trueAscendantSign: s.lagnaSign,
-          ascendantDegree: s.ascendant,
-          padaLabels: _overlay(s, ctx.config),
+    // The exported chart is annotated from the SAME token set the card
+    // builds, so every display toggle the user set on the widget shows
+    // up on paper. (It didn't: degrees, karakas and dignity/combustion
+    // were dropped on the way to the PDF.)
+    final ann = pdfAnnotationsFor(_tokens(s, ctx.config));
+    return pdfSection(
+      header: pdfSectionHeader(l10n.bcPdfHeader),
+      // Header + lagna line + chart are one unbreakable unit: a chart
+      // cannot be split, so it must never be parted from its title.
+      lead: pdfStack([
+        pw.Text(
+          l10n.bcLagnaLine(s.lagnaSign.label(l10n), formatDegree(s.ascendant)),
+          style: pdfBody(),
         ),
-      ),
-      pw.SizedBox(height: 6),
-    ];
+        pw.SizedBox(height: 10),
+        pw.Center(
+          child: pdfChart(
+            l10n: l10n,
+            placements: vargaPlacements(s, Varga.d1),
+            lagna: s.lagnaSign,
+            style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
+            retrograde: {
+              for (final p in s.positions.values) p.planet: p.isRetrograde,
+            },
+            trueAscendantSign: s.lagnaSign,
+            ascendantDegree: s.ascendant,
+            padaLabels: _overlay(s, ctx.config),
+            degreeLabels: ann.degrees,
+            planetTags: ann.tags,
+          ),
+        ),
+        pdfSectionGap(),
+      ]),
+    );
   }
 }
 

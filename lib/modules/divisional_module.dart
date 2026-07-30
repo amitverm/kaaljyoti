@@ -34,8 +34,18 @@ class DivisionalChartModule extends AstroModule {
         defaultSpan: CardSpan.full,
       );
 
+  /// What an instance with no 'varga' key shows.
+  ///
+  /// This constant is the single source of truth, fed BOTH to the
+  /// parser below and to the config choice's [defaultValue]. It used to
+  /// be a bare literal here while the choice declared no default, so
+  /// the host fell back to `options.first` — D2 — and an unconfigured
+  /// block rendered as D9 while its settings sheet insisted D2 was
+  /// selected. Two answers to "what does absent mean" is one too many.
+  static const _defaultVarga = 'd9';
+
   Varga _varga(Map<String, dynamic> config) =>
-      Varga.byName((config['varga'] as String?) ?? 'd9');
+      Varga.byName((config['varga'] as String?) ?? _defaultVarga);
 
   /// Padas are on unless explicitly hidden. Computed from the varga's
   /// OWN lagna and lord placements (per K.N. Rao) — not the D1 padas
@@ -61,6 +71,7 @@ class DivisionalChartModule extends AstroModule {
             for (final v in Varga.values.where((v) => v != Varga.d1))
               (v.name, v.displayLabel(l10n)),
           ],
+          defaultValue: _defaultVarga,
         ),
         chartStyleChoice(l10n),
         ModuleConfigChoice(
@@ -107,25 +118,30 @@ class DivisionalChartModule extends AstroModule {
     final varga = _varga(ctx.config);
     final s = ctx.snapshot;
     final l10n = ctx.l10n;
-    return [
-      pdfSectionHeader(varga.displayLabel(l10n)),
-      pw.Text(
-        l10n.vargaLagnaLine(varga.code, vargaLagna(s, varga).label(l10n)),
-        style: pdfBody(),
-      ),
-      pw.SizedBox(height: 10),
-      pw.Center(
-        child: pdfChart(
-          l10n: l10n,
-          placements: vargaPlacements(s, varga),
-          lagna: vargaLagna(s, varga),
-          style: _style(ctx).style,
-          size: 200,
-          padaLabels: _padaLabels(s, varga, ctx.config),
+    // No degree annotations: a varga's planets carry no meaningful
+    // degree-in-sign of their own (the natal degree would be a lie
+    // about the D-chart), which is exactly why this module offers no
+    // 'degrees' toggle on screen either.
+    return pdfSection(
+      header: pdfSectionHeader(varga.displayLabel(l10n)),
+      lead: pdfStack([
+        pw.Text(
+          l10n.vargaLagnaLine(varga.code, vargaLagna(s, varga).label(l10n)),
+          style: pdfBody(),
         ),
-      ),
-      pw.SizedBox(height: 6),
-    ];
+        pw.SizedBox(height: 10),
+        pw.Center(
+          child: pdfChart(
+            l10n: l10n,
+            placements: vargaPlacements(s, varga),
+            lagna: vargaLagna(s, varga),
+            style: _style(ctx).style,
+            padaLabels: _padaLabels(s, varga, ctx.config),
+          ),
+        ),
+        pdfSectionGap(),
+      ]),
+    );
   }
 }
 

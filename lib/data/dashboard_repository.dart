@@ -112,6 +112,21 @@ class DashboardRepository {
     return rows.map(_fromRow).toList();
   }
 
+  /// A single instance by id, across all views — null once the user has
+  /// removed it. The PDF report's blocks track dashboard instances by id
+  /// so they follow the card's settings; this is how they look one up.
+  Future<PlacedWidget?> instanceById(String instanceId) async {
+    final db = await _db.database;
+    final rows = await db.query(
+      'view_widgets',
+      where: 'instance_id = ?',
+      whereArgs: [instanceId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return _fromRow(rows.first);
+  }
+
   PlacedWidget _fromRow(Map<String, Object?> r) => PlacedWidget(
         instanceId: r['instance_id'] as String,
         viewId: r['view_id'] as String,

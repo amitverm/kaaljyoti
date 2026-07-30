@@ -545,12 +545,14 @@ extension DashaSystemL10n on DashaSystem {
         DashaSystem.vimshottari => l10n.dashaSystemVimshottari,
         DashaSystem.yogini => l10n.dashaSystemYogini,
         DashaSystem.jaimini => l10n.dashaSystemJaimini,
+        DashaSystem.sthira => l10n.dashaSystemSthira,
       };
 
   String subtitleLabel(AppLocalizations l10n) => switch (this) {
         DashaSystem.vimshottari => l10n.dashaSystemVimshottariSubtitle,
         DashaSystem.yogini => l10n.dashaSystemYoginiSubtitle,
         DashaSystem.jaimini => l10n.dashaSystemJaiminiSubtitle,
+        DashaSystem.sthira => l10n.dashaSystemSthiraSubtitle,
       };
 }
 

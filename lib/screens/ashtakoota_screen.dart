@@ -19,8 +19,8 @@ import '../modules/common.dart'
         pdfInk,
         pdfInkSoft,
         pdfMaroon,
-        pdfHairline,
         pdfBody,
+        pdfDataTable,
         pdfSectionHeader,
         pdfTheme,
         kjPdfCredit;
@@ -232,14 +232,20 @@ class _MatchBody extends ConsumerWidget {
             style: pw.TextStyle(fontSize: 14, color: pdfMaroon),
           ),
           pdfSectionHeader(l10n.akKootaBreakdown),
-          pw.TableHelper.fromTextArray(
+          pdfDataTable(
             headers: [
               l10n.akColKoota,
               l10n.akColPoints,
               l10n.akColMax,
               l10n.akColNotes,
             ],
-            data: [
+            columnWidths: const {
+              0: pw.FlexColumnWidth(1.3),
+              1: pw.FlexColumnWidth(0.7),
+              2: pw.FlexColumnWidth(0.6),
+              3: pw.FlexColumnWidth(2.4),
+            },
+            rows: [
               for (final k in result.kootas)
                 [
                   k.koota.label(l10n),
@@ -250,22 +256,6 @@ class _MatchBody extends ConsumerWidget {
                   k.note ?? '',
                 ],
             ],
-            headerStyle: pw.TextStyle(
-                fontSize: 8.5,
-                fontWeight: pw.FontWeight.bold,
-                color: pdfInkSoft),
-            cellStyle: pdfBody(size: 9.5),
-            border: null,
-            headerDecoration: const pw.BoxDecoration(
-              border:
-                  pw.Border(bottom: pw.BorderSide(color: pdfInk, width: 0.8)),
-            ),
-            rowDecoration: const pw.BoxDecoration(
-              border: pw.Border(
-                  bottom: pw.BorderSide(color: pdfHairline, width: 0.5)),
-            ),
-            cellAlignment: pw.Alignment.centerLeft,
-            headerAlignment: pw.Alignment.centerLeft,
           ),
           pdfSectionHeader(l10n.akMangalDoshaFull),
           pw.Text(

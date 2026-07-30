@@ -19,6 +19,7 @@ import '../ui/date_fields.dart';
 import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import 'kundli_list_screen.dart' show showLabelPicker;
 
 class KundliEditScreen extends ConsumerStatefulWidget {
   const KundliEditScreen({super.key, required this.kundliId});
@@ -111,6 +112,50 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
     }
   }
 
+  /// Labels as removable chips plus an "add" affordance. Edits apply to
+  /// the in-memory kundli and persist on Save alongside name and note —
+  /// a label added here must not survive the user backing out.
+  Widget _labelEditor(Kundli k) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        KJSectionLabel(l10n.klLabels, padded: true),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final label in k.labels)
+              InputChip(
+                label: Text(label),
+                onDeleted: () => setState(() {
+                  _kundli = k.copyWith(
+                      labels: [...k.labels]..remove(label));
+                }),
+              ),
+            ActionChip(
+              avatar: const Icon(Icons.add, size: 16),
+              label: Text(l10n.klAddLabel),
+              onPressed: () async {
+                // Offer every label already in use so the user picks the
+                // existing "2026 clients" instead of coining a near-miss.
+                final all = ref.read(kundliListDataProvider).value?.labels ??
+                    const <String>[];
+                final picked = await showLabelPicker(context, existing: all);
+                if (picked == null || !mounted) return;
+                final current = _kundli ?? k;
+                if (current.labels.contains(picked)) return;
+                setState(() {
+                  _kundli = current.copyWith(labels: [...current.labels, picked]);
+                });
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Future<void> _delete() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -132,6 +177,10 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
     await ref.read(kundliRepoProvider).delete(widget.kundliId);
     // Tombstone (not hard-delete) so other devices apply the deletion.
     ref.read(syncServiceProvider)?.deleteRemote(widget.kundliId);
+    // Drop the device-local list state too, so the chart can't linger in
+    // the pinned section or the recents strip.
+    ref.read(pinnedKundlisProvider.notifier).removeAll([widget.kundliId]);
+    ref.read(recentKundlisProvider.notifier).forget([widget.kundliId]);
     ref.invalidate(kundlisProvider);
     if (mounted) context.go('/');
   }
@@ -331,6 +380,8 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
               hintText: context.l10n.beNoteHint,
             ),
           ),
+          const SizedBox(height: 20),
+          _labelEditor(k),
           const SizedBox(height: 24),
           _settingBlock(
             title: context.l10n.labelChartStyle,

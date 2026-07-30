@@ -230,11 +230,18 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     return l10n.tdTillDate(KJDate.date(t), _hm(t));
   }
 
+  /// Today's transit wheel has no kundli to key its rotation to, so it
+  /// gets its own stable key in the shared "view from" provider — the
+  /// rotation then survives leaving and returning to the screen, like
+  /// every other chart's does.
+  static const _todayViewKey = 'today#transit';
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final d = _data;
     final place = _place;
+    final todayViewFrom = ref.watch(widgetViewFromProvider(_todayViewKey));
     return KJScaffold(
       section: KJSection.today,
       appBar: AppBar(title: Text(l10n.tdTitle)),
@@ -429,11 +436,19 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                       children: [
                         ChartView(
                           placements: d.placements,
-                          lagna: d.lagnaSign,
+                          // Rotatable like every other whole-sign chart
+                          // (double-tap / long-press a house). Today has
+                          // no kundli, so the rotation is keyed to the
+                          // screen itself.
+                          lagna: todayViewFrom ?? d.lagnaSign,
                           trueAscendantSign: d.lagnaSign,
                           ascendantDegree: d.ascendant,
                           ascendantRank:
                               ascendantRankIn(d.positions, d.ascendant),
+                          onSignSelect: (sign) => ref
+                              .read(widgetViewFromProvider(_todayViewKey)
+                                  .notifier)
+                              .state = sign == d.lagnaSign ? null : sign,
                           style: ChartStyle.values.firstWhere(
                             (s) => s.name == _chartStyle,
                             orElse: () => ChartStyle.north,

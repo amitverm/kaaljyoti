@@ -596,11 +596,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get peSavedReportNote =>
-      'इस कुंडली के लिए आपकी सहेजी रिपोर्ट — डैशबोर्ड से अलग रखी गई।';
+      'हर कुंडली के लिए एक ही रिपोर्ट लेआउट — ब्लॉक तब तक डैशबोर्ड का अनुसरण करते हैं जब तक आप उन्हें यहाँ न बदलें, और रीसेट उन्हें वापस ले आता है।';
 
   @override
   String get peFirstExportNote =>
-      'पहला निर्यात आपके डैशबोर्ड से शुरू होता है; उसके बाद रिपोर्ट अलग से याद रखी जाती है।';
+      'हर कुंडली के लिए एक ही रिपोर्ट लेआउट, आपके डैशबोर्ड से शुरू।';
 
   @override
   String get peReset => 'रीसेट';
@@ -916,6 +916,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get dbLifeEvents => 'जीवन-घटनाक्रम';
+
+  @override
+  String get dbShareScreenshot => 'स्क्रीनशॉट साझा करें';
+
+  @override
+  String get dbScreenshotFailed => 'स्क्रीनशॉट नहीं बन सका';
 
   @override
   String get dbExportPrint => 'निर्यात / प्रिंट';
@@ -1613,6 +1619,45 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get dashaSystemJaiminiSubtitle =>
       'राशि-आधारित · स्वामी की स्थिति से राशि अवधियाँ';
+
+  @override
+  String get dashaSystemSthira => 'जैमिनी स्थिर';
+
+  @override
+  String get dashaSystemSthiraSubtitle =>
+      'राशि-आधारित · ब्रह्मा से 7/8/9 वर्ष की स्थिर अवधियाँ';
+
+  @override
+  String dmSthiraDeities(Object brahma, Object rudra, Object maheshwara) {
+    return 'ब्रह्मा $brahma · रुद्र $rudra · महेश्वर $maheshwara';
+  }
+
+  @override
+  String get dmGrahaBala => 'ग्रह बल';
+
+  @override
+  String get dmRashiBala => 'राशि बल';
+
+  @override
+  String get dmColMula => 'मूल';
+
+  @override
+  String get dmColAmsa => 'अंश';
+
+  @override
+  String get dmColKendra => 'केंद्र';
+
+  @override
+  String get dmColChara => 'चर';
+
+  @override
+  String get dmColSthira => 'स्थिर';
+
+  @override
+  String get dmColDrishti => 'दृष्टि';
+
+  @override
+  String get dmColTotal => 'योग';
 
   @override
   String get dashaLevelMaha => 'महादशा';
@@ -4036,6 +4081,72 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get ssMethodLabel => 'पद्धति';
+
+  @override
+  String get ssMethodSigns => 'पारंपरिक (राशि)';
+
+  @override
+  String get ssMethodDegrees => 'अंश-आधारित (45°)';
+
+  @override
+  String get ssDegCaption => 'जन्म चंद्र से दोनों ओर 45° के भीतर शनि';
+
+  @override
+  String ssDegStatusInPast(String sep, String date) {
+    return 'साढ़े साती में — शनि जन्म चंद्र से $sep आगे · समाप्ति $date';
+  }
+
+  @override
+  String ssDegStatusInBefore(String sep, String date) {
+    return 'साढ़े साती में — शनि जन्म चंद्र से $sep पहले · समाप्ति $date';
+  }
+
+  @override
+  String ssDegStatusNext(String date) {
+    return 'साढ़े साती नहीं — अगली $date से आरंभ';
+  }
+
+  @override
+  String get ssDegStatusNone =>
+      'साढ़े साती नहीं — गणना की गई जीवन-अवधि में कोई आगामी अवधि नहीं।';
+
+  @override
+  String get ssDegColEntry => 'प्रवेश';
+
+  @override
+  String get ssDegColExit => 'निकास';
+
+  @override
+  String get ssDegColConjunction => 'सटीक युति';
+
+  @override
+  String get ssDegLegendApproaching => 'समीपगामी';
+
+  @override
+  String get ssDegLegendConjunction => 'युति';
+
+  @override
+  String get ssDegLegendSeparating => 'दूरगामी';
+
+  @override
+  String get ssDegLegendOutOfArc => 'परिधि से बाहर';
+
+  @override
+  String ssDegOutOfArc(String start, String end, String len) {
+    return '↳ परिधि से बाहर (वक्री): $start – $end ($len)';
+  }
+
+  @override
+  String ssDegConjunctionRow(String date) {
+    return '↳ सटीक युति: $date';
+  }
+
+  @override
+  String get ssDegNoWindows =>
+      'गणना की गई जीवन-अवधि में शनि कभी जन्म चंद्र के 45° के भीतर नहीं आता।';
+
+  @override
   String get ssTooltipRetroNote => '(वक्री पुनः प्रवेश सहित)';
 
   @override
@@ -5530,4 +5641,279 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get klCompareCap => 'Compare up to 4 charts at a time.';
+
+  @override
+  String get add => 'जोड़ें';
+
+  @override
+  String get klSearchHint => 'नाम, टिप्पणी, स्थान, लेबल खोजें';
+
+  @override
+  String get klClearSearch => 'खोज हटाएँ';
+
+  @override
+  String get klFilterAll => 'सभी';
+
+  @override
+  String get klPinned => 'पिन किए हुए';
+
+  @override
+  String get klAllKundlis => 'सभी कुंडलियाँ';
+
+  @override
+  String get klRecent => 'हाल की';
+
+  @override
+  String get klListOptions => 'क्रम और विवरण';
+
+  @override
+  String get klSortLabel => 'क्रम';
+
+  @override
+  String get klSortRecent => 'हाल में खोली गई';
+
+  @override
+  String get klSortAdded => 'हाल में जोड़ी गई';
+
+  @override
+  String get klSortName => 'नाम (अ–ज्ञ)';
+
+  @override
+  String get klSortBirth => 'जन्म तिथि';
+
+  @override
+  String get klDensityLabel => 'पंक्ति विवरण';
+
+  @override
+  String get klDensityCompact => 'संक्षिप्त';
+
+  @override
+  String get klDensityComfortable => 'सामान्य';
+
+  @override
+  String get klDensityDetailed => 'विस्तृत';
+
+  @override
+  String klShowingCount(String visible, String total) {
+    return '$total में से $visible कुंडलियाँ';
+  }
+
+  @override
+  String get klNoMatches => 'इस खोज से कोई कुंडली नहीं मिली।';
+
+  @override
+  String get klClearFilters => 'खोज और फ़िल्टर हटाएँ';
+
+  @override
+  String get klPin => 'पिन करें';
+
+  @override
+  String get klUnpin => 'पिन हटाएँ';
+
+  @override
+  String klPinnedN(String count) {
+    return '$count पिन की गईं';
+  }
+
+  @override
+  String klUnpinnedN(String count) {
+    return '$count की पिन हटाई गई';
+  }
+
+  @override
+  String klDeleteNTitle(String count) {
+    return '$count कुंडलियाँ हटाएँ?';
+  }
+
+  @override
+  String get klDeleteNBody =>
+      'ये इस डिवाइस से हट जाएँगी। सिंक की गई प्रतियाँ आपके अन्य डिवाइसों से भी हट जाएँगी।';
+
+  @override
+  String get klLabels => 'लेबल';
+
+  @override
+  String get klAddLabel => 'लेबल जोड़ें';
+
+  @override
+  String get klLabelHint => 'जैसे 2026 के जजमान';
+
+  @override
+  String get klExistingLabels => 'मौजूदा लेबल';
+
+  @override
+  String get klEditKundli => 'कुंडली संपादित करें';
+
+  @override
+  String get moduleGrahaDrishtiTitle => 'ग्रह दृष्टि';
+
+  @override
+  String get gdHeading => 'पराशरी ग्रह दृष्टि';
+
+  @override
+  String get gdBlurb =>
+      'प्रत्येक ग्रह अपनी राशि से सप्तम पर दृष्टि डालता है। मंगल चतुर्थ व अष्टम, गुरु पंचम व नवम, शनि तृतीय व दशम जोड़ते हैं। गणना पूर्ण-राशि और समावेशी है।';
+
+  @override
+  String get gdNodesOffNote =>
+      'शास्त्रीय परंपरा के अनुसार राहु-केतु की दृष्टि नहीं मानी जाती। \"राहु/केतु दृष्टि\" चालू करने पर उन्हें पंचम, सप्तम और नवम दृष्टि मिलेगी।';
+
+  @override
+  String get gdNodesOnNote =>
+      'राहु और केतु पंचम, सप्तम व नवम दृष्टि डाल रहे हैं। शास्त्रीय परंपरा में नोड दृष्टि नहीं मानी जाती।';
+
+  @override
+  String get gdCfgDirection => 'दिशा';
+
+  @override
+  String get gdReceived => 'प्राप्त';
+
+  @override
+  String get gdCast => 'प्रदत्त';
+
+  @override
+  String get gdCfgNodes => 'राहु/केतु दृष्टि';
+
+  @override
+  String get gdReceivedHeading => 'प्राप्त दृष्टियाँ';
+
+  @override
+  String get gdCastHeading => 'डाली गई दृष्टियाँ';
+
+  @override
+  String get gdRulesHeading => 'कौन सा ग्रह किन भावों पर दृष्टि डालता है';
+
+  @override
+  String get gdCastsNothing => 'कोई दृष्टि नहीं';
+
+  @override
+  String get gdNone => 'कोई नहीं';
+
+  @override
+  String get gdHouseHeading => 'भावों पर दृष्टि';
+
+  @override
+  String get gdHouseColumn => 'भाव';
+
+  @override
+  String get gdAspectsColumn => 'दृष्टि';
+
+  @override
+  String gdHouseN(String house) {
+    return 'भाव $house';
+  }
+
+  @override
+  String get modulePaceTitle => 'PACE';
+
+  @override
+  String get paceHeading => 'स्थिति, दृष्टि, युति, परिवर्तन';
+
+  @override
+  String get paceBlurb =>
+      'चार माध्यम जिनसे एक ग्रह दूसरे को प्रभावित करता है। केवल सक्रिय माध्यम दिखाए जाते हैं — बलानुसार: परिवर्तन, फिर युति, फिर दृष्टि।';
+
+  @override
+  String get pacePosition => 'स्थिति';
+
+  @override
+  String get paceAspect => 'दृष्टि';
+
+  @override
+  String get paceConjunction => 'युति';
+
+  @override
+  String get paceExchange => 'परिवर्तन';
+
+  @override
+  String get paceA => 'A';
+
+  @override
+  String get paceC => 'C';
+
+  @override
+  String get paceE => 'E';
+
+  @override
+  String get paceKendra => 'केन्द्र';
+
+  @override
+  String get paceTrikona => 'त्रिकोण';
+
+  @override
+  String get paceDusthana => 'दुःस्थान';
+
+  @override
+  String get paceUpachaya => 'उपचय';
+
+  @override
+  String get paceUntouched => 'कोई दृष्टि, युति या परिवर्तन नहीं';
+
+  @override
+  String get paceExchangeHeading => 'परिवर्तन योग';
+
+  @override
+  String get paceP => 'P';
+
+  @override
+  String paceLordOf(String houses) {
+    return '$houses का स्वामी';
+  }
+
+  @override
+  String get paceBhavaLordsHeading => 'भाव स्वामी — कौन कहाँ गया';
+
+  @override
+  String get paceOwnBhava => 'स्वभाव में';
+
+  @override
+  String get paceCfgLayout => 'कार्ड विवरण';
+
+  @override
+  String get paceLayoutCompact => 'संक्षिप्त';
+
+  @override
+  String get paceLayoutBlocks => 'विस्तृत';
+
+  @override
+  String get msLoadMore => 'और लोड करें';
+
+  @override
+  String msShowingOf(String shown, String total) {
+    return '$total में से $shown दिख रही हैं';
+  }
+
+  @override
+  String msLoadMoreError(String error) {
+    return 'और लोड नहीं हो सका: $error';
+  }
+
+  @override
+  String get msRecent => 'हाल की';
+
+  @override
+  String msRecentCount(String count) {
+    return '$count हाल में खोली गईं';
+  }
+
+  @override
+  String get msNoRecent => 'आपके द्वारा खोली गई कुंडलियाँ यहाँ दिखेंगी।';
+
+  @override
+  String msYogaCount(String count) {
+    return '$count योग';
+  }
+
+  @override
+  String msEventCount(String count) {
+    return '$count घटनाएँ';
+  }
+
+  @override
+  String get retry => 'पुनः प्रयास करें';
+
+  @override
+  String msBrowseError(String error) {
+    return 'सामुदायिक कुंडलियाँ लोड नहीं हो सकीं: $error';
+  }
 }

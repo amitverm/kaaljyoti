@@ -33,8 +33,11 @@ class PlanetaryPositionsModule extends AstroModule {
       );
 
   @override
-  List<pw.Widget> pdfView(ModuleContext ctx) => [
-        pdfSectionHeader(ctx.l10n.modulePlanetaryPositionsTitle),
-        pdfPositionsTable(ctx.snapshot, ctx.l10n),
-      ];
+  List<pw.Widget> pdfView(ModuleContext ctx) => pdfSection(
+        header: pdfSectionHeader(ctx.l10n.modulePlanetaryPositionsTitle),
+        rest: [
+          pdfPositionsTable(ctx.snapshot, ctx.l10n),
+          pdfSectionGap(),
+        ],
+      );
 }

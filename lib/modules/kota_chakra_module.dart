@@ -77,41 +77,41 @@ class KotaChakraModule extends AstroModule {
     final l10n = ctx.l10n;
     final d = _data(ctx.snapshot, null);
     String ringOf(int off) => kotaRing(off).label(l10n);
-    return [
-      pdfSectionHeader(l10n.moduleKotaChakraTitle),
-      pw.Text(
-        l10n.kotaSummary(
-          nakshatra28Label(l10n, d.janmaNak28),
-          d.kotaSwami.label(l10n),
-          d.kotaPala.label(l10n),
+    return pdfSection(
+      header: pdfSectionHeader(l10n.moduleKotaChakraTitle),
+      lead: pdfStack([
+        pw.Text(
+          l10n.kotaSummary(
+            nakshatra28Label(l10n, d.janmaNak28),
+            d.kotaSwami.label(l10n),
+            d.kotaPala.label(l10n),
+          ),
+          style: pdfBody(),
         ),
-        style: pdfBody(),
-      ),
-      pw.SizedBox(height: 8),
-      pw.TableHelper.fromTextArray(
-        headers: [
-          l10n.labelGraha,
-          l10n.labelNakshatra,
-          l10n.kotaRing,
-          l10n.kotaPath,
-        ],
-        data: [
-          for (final e in d.natal.entries)
-            for (final p in e.value)
-              [
-                p.label(l10n),
-                nakshatra28Label(l10n, (d.janmaNak28 + e.key - 1) % 28),
-                ringOf(e.key),
-                kotaIsEntry(e.key) ? l10n.kotaEntry : l10n.kotaExit,
-              ],
-        ],
-        headerStyle: pdfLabel(),
-        cellStyle: pdfBody(size: 9),
-        border: null,
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-    ];
+        pw.SizedBox(height: 8),
+      ]),
+      rest: [
+        pdfDataTable(
+          headers: [
+            l10n.labelGraha,
+            l10n.labelNakshatra,
+            l10n.kotaRing,
+            l10n.kotaPath,
+          ],
+          rows: [
+            for (final e in d.natal.entries)
+              for (final p in e.value)
+                [
+                  p.label(l10n),
+                  nakshatra28Label(l10n, (d.janmaNak28 + e.key - 1) % 28),
+                  ringOf(e.key),
+                  kotaIsEntry(e.key) ? l10n.kotaEntry : l10n.kotaExit,
+                ],
+          ],
+        ),
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 

@@ -1,6 +1,8 @@
 /// Mahakosh (community research repository) client-side models.
 library;
 
+import 'dart:convert';
+
 import '../data/models.dart';
 
 class MahakoshChartSummary {
@@ -29,9 +31,40 @@ class MahakoshChartSummary {
         locationGeneral: (j['location_general'] as String?) ?? '',
         ayanamsaId: (j['ayanamsa_id'] as int?) ?? 1,
         createdAt: DateTime.parse(j['created_at'] as String),
-        yogaCount: (j['yoga_count'] as int?) ?? 0,
-        eventCount: (j['event_count'] as int?) ?? 0,
+        yogaCount: _count(j, const ['yoga_count'], 'chart_yogas'),
+        // The combination-search function returns 'life_event_count',
+        // NOT 'event_count' — reading the wrong key meant the search
+        // path reported zero events for every chart even though the
+        // server had counted them.
+        eventCount:
+            _count(j, const ['event_count', 'life_event_count'], 'life_events'),
       );
+
+  /// Counts reach us two ways and neither is a plain column on
+  /// mahakosh_charts: the search edge function computes them as scalars,
+  /// while the browse/bookmark selects ask PostgREST to embed them, which
+  /// arrives as `"life_events": [{"count": 3}]`. Accept both, and treat
+  /// anything unrecognised as zero rather than throwing — a count is
+  /// decoration, and losing it must never cost the row.
+  static int _count(
+      Map<String, dynamic> j, List<String> scalarKeys, String embedKey) {
+    for (final key in scalarKeys) {
+      final v = j[key];
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+    }
+    final embedded = j[embedKey];
+    if (embedded is List && embedded.isNotEmpty) {
+      final first = embedded.first;
+      if (first is Map && first['count'] is num) {
+        return (first['count'] as num).toInt();
+      }
+    }
+    if (embedded is Map && embedded['count'] is num) {
+      return (embedded['count'] as num).toInt();
+    }
+    return 0;
+  }
 }
 
 /// A chart the current user has hidden from their own Mahakosh view
@@ -385,10 +418,32 @@ class AppNotification {
   static AppNotification fromJson(Map<String, dynamic> j) => AppNotification(
         id: j['id'] as String,
         type: j['type'] as String,
-        payload: (j['payload'] as Map?)?.cast<String, dynamic>() ?? {},
+        payload: _decodePayload(j['payload']),
         read: (j['read'] as bool?) ?? false,
         createdAt: DateTime.parse(j['created_at'] as String),
       );
+
+  /// `payload` is a jsonb column, so it normally arrives as a Map. Some
+  /// rows hold a jsonb STRING instead: the moderate-* edge functions
+  /// insert `${JSON.stringify(payload)}`, which the driver encodes a
+  /// second time, storing `"{\"mk_code\":…}"` rather than an object.
+  /// The SQL triggers use jsonb_build_object and are unaffected.
+  ///
+  /// Decoding the string form here is not just belt-and-braces: those
+  /// rows already exist in the database, and a blunt `as Map` cast made
+  /// ONE of them take down the entire notifications screen.
+  static Map<String, dynamic> _decodePayload(Object? raw) {
+    if (raw is Map) return raw.cast<String, dynamic>();
+    if (raw is String && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map) return decoded.cast<String, dynamic>();
+      } on FormatException {
+        // Not JSON at all — fall through to an empty payload.
+      }
+    }
+    return {};
+  }
 }
 
 /// One comment in a chart's discussion (0016). Flat list + reply-to:

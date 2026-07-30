@@ -3,32 +3,83 @@ import 'dart:convert';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'db.dart';
+import 'models.dart';
 
-/// A kundli's saved PDF report composition — deliberately separate
-/// from the dashboard: the widgets a jyotish works with on screen are
-/// not necessarily what they hand to a client.
+/// One block of the report: which module, which dashboard instance it
+/// tracks (if any), and the config to use when it doesn't track one.
+///
+/// [instanceId] is the link back to a dashboard widget instance. While
+/// [overridden] is false the block RENDERS WITH THAT INSTANCE'S CURRENT
+/// CONFIG — change the birth chart's degree display on the dashboard and
+/// the report follows. [config] is the frozen fallback, used once the
+/// user customizes the block here (overridden) or when the linked
+/// instance has been removed from the dashboard.
+typedef ExportBlock = ({
+  String widgetId,
+  String? instanceId,
+  bool overridden,
+  Map<String, dynamic> config,
+});
+
+/// The GLOBAL PDF report composition — one template for every kundli.
+///
+/// It used to be saved per kundli, which meant deselecting Panchang for
+/// one client left it in every other client's report. The layout is a
+/// lens, the kundli is the data (the same call the dashboard views made
+/// when they went global in schema v5).
 class SavedExportConfig {
   const SavedExportConfig({
-    required this.blocks, // ordered (widgetId, config) pairs, all selected
+    required this.blocks, // ordered, all selected
     required this.paper, // 'a4' | 'letter'
     required this.coverPage,
     required this.branding,
   });
 
-  final List<({String widgetId, Map<String, dynamic> config})> blocks;
+  final List<ExportBlock> blocks;
   final String paper;
   final bool coverPage;
   final String branding;
+}
+
+/// Resolves saved template blocks against the dashboard's live widget
+/// instances, so the report follows the dashboard instead of snapshotting
+/// it at first export.
+///
+/// A block adopts the live instance's config only when it still points at
+/// an instance that exists AND the user hasn't customized it on the export
+/// screen. Everything else keeps its frozen [ExportBlock.config] — a block
+/// whose dashboard widget was deleted still renders what it last showed
+/// rather than reverting to module defaults.
+List<ExportBlock> resolveTemplateBlocks(
+  List<ExportBlock> saved,
+  Map<String, PlacedWidget> liveInstances,
+) {
+  return [
+    for (final b in saved)
+      if (!b.overridden &&
+          b.instanceId != null &&
+          liveInstances.containsKey(b.instanceId))
+        (
+          widgetId: b.widgetId,
+          instanceId: b.instanceId,
+          overridden: false,
+          config: Map<String, dynamic>.of(liveInstances[b.instanceId]!.config),
+        )
+      else
+        b,
+  ];
 }
 
 class ExportRepository {
   ExportRepository({AppDb? db}) : _db = db ?? AppDb.instance;
   final AppDb _db;
 
-  Future<SavedExportConfig?> load(String kundliId) async {
+  static const _rowId = 1;
+
+  Future<SavedExportConfig?> load() async {
     final db = await _db.database;
-    final rows = await db
-        .query('export_configs', where: 'kundli_id = ?', whereArgs: [kundliId]);
+    final rows =
+        await db.query('export_template', where: 'id = ?', whereArgs: [_rowId]);
     if (rows.isEmpty) return null;
     final r = rows.first;
     final decoded = jsonDecode(r['blocks'] as String) as List;
@@ -37,7 +88,10 @@ class ExportRepository {
         for (final b in decoded)
           (
             widgetId: (b as Map)['widget_id'] as String,
-            config: (b['config'] as Map).cast<String, dynamic>(),
+            instanceId: b['instance_id'] as String?,
+            // Tolerate blocks written before the field existed.
+            overridden: b['overridden'] == true,
+            config: (b['config'] as Map?)?.cast<String, dynamic>() ?? {},
           ),
       ],
       paper: r['paper'] as String,
@@ -46,15 +100,20 @@ class ExportRepository {
     );
   }
 
-  Future<void> save(String kundliId, SavedExportConfig config) async {
+  Future<void> save(SavedExportConfig config) async {
     final db = await _db.database;
     await db.insert(
-      'export_configs',
+      'export_template',
       {
-        'kundli_id': kundliId,
+        'id': _rowId,
         'blocks': jsonEncode([
           for (final b in config.blocks)
-            {'widget_id': b.widgetId, 'config': b.config},
+            {
+              'widget_id': b.widgetId,
+              'instance_id': b.instanceId,
+              'overridden': b.overridden,
+              'config': b.config,
+            },
         ]),
         'paper': config.paper,
         'cover_page': config.coverPage ? 1 : 0,
@@ -64,9 +123,8 @@ class ExportRepository {
     );
   }
 
-  Future<void> clear(String kundliId) async {
+  Future<void> clear() async {
     final db = await _db.database;
-    await db.delete('export_configs',
-        where: 'kundli_id = ?', whereArgs: [kundliId]);
+    await db.delete('export_template', where: 'id = ?', whereArgs: [_rowId]);
   }
 }

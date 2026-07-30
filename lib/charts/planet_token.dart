@@ -16,6 +16,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../core/astro/dignity.dart';
+import '../core/astro/jaimini_karaka.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
 import '../l10n/astro_l10n.dart';
@@ -54,6 +55,44 @@ class PlanetToken {
   /// [retrograde].
   bool get showRetrograde =>
       retrograde && planet != Planet.rahu && planet != Planet.ketu;
+}
+
+/// Builds the per-planet annotation set a chart surface renders, from a
+/// snapshot's positions plus the instance's display toggles.
+///
+/// One implementation for every surface: the Birth Chart, Varshphal and
+/// Transit cards all built this same map inline, and the PDF export now
+/// takes it too (its charts used to ignore the toggles entirely). No
+/// astrology lives here — it only assembles [saptaKarakas], [dignityOf]
+/// and [isCombust] into tokens — so screen and paper can never disagree
+/// about what an "on" toggle means.
+///
+/// Every flag left false yields plain tokens, which render exactly like
+/// the bare abbreviations the painters always showed.
+Map<Planet, PlanetToken> chartTokens(
+  Map<Planet, PlanetPosition> positions, {
+  bool showDegrees = false,
+  bool showKarakas = false,
+  bool showExtras = false,
+}) {
+  final karakas =
+      showKarakas ? saptaKarakas(positions) : const <Planet, Karaka>{};
+  // Combustion is measured against the Sun; a chart without one (raw
+  // transit data can be filtered) simply reports nothing combust.
+  final sun = positions[Planet.sun];
+  return {
+    for (final p in positions.values)
+      p.planet: PlanetToken(
+        planet: p.planet,
+        retrograde: p.isRetrograde,
+        degreeInSign: showDegrees ? p.degreesInSign : null,
+        karaka: karakas[p.planet]?.code,
+        dignity: showExtras ? dignityOf(p) : PlanetDignity.none,
+        combust: showExtras && sun != null && p.planet != Planet.sun
+            ? isCombust(p, sun)
+            : false,
+      ),
+  };
 }
 
 /// Renders a signs-passed string ("11ˢ11°16'") as spans, enlarging each
@@ -97,6 +136,17 @@ TextPainter singleTokenPainter(
   );
 }
 
+/// The chart's dignity glyphs — exported so every surface that shows
+/// dignity (the chart itself, the PACE card) speaks one visual
+/// language. A null [color] means "inherit the surrounding muted style".
+({String glyph, Color? color})? dignityMark(PlanetDignity dignity) =>
+    switch (dignity) {
+      PlanetDignity.exalted => (glyph: '↑', color: KJColors.forest),
+      PlanetDignity.debilitated => (glyph: '↓', color: KJColors.maroon),
+      PlanetDignity.ownSign => (glyph: '○', color: null),
+      PlanetDignity.none => null,
+    };
+
 /// One planet's complete label as inline spans: colored abbreviation +
 /// retrograde/dignity/combustion glyphs + degree + karaka. Rendered as
 /// one unbreakable unit.
@@ -123,17 +173,11 @@ List<InlineSpan> _natalChipSpans(
   if (t.showRetrograde) {
     spans.add(TextSpan(text: '®', style: mod.copyWith(color: ink)));
   }
-  switch (t.dignity) {
-    case PlanetDignity.exalted:
-      spans.add(
-          TextSpan(text: '↑', style: mod.copyWith(color: KJColors.forest)));
-    case PlanetDignity.debilitated:
-      spans.add(
-          TextSpan(text: '↓', style: mod.copyWith(color: KJColors.maroon)));
-    case PlanetDignity.ownSign:
-      spans.add(TextSpan(text: '○', style: mod));
-    case PlanetDignity.none:
-      break;
+  final mark = dignityMark(t.dignity);
+  if (mark != null) {
+    spans.add(TextSpan(
+        text: mark.glyph,
+        style: mark.color == null ? mod : mod.copyWith(color: mark.color)));
   }
   if (t.combust) {
     spans.add(TextSpan(text: '•', style: mod.copyWith(color: KJColors.maroon)));
@@ -146,8 +190,7 @@ List<InlineSpan> _natalChipSpans(
     final degText = tune.degreeMinutes && !compactDegrees
         ? formatDegreeInSign(d)
         : '${(d % 30).floor()}°';
-    spans.addAll(signsPassedSpans(
-        ' ${t.signTag ?? ''}$degText', degreeStyle));
+    spans.addAll(signsPassedSpans(' ${t.signTag ?? ''}$degText', degreeStyle));
   }
   if (showKarakas && t.karaka != null) {
     spans.add(TextSpan(text: ' ${t.karaka}', style: karakaStyle));
@@ -272,8 +315,8 @@ class HouseLabelLayout {
     // Last resort for extremely crowded houses (HEIGHT overflow):
     // abandon one-per-row and flow several chips per line.
     if (showDegrees && _height(result) > maxHeight) {
-      result = pack(baseFontSize * scale,
-          onePerRow: false, compactDegrees: compact);
+      result =
+          pack(baseFontSize * scale, onePerRow: false, compactDegrees: compact);
     }
     rows = result;
     width = _width(rows);

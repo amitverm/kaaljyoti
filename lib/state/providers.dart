@@ -81,6 +81,44 @@ final mahakoshBookmarksProvider =
   return repo.bookmarks();
 });
 
+/// Mahakosh chart codes this device has opened, most recent first.
+/// Device-local like the kundli recents — "what I was just looking at"
+/// is a property of this device, not of the account, and keeping it off
+/// the server means it needs no schema and leaks nothing about a user's
+/// research interests.
+class RecentMahakoshNotifier extends StateNotifier<List<String>> {
+  RecentMahakoshNotifier(this._repo) : super(const []) {
+    _repo.recentMahakoshCodes().then((codes) {
+      if (!mounted) return;
+      state = [...state, ...codes.where((c) => !state.contains(c))];
+    });
+  }
+
+  final SettingsRepository _repo;
+
+  void touch(String mkCode) {
+    if (state.isNotEmpty && state.first == mkCode) return;
+    final next = [mkCode, ...state.where((c) => c != mkCode)];
+    state = next;
+    _repo.setRecentMahakoshCodes(next);
+  }
+
+  /// Drops codes whose chart is gone — a hidden, reported or withdrawn
+  /// chart must not keep a slot in the Recent tab.
+  void forget(Iterable<String> codes) {
+    final gone = codes.toSet();
+    if (!state.any(gone.contains)) return;
+    final next = state.where((c) => !gone.contains(c)).toList();
+    state = next;
+    _repo.setRecentMahakoshCodes(next);
+  }
+}
+
+final recentMahakoshProvider =
+    StateNotifierProvider<RecentMahakoshNotifier, List<String>>(
+  (ref) => RecentMahakoshNotifier(ref.watch(settingsRepoProvider)),
+);
+
 final researchRepoProvider = Provider<ResearchRepository?>((ref) {
   final client = ref.watch(supabaseClientProvider);
   return client == null ? null : ResearchRepository(client);
@@ -196,12 +234,299 @@ final isAdminProvider = FutureProvider<bool>((ref) async {
 
 // --- Kundlis ----------------------------------------------------------------
 
+/// The user's saved kundlis. Deliberately [KundliRepository.saved] and
+/// not `all()`: an un-kept instant Prashna exists as a row but must not
+/// appear in a list the user reads as "my charts".
 final kundlisProvider = FutureProvider<List<Kundli>>(
-  (ref) => ref.watch(kundliRepoProvider).all(),
+  (ref) => ref.watch(kundliRepoProvider).saved(),
 );
 
 /// The kundli whose dashboard is active.
 final activeKundliIdProvider = StateProvider<String?>((ref) => null);
+
+// --- Kundli list state ------------------------------------------------------
+// Everything the home screen needs to make a library of several hundred
+// charts findable: ordering, pinning, recency, search, and filtering.
+
+/// What a filter chip stands for. Relation tags come from the closed set
+/// on the kundli row; labels are user-created.
+enum KundliFilterKind { relation, label }
+
+typedef KundliFilter = ({KundliFilterKind kind, String value});
+
+/// Free-text query over name, note, place, labels, and relation tag.
+final kundliSearchProvider = StateProvider<String>((ref) => '');
+
+/// The single active filter chip, or null for "All".
+final kundliFilterProvider = StateProvider<KundliFilter?>((ref) => null);
+
+class KundliSortNotifier extends StateNotifier<KundliSort> {
+  KundliSortNotifier(this._repo) : super(KundliSort.recent) {
+    // Don't clobber a choice made before prefs finished loading — the
+    // list is interactive from the first frame, and the stored value
+    // resolving late would silently revert the user's pick.
+    // `mounted` because the container can be torn down while the prefs
+    // read is still in flight — writing state then throws.
+    _repo.kundliSort().then((s) {
+      if (mounted && !_chosen) state = s;
+    });
+  }
+
+  final SettingsRepository _repo;
+  bool _chosen = false;
+
+  void select(KundliSort sort) {
+    _chosen = true;
+    state = sort;
+    _repo.setKundliSort(sort);
+  }
+}
+
+final kundliSortProvider =
+    StateNotifierProvider<KundliSortNotifier, KundliSort>(
+  (ref) => KundliSortNotifier(ref.watch(settingsRepoProvider)),
+);
+
+class KundliDensityNotifier extends StateNotifier<KundliDensity> {
+  KundliDensityNotifier(this._repo) : super(KundliDensity.comfortable) {
+    _repo.kundliDensity().then((d) {
+      if (mounted && !_chosen) state = d;
+    });
+  }
+
+  final SettingsRepository _repo;
+  bool _chosen = false;
+
+  void select(KundliDensity density) {
+    _chosen = true;
+    state = density;
+    _repo.setKundliDensity(density);
+  }
+}
+
+final kundliDensityProvider =
+    StateNotifierProvider<KundliDensityNotifier, KundliDensity>(
+  (ref) => KundliDensityNotifier(ref.watch(settingsRepoProvider)),
+);
+
+/// Pinned kundli ids. Uncapped — the astrologer decides what they keep
+/// at the top, and a cap only bites the users with the biggest libraries.
+class PinnedKundlisNotifier extends StateNotifier<Set<String>> {
+  PinnedKundlisNotifier(this._repo) : super(const {}) {
+    _repo.pinnedKundliIds().then((ids) {
+      // Don't clobber a pin made before prefs finished loading.
+      if (mounted && state.isEmpty) state = ids.toSet();
+    });
+  }
+
+  final SettingsRepository _repo;
+
+  bool isPinned(String id) => state.contains(id);
+
+  void toggle(String id) {
+    final next = {...state};
+    if (!next.remove(id)) next.add(id);
+    _set(next);
+  }
+
+  void addAll(Iterable<String> ids) => _set({...state, ...ids});
+
+  void removeAll(Iterable<String> ids) =>
+      _set({...state}..removeAll(ids.toSet()));
+
+  void _set(Set<String> ids) {
+    state = ids;
+    _repo.setPinnedKundliIds(ids.toList(growable: false));
+  }
+}
+
+final pinnedKundlisProvider =
+    StateNotifierProvider<PinnedKundlisNotifier, Set<String>>(
+  (ref) => PinnedKundlisNotifier(ref.watch(settingsRepoProvider)),
+);
+
+/// Opened-kundli ids, most recent first. Drives both the recents strip
+/// and the default sort.
+class RecentKundlisNotifier extends StateNotifier<List<String>> {
+  RecentKundlisNotifier(this._repo) : super(const []) {
+    _repo.recentKundliIds().then((ids) {
+      // Merge rather than assign: a kundli opened before prefs resolved
+      // must stay at the head.
+      if (!mounted) return;
+      state = [...state, ...ids.where((id) => !state.contains(id))];
+    });
+  }
+
+  final SettingsRepository _repo;
+
+  /// Records an open. Idempotent per position — re-opening the head of
+  /// the list writes nothing.
+  void touch(String id) {
+    if (state.isNotEmpty && state.first == id) return;
+    final next = [id, ...state.where((e) => e != id)];
+    state = next;
+    _repo.setRecentKundliIds(next);
+  }
+
+  /// Drops deleted kundlis, so they can't hold a slot in the strip.
+  void forget(Iterable<String> ids) {
+    final gone = ids.toSet();
+    if (!state.any(gone.contains)) return;
+    final next = state.where((id) => !gone.contains(id)).toList();
+    state = next;
+    _repo.setRecentKundliIds(next);
+  }
+}
+
+final recentKundlisProvider =
+    StateNotifierProvider<RecentKundlisNotifier, List<String>>(
+  (ref) => RecentKundlisNotifier(ref.watch(settingsRepoProvider)),
+);
+
+/// Everything the list screen renders, resolved in one place so the
+/// widget tree stays a pure function of it.
+class KundliListData {
+  const KundliListData({
+    required this.pinned,
+    required this.others,
+    required this.recents,
+    required this.labels,
+    required this.relationTags,
+    required this.totalCount,
+  });
+
+  /// Pinned matches, in the active sort order.
+  final List<Kundli> pinned;
+
+  /// Everything else that survived search + filter, in sort order.
+  final List<Kundli> others;
+
+  /// Head of the recents list — the strip. Excludes pinned charts,
+  /// which already have a permanent home above.
+  final List<Kundli> recents;
+
+  /// Every label in use across the whole library, alphabetical — the
+  /// filter chip source. Computed over all kundlis, not the filtered
+  /// set, so selecting a chip never removes the other chips.
+  final List<String> labels;
+
+  /// Relation tags actually in use, so the chip row doesn't offer
+  /// "Spouse" to someone who has none.
+  final List<String> relationTags;
+
+  /// Size of the library before search/filter — for the "n of m" line.
+  final int totalCount;
+
+  int get visibleCount => pinned.length + others.length;
+  bool get isEmpty => visibleCount == 0;
+}
+
+/// Lowercase + strip Latin diacritics so "Renée" matches "renee". Indian
+/// names are routinely typed both ways.
+String normalizeForSearch(String input) {
+  const from = 'àáâãäåèéêëìíîïòóôõöùúûüñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÑÇ';
+  const to = 'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC';
+  final buffer = StringBuffer();
+  for (final rune in input.runes) {
+    final char = String.fromCharCode(rune);
+    final index = from.indexOf(char);
+    buffer.write(index >= 0 ? to[index] : char);
+  }
+  return buffer.toString().toLowerCase().trim();
+}
+
+final kundliListDataProvider = Provider<AsyncValue<KundliListData>>((ref) {
+  final async = ref.watch(kundlisProvider);
+  final query = normalizeForSearch(ref.watch(kundliSearchProvider));
+  final filter = ref.watch(kundliFilterProvider);
+  final sort = ref.watch(kundliSortProvider);
+  final pinnedIds = ref.watch(pinnedKundlisProvider);
+  final recentIds = ref.watch(recentKundlisProvider);
+
+  return async.whenData((all) {
+    final labels = <String>{for (final k in all) ...k.labels}.toList()..sort();
+    final relationTags = <String>{for (final k in all) k.relationTag}.toList()
+      ..sort();
+
+    bool matchesFilter(Kundli k) => switch (filter) {
+          null => true,
+          (kind: KundliFilterKind.relation, value: final v) =>
+            k.relationTag == v,
+          (kind: KundliFilterKind.label, value: final v) =>
+            k.labels.contains(v),
+        };
+
+    bool matchesQuery(Kundli k) {
+      if (query.isEmpty) return true;
+      final haystack = normalizeForSearch([
+        k.name,
+        k.note ?? '',
+        k.placeName,
+        k.relationTag,
+        ...k.labels,
+      ].join(' '));
+      // Every whitespace-separated term must appear, so "sharma pune"
+      // narrows instead of widening.
+      return query.split(RegExp(r'\s+')).every(haystack.contains);
+    }
+
+    final matched = [
+      for (final k in all)
+        if (matchesFilter(k) && matchesQuery(k)) k,
+    ];
+
+    // Unseen kundlis sort after every seen one under `recent`.
+    final recentRank = {
+      for (var i = 0; i < recentIds.length; i++) recentIds[i]: i,
+    };
+    int compare(Kundli a, Kundli b) {
+      final primary = switch (sort) {
+        KundliSort.recent => () {
+            final ra = recentRank[a.id] ?? recentIds.length;
+            final rb = recentRank[b.id] ?? recentIds.length;
+            return ra != rb
+                ? ra.compareTo(rb)
+                : b.createdAt.compareTo(a.createdAt);
+          }(),
+        // Newest first — the old list was created_at ASC, which buried
+        // the chart you just cast at the bottom.
+        KundliSort.added => b.createdAt.compareTo(a.createdAt),
+        KundliSort.name =>
+          normalizeForSearch(a.name).compareTo(normalizeForSearch(b.name)),
+        KundliSort.birth => a.birthUtc.compareTo(b.birthUtc),
+      };
+      if (primary != 0) return primary;
+      // Dart's List.sort is NOT stable, so equal keys would let rows
+      // swap places between rebuilds — very visible on a list where most
+      // charts share a creation date (an import) or have never been
+      // opened. Break every tie deterministically.
+      final byName =
+          normalizeForSearch(a.name).compareTo(normalizeForSearch(b.name));
+      return byName != 0 ? byName : a.id.compareTo(b.id);
+    }
+
+    matched.sort(compare);
+
+    final byId = {for (final k in all) k.id: k};
+    return KundliListData(
+      pinned: [
+        for (final k in matched)
+          if (pinnedIds.contains(k.id)) k,
+      ],
+      others: [
+        for (final k in matched)
+          if (!pinnedIds.contains(k.id)) k,
+      ],
+      recents: [
+        for (final id in recentIds)
+          if (byId[id] != null && !pinnedIds.contains(id)) byId[id]!,
+      ],
+      labels: labels,
+      relationTags: relationTags,
+      totalCount: all.length,
+    );
+  });
+});
 
 /// Life events recorded on a kundli, chronologically. Invalidated after any
 /// add/edit/delete on the Events screen.
@@ -570,6 +895,24 @@ final sadeSatiPhasesProvider =
   );
 });
 
+/// The degree-based reading of the same span: every stretch where
+/// transiting Saturn is within 45° of the natal Moon's exact longitude.
+/// A SEPARATE provider rather than a flag on [sadeSatiPhasesProvider]
+/// so a dashboard showing only the classical method never pays for the
+/// second scan — and so a dashboard showing both memoizes each once.
+final sadeSatiDegreeWindowsProvider =
+    FutureProvider.family<List<SadeSatiDegreeWindow>, String>(
+        (ref, kundliId) async {
+  final snapshot = await ref.watch(snapshotProvider(kundliId).future);
+  final birth = snapshot.birth.dateTimeUtc;
+  return sadeSatiDegreeWindows(
+    natalMoonLon: snapshot.positions[Planet.moon]!.longitude,
+    from: birth,
+    to: birth.add(const Duration(days: 36525)), // ~100 solar years
+    ayanamsaId: snapshot.ayanamsaId,
+  );
+});
+
 /// Shadbala (six-fold planetary strength) for every graha in a kundli.
 /// Memoized per kundli — the computation runs two backward ephemeris
 /// scans plus a full dignity/aspect pass per graha, so it must not
@@ -799,8 +1142,7 @@ final compareViewIdProvider =
 /// getting a snapshot built through the existing [snapshotProvider]
 /// path (which pins the chart's own ayanamsa). Unreachable charts and
 /// removed kundlis become disabled slots rather than failing the screen.
-final compareSubjectsProvider =
-    FutureProvider<List<CompareSlot>>((ref) async {
+final compareSubjectsProvider = FutureProvider<List<CompareSlot>>((ref) async {
   final refs = ref.watch(compareSetProvider);
   final slots = <CompareSlot>[];
   for (final r in refs) {
@@ -850,8 +1192,8 @@ final compareSubjectsProvider =
           ref: r,
           label: k.name,
           isMahakosh: false,
-          subject: LocalSubject(
-              kundli: k, snapshot: snap, kundliEvents: events),
+          subject:
+              LocalSubject(kundli: k, snapshot: snap, kundliEvents: events),
           kundliId: r,
           ayanamsaId: snap.ayanamsaId,
         ));

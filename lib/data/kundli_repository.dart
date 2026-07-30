@@ -9,9 +9,23 @@ class KundliRepository {
   final AppDb _db;
   static const _uuid = Uuid();
 
+  /// Every row, ephemeral Prashna charts included — for sync and for the
+  /// Settings counters. The kundli LIST must not use this; see [saved].
   Future<List<Kundli>> all() async {
     final db = await _db.database;
     final rows = await db.query('kundlis', orderBy: 'created_at ASC');
+    return rows.map(Kundli.fromRow).toList();
+  }
+
+  /// What the user thinks of as "my kundlis". An instant Prashna is
+  /// written to the row store the moment it's cast, but until the user
+  /// taps Keep it isn't saved in any sense they'd recognise — listing it
+  /// makes a discarded question look like a stored chart. AppDb sweeps
+  /// these on the next launch; this keeps them out in the meantime.
+  Future<List<Kundli>> saved() async {
+    final db = await _db.database;
+    final rows = await db.query('kundlis',
+        where: 'is_ephemeral = 0', orderBy: 'created_at ASC');
     return rows.map(Kundli.fromRow).toList();
   }
 

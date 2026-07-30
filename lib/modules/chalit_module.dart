@@ -24,6 +24,7 @@ import '../core/astro/dignity.dart';
 import '../core/astro/models.dart';
 import '../core/theme/theme.dart';
 import '../l10n/astro_l10n.dart';
+import '../pdf/pdf_chart.dart';
 import '../state/providers.dart';
 import '../widgetsystem/astro_module.dart';
 import 'common.dart';
@@ -124,44 +125,88 @@ class ChalitModule extends AstroModule {
   @override
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
+    final snapshot = ctx.snapshot;
     final system = _systemFromConfig(ctx.config);
-    final d = computeChalit(ctx.snapshot, system);
-    return [
-      pdfSectionHeader(
+    final d = computeChalit(snapshot, system);
+    final showCusps =
+        _flag(ctx.config, 'cusp_degrees') || _flag(ctx.config, 'cusp_signs');
+    // The exported chart honours the same annotation toggles the card
+    // does. The two signs-passed toggles are the exception and stay
+    // screen-only: that notation's marker is U+02E2 (ˢ), which none of
+    // the embedded PDF faces carry — it would print as a .notdef box —
+    // and the table below prints every cusp's absolute degree anyway.
+    final ann = pdfAnnotationsFor(chartTokens(
+      snapshot.positions,
+      showDegrees: _flag(ctx.config, 'degrees'),
+      showExtras: _flag(ctx.config, 'extras'),
+    ));
+    return pdfSection(
+      header: pdfSectionHeader(
           '${l10n.moduleChalitTitle} — ${_systemLabel(l10n, system)}'),
-      pw.TableHelper.fromTextArray(
-        headers: [
-          l10n.labelHouse,
-          l10n.labelSign,
-          l10n.ccMadhyaCol,
-          l10n.ccSandhiCol,
-          l10n.labelGraha,
-        ],
-        data: [
-          for (var h = 1; h <= 12; h++)
-            [
-              '$h',
-              d.signOfHouse(h).label(l10n),
-              formatDegree(d.madhya[h - 1]),
-              formatDegree(d.sandhi[h - 1]),
-              // Tables list grahas in traditional order; only the chart
-              // boxes read in degree order ([planetsInHouse] is sorted
-              // along the bhava).
-              ([...d.planetsInHouse[h - 1]]
-                    ..sort((a, b) => a.index.compareTo(b.index)))
-                  .map((p) => p.abbrLabel(l10n))
-                  .join(' '),
+      // Chalit houses are cusp-bounded, so the chart is drawn from
+      // per-house data rather than a sign rotation — the same reason
+      // the screen painter has a houseData mode.
+      lead: pdfStack([
+        pw.SizedBox(height: 4),
+        pw.Center(
+          child: pdfChart(
+            l10n: l10n,
+            // Unused in houses mode, but the sign-based contract still
+            // asks for them.
+            placements: const {},
+            lagna: snapshot.lagnaSign,
+            style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
+            retrograde: {
+              for (final p in snapshot.positions.values)
+                p.planet: p.isRetrograde,
+            },
+            ascendantDegree: snapshot.ascendant,
+            degreeLabels: ann.degrees,
+            planetTags: ann.tags,
+            houses: [
+              for (var h = 1; h <= 12; h++)
+                (
+                  signNumber: d.signOfHouse(h).index + 1,
+                  planets: d.planetsInHouse[h - 1],
+                  cuspLabel: showCusps
+                      ? 'M ${formatDegreeInSign(d.madhya[h - 1])}'
+                      : null,
+                ),
             ],
-        ],
-        headerStyle: pdfLabel(),
-        cellStyle: pdfBody(size: 9),
-        border: null,
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-      pw.SizedBox(height: 4),
-      pw.Text(l10n.ccCaption, style: pw.TextStyle(fontSize: 7.5)),
-    ];
+          ),
+        ),
+        pdfSectionGap(),
+      ]),
+      rest: [
+        pdfDataTable(
+          headers: [
+            l10n.labelHouse,
+            l10n.labelSign,
+            l10n.ccMadhyaCol,
+            l10n.ccSandhiCol,
+            l10n.labelGraha,
+          ],
+          rows: [
+            for (var h = 1; h <= 12; h++)
+              [
+                '$h',
+                d.signOfHouse(h).label(l10n),
+                formatDegree(d.madhya[h - 1]),
+                formatDegree(d.sandhi[h - 1]),
+                // Tables list grahas in traditional order; only the chart
+                // boxes read in degree order ([planetsInHouse] is sorted
+                // along the bhava).
+                ([...d.planetsInHouse[h - 1]]
+                      ..sort((a, b) => a.index.compareTo(b.index)))
+                    .map((p) => p.abbrLabel(l10n))
+                    .join(' '),
+              ],
+          ],
+        ),
+        pdfNote(l10n.ccCaption),
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 

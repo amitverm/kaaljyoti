@@ -140,30 +140,28 @@ class SpecialLagnaModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
     final lagnas = _lagnas(ctx.snapshot);
-    return [
-      pdfSectionHeader(l10n.moduleSpecialLagnasTitle),
-      pw.TableHelper.fromTextArray(
-        headers: [
-          l10n.labelCode,
-          l10n.labelLagna,
-          l10n.labelPosition,
-          l10n.labelSignifies,
-        ],
-        data: [
-          for (final p in lagnas)
-            [
-              p.kind.code,
-              p.kind.label(l10n),
-              _position(p, l10n),
-              p.kind.meaningLabel(l10n),
-            ],
-        ],
-        headerStyle: pdfLabel(),
-        cellStyle: pdfBody(size: 9),
-        border: null,
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(l10n.moduleSpecialLagnasTitle),
+      rest: [
+        pdfDataTable(
+          headers: [
+            l10n.labelCode,
+            l10n.labelLagna,
+            l10n.labelPosition,
+            l10n.labelSignifies,
+          ],
+          rows: [
+            for (final p in lagnas)
+              [
+                p.kind.code,
+                p.kind.label(l10n),
+                _position(p, l10n),
+                p.kind.meaningLabel(l10n),
+              ],
+          ],
+        ),
+        pdfSectionGap(),
+      ],
+    );
   }
 }

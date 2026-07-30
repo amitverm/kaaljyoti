@@ -271,20 +271,7 @@ String _pdfList(List<Planet> ps, AppLocalizations l10n) =>
     ps.isEmpty ? '-' : ps.map((p) => p.abbrLabel(l10n)).join(' ');
 
 pw.Widget _pdfTable(List<String> headers, List<List<String>> data) =>
-    pw.TableHelper.fromTextArray(
-      headers: headers,
-      data: data,
-      headerStyle: pw.TextStyle(
-          fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: pdfInkSoft),
-      cellStyle: pdfBody(size: 9.5),
-      border: null,
-      rowDecoration: const pw.BoxDecoration(
-        border:
-            pw.Border(bottom: pw.BorderSide(color: pdfHairline, width: 0.5)),
-      ),
-      cellAlignment: pw.Alignment.centerLeft,
-      headerAlignment: pw.Alignment.centerLeft,
-    );
+    pdfDataTable(headers: headers, rows: data);
 
 // ---------------------------------------------------------------------------
 // 1. Cusps & sub lords (id 'kp' — the original combined widget's id,
@@ -339,20 +326,23 @@ class KpCuspsModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
     final kp = KpChart(ctx.snapshot);
-    return [
-      pdfSectionHeader(l10n.kpPdfCuspsHeader),
-      _pdfTable(
-        [l10n.kpHeadCusp, l10n.labelDegree, l10n.kpHeadChainFull],
-        [
-          for (final c in kp.cusps)
-            [
-              '${c.house}',
-              _degInSign(c.longitude, l10n),
-              _pdfChain(c.lords, l10n),
-            ],
-        ],
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(l10n.kpPdfCuspsHeader),
+      rest: [
+        _pdfTable(
+          [l10n.kpHeadCusp, l10n.labelDegree, l10n.kpHeadChainFull],
+          [
+            for (final c in kp.cusps)
+              [
+                '${c.house}',
+                _degInSign(c.longitude, l10n),
+                _pdfChain(c.lords, l10n),
+              ],
+          ],
+        ),
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 
@@ -408,27 +398,30 @@ class KpPlanetsModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
     final kp = KpChart(ctx.snapshot);
-    return [
-      pdfSectionHeader(l10n.kpPdfPlanetsHeader),
-      _pdfTable(
-        [
-          l10n.labelGraha,
-          l10n.labelDegree,
-          l10n.labelHouse,
-          l10n.kpHeadChainFull,
-        ],
-        [
-          for (final p in kp.planets)
-            [
-              '${p.planet.label(l10n)}'
-                  '${p.position.isRetrograde ? ' (R)' : ''}',
-              _degInSign(p.position.longitude, l10n),
-              '${p.house}',
-              _pdfChain(p.lords, l10n),
-            ],
-        ],
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(l10n.kpPdfPlanetsHeader),
+      rest: [
+        _pdfTable(
+          [
+            l10n.labelGraha,
+            l10n.labelDegree,
+            l10n.labelHouse,
+            l10n.kpHeadChainFull,
+          ],
+          [
+            for (final p in kp.planets)
+              [
+                '${p.planet.label(l10n)}'
+                    '${p.position.isRetrograde ? ' (R)' : ''}',
+                _degInSign(p.position.longitude, l10n),
+                '${p.house}',
+                _pdfChain(p.lords, l10n),
+              ],
+          ],
+        ),
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 
@@ -493,35 +486,45 @@ class KpSignificatorsModule extends AstroModule {
     final l10n = ctx.l10n;
     final kp = KpChart(ctx.snapshot);
     return [
-      pdfSectionHeader(l10n.kpPdfSignificatorsHeader),
-      _pdfTable(
-        [
-          l10n.labelHouse,
-          l10n.kpHeadAStarOfOccupants,
-          l10n.kpHeadBOccupants,
-          l10n.kpHeadCStarOfOwner,
-          l10n.kpHeadDOwner,
-        ],
-        [
-          for (final s in kp.significators)
+      ...pdfSection(
+        header: pdfSectionHeader(l10n.kpPdfSignificatorsHeader),
+        rest: [
+          _pdfTable(
             [
-              '${s.house}',
-              _pdfList(s.inStarOfOccupants, l10n),
-              _pdfList(s.occupants, l10n),
-              _pdfList(s.inStarOfOwner, l10n),
-              s.owner.abbrLabel(l10n),
+              l10n.labelHouse,
+              l10n.kpHeadAStarOfOccupants,
+              l10n.kpHeadBOccupants,
+              l10n.kpHeadCStarOfOwner,
+              l10n.kpHeadDOwner,
             ],
+            [
+              for (final s in kp.significators)
+                [
+                  '${s.house}',
+                  _pdfList(s.inStarOfOccupants, l10n),
+                  _pdfList(s.occupants, l10n),
+                  _pdfList(s.inStarOfOwner, l10n),
+                  s.owner.abbrLabel(l10n),
+                ],
+            ],
+          ),
+          pdfSectionGap(),
         ],
       ),
-      pdfSectionHeader(l10n.kpPdfSignificationsHeader),
-      _pdfTable(
-        [l10n.labelGraha, l10n.kpHeadSignifiesHouses],
-        [
-          for (final p in kp.planets)
+      ...pdfSection(
+        header: pdfSectionHeader(l10n.kpPdfSignificationsHeader),
+        rest: [
+          _pdfTable(
+            [l10n.labelGraha, l10n.kpHeadSignifiesHouses],
             [
-              p.planet.label(l10n),
-              kp.housesSignifiedBy(p.planet).join(', '),
+              for (final p in kp.planets)
+                [
+                  p.planet.label(l10n),
+                  kp.housesSignifiedBy(p.planet).join(', '),
+                ],
             ],
+          ),
+          pdfSectionGap(),
         ],
       ),
     ];

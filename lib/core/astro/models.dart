@@ -287,8 +287,8 @@ Map<ZodiacSign, List<Planet>> sortPlacementsByLongitude(
   Map<Planet, PlanetPosition> positions,
 ) {
   for (final list in placements.values) {
-    list.sort((a, b) =>
-        positions[a]!.longitude.compareTo(positions[b]!.longitude));
+    list.sort(
+        (a, b) => positions[a]!.longitude.compareTo(positions[b]!.longitude));
   }
   return placements;
 }
@@ -315,13 +315,36 @@ int ascendantRankIn(
       .length;
 }
 
+/// A degree-in-sign rounded to whole [subdivisions] of a degree (60 for
+/// arc-minutes, 3600 for arc-seconds).
+///
+/// Rounding ONCE on the total and decomposing afterwards is what makes
+/// the carry automatic. Rounding each place separately is how
+/// 8°56'59.98" came out as `8°56'60"` — a real reading that shipped in
+/// the planetary positions table, on screen and in the PDF, because 60
+/// is a legal-looking two digits that nothing else in the suite
+/// checked.
+///
+/// A value that rounds up past the end of the sign is CLAMPED to the
+/// last representable unit (29°59'59", 29°59') instead of carrying.
+/// Carrying would print either a 30th degree, which no sign has, or a
+/// 0° that reads as the NEXT sign — and every caller shows this string
+/// beside a separately computed sign label ([ZodiacSign.fromLongitude],
+/// which does not round), so either would contradict the label sitting
+/// next to it. Losing at most one unit at the very end of a sign is the
+/// cheaper error.
+int _roundedInSign(double degreeInSign, int subdivisions) {
+  final total = ((degreeInSign % 30) * subdivisions).round();
+  return total >= 30 * subdivisions ? 30 * subdivisions - 1 : total;
+}
+
+/// Full degree°minute'second" for a sidereal longitude (reduced into
+/// its sign).
 String formatDegree(double longitude) {
-  final inSign = longitude % 30;
-  final deg = inSign.floor();
-  final minTotal = (inSign - deg) * 60;
-  final min = minTotal.floor();
-  final sec = ((minTotal - min) * 60).round();
-  return "$deg°${min.toString().padLeft(2, '0')}'"
+  final total = _roundedInSign(longitude, 3600);
+  final min = (total % 3600) ~/ 60;
+  final sec = total % 60;
+  return "${total ~/ 3600}°${min.toString().padLeft(2, '0')}'"
       '${sec.toString().padLeft(2, '0')}"';
 }
 
@@ -332,12 +355,6 @@ String formatDegree(double longitude) {
 /// itself, so callers can pass either a degree-in-sign or a full
 /// sidereal longitude.
 String formatDegreeInSign(double degreeInSign) {
-  final inSign = degreeInSign % 30;
-  var deg = inSign.floor();
-  var min = ((inSign - deg) * 60).round();
-  if (min == 60) {
-    min = 0;
-    deg += 1;
-  }
-  return "$deg°${min.toString().padLeft(2, '0')}'";
+  final total = _roundedInSign(degreeInSign, 60);
+  return "${total ~/ 60}°${(total % 60).toString().padLeft(2, '0')}'";
 }

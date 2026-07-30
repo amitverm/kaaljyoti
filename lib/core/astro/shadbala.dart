@@ -133,6 +133,13 @@ const Map<Planet, (double, double)> _moolatrikonaRange = {
   Planet.saturn: (0, 20),
 };
 
+/// Public dignity lookups shared with the Sthira dasha's Mulatrikonadi
+/// bala (core/astro/dasha/sthira.dart) — one classical table, not two
+/// copies that could drift. Null for the nodes.
+ZodiacSign? moolatrikonaSignOf(Planet p) => _moolatrikonaSign[p];
+(double, double)? moolatrikonaRangeOf(Planet p) => _moolatrikonaRange[p];
+double? deepExaltationDegreeOf(Planet p) => _exaltationDegreeInSign[p];
+
 /// Natural (Naisargika) friendship — the classical fixed table (BPHS
 /// ch. 4), independent of any chart.
 const Map<Planet, ({List<Planet> friends, List<Planet> enemies})>

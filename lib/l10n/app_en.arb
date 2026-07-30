@@ -324,8 +324,14 @@
   },
   "peOwnKundlisOnly": "PDF export is available for your own kundlis only. Community charts stay anonymized — their birth time is never exported.",
   "peModulesSection": "MODULES IN THIS EXPORT",
-  "peSavedReportNote": "Your saved report for this kundli — kept separate from the dashboard.",
-  "peFirstExportNote": "First export starts from your dashboard; after that the report is remembered separately.",
+  "peSavedReportNote": "One report layout for every kundli — blocks follow your dashboard until you change them here, and Reset puts them back.",
+  "@peSavedReportNote": {
+    "description": "Shown above the block list once a report template exists. 'Reset' must match the peReset button label."
+  },
+  "peFirstExportNote": "One report layout for every kundli, starting from your dashboard.",
+  "@peFirstExportNote": {
+    "description": "Shown above the block list before any report template is saved — the list is seeded from the dashboard."
+  },
   "peReset": "Reset",
   "peConfigureBlock": "Configure this block",
   "peDuplicateBlock": "Duplicate this block",
@@ -492,6 +498,11 @@
   },
   "dbArrangeWidgets": "Arrange widgets",
   "dbLifeEvents": "Life events",
+  "dbShareScreenshot": "Share screenshot",
+  "@dbShareScreenshot": {
+    "description": "Dashboard header action: renders the whole scrolling board as one tall image and opens the system share sheet."
+  },
+  "dbScreenshotFailed": "Couldn't create the screenshot",
   "dbExportPrint": "Export / Print",
   "dbKundli": "Kundli",
   "dbViewsError": "Could not load views: {e}",
@@ -803,6 +814,25 @@
   "dashaSystemVimshottariSubtitle": "Nakshatra-based · 120-year cycle · 9 lords",
   "dashaSystemYoginiSubtitle": "Nakshatra-based · 36-year cycle · 8 Yoginis",
   "dashaSystemJaiminiSubtitle": "Sign-based · rashi periods from lord placement",
+  "dashaSystemSthira": "Jaimini Sthira",
+  "dashaSystemSthiraSubtitle": "Sign-based · fixed 7/8/9-year periods from Brahma",
+  "dmSthiraDeities": "Brahma {brahma} · Rudra {rudra} · Maheshwara {maheshwara}",
+  "@dmSthiraDeities": {
+    "description": "Sthira dasha context line: the three computed deities (K.N. Rao school). Brahma/Rudra/Maheshwara are fixed Sanskrit terms — transliterate, never translate.",
+    "placeholders": {"brahma": {}, "rudra": {}, "maheshwara": {}}
+  },
+  "dmGrahaBala": "Graha Bala",
+  "dmRashiBala": "Rashi Bala",
+  "dmColMula": "Mula",
+  "@dmColMula": {
+    "description": "Sthira bala table column: Mulatrikonadi (dignity) units. Keep short — six columns share a phone width."
+  },
+  "dmColAmsa": "Amsa",
+  "dmColKendra": "Kendra",
+  "dmColChara": "Chara",
+  "dmColSthira": "Sthira",
+  "dmColDrishti": "Drishti",
+  "dmColTotal": "Total",
   "dashaLevelMaha": "Mahadasha",
   "dashaLevelAntar": "Antardasha",
   "dashaLevelPratyantar": "Pratyantardasha",
@@ -2412,6 +2442,77 @@
       }
     }
   },
+  "ssMethodLabel": "Method",
+  "ssMethodSigns": "Classical (signs)",
+  "ssMethodDegrees": "Degree-based (45°)",
+  "ssDegCaption": "Saturn within 45° either side of the natal Moon",
+  "ssDegStatusInPast": "In Sade Sati — Saturn {sep} past the natal Moon · ends {date}",
+  "@ssDegStatusInPast": {
+    "description": "Degree-method status when Saturn has already crossed the natal Moon (separating). Mirrors ssStatusInPhase's shape so both methods read alike.",
+    "placeholders": {
+      "sep": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ssDegStatusInBefore": "In Sade Sati — Saturn {sep} before the natal Moon · ends {date}",
+  "@ssDegStatusInBefore": {
+    "description": "Degree-method status when Saturn has not yet reached the natal Moon (applying).",
+    "placeholders": {
+      "sep": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ssDegStatusNext": "Not in Sade Sati — next begins {date}",
+  "@ssDegStatusNext": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ssDegStatusNone": "Not in Sade Sati — none upcoming in the computed lifetime.",
+  "ssDegColEntry": "Entry",
+  "ssDegColExit": "Exit",
+  "ssDegColConjunction": "Exact conjunction",
+  "ssDegLegendApproaching": "Approaching",
+  "@ssDegLegendApproaching": {
+    "description": "Degree-method bar legend: Saturn inside the 45-degree arc and not yet at the natal Moon."
+  },
+  "ssDegLegendConjunction": "Conjunction",
+  "ssDegLegendSeparating": "Separating",
+  "ssDegLegendOutOfArc": "Out of arc",
+  "ssDegOutOfArc": "↳ out of arc (retrograde): {start} – {end} ({len})",
+  "@ssDegOutOfArc": {
+    "description": "Degree method: the gap between two windows of one passage, when Saturn retrogrades back out of the 45-degree arc and later re-enters. Mirrors ssRetroReentry's shape.",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "len": {
+        "type": "String"
+      }
+    }
+  },
+  "ssDegConjunctionRow": "↳ exact conjunction: {date}",
+  "@ssDegConjunctionRow": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ssDegNoWindows": "Saturn never comes within 45° of the natal Moon in the computed lifetime.",
   "ssTooltipRetroNote": "(includes a retrograde re-entry)",
   "ssComputeError": "Could not compute: {error}",
   "@ssComputeError": {
@@ -3389,5 +3490,114 @@
   "@klCompareN": {
     "placeholders": { "count": { "type": "String" } }
   },
-  "klCompareCap": "Compare up to 4 charts at a time."
+  "klCompareCap": "Compare up to 4 charts at a time.",
+  "add": "Add",
+  "klSearchHint": "Search name, note, place, label",
+  "klClearSearch": "Clear search",
+  "klFilterAll": "All",
+  "klPinned": "Pinned",
+  "klAllKundlis": "All kundlis",
+  "klRecent": "Recent",
+  "klListOptions": "Sort and detail",
+  "klSortLabel": "Sort",
+  "klSortRecent": "Recently opened",
+  "klSortAdded": "Recently added",
+  "klSortName": "Name (A–Z)",
+  "klSortBirth": "Birth date",
+  "klDensityLabel": "Row detail",
+  "klDensityCompact": "Compact",
+  "klDensityComfortable": "Comfortable",
+  "klDensityDetailed": "Detailed",
+  "klShowingCount": "{visible} of {total} kundlis",
+  "@klShowingCount": {
+    "placeholders": {
+      "visible": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "klNoMatches": "No kundlis match that search.",
+  "klClearFilters": "Clear search and filters",
+  "klPin": "Pin",
+  "klUnpin": "Unpin",
+  "klPinnedN": "{count} pinned",
+  "@klPinnedN": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "klUnpinnedN": "{count} unpinned",
+  "@klUnpinnedN": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "klDeleteNTitle": "Delete {count} kundlis?",
+  "@klDeleteNTitle": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "klDeleteNBody": "This removes them from this device. Synced copies are deleted on your other devices too.",
+  "klLabels": "Labels",
+  "klAddLabel": "Add label",
+  "klLabelHint": "e.g. 2026 clients",
+  "klExistingLabels": "Existing labels",
+  "klEditKundli": "Edit kundli",
+  "moduleGrahaDrishtiTitle": "Graha Drishti",
+  "gdHeading": "Parashari Graha Drishti",
+  "gdBlurb": "Every graha aspects the 7th from its own sign. Mars adds the 4th and 8th, Jupiter the 5th and 9th, Saturn the 3rd and 10th. Counting is whole-sign and inclusive.",
+  "gdNodesOffNote": "Rahu and Ketu cast no drishti, per classical practice. Turn on \"Rahu/Ketu drishti\" to give them the 5th, 7th and 9th.",
+  "gdNodesOnNote": "Rahu and Ketu are casting the 5th, 7th and 9th. Classical practice does not reckon nodal drishti.",
+  "gdCfgDirection": "Direction",
+  "gdReceived": "Received",
+  "gdCast": "Cast",
+  "gdCfgNodes": "Rahu/Ketu drishti",
+  "gdReceivedHeading": "Aspects received",
+  "gdCastHeading": "Aspects cast",
+  "gdRulesHeading": "Which houses each graha aspects",
+  "gdCastsNothing": "casts no drishti",
+  "gdNone": "none",
+  "gdHouseHeading": "Aspects on houses",
+  "gdHouseColumn": "House",
+  "gdAspectsColumn": "Aspects",
+  "gdHouseN": "H{house}",
+  "@gdHouseN": {
+    "placeholders": { "house": { "type": "String" } }
+  },
+  "modulePaceTitle": "PACE",
+  "paceHeading": "Position, Aspect, Conjunction, Exchange",
+  "paceBlurb": "The four channels through which one graha influences another. Only the channels actually acting on a graha are listed — strongest first: exchange, then conjunction, then aspect.",
+  "pacePosition": "Position",
+  "paceAspect": "Aspect",
+  "paceConjunction": "Conjunction",
+  "paceExchange": "Exchange",
+  "paceA": "A",
+  "paceC": "C",
+  "paceE": "E",
+  "paceKendra": "kendra",
+  "paceTrikona": "trikona",
+  "paceDusthana": "dusthana",
+  "paceUpachaya": "upachaya",
+  "paceUntouched": "no aspect, conjunction or exchange",
+  "paceExchangeHeading": "Parivartana (sign exchange)",
+  "paceP": "P",
+  "paceLordOf": "lord of {houses}",
+  "@paceLordOf": {"placeholders": {"houses": {"type": "String"}}},
+  "paceBhavaLordsHeading": "Bhava lords — where each went",
+  "paceOwnBhava": "own bhava",
+  "paceCfgLayout": "Card detail",
+  "paceLayoutCompact": "Compact",
+  "paceLayoutBlocks": "Detailed",
+  "msChartCode": "Chart {code}",
+  "@msChartCode": {"placeholders": {"code": {"type": "String"}}},
+  "msLoadMore": "Load more",
+  "msShowingOf": "Showing {shown} of {total}",
+  "@msShowingOf": {"placeholders": {"shown": {"type": "String"}, "total": {"type": "String"}}},
+  "msLoadMoreError": "Couldn't load more: {error}",
+  "@msLoadMoreError": {"placeholders": {"error": {"type": "String"}}},
+  "msRecent": "Recent",
+  "msRecentCount": "{count} recently opened",
+  "@msRecentCount": {"placeholders": {"count": {"type": "String"}}},
+  "msNoRecent": "Charts you open will appear here.",
+  "msYogaCount": "{count} yogas",
+  "@msYogaCount": {"placeholders": {"count": {"type": "String"}}},
+  "msEventCount": "{count} events",
+  "@msEventCount": {"placeholders": {"count": {"type": "String"}}},
+  "retry": "Retry",
+  "msBrowseError": "Couldn't load community charts: {error}",
+  "@msBrowseError": {"placeholders": {"error": {"type": "String"}}}
 }

@@ -47,6 +47,39 @@ class TodayPlace {
   final double longitude;
 }
 
+/// How the kundli list is ordered. [recent] is the default: with a
+/// library in the hundreds, the charts you touched today ARE your
+/// working set, and unlike a fixed "recents" strip it sizes itself.
+enum KundliSort {
+  recent,
+  added,
+  name,
+  birth;
+
+  static KundliSort byName(String? name) =>
+      KundliSort.values.firstWhere((s) => s.name == name,
+          orElse: () => KundliSort.recent);
+}
+
+/// How much of each kundli the list row shows. The name is the only
+/// real identifier, so the default keeps it and the birth stamp and
+/// sheds the rest.
+enum KundliDensity {
+  /// One line: avatar, name, relation, sync glyph.
+  compact,
+
+  /// Two lines: the above plus date · time, or the note when there is one.
+  comfortable,
+
+  /// Everything, including the lagna/moon quick reads (which cost one
+  /// ephemeris computation per visible row).
+  detailed;
+
+  static KundliDensity byName(String? name) =>
+      KundliDensity.values.firstWhere((d) => d.name == name,
+          orElse: () => KundliDensity.comfortable);
+}
+
 class SettingsRepository {
   static const _kAyanamsa = 'default_ayanamsa_id';
   static const _kChartStyle = 'default_chart_style';
@@ -72,6 +105,78 @@ class SettingsRepository {
   static const _kCompareSet = 'compare_set_refs';
   static const _kCompareDasha = 'compare_dasha_system';
   static const _kCompareView = 'compare_view_id';
+  static const _kListSort = 'kundli_list_sort';
+  static const _kListDensity = 'kundli_list_density';
+  static const _kPinned = 'kundli_pinned_ids';
+  static const _kRecent = 'kundli_recent_ids';
+  static const _kRecentMahakosh = 'mahakosh_recent_codes';
+
+  /// How many opened-kundli ids to remember. Deep enough to order a
+  /// large library by recency, shallow enough that the list stays cheap
+  /// to read and write on every chart open.
+  static const recentCap = 200;
+
+  /// Kundli list ordering, density, and pins. All three are deliberately
+  /// device-local rather than columns on the kundli row: they describe
+  /// how THIS device shows the library, so they need no migration and
+  /// give the sync tombstone/LWW logic nothing new to reconcile. The
+  /// trade-off is that pins don't follow the user to a new device.
+  Future<KundliSort> kundliSort() async {
+    final prefs = await SharedPreferences.getInstance();
+    return KundliSort.byName(prefs.getString(_kListSort));
+  }
+
+  Future<void> setKundliSort(KundliSort sort) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kListSort, sort.name);
+  }
+
+  Future<KundliDensity> kundliDensity() async {
+    final prefs = await SharedPreferences.getInstance();
+    return KundliDensity.byName(prefs.getString(_kListDensity));
+  }
+
+  Future<void> setKundliDensity(KundliDensity density) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kListDensity, density.name);
+  }
+
+  Future<List<String>> pinnedKundliIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kPinned) ?? const [];
+  }
+
+  Future<void> setPinnedKundliIds(List<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kPinned, ids);
+  }
+
+  /// Opened-kundli ids, most recent first.
+  Future<List<String>> recentKundliIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kRecent) ?? const [];
+  }
+
+  Future<void> setRecentKundliIds(List<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+        _kRecent, ids.take(recentCap).toList(growable: false));
+  }
+
+  /// Opened Mahakosh chart codes, most recent first. Kept separate from
+  /// the kundli recents: these are community charts identified by
+  /// mk_code, they live server-side, and mixing the two id spaces would
+  /// let a deleted community chart hold a slot in the kundli strip.
+  Future<List<String>> recentMahakoshCodes() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kRecentMahakosh) ?? const [];
+  }
+
+  Future<void> setRecentMahakoshCodes(List<String> codes) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+        _kRecentMahakosh, codes.take(recentCap).toList(growable: false));
+  }
 
   /// Chart text rendering settings (Settings ▸ Chart text). Loaded in
   /// main() into the global [chartTuning] notifier the painters read.

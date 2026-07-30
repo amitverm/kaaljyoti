@@ -148,33 +148,39 @@ class JaiminiAspectModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
     final pairs = _uniquePairs(ctx.snapshot);
-    return [
-      pdfSectionHeader(l10n.jaPdfHeader),
-      if (pairs.isEmpty)
-        pw.Text(l10n.jaNone, style: pdfBody())
-      else
-        pw.TableHelper.fromTextArray(
-          headers: [
-            l10n.labelGraha,
-            l10n.labelSign,
-            l10n.labelGraha,
-            l10n.labelSign,
-          ],
-          data: [
-            for (final p in pairs)
-              [
-                p.from.label(l10n),
-                p.fromSign.label(l10n),
-                p.to.label(l10n),
-                p.toSign.label(l10n),
-              ],
-          ],
-          headerStyle: pdfLabel(),
-          cellStyle: pdfBody(size: 9),
-          border: null,
-          cellAlignment: pw.Alignment.centerLeft,
-          headerAlignment: pw.Alignment.centerLeft,
-        ),
-    ];
+    // "Graha | Sign | Graha | Sign" said nothing about what related the
+    // two, or that a relationship was being shown at all. The pair is
+    // now composed into ONE cell the way the screen writes it — and the
+    // blurb rides above the table, because rashi drishti is sign-based
+    // and a reader must not go looking for an orb or an angle.
+    //
+    // U+2194 (↔), not the screen's U+27F7 (⟷): the long arrow is absent
+    // from the embedded IBM Plex faces and would print as a .notdef
+    // box. Bidirectional either way, which is the point — the relation
+    // is symmetric (see [_uniquePairs]), so a one-way arrow would lie.
+    String pair(JaiminiAspect a) =>
+        '${a.from.label(l10n)} (${a.fromSign.label(l10n)})'
+        ' ↔ ${a.to.label(l10n)} (${a.toSign.label(l10n)})';
+
+    return pdfSection(
+      header: pdfSectionHeader(l10n.jaPdfHeader),
+      lead: pdfStack([
+        pw.Text(l10n.jaBlurb, style: pdfLabel()),
+        if (pairs.isEmpty) ...[
+          pw.SizedBox(height: 6),
+          pw.Text(l10n.jaNone, style: pdfBody()),
+        ],
+      ]),
+      rest: [
+        if (pairs.isNotEmpty)
+          pdfDataTable(
+            headers: [l10n.jaGrahaPairs],
+            rows: [
+              for (final p in pairs) [pair(p)],
+            ],
+          ),
+        pdfSectionGap(),
+      ],
+    );
   }
 }

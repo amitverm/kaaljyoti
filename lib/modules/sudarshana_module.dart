@@ -132,29 +132,28 @@ class SudarshanaModule extends AstroModule {
       (l10n.labelChandra, s.moonSign),
       (l10n.labelSurya, s.positions[Planet.sun]!.sign),
     ];
-    return [
-      pdfSectionHeader(l10n.moduleSudarshanaTitle),
-      pw.TableHelper.fromTextArray(
-        headers: [l10n.labelHouse, for (final (name, _) in bases) name],
-        data: [
-          for (var h = 1; h <= 12; h++)
-            [
-              'H$h',
-              for (final (_, base) in bases)
-                () {
-                  final sign = ZodiacSign.values[(base.index + h - 1) % 12];
-                  final planets = placements[sign] ?? const [];
-                  return '${sign.abbrLabel(l10n)}'
-                      '${planets.isEmpty ? '' : ' · ${planets.map((p) => p.abbrLabel(l10n)).join(' ')}'}';
-                }(),
-            ],
-        ],
-        headerStyle: pdfLabel(),
-        cellStyle: pdfBody(size: 8),
-        border: null,
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(l10n.moduleSudarshanaTitle),
+      rest: [
+        pdfDataTable(
+          headers: [l10n.labelHouse, for (final (name, _) in bases) name],
+          fontSize: 8,
+          rows: [
+            for (var h = 1; h <= 12; h++)
+              [
+                'H$h',
+                for (final (_, base) in bases)
+                  () {
+                    final sign = ZodiacSign.values[(base.index + h - 1) % 12];
+                    final planets = placements[sign] ?? const [];
+                    return '${sign.abbrLabel(l10n)}'
+                        '${planets.isEmpty ? '' : ' · ${planets.map((p) => p.abbrLabel(l10n)).join(' ')}'}';
+                  }(),
+              ],
+          ],
+        ),
+        pdfSectionGap(),
+      ],
+    );
   }
 }

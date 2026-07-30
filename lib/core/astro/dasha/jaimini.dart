@@ -70,26 +70,26 @@ class JaiminiCharaCalculator implements DashaCalculator {
     // whose total is under a full lifespan (e.g. ~56y) leaves older
     // natives with no active dasha. K.N. Rao (Predicting through
     // Jaimini's Chara Dasha, p.42): "If a person lives beyond it, the
-    // second cycle is to be repeated in exactly the same way." So we
-    // append IDENTICAL cycles (same signs, same years, same antardasha
-    // rules) until coverage reaches ~100 years — mirroring how Yogini
-    // runs extra cycles for long lifespans.
+    // second cycle is to be repeated in exactly the same way." The
+    // repetition stops at the app-wide horizon — the last mahadasha
+    // STARTS before age 120; whole extra cycles used to run the listing
+    // out to ~166 years of pure noise.
     final cycleYears = [for (final s in signs) _charaYears(s, snapshot)];
-    final cycleTotal = cycleYears.fold<int>(0, (a, b) => a + b);
-    const targetYears = 100;
-    final cycles = cycleTotal <= 0 ? 1 : (targetYears / cycleTotal).ceil();
+    final horizon = addYears(birth, kDashaHorizonYears.toDouble());
 
     var cursor = birth;
     final periods = <DashaPeriod>[];
-    for (var cycle = 0; cycle < cycles; cycle++) {
-      for (var i = 0; i < signs.length; i++) {
-        final sign = signs[i];
-        final years = cycleYears[i].toDouble();
-        final start = cursor;
-        final end = addYears(start, years);
-        periods.add(_buildPeriod(sign, years, start, end, 1, snapshot));
-        cursor = end;
-      }
+    // _charaYears is never below 1, so cycleTotal >= 12 and this loop
+    // always terminates with at least one full cycle behind it.
+    var i = 0;
+    while (cursor.isBefore(horizon)) {
+      final sign = signs[i % 12];
+      final years = cycleYears[i % 12].toDouble();
+      final start = cursor;
+      final end = addYears(start, years);
+      periods.add(_buildPeriod(sign, years, start, end, 1, snapshot));
+      cursor = end;
+      i++;
     }
     return DashaResult(system: system, periods: periods);
   }

@@ -107,55 +107,54 @@ class TransitModule extends AstroModule {
         transit.currentTransitPositions(ayanamsaId: s.ayanamsaId, at: now);
     final showSav = _showSav(ctx.config);
     final l10n = ctx.l10n;
-    return [
-      pdfSectionHeader(l10n.moduleTransitTitle),
-      pw.Text(
-        // A PDF is static, so it can only ever capture the instant it
-        // was exported at — call that out explicitly.
-        l10n.transitPdfAsOf('${now.toLocal()}'),
-        style: pdfLabel(),
-      ),
-      pw.SizedBox(height: 6),
-      pw.Center(
-        child: pdfChart(
-          l10n: l10n,
-          placements: transit.transitPlacements(tPos),
-          lagna: s.lagnaSign,
-          style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
-          retrograde: {for (final p in tPos.values) p.planet: p.isRetrograde},
-          trueAscendantSign: s.lagnaSign,
-          ascendantDegree: s.ascendant,
-          padaLabels: showSav ? _savLabels(ctx) : const {},
+    final ann = pdfAnnotationsFor(
+        chartTokens(tPos, showDegrees: _showDegrees(ctx.config)));
+    return pdfSection(
+      header: pdfSectionHeader(l10n.moduleTransitTitle),
+      lead: pdfStack([
+        pw.Text(
+          // A PDF is static, so it can only ever capture the instant it
+          // was exported at — call that out explicitly.
+          l10n.transitPdfAsOf('${now.toLocal()}'),
+          style: pdfLabel(),
         ),
-      ),
-      if (showSav) ...[
-        pw.SizedBox(height: 4),
-        pw.Text(l10n.transitSavNote, style: pdfLabel()),
+        pw.SizedBox(height: 6),
+        pw.Center(
+          child: pdfChart(
+            l10n: l10n,
+            placements: transit.transitPlacements(tPos),
+            lagna: s.lagnaSign,
+            style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
+            retrograde: {for (final p in tPos.values) p.planet: p.isRetrograde},
+            trueAscendantSign: s.lagnaSign,
+            ascendantDegree: s.ascendant,
+            padaLabels: showSav ? _savLabels(ctx) : const {},
+            degreeLabels: ann.degrees,
+          ),
+        ),
+        if (showSav) pdfNote(l10n.transitSavNote),
+        pdfSectionGap(),
+      ]),
+      rest: [
+        pdfDataTable(
+          headers: [
+            l10n.labelGraha,
+            l10n.labelSign,
+            l10n.labelDegree,
+            l10n.labelNakshatra,
+          ],
+          rows: [
+            for (final p in tPos.values)
+              [
+                '${p.planet.label(l10n)}${p.isRetrograde ? ' (R)' : ''}',
+                p.sign.label(l10n),
+                formatDegree(p.longitude),
+                p.nakshatra.label(l10n),
+              ],
+          ],
+        ),
       ],
-      pw.SizedBox(height: 6),
-      pw.TableHelper.fromTextArray(
-        headers: [
-          l10n.labelGraha,
-          l10n.labelSign,
-          l10n.labelDegree,
-          l10n.labelNakshatra,
-        ],
-        data: [
-          for (final p in tPos.values)
-            [
-              '${p.planet.label(l10n)}${p.isRetrograde ? ' (R)' : ''}',
-              p.sign.label(l10n),
-              formatDegree(p.longitude),
-              p.nakshatra.label(l10n),
-            ],
-        ],
-        headerStyle: pdfLabel(),
-        cellStyle: pdfBody(size: 9.5),
-        border: null,
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-    ];
+    );
   }
 }
 
@@ -214,23 +213,23 @@ class _TransitBodyState extends ConsumerState<_TransitBody> {
         transit.currentTransitPositions(ayanamsaId: s.ayanamsaId, at: asOf);
     final placements = transit.transitPlacements(tPos);
     final retro = {for (final p in tPos.values) p.planet: p.isRetrograde};
-    final tokens = <Planet, PlanetToken>{};
-    if (widget.showDegrees) {
-      for (final p in tPos.values) {
-        tokens[p.planet] = PlanetToken(
-          planet: p.planet,
-          retrograde: p.isRetrograde,
-          degreeInSign: p.degreesInSign,
-        );
-      }
-    }
+    // Degrees only: dignity and karakas are natal readings, not gochar.
+    final tokens = chartTokens(tPos, showDegrees: widget.showDegrees);
+
+    // Gochar is routinely read from an anchor other than the natal
+    // lagna — Chandra lagna above all — so this chart wants the same
+    // double-tap / long-press rotation as the rashi and varga charts.
+    // Keyed per kundli so it survives navigation and stays independent
+    // of the Birth Chart's own rotation.
+    final viewKey = '${widget.ctx.kundli.id}#transit';
+    final viewFrom = ref.watch(widgetViewFromProvider(viewKey)) ?? s.lagnaSign;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ChartView(
           placements: placements,
-          lagna: s.lagnaSign,
+          lagna: viewFrom,
           trueAscendantSign: s.lagnaSign,
           ascendantDegree: s.ascendant,
           // Rank among the TRANSIT bodies — they are what share the box.
@@ -240,6 +239,9 @@ class _TransitBodyState extends ConsumerState<_TransitBody> {
           tokens: tokens,
           showDegrees: widget.showDegrees,
           padaLabels: widget.savLabels,
+          onSignSelect: (sign) => ref
+              .read(widgetViewFromProvider(viewKey).notifier)
+              .state = sign == s.lagnaSign ? null : sign,
         ),
         const SizedBox(height: 10),
         Text(

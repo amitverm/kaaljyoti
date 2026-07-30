@@ -38,6 +38,10 @@ class YogasModule extends AstroModule {
             ('vimshottari', l10n.dashaSystemVimshottari),
             ('chara', l10n.dashaSystemJaimini),
           ],
+          // Agrees with _YogasBodyState's own fallback. Stated rather
+          // than left to `options.first`, which would silently break
+          // the settings sheet if these two were ever reordered.
+          defaultValue: 'vimshottari',
         ),
       ];
 
@@ -57,30 +61,34 @@ class YogasModule extends AstroModule {
     final l10n = ctx.l10n;
     final visible = visibleYogas(ctx.snapshot.yogas);
     final grouped = _groupByCategory(visible);
-    return [
-      pdfSectionHeader(l10n.moduleYogasTitle),
-      if (visible.isEmpty)
-        pw.Text(l10n.ymNoYogas, style: pdfBody())
-      else
-        for (final e in grouped.entries) ...[
-          pw.Padding(
-            padding: const pw.EdgeInsets.only(top: 4, bottom: 2),
-            child: pw.Text(_categoryLabel(l10n, e.key).toUpperCase(),
-                style: pdfLabel()),
-          ),
-          for (final y in e.value)
+    // Each category's kicker is glued to its first yoga line so a
+    // heading can't end a page on its own.
+    return pdfSection(
+      header: pdfSectionHeader(l10n.moduleYogasTitle),
+      lead: visible.isEmpty ? pw.Text(l10n.ymNoYogas, style: pdfBody()) : null,
+      rest: [
+        for (final e in grouped.entries)
+          pdfStack([
             pw.Padding(
-              padding: const pw.EdgeInsets.only(bottom: 3),
-              child: pw.Text(
-                // TODO(l10n): details are still composed in English by
-                // the rule engine (see yogaName in astro_l10n.dart).
-                '${yogaName(l10n, y)}'
-                '${y.detail != null ? ' — ${y.detail}' : ''}',
-                style: pdfBody(size: 9.5),
-              ),
+              padding: const pw.EdgeInsets.only(top: 4, bottom: 2),
+              child: pw.Text(_categoryLabel(l10n, e.key).toUpperCase(),
+                  style: pdfLabel()),
             ),
-        ],
-    ];
+            for (final y in e.value)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 3),
+                child: pw.Text(
+                  // TODO(l10n): details are still composed in English by
+                  // the rule engine (see yogaName in astro_l10n.dart).
+                  '${yogaName(l10n, y)}'
+                  '${y.detail != null ? ' — ${y.detail}' : ''}',
+                  style: pdfBody(size: 9.5),
+                ),
+              ),
+          ]),
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 

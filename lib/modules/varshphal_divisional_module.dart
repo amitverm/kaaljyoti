@@ -25,8 +25,13 @@ import 'common.dart';
 
 String _title(AppLocalizations l10n) => l10n.moduleVarshphalDivisionalTitle;
 
+/// See [DivisionalChartModule._defaultVarga] — one source of truth for
+/// "what does an absent 'varga' mean", shared by the parser and the
+/// config choice, so the settings sheet can't disagree with the chart.
+const _defaultVarga = 'd9';
+
 Varga _varga(Map<String, dynamic> config) =>
-    Varga.byName((config['varga'] as String?) ?? 'd9');
+    Varga.byName((config['varga'] as String?) ?? _defaultVarga);
 
 class VarshphalDivisionalModule extends AstroModule {
   const VarshphalDivisionalModule();
@@ -50,6 +55,7 @@ class VarshphalDivisionalModule extends AstroModule {
             for (final v in Varga.values.where((v) => v != Varga.d1))
               (v.name, v.displayLabel(l10n)),
           ],
+          defaultValue: _defaultVarga,
         ),
         chartStyleChoice(l10n),
       ];
@@ -101,22 +107,24 @@ class VarshphalDivisionalModule extends AstroModule {
       ),
       natal.ayanamsaId,
     );
-    return [
-      pdfSectionHeader(
+    // Varga chart: no per-planet degrees (see DivisionalChartModule) —
+    // and no 'degrees' toggle on screen to honour.
+    return pdfSection(
+      header: pdfSectionHeader(
           '${l10n.moduleVarshphalDivisionalTitle} — ${varga.displayLabel(l10n)}'
           ' (${l10n.vpYearLine('$year', '${returnUtc.toUtc().year}')})'),
-      pw.SizedBox(height: 10),
-      pw.Center(
-        child: pdfChart(
-          l10n: l10n,
-          placements: vargaPlacements(varsha, varga),
-          lagna: vargaLagna(varsha, varga),
-          style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
-          size: 200,
+      lead: pdfStack([
+        pw.Center(
+          child: pdfChart(
+            l10n: l10n,
+            placements: vargaPlacements(varsha, varga),
+            lagna: vargaLagna(varsha, varga),
+            style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
+          ),
         ),
-      ),
-      pw.SizedBox(height: 6),
-    ];
+        pdfSectionGap(),
+      ]),
+    );
   }
 }
 

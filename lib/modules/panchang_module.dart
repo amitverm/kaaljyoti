@@ -47,12 +47,22 @@ class PanchangModule extends AstroModule {
         for (final (label, value) in _rows(ctx, l10n))
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
+            // At half span on a phone the row is ~163pt wide, which the
+            // longest limb values ("Shatabhisha · 3") do not fit on one
+            // line beside their label. The label stays rigid and the
+            // value column wraps — never ellipsised, the reading has to
+            // stay legible.
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
                     style: TextStyle(fontSize: 12.5, color: KJColors.inkSoft)),
-                Text(value, style: const TextStyle(fontSize: 13)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(value,
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(fontSize: 13)),
+                ),
               ],
             ),
           ),
@@ -71,24 +81,30 @@ class PanchangModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
     final p = ctx.snapshot.panchang;
-    return [
-      pdfSectionHeader(l10n.panchangPdfHeader),
-      pw.TableHelper.fromTextArray(
-        data: [
-          for (final (label, value) in _rows(ctx, l10n))
-            if (label == l10n.labelNakshatra)
-              // The PDF spells the pada out where the card keeps it terse.
-              [
-                label,
-                '${p.nakshatra.label(l10n)} · ${l10n.labelPada} ${p.pada}'
-              ]
-            else
-              [label, value],
-        ],
-        cellStyle: pdfBody(size: 9.5),
-        border: null,
-        cellAlignment: pw.Alignment.centerLeft,
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(l10n.panchangPdfHeader),
+      rest: [
+        // Deliberately headerless: this is a label/value list, not a
+        // grid — the left column IS the heading for each row.
+        pdfDataTable(
+          columnWidths: const {
+            0: pw.FlexColumnWidth(1),
+            1: pw.FlexColumnWidth(2.2),
+          },
+          rows: [
+            for (final (label, value) in _rows(ctx, l10n))
+              if (label == l10n.labelNakshatra)
+                // The PDF spells the pada out where the card keeps it terse.
+                [
+                  label,
+                  '${p.nakshatra.label(l10n)} · ${l10n.labelPada} ${p.pada}'
+                ]
+              else
+                [label, value],
+          ],
+        ),
+        pdfSectionGap(),
+      ],
+    );
   }
 }

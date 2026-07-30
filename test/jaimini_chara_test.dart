@@ -139,8 +139,7 @@ void main() {
     //                  → Saturn, in Capricorn: 2 incl − 1 = 1
     //   Pisces  (bwd)  Jupiter in Sagittarius: 4 incl − 1 = 3
     test('reference chart matches hand-computed table', () {
-      final result =
-          calc.calculate(_snapshot(ascendant: 15, longs: _refLongs));
+      final result = calc.calculate(_snapshot(ascendant: 15, longs: _refLongs));
       final years = {
         for (final p in result.periods) p.sign!: _years(p),
       };
@@ -161,8 +160,7 @@ void main() {
     });
 
     test('every rashi gets 1–12 years, never 0 (ch. 6 note 1)', () {
-      final result =
-          calc.calculate(_snapshot(ascendant: 15, longs: _refLongs));
+      final result = calc.calculate(_snapshot(ascendant: 15, longs: _refLongs));
       for (final p in result.periods) {
         expect(_years(p), inInclusiveRange(1, 12), reason: '${p.sign}');
       }
@@ -263,7 +261,9 @@ void main() {
           .toList();
       expect(order.take(3),
           [ZodiacSign.virgo, ZodiacSign.libra, ZodiacSign.scorpio]);
-      expect(order.last, ZodiacSign.leo);
+      // The first cycle's last rashi (the listing itself now continues
+      // into a truncated second cycle up to the 120-year horizon).
+      expect(order[11], ZodiacSign.leo);
     });
 
     test('Illustration Three: Virgo lagna year table (p. 43-44)', () {
@@ -309,19 +309,16 @@ void main() {
 
     test('(a) Mars in Scorpio, Ketu elsewhere → count to Ketu', () {
       // Ketu in Cancer; Scorpio counts forward: 9 incl − 1 = 8.
-      expect(
-          scorpioYears({Planet.mars: 220.0, Planet.ketu: 105.0}), 8);
+      expect(scorpioYears({Planet.mars: 220.0, Planet.ketu: 105.0}), 8);
     });
 
     test('(b) Ketu in Scorpio, Mars elsewhere → count to Mars', () {
       // Mars in Cancer; forward: 9 incl − 1 = 8.
-      expect(
-          scorpioYears({Planet.ketu: 225.0, Planet.mars: 100.0}), 8);
+      expect(scorpioYears({Planet.ketu: 225.0, Planet.mars: 100.0}), 8);
     });
 
     test('(c) both in Scorpio → full 12 years', () {
-      expect(
-          scorpioYears({Planet.mars: 220.0, Planet.ketu: 225.0}), 12);
+      expect(scorpioYears({Planet.mars: 220.0, Planet.ketu: 225.0}), 12);
     });
 
     test('(d) both outside → stronger co-lord counts', () {
@@ -336,8 +333,8 @@ void main() {
       final result = calc.calculate(_snapshot(ascendant: 15, longs: longs));
       // Rahu in Gemini; Aquarius counts backward: 9 incl − 1 = 8.
       expect(
-          _years(result.periods
-              .firstWhere((p) => p.sign == ZodiacSign.aquarius)),
+          _years(
+              result.periods.firstWhere((p) => p.sign == ZodiacSign.aquarius)),
           8);
     });
   });
@@ -364,7 +361,8 @@ void main() {
     test('Illustration Two (56y cycle) repeats identically, coverage ≥100y',
         () {
       final birth = DateTime.utc(1990, 1, 1, 6, 0);
-      final result = calc.calculate(_snapshot(ascendant: 165, longs: illTwoLongs));
+      final result =
+          calc.calculate(_snapshot(ascendant: 165, longs: illTwoLongs));
 
       // First cycle is 12 mahadashas totalling 56 years.
       final firstCycle = result.periods.take(12).toList();
@@ -410,10 +408,18 @@ void main() {
       final firstTotal =
           result.periods.take(12).fold<int>(0, (a, p) => a + _years(p));
       expect(firstTotal, 86);
-      // 86y < 100y target → a second cycle is appended, continuing past 86.
-      expect(result.periods.length, 24);
+      // 86y < the horizon → the second cycle begins identically, but
+      // is TRUNCATED at 120 years: no mahadasha starts at or after age
+      // 120 (a whole second cycle used to run the listing to 172y).
+      expect(result.periods.length, greaterThan(12));
+      expect(result.periods.length, lessThan(24));
       expect(result.periods[12].sign, result.periods[0].sign);
       expect(result.periods[12].start, result.periods[11].end);
+      final horizon = addYears(birth, kDashaHorizonYears.toDouble());
+      for (final p in result.periods) {
+        expect(p.start.isBefore(horizon), isTrue,
+            reason: 'no maha may start past the horizon');
+      }
       expect(coverageYears(result, birth), greaterThanOrEqualTo(100));
       // Active dasha exists well beyond the first cycle (age 90).
       expect(result.currentMahadasha(addYears(birth, 90)), isNotNull);
@@ -422,8 +428,7 @@ void main() {
 
   group('antardasha order (ch. 4)', () {
     List<ZodiacSign> subsOf(ZodiacSign maha) {
-      final result =
-          calc.calculate(_snapshot(ascendant: 15, longs: _refLongs));
+      final result = calc.calculate(_snapshot(ascendant: 15, longs: _refLongs));
       return result.periods
           .firstWhere((p) => p.sign == maha)
           .children
@@ -446,8 +451,7 @@ void main() {
     });
 
     test('own rashi always last, 12 equal sub-periods', () {
-      final result =
-          calc.calculate(_snapshot(ascendant: 15, longs: _refLongs));
+      final result = calc.calculate(_snapshot(ascendant: 15, longs: _refLongs));
       for (final maha in result.periods) {
         final subs = maha.children;
         expect(subs.length, 12);

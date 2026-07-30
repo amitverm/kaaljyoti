@@ -159,32 +159,30 @@ class JaiminiKarakaModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
     final ranked = _ranked(ctx.snapshot);
-    return [
-      pdfSectionHeader(l10n.karakaPdfHeader),
-      pw.TableHelper.fromTextArray(
-        headers: [
-          l10n.labelKaraka,
-          l10n.labelGraha,
-          l10n.labelSign,
-          l10n.labelDegree,
-          l10n.labelSignifies,
-        ],
-        data: [
-          for (final entry in ranked.entries)
-            [
-              '${entry.key.code} · ${entry.key.label(l10n)}',
-              entry.value.planet.label(l10n),
-              entry.value.sign.label(l10n),
-              formatDegreeInSign(entry.value.degreesInSign),
-              entry.key.signifiesLabel(l10n),
-            ],
-        ],
-        headerStyle: pdfLabel(),
-        cellStyle: pdfBody(size: 9),
-        border: null,
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(l10n.karakaPdfHeader),
+      rest: [
+        pdfDataTable(
+          headers: [
+            l10n.labelKaraka,
+            l10n.labelGraha,
+            l10n.labelSign,
+            l10n.labelDegree,
+            l10n.labelSignifies,
+          ],
+          rows: [
+            for (final entry in ranked.entries)
+              [
+                '${entry.key.code} · ${entry.key.label(l10n)}',
+                entry.value.planet.label(l10n),
+                entry.value.sign.label(l10n),
+                formatDegreeInSign(entry.value.degreesInSign),
+                entry.key.signifiesLabel(l10n),
+              ],
+          ],
+        ),
+        pdfSectionGap(),
+      ],
+    );
   }
 }

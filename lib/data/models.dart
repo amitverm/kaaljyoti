@@ -1,6 +1,8 @@
 /// Local persistence models.
 library;
 
+import 'dart:convert';
+
 import '../core/astro/models.dart';
 
 class Kundli {
@@ -9,6 +11,7 @@ class Kundli {
     required this.name,
     required this.relationTag, // 'Self', 'Spouse', 'Client', …
     this.note, // free-text label to remember who this person is
+    this.labels = const [], // user-defined groupings, multi-valued
     required this.birthUtc,
     required this.latitude,
     required this.longitude,
@@ -29,6 +32,13 @@ class Kundli {
   final String name;
   final String relationTag;
   final String? note;
+
+  /// Free-form user groupings ("2026 clients", "matchmaking"). Unlike
+  /// [relationTag] — single-valued and drawn from a closed list — a
+  /// kundli carries as many labels as the astrologer wants, which is
+  /// what makes this the folder replacement: a chart can be a client
+  /// AND family, something no folder can express.
+  final List<String> labels;
   final DateTime birthUtc;
   final double latitude;
   final double longitude;
@@ -60,6 +70,7 @@ class Kundli {
     String? relationTag,
     String? note,
     bool clearNote = false,
+    List<String>? labels,
     DateTime? birthUtc,
     double? latitude,
     double? longitude,
@@ -80,6 +91,7 @@ class Kundli {
         name: name ?? this.name,
         relationTag: relationTag ?? this.relationTag,
         note: clearNote ? null : (note ?? this.note),
+        labels: labels ?? this.labels,
         birthUtc: birthUtc ?? this.birthUtc,
         latitude: latitude ?? this.latitude,
         longitude: longitude ?? this.longitude,
@@ -104,6 +116,10 @@ class Kundli {
         'name': name,
         'relation_tag': relationTag,
         'note': note,
+        // JSON rather than a join table: the sync payload IS the row
+        // (sync_service pushes toRow()), so labels ride cross-device for
+        // free. Label queries are done in Dart over a few hundred rows.
+        'labels': labels.isEmpty ? null : jsonEncode(labels),
         'birth_utc': birthUtc.millisecondsSinceEpoch,
         'lat': latitude,
         'lon': longitude,
@@ -125,6 +141,7 @@ class Kundli {
         name: r['name'] as String,
         relationTag: r['relation_tag'] as String,
         note: r['note'] as String?,
+        labels: _decodeLabels(r['labels'] as String?),
         birthUtc: DateTime.fromMillisecondsSinceEpoch(r['birth_utc'] as int,
             isUtc: true),
         latitude: r['lat'] as double,
@@ -143,6 +160,23 @@ class Kundli {
         updatedAt: DateTime.fromMillisecondsSinceEpoch(r['updated_at'] as int,
             isUtc: true),
       );
+
+  /// Tolerant of anything that isn't a clean list of strings — a row
+  /// written by a future version (or a corrupted sync payload) costs the
+  /// user their labels, never their kundli.
+  static List<String> _decodeLabels(String? raw) {
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return [
+        for (final e in decoded)
+          if (e is String && e.trim().isNotEmpty) e.trim(),
+      ];
+    } on FormatException {
+      return const [];
+    }
+  }
 }
 
 /// Curated life-event categories. Free-text tagging is layered on top via

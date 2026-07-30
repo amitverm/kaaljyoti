@@ -8,6 +8,7 @@ import '../modules/birth_chart_module.dart';
 import '../modules/chalit_module.dart';
 import '../modules/dasha_module.dart';
 import '../modules/divisional_module.dart';
+import '../modules/graha_drishti_module.dart';
 import '../modules/jaimini_aspect_module.dart';
 import '../modules/jaimini_karaka_module.dart';
 import '../modules/jaimini_lagna_module.dart';
@@ -15,6 +16,7 @@ import '../modules/jaimini_pada_module.dart';
 import '../modules/kota_chakra_module.dart';
 import '../modules/kp_module.dart';
 import '../modules/moon_nakshatra_module.dart';
+import '../modules/pace_module.dart';
 import '../modules/panchadha_maitri_module.dart';
 import '../modules/sarvatobhadra_module.dart';
 import '../modules/shadbala_module.dart';
@@ -58,6 +60,8 @@ const List<AstroModule> _allModules = [
   SpecialLagnaModule(),
   AshtakavargaModule(),
   PanchadhaMaitriModule(),
+  GrahaDrishtiModule(),
+  PaceModule(),
   YogasModule(),
   TransitModule(),
   KpCuspsModule(),

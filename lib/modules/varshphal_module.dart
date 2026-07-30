@@ -12,7 +12,6 @@ import '../pdf/pw.dart' as pw;
 
 import '../charts/chart_view.dart';
 import '../charts/planet_token.dart';
-import '../core/astro/dignity.dart';
 import '../core/astro/divisional.dart';
 import '../core/astro/models.dart';
 import '../core/astro/snapshot_builder.dart';
@@ -30,6 +29,18 @@ import 'common.dart';
 String _varshphalTitle(AppLocalizations l10n) => l10n.moduleVarshphalTitle;
 
 DateFormat get _fmtPravesh => DateFormat('${KJDate.pref.datePattern}, HH:mm');
+
+/// Chart annotations for a varsha snapshot, per the instance config —
+/// shared by the card and [VarshphalModule.pdfView] so the exported
+/// annual chart honours the same 'degrees'/'extras' toggles the widget
+/// does. No karakas: the Tajika chart is not read that way.
+Map<Planet, PlanetToken> varshphalTokens(
+        AstroSnapshot varsha, Map<String, dynamic> config) =>
+    chartTokens(
+      varsha.positions,
+      showDegrees: (config['degrees'] as String?) == 'on',
+      showExtras: (config['extras'] as String?) == 'on',
+    );
 
 class VarshphalModule extends AstroModule {
   const VarshphalModule();
@@ -100,29 +111,40 @@ class VarshphalModule extends AstroModule {
     );
     final muntha = munthaSign(natal.lagnaSign, year);
     final munthaHouse = ((muntha.index - varsha.lagnaSign.index + 12) % 12) + 1;
-    return [
-      pdfSectionHeader(l10n.vpPdfHeader('$year', '${returnUtc.toUtc().year}')),
-      pw.Text(
-        '${l10n.vpPraveshLine(_fmtPravesh.format(varsha.birth.localDateTime))}'
-        ' · ${l10n.vpMunthaLine('${muntha.label(l10n)} ${formatDegreeInSign(natal.ascendant % 30)}', l10n.nrHouseN('$munthaHouse'))}',
-        style: pdfBody(),
-      ),
-      pw.SizedBox(height: 10),
-      pw.Center(
-        child: pdfChart(
-          l10n: l10n,
-          placements: vargaPlacements(varsha, Varga.d1),
-          lagna: varsha.lagnaSign,
-          style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
-          retrograde: {
-            for (final p in varsha.positions.values) p.planet: p.isRetrograde,
-          },
-          trueAscendantSign: varsha.lagnaSign,
-          ascendantDegree: varsha.ascendant,
+    final ann = pdfAnnotationsFor(varshphalTokens(varsha, ctx.config));
+    return pdfSection(
+      header: pdfSectionHeader(
+          l10n.vpPdfHeader('$year', '${returnUtc.toUtc().year}')),
+      lead: pdfStack([
+        pw.Text(
+          '${l10n.vpPraveshLine(_fmtPravesh.format(varsha.birth.localDateTime))}'
+          ' · ${l10n.vpMunthaLine('${muntha.label(l10n)} ${formatDegreeInSign(natal.ascendant % 30)}', l10n.nrHouseN('$munthaHouse'))}',
+          style: pdfBody(),
         ),
-      ),
-      pw.SizedBox(height: 6),
-    ];
+        pw.SizedBox(height: 10),
+        pw.Center(
+          child: pdfChart(
+            l10n: l10n,
+            placements: vargaPlacements(varsha, Varga.d1),
+            lagna: varsha.lagnaSign,
+            style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
+            retrograde: {
+              for (final p in varsha.positions.values) p.planet: p.isRetrograde,
+            },
+            trueAscendantSign: varsha.lagnaSign,
+            ascendantDegree: varsha.ascendant,
+            // The Muntha rides the grey overlay channel, same as on
+            // screen.
+            padaLabels: {
+              muntha: const ['Mu'],
+            },
+            degreeLabels: ann.degrees,
+            planetTags: ann.tags,
+          ),
+        ),
+        pdfSectionGap(),
+      ]),
+    );
   }
 }
 
@@ -227,22 +249,10 @@ class _VarshphalBodyState extends ConsumerState<_VarshphalBody> {
     final ctx = widget.ctx;
     final varsha = d.snapshot;
     final showDegrees = (ctx.config['degrees'] as String?) == 'on';
-    final showExtras = (ctx.config['extras'] as String?) == 'on';
 
     // Same annotation set the Birth Chart builds (minus karakas) —
     // computed from the VARSHA snapshot, not the natal one.
-    final sun = varsha.positions[Planet.sun]!;
-    final tokens = {
-      for (final p in varsha.positions.values)
-        p.planet: PlanetToken(
-          planet: p.planet,
-          retrograde: p.isRetrograde,
-          degreeInSign: showDegrees ? p.degreesInSign : null,
-          dignity: showExtras ? dignityOf(p) : PlanetDignity.none,
-          combust:
-              showExtras && p.planet != Planet.sun ? isCombust(p, sun) : false,
-        ),
-    };
+    final tokens = varshphalTokens(varsha, ctx.config);
 
     // Double-tap rotation, independent of the Birth Chart's.
     final viewKey = '${ctx.kundli.id}#varshphal';

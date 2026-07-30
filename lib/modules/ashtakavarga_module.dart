@@ -91,35 +91,34 @@ class AshtakavargaModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final av = ctx.ashtakavarga;
     final sav = av.sav();
-    return [
-      pdfSectionHeader(ctx.l10n.moduleAshtakavargaTitle),
-      pw.TableHelper.fromTextArray(
-        headers: [
-          ctx.l10n.cfgChart,
-          for (final s in ZodiacSign.values) s.abbrLabel(ctx.l10n),
-          ctx.l10n.labelTotal,
-        ],
-        data: [
-          ['SAV', ...sav.map((v) => '$v'), '${sav.fold(0, (a, b) => a + b)}'],
-          for (final p in ashtakavargaPlanets)
-            [
-              p.abbr,
-              ...av.bav(p).map((v) => '$v'),
-              '${av.bav(p).fold(0, (a, b) => a + b)}',
-            ],
-        ],
-        headerStyle: pdfLabel(),
-        cellStyle: pdfBody(size: 8.5),
-        border: null,
-        cellAlignment: pw.Alignment.center,
-        headerAlignment: pw.Alignment.center,
-      ),
-      pw.SizedBox(height: 4),
-      pw.Text(
-        ctx.l10n.avPdfNote,
-        style: pdfLabel(),
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(ctx.l10n.moduleAshtakavargaTitle),
+      rest: [
+        pdfDataTable(
+          headers: [
+            ctx.l10n.cfgChart,
+            for (final s in ZodiacSign.values) s.abbrLabel(ctx.l10n),
+            ctx.l10n.labelTotal,
+          ],
+          rows: [
+            ['SAV', ...sav.map((v) => '$v'), '${sav.fold(0, (a, b) => a + b)}'],
+            for (final p in ashtakavargaPlanets)
+              [
+                p.abbr,
+                ...av.bav(p).map((v) => '$v'),
+                '${av.bav(p).fold(0, (a, b) => a + b)}',
+              ],
+          ],
+          // Fourteen numeric columns: centred and tighter than the
+          // document default so the grid fits the text column.
+          defaultAlignment: pw.Alignment.center,
+          fontSize: 8.5,
+          headerFontSize: 7.5,
+        ),
+        pdfNote(ctx.l10n.avPdfNote),
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 

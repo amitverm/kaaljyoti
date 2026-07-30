@@ -101,12 +101,15 @@ class JaiminiLagnaModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
     final k = karakamshaLagna(ctx.snapshot);
-    return [
-      pdfSectionHeader(l10n.jlPdfHeader),
-      pw.Text(
-        l10n.jlPdfLine(k.sign.label(l10n), k.atmakaraka.label(l10n)),
-        style: pdfBody(),
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(l10n.jlPdfHeader),
+      lead: pdfStack([
+        pw.Text(
+          l10n.jlPdfLine(k.sign.label(l10n), k.atmakaraka.label(l10n)),
+          style: pdfBody(),
+        ),
+        pdfSectionGap(),
+      ]),
+    );
   }
 }

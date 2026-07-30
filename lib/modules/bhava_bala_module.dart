@@ -49,52 +49,40 @@ class BhavaBalaModule extends AstroModule {
     final shadbala = computeShadbalaSync(ctx.snapshot);
     final results = computeBhavaBala(ctx.snapshot, shadbala);
     final l10n = ctx.l10n;
-    return [
-      pdfSectionHeader(l10n.moduleBhavaBalaTitle),
-      pw.TableHelper.fromTextArray(
-        headers: [
-          l10n.labelHouse,
-          l10n.labelSign,
-          l10n.bbFromLord,
-          l10n.sbDig,
-          l10n.bbDrishti,
-          l10n.bbPlanetsIn,
-          l10n.bbDayNight,
-          l10n.sbRupas,
-        ],
-        data: [
-          for (final r in results)
-            [
-              '${r.house}',
-              r.sign.label(l10n),
-              _fmt1(r.fromLord),
-              _fmt1(r.dig),
-              _fmt1(r.drishti),
-              _fmt1(r.planetsIn),
-              _fmt1(r.dayNight),
-              _fmt1(r.rupas),
-            ],
-        ],
-        headerStyle: pw.TextStyle(
-            fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: pdfInkSoft),
-        cellStyle: pdfBody(size: 8.5),
-        border: null,
-        headerDecoration: const pw.BoxDecoration(
-          border: pw.Border(bottom: pw.BorderSide(color: pdfInk, width: 0.8)),
+    return pdfSection(
+      header: pdfSectionHeader(l10n.moduleBhavaBalaTitle),
+      rest: [
+        pdfDataTable(
+          headers: [
+            l10n.labelHouse,
+            l10n.labelSign,
+            l10n.bbFromLord,
+            l10n.sbDig,
+            l10n.bbDrishti,
+            l10n.bbPlanetsIn,
+            l10n.bbDayNight,
+            l10n.sbRupas,
+          ],
+          rows: [
+            for (final r in results)
+              [
+                '${r.house}',
+                r.sign.label(l10n),
+                _fmt1(r.fromLord),
+                _fmt1(r.dig),
+                _fmt1(r.drishti),
+                _fmt1(r.planetsIn),
+                _fmt1(r.dayNight),
+                _fmt1(r.rupas),
+              ],
+          ],
+          fontSize: 8.5,
+          headerFontSize: 7.5,
         ),
-        rowDecoration: const pw.BoxDecoration(
-          border:
-              pw.Border(bottom: pw.BorderSide(color: pdfHairline, width: 0.5)),
-        ),
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-      pw.SizedBox(height: 4),
-      pw.Text(
-        l10n.bbPdfNote,
-        style: pw.TextStyle(fontSize: 7.5, color: pdfInkSoft),
-      ),
-    ];
+        pdfNote(l10n.bbPdfNote),
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 

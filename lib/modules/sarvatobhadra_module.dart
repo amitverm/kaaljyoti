@@ -49,21 +49,19 @@ class SarvatobhadraModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
     final v = _SbcVedhas(ctx.snapshot, null, l10n);
-    return [
-      pdfSectionHeader(l10n.sarvatobhadraPdfHeader),
-      pw.TableHelper.fromTextArray(
-        headers: [l10n.sbcNatalAnchor, l10n.sbcVedhaFrom],
-        data: [
-          for (final e in v.anchorReport.entries)
-            [e.key, e.value.isEmpty ? '—' : e.value.join(', ')],
-        ],
-        headerStyle: pdfLabel(),
-        cellStyle: pdfBody(size: 9),
-        border: null,
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(l10n.sarvatobhadraPdfHeader),
+      rest: [
+        pdfDataTable(
+          headers: [l10n.sbcNatalAnchor, l10n.sbcVedhaFrom],
+          rows: [
+            for (final e in v.anchorReport.entries)
+              [e.key, e.value.isEmpty ? '—' : e.value.join(', ')],
+          ],
+        ),
+        pdfSectionGap(),
+      ],
+    );
   }
 }
 

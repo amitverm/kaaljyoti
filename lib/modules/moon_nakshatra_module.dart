@@ -50,14 +50,17 @@ class MoonNakshatraModule extends AstroModule {
   List<pw.Widget> pdfView(ModuleContext ctx) {
     final l10n = ctx.l10n;
     final moon = ctx.snapshot.positions[Planet.moon]!;
-    return [
-      pdfSectionHeader(l10n.moduleMoonNakshatraTitle),
-      pw.Text(
-        '${l10n.moonInSign(moon.sign.label(l10n))} '
-        '${formatDegree(moon.longitude)} — '
-        '${moon.nakshatra.label(l10n)}, ${l10n.labelPada} ${moon.pada}',
-        style: pdfBody(),
-      ),
-    ];
+    return pdfSection(
+      header: pdfSectionHeader(l10n.moduleMoonNakshatraTitle),
+      lead: pdfStack([
+        pw.Text(
+          '${l10n.moonInSign(moon.sign.label(l10n))} '
+          '${formatDegree(moon.longitude)} — '
+          '${moon.nakshatra.label(l10n)}, ${l10n.labelPada} ${moon.pada}',
+          style: pdfBody(),
+        ),
+        pdfSectionGap(),
+      ]),
+    );
   }
 }

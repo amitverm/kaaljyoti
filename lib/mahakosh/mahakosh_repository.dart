@@ -115,27 +115,78 @@ class MahakoshRepository {
         .eq('contributor_id', _userId as Object);
   }
 
+  /// List rows come from the summary VIEW, not the table: the yoga and
+  /// life-event counts are subqueries there (migration 0027), because
+  /// they are not columns on mahakosh_charts and a plain select reported
+  /// zero for both on every browsed and bookmarked row.
+  ///
+  /// A view rather than PostgREST's `life_events(count)` embed —
+  /// that needs db-aggregates-enabled, off by default in PostgREST 12+
+  /// and unset in this project's config.toml.
+  static const _summaryTable = 'mahakosh_chart_summaries';
+
+  /// Columns for a [MahakoshChartSummary]. NEVER contributor_id or
+  /// chart_payload — the view excludes both, and this list is explicit
+  /// so a future column can't leak in through a `select(*)`.
+  static const _summaryColumns =
+      'mk_code, birth_year, location_general, ayanamsa_id, created_at, '
+      'yoga_count, life_event_count';
+
+  /// The same columns minus the counts — what the base table can answer
+  /// on its own.
+  static const _fallbackColumns =
+      'mk_code, birth_year, location_general, ayanamsa_id, created_at';
+
+  /// True when a failure means "the summary view isn't in this project
+  /// yet". PGRST205 is PostgREST's schema-cache miss for an unknown
+  /// relation.
+  ///
+  /// The app and the database deploy on completely different clocks — a
+  /// build can sit in App Store review for weeks after, or before, a
+  /// migration goes out — so a client that hard-depends on the newest
+  /// schema is a client that bricks a screen for whoever is on the wrong
+  /// side of that gap. Degrade to the base table and lose the counts,
+  /// which is what the list did for its whole life until now.
+  static bool _missingSummaryView(Object e) =>
+      e is PostgrestException &&
+      (e.code == 'PGRST205' ||
+          (e.message.contains('mahakosh_chart_summaries') &&
+              e.message.contains('schema cache')));
+
   /// Latest active community charts + total count — the default
   /// "browse" state of the Mahakosh screen before any search runs.
   /// Plain RLS-governed select (active charts are readable by any
   /// signed-in user; contributor_id is never selected).
+  /// [offset] pages through the corpus — the browse list is capped per
+  /// call, and without paging the charts past the first page were simply
+  /// unreachable however large the community grew.
   Future<({int total, List<MahakoshChartSummary> results})> recent(
-      {int limit = 20}) async {
-    final res = await _client
-        .from('mahakosh_charts')
-        .select('mk_code, birth_year, location_general, ayanamsa_id, '
-            'created_at')
-        .eq('status', 'active')
-        .order('created_at', ascending: false)
-        .limit(limit)
-        .count(CountOption.exact);
-    return (
-      total: res.count,
-      results: [
-        for (final r in res.data)
-          MahakoshChartSummary.fromJson((r as Map).cast<String, dynamic>()),
-      ],
-    );
+      {int limit = 20, int offset = 0}) async {
+    Future<({int total, List<MahakoshChartSummary> results})> query(
+        String from, String columns) async {
+      final res = await _client
+          .from(from)
+          .select(columns)
+          .eq('status', 'active')
+          .order('created_at', ascending: false)
+          // range() is inclusive at both ends, hence the -1.
+          .range(offset, offset + limit - 1)
+          .count(CountOption.exact);
+      return (
+        total: res.count,
+        results: [
+          for (final r in res.data)
+            MahakoshChartSummary.fromJson((r as Map).cast<String, dynamic>()),
+        ],
+      );
+    }
+
+    try {
+      return await query(_summaryTable, _summaryColumns);
+    } catch (e) {
+      if (!_missingSummaryView(e)) rethrow;
+      return query('mahakosh_charts', _fallbackColumns);
+    }
   }
 
   // --- Bookmarks (private, per-user, synced) --------------------------------
@@ -159,12 +210,20 @@ class MahakoshRepository {
         .order('created_at', ascending: false);
     final codes = [for (final r in bm) r['mk_code'] as String];
     if (codes.isEmpty) return [];
-    final charts = await _client
-        .from('mahakosh_charts')
-        .select('mk_code, birth_year, location_general, ayanamsa_id, '
-            'created_at')
-        .inFilter('mk_code', codes)
-        .eq('status', 'active');
+    Future<List<dynamic>> chartsFrom(String from, String columns) =>
+        _client
+            .from(from)
+            .select(columns)
+            .inFilter('mk_code', codes)
+            .eq('status', 'active');
+
+    List<dynamic> charts;
+    try {
+      charts = await chartsFrom(_summaryTable, _summaryColumns);
+    } catch (e) {
+      if (!_missingSummaryView(e)) rethrow;
+      charts = await chartsFrom('mahakosh_charts', _fallbackColumns);
+    }
     final byCode = {
       for (final r in charts)
         (r['mk_code'] as String):

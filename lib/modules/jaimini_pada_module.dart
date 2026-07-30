@@ -133,36 +133,40 @@ class JaiminiPadaModule extends AstroModule {
     final l10n = ctx.l10n;
     final s = ctx.snapshot;
     final padas = arudhaPadas(s);
-    return [
-      pdfSectionHeader(l10n.jpHeading),
-      pw.Center(
-        child: pdfChart(
-          l10n: l10n,
-          placements: const {},
-          padaLabels: padaLabelsBySign(padas),
-          lagna: s.lagnaSign,
-          trueAscendantSign: s.lagnaSign,
-          style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
-          size: 200,
+    // Pada-only chart: it draws no planets, so there is nothing to
+    // annotate with degrees or dignity — and the padas are the SUBJECT
+    // here, not an overlay on someone else's chart, so they render at
+    // planet size in ink instead of the recessive 6.5pt grey the Birth
+    // Chart's pada overlay uses.
+    return pdfSection(
+      header: pdfSectionHeader(l10n.jpHeading),
+      lead: pdfStack([
+        pw.Center(
+          child: pdfChart(
+            l10n: l10n,
+            placements: const {},
+            padaLabels: padaLabelsBySign(padas),
+            lagna: s.lagnaSign,
+            trueAscendantSign: s.lagnaSign,
+            style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
+            primaryPadas: true,
+          ),
         ),
-      ),
-      pw.SizedBox(height: 10),
-      pw.TableHelper.fromTextArray(
-        headers: [l10n.labelPada, l10n.labelSign, l10n.labelOccupants],
-        data: [
-          for (final p in padas)
-            [
-              p.house == 1 ? l10n.jpArudhaLagnaLabel : p.code,
-              p.sign.label(l10n),
-              _occupants(s, p.sign).map((pl) => pl.label(l10n)).join(', '),
-            ],
-        ],
-        headerStyle: pdfLabel(),
-        cellStyle: pdfBody(size: 9),
-        border: null,
-        cellAlignment: pw.Alignment.centerLeft,
-        headerAlignment: pw.Alignment.centerLeft,
-      ),
-    ];
+        pdfSectionGap(),
+      ]),
+      rest: [
+        pdfDataTable(
+          headers: [l10n.labelPada, l10n.labelSign, l10n.labelOccupants],
+          rows: [
+            for (final p in padas)
+              [
+                p.house == 1 ? l10n.jpArudhaLagnaLabel : p.code,
+                p.sign.label(l10n),
+                _occupants(s, p.sign).map((pl) => pl.label(l10n)).join(', '),
+              ],
+          ],
+        ),
+      ],
+    );
   }
 }
