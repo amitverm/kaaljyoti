@@ -16,6 +16,7 @@ import '../data/models.dart';
 import '../mahakosh/models.dart';
 import '../services/place_lookup_service.dart';
 import '../ui/date_fields.dart';
+import '../ui/manual_place_dialog.dart';
 import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
@@ -66,6 +67,29 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
     _placeController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+
+  /// Same escape hatch as birth entry — the geocoder must never be the
+  /// only path to a corrected birthplace (unfound villages, offline, or
+  /// book-sourced coordinates the search would never match).
+  Future<void> _enterPlaceManually() async {
+    final result = await showDialog<PlaceResult>(
+      context: context,
+      builder: (_) => ManualPlaceDialog(
+        lookup: ref.read(placeLookupProvider),
+        // Carry in the field text (stored place name or fresh search
+        // query) — it's almost certainly the name they want.
+        initialName: _newPlace == null ? _placeController.text.trim() : '',
+      ),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _newPlace = result;
+      _placeController.text = result.displayName;
+      _placeResults = [];
+      _placeSearchFailed = false;
+      _dirtyBirthData = true;
+    });
   }
 
   Future<void> _save() async {
@@ -314,7 +338,18 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _placeController,
-            decoration: InputDecoration(labelText: context.l10n.placeOfBirth),
+            decoration: InputDecoration(
+              labelText: context.l10n.placeOfBirth,
+              // Coordinates in play: the pending pick, else what's stored —
+              // so a manual/typeahead change is verifiable before Save.
+              helperText: _newPlace != null
+                  ? '${_newPlace!.latitude.toStringAsFixed(4)}, '
+                      '${_newPlace!.longitude.toStringAsFixed(4)} · '
+                      '${_newPlace!.timezoneName}'
+                  : '${k.latitude.toStringAsFixed(4)}, '
+                      '${k.longitude.toStringAsFixed(4)} · '
+                      '${k.timezoneName}',
+            ),
             onChanged: (q) {
               setState(() {
                 _newPlace = null;
@@ -369,6 +404,14 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
                 ],
               ),
             ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              icon: const Icon(Icons.edit_location_alt_outlined, size: 18),
+              label: Text(context.l10n.beManualEntry),
+              onPressed: _enterPlaceManually,
+            ),
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _noteController,

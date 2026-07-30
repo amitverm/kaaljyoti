@@ -849,6 +849,15 @@
   "cfgDignityCombustion": "ग्रह अवस्था और अस्त",
   "cfgTransitOverlay": "वर्तमान गोचर ओवरले",
   "cfgSavPoints": "SAV बिन्दु",
+  "cfgTransitLagna": "गोचर लग्न",
+  "transitLagnaLine": "TL: जन्म स्थान पर गोचर लग्न — {value}",
+  "@transitLagnaLine": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "cfgActiveFilterDasha": "सक्रिय फ़िल्टर दशा",
   "cfgDivisionalChart": "वर्ग कुंडली",
   "cfgChart": "चार्ट",
@@ -1990,6 +1999,10 @@
   "beLongitudeLabel": "देशांतर",
   "beTimezoneLabel": "समय क्षेत्र",
   "beManualInvalid": "स्थान का नाम, अक्षांश (−90 से 90), देशांतर (−180 से 180) जाँचें, और सुझावों में से समय क्षेत्र चुनें।",
+  "beLatAxisError": "अक्षांश में N या S लिखें — जैसे 18N58 (E/W वाला मान देशांतर में जाता है)",
+  "beLonAxisError": "देशांतर में E या W लिखें — जैसे 72E50 (N/S वाला मान अक्षांश में जाता है)",
+  "beLatInvalid": "दशमलव (18.9667) या DMS (18N58'30) लिखें, −90 से 90",
+  "beLonInvalid": "दशमलव (72.8333) या DMS (72E50'00) लिखें, −180 से 180",
   "beSaveFailed": "कुंडली नहीं बन सकी: {e}",
   "@beSaveFailed": {
     "placeholders": {

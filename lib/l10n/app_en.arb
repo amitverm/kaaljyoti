@@ -1207,6 +1207,16 @@
   "cfgDignityCombustion": "Dignity & combustion",
   "cfgTransitOverlay": "Current transit overlay",
   "cfgSavPoints": "SAV points",
+  "cfgTransitLagna": "Transit Lagna (rising)",
+  "transitLagnaLine": "TL: Transit Lagna rising at birth place — {value}",
+  "@transitLagnaLine": {
+    "description": "Line under the transit chart giving the ascendant rising at the transit instant. {value} is sign + degree, e.g. 'Taurus 9°04''.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "cfgActiveFilterDasha": "Active filter dasha",
   "cfgDivisionalChart": "Divisional chart",
   "cfgChart": "Chart",
@@ -2626,6 +2636,10 @@
   "beLongitudeLabel": "Longitude",
   "beTimezoneLabel": "Timezone",
   "beManualInvalid": "Check the place name, latitude (−90 to 90), longitude (−180 to 180), and pick a timezone from the suggestions.",
+  "beLatAxisError": "Latitude uses N or S — e.g. 18N58 (an E/W value belongs in Longitude)",
+  "beLonAxisError": "Longitude uses E or W — e.g. 72E50 (an N/S value belongs in Latitude)",
+  "beLatInvalid": "Enter decimal (18.9667) or DMS (18N58'30), −90 to 90",
+  "beLonInvalid": "Enter decimal (72.8333) or DMS (72E50'00), −180 to 180",
   "beSaveFailed": "Could not create the kundli: {e}",
   "@beSaveFailed": {
     "description": "Shown when chart creation throws (e.g. an unknown timezone from the geocoder). {e} is the raw error.",

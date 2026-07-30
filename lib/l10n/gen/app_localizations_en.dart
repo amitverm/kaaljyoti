@@ -2559,6 +2559,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cfgSavPoints => 'SAV points';
 
   @override
+  String get cfgTransitLagna => 'Transit Lagna (rising)';
+
+  @override
+  String transitLagnaLine(String value) {
+    return 'TL: Transit Lagna rising at birth place — $value';
+  }
+
+  @override
   String get cfgActiveFilterDasha => 'Active filter dasha';
 
   @override
@@ -4364,6 +4372,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get beManualInvalid =>
       'Check the place name, latitude (−90 to 90), longitude (−180 to 180), and pick a timezone from the suggestions.';
+
+  @override
+  String get beLatAxisError =>
+      'Latitude uses N or S — e.g. 18N58 (an E/W value belongs in Longitude)';
+
+  @override
+  String get beLonAxisError =>
+      'Longitude uses E or W — e.g. 72E50 (an N/S value belongs in Latitude)';
+
+  @override
+  String get beLatInvalid =>
+      'Enter decimal (18.9667) or DMS (18N58\'30), −90 to 90';
+
+  @override
+  String get beLonInvalid =>
+      'Enter decimal (72.8333) or DMS (72E50\'00), −180 to 180';
 
   @override
   String beSaveFailed(String e) {

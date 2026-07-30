@@ -58,6 +58,16 @@ class TransitModule extends AstroModule {
           options: onOffOptions(l10n),
           toggleOnValue: 'on',
         ),
+        ModuleConfigChoice(
+          key: 'tlagna',
+          label: l10n.cfgTransitLagna,
+          options: onOffOptions(l10n),
+          toggleOnValue: 'on',
+          // On by default: the rising lagna is the one transit datum
+          // that can't be read off the natal wheel, and it's what gets
+          // verified against desktop software.
+          defaultValue: 'on',
+        ),
       ];
 
   bool _showDegrees(Map<String, dynamic> config) =>
@@ -65,6 +75,15 @@ class TransitModule extends AstroModule {
 
   bool _showSav(Map<String, dynamic> config) =>
       (config['sav'] as String?) == 'on';
+
+  static bool _showTLagna(Map<String, dynamic> config) =>
+      (config['tlagna'] as String?) != 'off';
+
+  /// Grey overlay code for the transit lagna: 'TL', carrying its degree
+  /// when the degrees toggle is on — the mark then verifies against
+  /// desktop software without leaving the chart.
+  static String _tlCode(double asc, bool showDegrees) =>
+      showDegrees ? 'TL ${formatDegreeInSign(asc % 30)}' : 'TL';
 
   /// Sarvashtakavarga bindu count per sign, in the same light-grey
   /// overlay channel [ChartView.padaLabels] already uses for Jaimini
@@ -84,6 +103,7 @@ class TransitModule extends AstroModule {
         style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
         showDegrees: _showDegrees(ctx.config),
         savLabels: _showSav(ctx.config) ? _savLabels(ctx) : const {},
+        showTLagna: _showTLagna(ctx.config),
       );
 
   @override
@@ -95,6 +115,7 @@ class TransitModule extends AstroModule {
           style: chartStyleFromConfig(ctx.config, ctx.chartStyle).style,
           showDegrees: _showDegrees(ctx.config),
           savLabels: _showSav(ctx.config) ? _savLabels(ctx) : const {},
+          showTLagna: _showTLagna(ctx.config),
           detailed: true,
         ),
       );
@@ -109,6 +130,20 @@ class TransitModule extends AstroModule {
     final l10n = ctx.l10n;
     final ann = pdfAnnotationsFor(
         chartTokens(tPos, showDegrees: _showDegrees(ctx.config)));
+    final tlAsc = _showTLagna(ctx.config)
+        ? transit.transitAscendant(
+            at: now,
+            latitude: s.birth.latitude,
+            longitude: s.birth.longitude,
+            ayanamsaId: s.ayanamsaId,
+          )
+        : null;
+    var overlay = showSav ? _savLabels(ctx) : const <ZodiacSign, List<String>>{};
+    if (tlAsc != null) {
+      overlay = {for (final e in overlay.entries) e.key: [...e.value]};
+      (overlay[ZodiacSign.fromLongitude(tlAsc)] ??= [])
+          .add(_tlCode(tlAsc, _showDegrees(ctx.config)));
+    }
     return pdfSection(
       header: pdfSectionHeader(l10n.moduleTransitTitle),
       lead: pdfStack([
@@ -118,6 +153,13 @@ class TransitModule extends AstroModule {
           l10n.transitPdfAsOf('${now.toLocal()}'),
           style: pdfLabel(),
         ),
+        if (tlAsc != null)
+          pw.Text(
+            l10n.transitLagnaLine(
+                '${ZodiacSign.fromLongitude(tlAsc).label(l10n)} '
+                '${formatDegreeInSign(tlAsc % 30)}'),
+            style: pdfLabel(),
+          ),
         pw.SizedBox(height: 6),
         pw.Center(
           child: pdfChart(
@@ -128,7 +170,7 @@ class TransitModule extends AstroModule {
             retrograde: {for (final p in tPos.values) p.planet: p.isRetrograde},
             trueAscendantSign: s.lagnaSign,
             ascendantDegree: s.ascendant,
-            padaLabels: showSav ? _savLabels(ctx) : const {},
+            padaLabels: overlay,
             degreeLabels: ann.degrees,
           ),
         ),
@@ -164,6 +206,7 @@ class _TransitBody extends ConsumerStatefulWidget {
     required this.style,
     required this.showDegrees,
     this.savLabels = const {},
+    this.showTLagna = true,
     this.detailed = false,
   });
 
@@ -174,6 +217,13 @@ class _TransitBody extends ConsumerStatefulWidget {
   /// SAV bindu-count overlay, one entry per sign — see
   /// [TransitModule._savLabels]. Empty when the config choice is off.
   final Map<ZodiacSign, List<String>> savLabels;
+
+  /// Mark the transit lagna (the sign rising at the transit instant
+  /// over the birth place) with a grey 'TL' and print its degree below.
+  /// The chart's houses stay anchored to the NATAL lagna — that is the
+  /// reference the transit is read against — so the rising lagna is an
+  /// annotation, never the wheel's anchor.
+  final bool showTLagna;
   final bool detailed;
 
   @override
@@ -216,6 +266,23 @@ class _TransitBodyState extends ConsumerState<_TransitBody> {
     // Degrees only: dignity and karakas are natal readings, not gochar.
     final tokens = chartTokens(tPos, showDegrees: widget.showDegrees);
 
+    // Transit lagna — rides the grey overlay channel next to the SAV
+    // numbers; null when disabled or in degenerate polar cases.
+    final tlAsc = widget.showTLagna
+        ? transit.transitAscendant(
+            at: asOf,
+            latitude: s.birth.latitude,
+            longitude: s.birth.longitude,
+            ayanamsaId: s.ayanamsaId,
+          )
+        : null;
+    var overlay = widget.savLabels;
+    if (tlAsc != null) {
+      overlay = {for (final e in overlay.entries) e.key: [...e.value]};
+      (overlay[ZodiacSign.fromLongitude(tlAsc)] ??= [])
+          .add(TransitModule._tlCode(tlAsc, widget.showDegrees));
+    }
+
     // Gochar is routinely read from an anchor other than the natal
     // lagna — Chandra lagna above all — so this chart wants the same
     // double-tap / long-press rotation as the rashi and varga charts.
@@ -238,7 +305,7 @@ class _TransitBodyState extends ConsumerState<_TransitBody> {
           retrograde: retro,
           tokens: tokens,
           showDegrees: widget.showDegrees,
-          padaLabels: widget.savLabels,
+          padaLabels: overlay,
           onSignSelect: (sign) => ref
               .read(widgetViewFromProvider(viewKey).notifier)
               .state = sign == s.lagnaSign ? null : sign,
@@ -249,6 +316,16 @@ class _TransitBodyState extends ConsumerState<_TransitBody> {
           '${isLive ? ' · ${context.l10n.transitLiveWord}' : ''}',
           style: KJTheme.mono(size: 12, color: KJColors.inkSoft),
         ),
+        if (tlAsc != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              context.l10n.transitLagnaLine(
+                  '${ZodiacSign.fromLongitude(tlAsc).label(context.l10n)} '
+                  '${formatDegreeInSign(tlAsc % 30)}'),
+              style: KJTheme.mono(size: 12, color: KJColors.inkSoft),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.only(top: 2),
           child: Text(

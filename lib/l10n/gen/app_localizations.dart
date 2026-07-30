@@ -4748,6 +4748,18 @@ abstract class AppLocalizations {
   /// **'SAV points'**
   String get cfgSavPoints;
 
+  /// No description provided for @cfgTransitLagna.
+  ///
+  /// In en, this message translates to:
+  /// **'Transit Lagna (rising)'**
+  String get cfgTransitLagna;
+
+  /// Line under the transit chart giving the ascendant rising at the transit instant. {value} is sign + degree, e.g. 'Taurus 9°04''.
+  ///
+  /// In en, this message translates to:
+  /// **'TL: Transit Lagna rising at birth place — {value}'**
+  String transitLagnaLine(String value);
+
   /// No description provided for @cfgActiveFilterDasha.
   ///
   /// In en, this message translates to:
@@ -7880,6 +7892,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check the place name, latitude (−90 to 90), longitude (−180 to 180), and pick a timezone from the suggestions.'**
   String get beManualInvalid;
+
+  /// No description provided for @beLatAxisError.
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude uses N or S — e.g. 18N58 (an E/W value belongs in Longitude)'**
+  String get beLatAxisError;
+
+  /// No description provided for @beLonAxisError.
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude uses E or W — e.g. 72E50 (an N/S value belongs in Latitude)'**
+  String get beLonAxisError;
+
+  /// No description provided for @beLatInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter decimal (18.9667) or DMS (18N58\'30), −90 to 90'**
+  String get beLatInvalid;
+
+  /// No description provided for @beLonInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter decimal (72.8333) or DMS (72E50\'00), −180 to 180'**
+  String get beLonInvalid;
 
   /// Shown when chart creation throws (e.g. an unknown timezone from the geocoder). {e} is the raw error.
   ///

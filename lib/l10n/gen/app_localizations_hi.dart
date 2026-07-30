@@ -2560,6 +2560,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get cfgSavPoints => 'SAV बिन्दु';
 
   @override
+  String get cfgTransitLagna => 'गोचर लग्न';
+
+  @override
+  String transitLagnaLine(String value) {
+    return 'TL: जन्म स्थान पर गोचर लग्न — $value';
+  }
+
+  @override
   String get cfgActiveFilterDasha => 'सक्रिय फ़िल्टर दशा';
 
   @override
@@ -4360,6 +4368,22 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get beManualInvalid =>
       'स्थान का नाम, अक्षांश (−90 से 90), देशांतर (−180 से 180) जाँचें, और सुझावों में से समय क्षेत्र चुनें।';
+
+  @override
+  String get beLatAxisError =>
+      'अक्षांश में N या S लिखें — जैसे 18N58 (E/W वाला मान देशांतर में जाता है)';
+
+  @override
+  String get beLonAxisError =>
+      'देशांतर में E या W लिखें — जैसे 72E50 (N/S वाला मान अक्षांश में जाता है)';
+
+  @override
+  String get beLatInvalid =>
+      'दशमलव (18.9667) या DMS (18N58\'30) लिखें, −90 से 90';
+
+  @override
+  String get beLonInvalid =>
+      'दशमलव (72.8333) या DMS (72E50\'00) लिखें, −180 से 180';
 
   @override
   String beSaveFailed(String e) {
