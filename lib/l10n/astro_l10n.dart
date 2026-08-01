@@ -16,6 +16,7 @@ import 'package:flutter/widgets.dart';
 import '../charts/chart_style.dart';
 import '../core/astro/dasha/dasha.dart';
 import '../core/astro/dasha/yogini.dart';
+import '../core/astro/dignity.dart';
 import '../core/astro/divisional.dart';
 import '../core/astro/guna_milan.dart';
 import '../core/astro/jaimini_karaka.dart';
@@ -23,9 +24,11 @@ import '../core/astro/kota_chakra.dart';
 import '../core/astro/maitri.dart';
 import '../core/astro/models.dart';
 import '../core/astro/muhurta.dart';
+import '../core/astro/nakshatra_attrs.dart';
 import '../core/astro/sarvatobhadra.dart';
 import '../core/astro/special_lagna.dart';
 import '../core/astro/transit_scan.dart';
+import '../core/astro/vikram_samvat.dart';
 import '../data/models.dart';
 import '../mahakosh/models.dart';
 import 'gen/app_localizations.dart';
@@ -741,9 +744,11 @@ String mahakoshFilterLabel(AppLocalizations l10n, AtomicFilter f) =>
 /// adding a koota to core is a compile error here rather than a stray
 /// English word in a Hindi table.
 ///
-/// TODO(l10n): KootaScore.note is still core-rendered English (the varna
-/// and yoni names in guna_milan.dart) — same shape as the yoga-name gap,
-/// and it needs the same treatment as [Koota] got.
+/// TODO(l10n): KootaScore.note is still core-rendered English — it
+/// composes [varnaNameOf] and [Yoni.label] into a sentence. The VALUES
+/// now have display helpers ([varnaLabel], [YoniL10n]); what's left is
+/// giving the note structured fields so the sentence can be composed
+/// here instead of in core.
 extension KootaL10n on Koota {
   String label(AppLocalizations l10n) => switch (this) {
         Koota.varna => l10n.akKootaVarna,
@@ -754,6 +759,143 @@ extension KootaL10n on Koota {
         Koota.gana => l10n.akKootaGana,
         Koota.bhakoot => l10n.akKootaBhakoot,
         Koota.nadi => l10n.akKootaNadi,
+      };
+}
+
+/// Localized Gana / Yoni / Nadi of a nakshatra, and Varna of a Moon
+/// sign — the janma-nakshatra attributes a printed panchang lists. The
+/// Ashtakoota engine keys its tables by these same enums, so a chart's
+/// attribute row and its melapak reading can't disagree.
+extension GanaL10n on Gana {
+  String label(AppLocalizations l10n) => switch (this) {
+        Gana.deva => l10n.akGanaDeva,
+        Gana.manushya => l10n.akGanaManushya,
+        Gana.rakshasa => l10n.akGanaRakshasa,
+      };
+}
+
+extension YoniL10n on Yoni {
+  /// NOT named `label` — the enum already declares a `label` getter,
+  /// and a type's own member always wins over an extension.
+  String yoniLabel(AppLocalizations l10n) => switch (this) {
+        Yoni.horse => l10n.akYoniHorse,
+        Yoni.elephant => l10n.akYoniElephant,
+        Yoni.sheep => l10n.akYoniSheep,
+        Yoni.serpent => l10n.akYoniSerpent,
+        Yoni.dog => l10n.akYoniDog,
+        Yoni.cat => l10n.akYoniCat,
+        Yoni.rat => l10n.akYoniRat,
+        Yoni.cow => l10n.akYoniCow,
+        Yoni.buffalo => l10n.akYoniBuffalo,
+        Yoni.tiger => l10n.akYoniTiger,
+        Yoni.deer => l10n.akYoniDeer,
+        Yoni.monkey => l10n.akYoniMonkey,
+        Yoni.mongoose => l10n.akYoniMongoose,
+        Yoni.lion => l10n.akYoniLion,
+      };
+}
+
+extension NadiL10n on Nadi {
+  String label(AppLocalizations l10n) => switch (this) {
+        Nadi.adi => l10n.akNadiAdi,
+        Nadi.madhya => l10n.akNadiMadhya,
+        Nadi.antya => l10n.akNadiAntya,
+      };
+}
+
+/// Varna is read from the Moon SIGN, not the nakshatra. Keyed on
+/// [varnaRankOf]'s 1–4 rank rather than on [varnaNameOf]'s English, so
+/// there is no string round-trip to keep in step.
+String varnaLabel(AppLocalizations l10n, ZodiacSign moonSign) => [
+      l10n.akVarnaShudra,
+      l10n.akVarnaVaishya,
+      l10n.akVarnaKshatriya,
+      l10n.akVarnaBrahmin,
+    ][varnaRankOf(moonSign) - 1];
+
+/// Presiding deity of a nakshatra.
+extension NakshatraDeityL10n on NakshatraDeity {
+  String label(AppLocalizations l10n) => switch (this) {
+        NakshatraDeity.ashwiniKumaras => l10n.nkDeityAshwiniKumaras,
+        NakshatraDeity.yama => l10n.nkDeityYama,
+        NakshatraDeity.agni => l10n.nkDeityAgni,
+        NakshatraDeity.brahma => l10n.nkDeityBrahma,
+        NakshatraDeity.soma => l10n.nkDeitySoma,
+        NakshatraDeity.rudra => l10n.nkDeityRudra,
+        NakshatraDeity.aditi => l10n.nkDeityAditi,
+        NakshatraDeity.brihaspati => l10n.nkDeityBrihaspati,
+        NakshatraDeity.nagas => l10n.nkDeityNagas,
+        NakshatraDeity.pitris => l10n.nkDeityPitris,
+        NakshatraDeity.bhaga => l10n.nkDeityBhaga,
+        NakshatraDeity.aryaman => l10n.nkDeityAryaman,
+        NakshatraDeity.savitar => l10n.nkDeitySavitar,
+        NakshatraDeity.tvashtar => l10n.nkDeityTvashtar,
+        NakshatraDeity.vayu => l10n.nkDeityVayu,
+        NakshatraDeity.indraAgni => l10n.nkDeityIndraAgni,
+        NakshatraDeity.mitra => l10n.nkDeityMitra,
+        NakshatraDeity.indra => l10n.nkDeityIndra,
+        NakshatraDeity.nirriti => l10n.nkDeityNirriti,
+        NakshatraDeity.apas => l10n.nkDeityApas,
+        NakshatraDeity.vishvedevas => l10n.nkDeityVishvedevas,
+        NakshatraDeity.vishnu => l10n.nkDeityVishnu,
+        NakshatraDeity.vasus => l10n.nkDeityVasus,
+        NakshatraDeity.varuna => l10n.nkDeityVaruna,
+        NakshatraDeity.ajaEkapada => l10n.nkDeityAjaEkapada,
+        NakshatraDeity.ahirBudhnya => l10n.nkDeityAhirBudhnya,
+        NakshatraDeity.pushan => l10n.nkDeityPushan,
+      };
+}
+
+/// Traditional symbol of a nakshatra.
+extension NakshatraSymbolL10n on NakshatraSymbol {
+  String label(AppLocalizations l10n) => switch (this) {
+        NakshatraSymbol.horseHead => l10n.nkSymbolHorseHead,
+        NakshatraSymbol.yoni => l10n.nkSymbolYoni,
+        NakshatraSymbol.razor => l10n.nkSymbolRazor,
+        NakshatraSymbol.cart => l10n.nkSymbolCart,
+        NakshatraSymbol.deerHead => l10n.nkSymbolDeerHead,
+        NakshatraSymbol.teardrop => l10n.nkSymbolTeardrop,
+        NakshatraSymbol.bowAndQuiver => l10n.nkSymbolBowAndQuiver,
+        NakshatraSymbol.cowUdder => l10n.nkSymbolCowUdder,
+        NakshatraSymbol.coiledSerpent => l10n.nkSymbolCoiledSerpent,
+        NakshatraSymbol.throne => l10n.nkSymbolThrone,
+        NakshatraSymbol.frontLegsOfCot => l10n.nkSymbolFrontLegsOfCot,
+        NakshatraSymbol.backLegsOfCot => l10n.nkSymbolBackLegsOfCot,
+        NakshatraSymbol.hand => l10n.nkSymbolHand,
+        NakshatraSymbol.pearl => l10n.nkSymbolPearl,
+        NakshatraSymbol.youngSprout => l10n.nkSymbolYoungSprout,
+        NakshatraSymbol.triumphalArch => l10n.nkSymbolTriumphalArch,
+        NakshatraSymbol.lotus => l10n.nkSymbolLotus,
+        NakshatraSymbol.earring => l10n.nkSymbolEarring,
+        NakshatraSymbol.tiedRoots => l10n.nkSymbolTiedRoots,
+        NakshatraSymbol.fan => l10n.nkSymbolFan,
+        NakshatraSymbol.elephantTusk => l10n.nkSymbolElephantTusk,
+        NakshatraSymbol.threeFootprints => l10n.nkSymbolThreeFootprints,
+        NakshatraSymbol.drum => l10n.nkSymbolDrum,
+        NakshatraSymbol.emptyCircle => l10n.nkSymbolEmptyCircle,
+        NakshatraSymbol.frontOfFuneralCot => l10n.nkSymbolFrontOfFuneralCot,
+        NakshatraSymbol.backOfFuneralCot => l10n.nkSymbolBackOfFuneralCot,
+        NakshatraSymbol.fish => l10n.nkSymbolFish,
+      };
+}
+
+/// Localized dignity, or NULL for [PlanetDignity.none] — "no dignity"
+/// is the ordinary case and has no reading to print, so callers omit
+/// the line rather than writing a word for its absence.
+extension PlanetDignityL10n on PlanetDignity {
+  String? label(AppLocalizations l10n) => switch (this) {
+        PlanetDignity.none => null,
+        PlanetDignity.ownSign => l10n.dignityOwnSign,
+        PlanetDignity.exalted => l10n.dignityExalted,
+        PlanetDignity.debilitated => l10n.dignityDebilitated,
+      };
+}
+
+/// Localized maasa naming convention. Exhaustive over [MasaSystem].
+extension MasaSystemL10n on MasaSystem {
+  String label(AppLocalizations l10n) => switch (this) {
+        MasaSystem.amanta => l10n.masaAmanta,
+        MasaSystem.purnimanta => l10n.masaPurnimanta,
       };
 }
 

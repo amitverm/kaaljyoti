@@ -3613,5 +3613,166 @@
   "@msEventCount": {"placeholders": {"count": {"type": "String"}}},
   "retry": "Retry",
   "msBrowseError": "Couldn't load community charts: {error}",
-  "@msBrowseError": {"placeholders": {"error": {"type": "String"}}}
+  "@msBrowseError": {"placeholders": {"error": {"type": "String"}}},
+
+  "labelNakshatraLord": "Nakshatra lord",
+  "@labelNakshatraLord": {
+    "description": "The Vimshottari star lord of a nakshatra."
+  },
+  "labelDashaBalance": "Dasha balance at birth",
+  "@labelDashaBalance": {
+    "description": "How much of the first Vimshottari mahadasha was still unspent at the moment of birth."
+  },
+  "labelDignity": "Dignity",
+  "labelDeity": "Deity",
+  "@labelDeity": {
+    "description": "The devata presiding over a nakshatra."
+  },
+  "labelSymbol": "Symbol",
+  "labelSunrise": "Sunrise",
+  "labelSunset": "Sunset",
+  "labelDayNight": "Day / Night",
+  "@labelDayNight": {
+    "description": "Row label for whether the birth fell in daylight or after sunset."
+  },
+  "labelHoraLord": "Hora lord",
+  "labelMasaSystem": "Maasa system",
+
+  "dignityExalted": "Exalted",
+  "@dignityExalted": {
+    "description": "Uchcha — a graha in its sign of exaltation."
+  },
+  "dignityDebilitated": "Debilitated",
+  "@dignityDebilitated": {
+    "description": "Neecha — a graha in its sign of debilitation."
+  },
+  "dignityOwnSign": "Own sign",
+  "@dignityOwnSign": {
+    "description": "Swakshetra — a graha in a sign it rules."
+  },
+
+  "pcDayBirth": "Day birth",
+  "@pcDayBirth": {
+    "description": "Born between sunrise and sunset."
+  },
+  "pcNightBirth": "Night birth",
+  "@pcNightBirth": {
+    "description": "Born between sunset and the next sunrise."
+  },
+  "pcTimeWithDate": "{time} ({date})",
+  "@pcTimeWithDate": {
+    "description": "A clock time carrying its own date, used when the Vedic day's sunrise falls on a different calendar date from the birth (a post-midnight, pre-sunrise birth).",
+    "placeholders": {
+      "time": {"type": "String"},
+      "date": {"type": "String"}
+    }
+  },
+  "pcMaasaValue": "{month} · V.S. {year}",
+  "@pcMaasaValue": {
+    "description": "Maasa row. 'V.S.' is the Vikram Samvat era abbreviation — use the local convention (hi: वि.सं.).",
+    "placeholders": {
+      "month": {"type": "String"},
+      "year": {"type": "String"}
+    }
+  },
+
+  "akGanaDeva": "Deva",
+  "@akGanaDeva": {
+    "description": "Gana (temperament) of a nakshatra — fixed term, transliterate."
+  },
+  "akGanaManushya": "Manushya",
+  "akGanaRakshasa": "Rakshasa",
+  "akNadiAdi": "Adi",
+  "@akNadiAdi": {
+    "description": "Nadi (constitution) of a nakshatra — fixed term, transliterate."
+  },
+  "akNadiMadhya": "Madhya",
+  "akNadiAntya": "Antya",
+  "akVarnaBrahmin": "Brahmin",
+  "@akVarnaBrahmin": {
+    "description": "Varna of a Moon sign — fixed term, transliterate."
+  },
+  "akVarnaKshatriya": "Kshatriya",
+  "akVarnaVaishya": "Vaishya",
+  "akVarnaShudra": "Shudra",
+
+  "akYoniHorse": "Horse",
+  "@akYoniHorse": {
+    "description": "Yoni (animal) of a nakshatra — translate as the animal name."
+  },
+  "akYoniElephant": "Elephant",
+  "akYoniSheep": "Sheep",
+  "akYoniSerpent": "Serpent",
+  "akYoniDog": "Dog",
+  "akYoniCat": "Cat",
+  "akYoniRat": "Rat",
+  "akYoniCow": "Cow",
+  "akYoniBuffalo": "Buffalo",
+  "akYoniTiger": "Tiger",
+  "akYoniDeer": "Deer",
+  "akYoniMonkey": "Monkey",
+  "akYoniMongoose": "Mongoose",
+  "akYoniLion": "Lion",
+
+  "nkDeityAshwiniKumaras": "Ashwini Kumaras",
+  "@nkDeityAshwiniKumaras": {
+    "description": "Nakshatra presiding deities — proper names; transliterate into the local script."
+  },
+  "nkDeityYama": "Yama",
+  "nkDeityAgni": "Agni",
+  "nkDeityBrahma": "Brahma",
+  "nkDeitySoma": "Soma",
+  "nkDeityRudra": "Rudra",
+  "nkDeityAditi": "Aditi",
+  "nkDeityBrihaspati": "Brihaspati",
+  "nkDeityNagas": "Nagas",
+  "nkDeityPitris": "Pitris",
+  "nkDeityBhaga": "Bhaga",
+  "nkDeityAryaman": "Aryaman",
+  "nkDeitySavitar": "Savitar",
+  "nkDeityTvashtar": "Tvashtar",
+  "nkDeityVayu": "Vayu",
+  "nkDeityIndraAgni": "Indra–Agni",
+  "nkDeityMitra": "Mitra",
+  "nkDeityIndra": "Indra",
+  "nkDeityNirriti": "Nirriti",
+  "nkDeityApas": "Apas",
+  "nkDeityVishvedevas": "Vishvedevas",
+  "nkDeityVishnu": "Vishnu",
+  "nkDeityVasus": "Vasus",
+  "nkDeityVaruna": "Varuna",
+  "nkDeityAjaEkapada": "Aja Ekapada",
+  "nkDeityAhirBudhnya": "Ahir Budhnya",
+  "nkDeityPushan": "Pushan",
+
+  "nkSymbolHorseHead": "Horse's head",
+  "@nkSymbolHorseHead": {
+    "description": "Nakshatra symbols — translate descriptively, they are objects rather than names."
+  },
+  "nkSymbolYoni": "Yoni",
+  "nkSymbolRazor": "Razor",
+  "nkSymbolCart": "Cart",
+  "nkSymbolDeerHead": "Deer's head",
+  "nkSymbolTeardrop": "Teardrop",
+  "nkSymbolBowAndQuiver": "Bow & quiver",
+  "nkSymbolCowUdder": "Cow's udder",
+  "nkSymbolCoiledSerpent": "Coiled serpent",
+  "nkSymbolThrone": "Throne",
+  "nkSymbolFrontLegsOfCot": "Front legs of a cot",
+  "nkSymbolBackLegsOfCot": "Back legs of a cot",
+  "nkSymbolHand": "Hand",
+  "nkSymbolPearl": "Pearl",
+  "nkSymbolYoungSprout": "Young sprout",
+  "nkSymbolTriumphalArch": "Triumphal arch",
+  "nkSymbolLotus": "Lotus",
+  "nkSymbolEarring": "Earring",
+  "nkSymbolTiedRoots": "Tied roots",
+  "nkSymbolFan": "Fan",
+  "nkSymbolElephantTusk": "Elephant tusk",
+  "nkSymbolThreeFootprints": "Three footprints",
+  "nkSymbolDrum": "Drum",
+  "nkSymbolEmptyCircle": "Empty circle",
+  "nkSymbolFrontOfFuneralCot": "Front of a funeral cot",
+  "nkSymbolBackOfFuneralCot": "Back of a funeral cot",
+  "nkSymbolFish": "Fish"
 }

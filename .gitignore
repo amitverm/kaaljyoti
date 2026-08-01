@@ -149,3 +149,4 @@ env.*.json
 # Supabase CLI link state — identifies the linked project/account
 # (project ref, org id, pooler host). Never publish.
 supabase/.temp/
+.venv/

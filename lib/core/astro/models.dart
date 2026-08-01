@@ -197,6 +197,12 @@ class PanchangData {
     required this.karanaName,
     required this.varaIndex, // 0 = Somavara … 6 = Ravivara
     required this.vara, // weekday name
+    this.sunrise,
+    this.sunset,
+    this.nextSunrise,
+    this.amantaMonthIndex,
+    this.isAdhikMaasa,
+    this.samvatYear,
   });
 
   final int tithiIndex;
@@ -210,6 +216,64 @@ class PanchangData {
   final String karanaName;
   final int varaIndex;
   final String vara;
+
+  /// The sunrise that BEGAN this instant's Vedic day — the last sunrise
+  /// at or before it — in the PLACE's local wall clock (the same
+  /// offset-shifted form as [BirthData.localDateTime], so the two are
+  /// directly comparable). Null when the caller resolved no sunrise
+  /// (circumpolar, or a call site with no place to resolve one for).
+  final DateTime? sunrise;
+
+  /// The sunset following [sunrise], and the sunrise following that —
+  /// together they close the Vedic day, which is what the hora cycle
+  /// and the day/night-birth split are measured against.
+  final DateTime? sunset;
+  final DateTime? nextSunrise;
+
+  /// Vikram Samvat maasa, stored in its raw AMANTA form: the month
+  /// named for the Sun's rashi at the amavasya that began it. Display
+  /// resolves purnimanta/amanta via `resolveMonthIndex` — keeping the
+  /// amanta index here means the snapshot doesn't bake in a naming
+  /// convention the reader is free to switch.
+  final int? amantaMonthIndex;
+  final bool? isAdhikMaasa;
+
+  /// Vikram Samvat year — system-independent (it rolls at Chaitra
+  /// Shukla Pratipada under either naming).
+  final int? samvatYear;
+
+  /// A copy carrying the Vedic-day and maasa fields. [computePanchang]
+  /// derives the five limbs from longitudes alone; these need an
+  /// ephemeris and a place, so the snapshot builder layers them on
+  /// afterwards rather than computePanchang growing an ephemeris
+  /// dependency.
+  PanchangData withVedicDay({
+    DateTime? sunrise,
+    DateTime? sunset,
+    DateTime? nextSunrise,
+    int? amantaMonthIndex,
+    bool? isAdhikMaasa,
+    int? samvatYear,
+  }) =>
+      PanchangData(
+        tithiIndex: tithiIndex,
+        tithiName: tithiName,
+        paksha: paksha,
+        nakshatra: nakshatra,
+        pada: pada,
+        yogaIndex: yogaIndex,
+        yogaName: yogaName,
+        karanaIndex: karanaIndex,
+        karanaName: karanaName,
+        varaIndex: varaIndex,
+        vara: vara,
+        sunrise: sunrise ?? this.sunrise,
+        sunset: sunset ?? this.sunset,
+        nextSunrise: nextSunrise ?? this.nextSunrise,
+        amantaMonthIndex: amantaMonthIndex ?? this.amantaMonthIndex,
+        isAdhikMaasa: isAdhikMaasa ?? this.isAdhikMaasa,
+        samvatYear: samvatYear ?? this.samvatYear,
+      );
 }
 
 /// A detected yoga/dosha for the searchable index.

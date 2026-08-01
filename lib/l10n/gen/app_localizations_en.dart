@@ -5942,4 +5942,293 @@ class AppLocalizationsEn extends AppLocalizations {
   String msBrowseError(String error) {
     return 'Couldn\'t load community charts: $error';
   }
+
+  @override
+  String get labelNakshatraLord => 'Nakshatra lord';
+
+  @override
+  String get labelDashaBalance => 'Dasha balance at birth';
+
+  @override
+  String get labelDignity => 'Dignity';
+
+  @override
+  String get labelDeity => 'Deity';
+
+  @override
+  String get labelSymbol => 'Symbol';
+
+  @override
+  String get labelSunrise => 'Sunrise';
+
+  @override
+  String get labelSunset => 'Sunset';
+
+  @override
+  String get labelDayNight => 'Day / Night';
+
+  @override
+  String get labelHoraLord => 'Hora lord';
+
+  @override
+  String get labelMasaSystem => 'Maasa system';
+
+  @override
+  String get dignityExalted => 'Exalted';
+
+  @override
+  String get dignityDebilitated => 'Debilitated';
+
+  @override
+  String get dignityOwnSign => 'Own sign';
+
+  @override
+  String get pcDayBirth => 'Day birth';
+
+  @override
+  String get pcNightBirth => 'Night birth';
+
+  @override
+  String pcTimeWithDate(String time, String date) {
+    return '$time ($date)';
+  }
+
+  @override
+  String pcMaasaValue(String month, String year) {
+    return '$month · V.S. $year';
+  }
+
+  @override
+  String get akGanaDeva => 'Deva';
+
+  @override
+  String get akGanaManushya => 'Manushya';
+
+  @override
+  String get akGanaRakshasa => 'Rakshasa';
+
+  @override
+  String get akNadiAdi => 'Adi';
+
+  @override
+  String get akNadiMadhya => 'Madhya';
+
+  @override
+  String get akNadiAntya => 'Antya';
+
+  @override
+  String get akVarnaBrahmin => 'Brahmin';
+
+  @override
+  String get akVarnaKshatriya => 'Kshatriya';
+
+  @override
+  String get akVarnaVaishya => 'Vaishya';
+
+  @override
+  String get akVarnaShudra => 'Shudra';
+
+  @override
+  String get akYoniHorse => 'Horse';
+
+  @override
+  String get akYoniElephant => 'Elephant';
+
+  @override
+  String get akYoniSheep => 'Sheep';
+
+  @override
+  String get akYoniSerpent => 'Serpent';
+
+  @override
+  String get akYoniDog => 'Dog';
+
+  @override
+  String get akYoniCat => 'Cat';
+
+  @override
+  String get akYoniRat => 'Rat';
+
+  @override
+  String get akYoniCow => 'Cow';
+
+  @override
+  String get akYoniBuffalo => 'Buffalo';
+
+  @override
+  String get akYoniTiger => 'Tiger';
+
+  @override
+  String get akYoniDeer => 'Deer';
+
+  @override
+  String get akYoniMonkey => 'Monkey';
+
+  @override
+  String get akYoniMongoose => 'Mongoose';
+
+  @override
+  String get akYoniLion => 'Lion';
+
+  @override
+  String get nkDeityAshwiniKumaras => 'Ashwini Kumaras';
+
+  @override
+  String get nkDeityYama => 'Yama';
+
+  @override
+  String get nkDeityAgni => 'Agni';
+
+  @override
+  String get nkDeityBrahma => 'Brahma';
+
+  @override
+  String get nkDeitySoma => 'Soma';
+
+  @override
+  String get nkDeityRudra => 'Rudra';
+
+  @override
+  String get nkDeityAditi => 'Aditi';
+
+  @override
+  String get nkDeityBrihaspati => 'Brihaspati';
+
+  @override
+  String get nkDeityNagas => 'Nagas';
+
+  @override
+  String get nkDeityPitris => 'Pitris';
+
+  @override
+  String get nkDeityBhaga => 'Bhaga';
+
+  @override
+  String get nkDeityAryaman => 'Aryaman';
+
+  @override
+  String get nkDeitySavitar => 'Savitar';
+
+  @override
+  String get nkDeityTvashtar => 'Tvashtar';
+
+  @override
+  String get nkDeityVayu => 'Vayu';
+
+  @override
+  String get nkDeityIndraAgni => 'Indra–Agni';
+
+  @override
+  String get nkDeityMitra => 'Mitra';
+
+  @override
+  String get nkDeityIndra => 'Indra';
+
+  @override
+  String get nkDeityNirriti => 'Nirriti';
+
+  @override
+  String get nkDeityApas => 'Apas';
+
+  @override
+  String get nkDeityVishvedevas => 'Vishvedevas';
+
+  @override
+  String get nkDeityVishnu => 'Vishnu';
+
+  @override
+  String get nkDeityVasus => 'Vasus';
+
+  @override
+  String get nkDeityVaruna => 'Varuna';
+
+  @override
+  String get nkDeityAjaEkapada => 'Aja Ekapada';
+
+  @override
+  String get nkDeityAhirBudhnya => 'Ahir Budhnya';
+
+  @override
+  String get nkDeityPushan => 'Pushan';
+
+  @override
+  String get nkSymbolHorseHead => 'Horse\'s head';
+
+  @override
+  String get nkSymbolYoni => 'Yoni';
+
+  @override
+  String get nkSymbolRazor => 'Razor';
+
+  @override
+  String get nkSymbolCart => 'Cart';
+
+  @override
+  String get nkSymbolDeerHead => 'Deer\'s head';
+
+  @override
+  String get nkSymbolTeardrop => 'Teardrop';
+
+  @override
+  String get nkSymbolBowAndQuiver => 'Bow & quiver';
+
+  @override
+  String get nkSymbolCowUdder => 'Cow\'s udder';
+
+  @override
+  String get nkSymbolCoiledSerpent => 'Coiled serpent';
+
+  @override
+  String get nkSymbolThrone => 'Throne';
+
+  @override
+  String get nkSymbolFrontLegsOfCot => 'Front legs of a cot';
+
+  @override
+  String get nkSymbolBackLegsOfCot => 'Back legs of a cot';
+
+  @override
+  String get nkSymbolHand => 'Hand';
+
+  @override
+  String get nkSymbolPearl => 'Pearl';
+
+  @override
+  String get nkSymbolYoungSprout => 'Young sprout';
+
+  @override
+  String get nkSymbolTriumphalArch => 'Triumphal arch';
+
+  @override
+  String get nkSymbolLotus => 'Lotus';
+
+  @override
+  String get nkSymbolEarring => 'Earring';
+
+  @override
+  String get nkSymbolTiedRoots => 'Tied roots';
+
+  @override
+  String get nkSymbolFan => 'Fan';
+
+  @override
+  String get nkSymbolElephantTusk => 'Elephant tusk';
+
+  @override
+  String get nkSymbolThreeFootprints => 'Three footprints';
+
+  @override
+  String get nkSymbolDrum => 'Drum';
+
+  @override
+  String get nkSymbolEmptyCircle => 'Empty circle';
+
+  @override
+  String get nkSymbolFrontOfFuneralCot => 'Front of a funeral cot';
+
+  @override
+  String get nkSymbolBackOfFuneralCot => 'Back of a funeral cot';
+
+  @override
+  String get nkSymbolFish => 'Fish';
 }

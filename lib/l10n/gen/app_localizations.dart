@@ -10516,6 +10516,576 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load community charts: {error}'**
   String msBrowseError(String error);
+
+  /// The Vimshottari star lord of a nakshatra.
+  ///
+  /// In en, this message translates to:
+  /// **'Nakshatra lord'**
+  String get labelNakshatraLord;
+
+  /// How much of the first Vimshottari mahadasha was still unspent at the moment of birth.
+  ///
+  /// In en, this message translates to:
+  /// **'Dasha balance at birth'**
+  String get labelDashaBalance;
+
+  /// No description provided for @labelDignity.
+  ///
+  /// In en, this message translates to:
+  /// **'Dignity'**
+  String get labelDignity;
+
+  /// The devata presiding over a nakshatra.
+  ///
+  /// In en, this message translates to:
+  /// **'Deity'**
+  String get labelDeity;
+
+  /// No description provided for @labelSymbol.
+  ///
+  /// In en, this message translates to:
+  /// **'Symbol'**
+  String get labelSymbol;
+
+  /// No description provided for @labelSunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise'**
+  String get labelSunrise;
+
+  /// No description provided for @labelSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunset'**
+  String get labelSunset;
+
+  /// Row label for whether the birth fell in daylight or after sunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Day / Night'**
+  String get labelDayNight;
+
+  /// No description provided for @labelHoraLord.
+  ///
+  /// In en, this message translates to:
+  /// **'Hora lord'**
+  String get labelHoraLord;
+
+  /// No description provided for @labelMasaSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Maasa system'**
+  String get labelMasaSystem;
+
+  /// Uchcha — a graha in its sign of exaltation.
+  ///
+  /// In en, this message translates to:
+  /// **'Exalted'**
+  String get dignityExalted;
+
+  /// Neecha — a graha in its sign of debilitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Debilitated'**
+  String get dignityDebilitated;
+
+  /// Swakshetra — a graha in a sign it rules.
+  ///
+  /// In en, this message translates to:
+  /// **'Own sign'**
+  String get dignityOwnSign;
+
+  /// Born between sunrise and sunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Day birth'**
+  String get pcDayBirth;
+
+  /// Born between sunset and the next sunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Night birth'**
+  String get pcNightBirth;
+
+  /// A clock time carrying its own date, used when the Vedic day's sunrise falls on a different calendar date from the birth (a post-midnight, pre-sunrise birth).
+  ///
+  /// In en, this message translates to:
+  /// **'{time} ({date})'**
+  String pcTimeWithDate(String time, String date);
+
+  /// Maasa row. 'V.S.' is the Vikram Samvat era abbreviation — use the local convention (hi: वि.सं.).
+  ///
+  /// In en, this message translates to:
+  /// **'{month} · V.S. {year}'**
+  String pcMaasaValue(String month, String year);
+
+  /// Gana (temperament) of a nakshatra — fixed term, transliterate.
+  ///
+  /// In en, this message translates to:
+  /// **'Deva'**
+  String get akGanaDeva;
+
+  /// No description provided for @akGanaManushya.
+  ///
+  /// In en, this message translates to:
+  /// **'Manushya'**
+  String get akGanaManushya;
+
+  /// No description provided for @akGanaRakshasa.
+  ///
+  /// In en, this message translates to:
+  /// **'Rakshasa'**
+  String get akGanaRakshasa;
+
+  /// Nadi (constitution) of a nakshatra — fixed term, transliterate.
+  ///
+  /// In en, this message translates to:
+  /// **'Adi'**
+  String get akNadiAdi;
+
+  /// No description provided for @akNadiMadhya.
+  ///
+  /// In en, this message translates to:
+  /// **'Madhya'**
+  String get akNadiMadhya;
+
+  /// No description provided for @akNadiAntya.
+  ///
+  /// In en, this message translates to:
+  /// **'Antya'**
+  String get akNadiAntya;
+
+  /// Varna of a Moon sign — fixed term, transliterate.
+  ///
+  /// In en, this message translates to:
+  /// **'Brahmin'**
+  String get akVarnaBrahmin;
+
+  /// No description provided for @akVarnaKshatriya.
+  ///
+  /// In en, this message translates to:
+  /// **'Kshatriya'**
+  String get akVarnaKshatriya;
+
+  /// No description provided for @akVarnaVaishya.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaishya'**
+  String get akVarnaVaishya;
+
+  /// No description provided for @akVarnaShudra.
+  ///
+  /// In en, this message translates to:
+  /// **'Shudra'**
+  String get akVarnaShudra;
+
+  /// Yoni (animal) of a nakshatra — translate as the animal name.
+  ///
+  /// In en, this message translates to:
+  /// **'Horse'**
+  String get akYoniHorse;
+
+  /// No description provided for @akYoniElephant.
+  ///
+  /// In en, this message translates to:
+  /// **'Elephant'**
+  String get akYoniElephant;
+
+  /// No description provided for @akYoniSheep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sheep'**
+  String get akYoniSheep;
+
+  /// No description provided for @akYoniSerpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Serpent'**
+  String get akYoniSerpent;
+
+  /// No description provided for @akYoniDog.
+  ///
+  /// In en, this message translates to:
+  /// **'Dog'**
+  String get akYoniDog;
+
+  /// No description provided for @akYoniCat.
+  ///
+  /// In en, this message translates to:
+  /// **'Cat'**
+  String get akYoniCat;
+
+  /// No description provided for @akYoniRat.
+  ///
+  /// In en, this message translates to:
+  /// **'Rat'**
+  String get akYoniRat;
+
+  /// No description provided for @akYoniCow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cow'**
+  String get akYoniCow;
+
+  /// No description provided for @akYoniBuffalo.
+  ///
+  /// In en, this message translates to:
+  /// **'Buffalo'**
+  String get akYoniBuffalo;
+
+  /// No description provided for @akYoniTiger.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiger'**
+  String get akYoniTiger;
+
+  /// No description provided for @akYoniDeer.
+  ///
+  /// In en, this message translates to:
+  /// **'Deer'**
+  String get akYoniDeer;
+
+  /// No description provided for @akYoniMonkey.
+  ///
+  /// In en, this message translates to:
+  /// **'Monkey'**
+  String get akYoniMonkey;
+
+  /// No description provided for @akYoniMongoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Mongoose'**
+  String get akYoniMongoose;
+
+  /// No description provided for @akYoniLion.
+  ///
+  /// In en, this message translates to:
+  /// **'Lion'**
+  String get akYoniLion;
+
+  /// Nakshatra presiding deities — proper names; transliterate into the local script.
+  ///
+  /// In en, this message translates to:
+  /// **'Ashwini Kumaras'**
+  String get nkDeityAshwiniKumaras;
+
+  /// No description provided for @nkDeityYama.
+  ///
+  /// In en, this message translates to:
+  /// **'Yama'**
+  String get nkDeityYama;
+
+  /// No description provided for @nkDeityAgni.
+  ///
+  /// In en, this message translates to:
+  /// **'Agni'**
+  String get nkDeityAgni;
+
+  /// No description provided for @nkDeityBrahma.
+  ///
+  /// In en, this message translates to:
+  /// **'Brahma'**
+  String get nkDeityBrahma;
+
+  /// No description provided for @nkDeitySoma.
+  ///
+  /// In en, this message translates to:
+  /// **'Soma'**
+  String get nkDeitySoma;
+
+  /// No description provided for @nkDeityRudra.
+  ///
+  /// In en, this message translates to:
+  /// **'Rudra'**
+  String get nkDeityRudra;
+
+  /// No description provided for @nkDeityAditi.
+  ///
+  /// In en, this message translates to:
+  /// **'Aditi'**
+  String get nkDeityAditi;
+
+  /// No description provided for @nkDeityBrihaspati.
+  ///
+  /// In en, this message translates to:
+  /// **'Brihaspati'**
+  String get nkDeityBrihaspati;
+
+  /// No description provided for @nkDeityNagas.
+  ///
+  /// In en, this message translates to:
+  /// **'Nagas'**
+  String get nkDeityNagas;
+
+  /// No description provided for @nkDeityPitris.
+  ///
+  /// In en, this message translates to:
+  /// **'Pitris'**
+  String get nkDeityPitris;
+
+  /// No description provided for @nkDeityBhaga.
+  ///
+  /// In en, this message translates to:
+  /// **'Bhaga'**
+  String get nkDeityBhaga;
+
+  /// No description provided for @nkDeityAryaman.
+  ///
+  /// In en, this message translates to:
+  /// **'Aryaman'**
+  String get nkDeityAryaman;
+
+  /// No description provided for @nkDeitySavitar.
+  ///
+  /// In en, this message translates to:
+  /// **'Savitar'**
+  String get nkDeitySavitar;
+
+  /// No description provided for @nkDeityTvashtar.
+  ///
+  /// In en, this message translates to:
+  /// **'Tvashtar'**
+  String get nkDeityTvashtar;
+
+  /// No description provided for @nkDeityVayu.
+  ///
+  /// In en, this message translates to:
+  /// **'Vayu'**
+  String get nkDeityVayu;
+
+  /// No description provided for @nkDeityIndraAgni.
+  ///
+  /// In en, this message translates to:
+  /// **'Indra–Agni'**
+  String get nkDeityIndraAgni;
+
+  /// No description provided for @nkDeityMitra.
+  ///
+  /// In en, this message translates to:
+  /// **'Mitra'**
+  String get nkDeityMitra;
+
+  /// No description provided for @nkDeityIndra.
+  ///
+  /// In en, this message translates to:
+  /// **'Indra'**
+  String get nkDeityIndra;
+
+  /// No description provided for @nkDeityNirriti.
+  ///
+  /// In en, this message translates to:
+  /// **'Nirriti'**
+  String get nkDeityNirriti;
+
+  /// No description provided for @nkDeityApas.
+  ///
+  /// In en, this message translates to:
+  /// **'Apas'**
+  String get nkDeityApas;
+
+  /// No description provided for @nkDeityVishvedevas.
+  ///
+  /// In en, this message translates to:
+  /// **'Vishvedevas'**
+  String get nkDeityVishvedevas;
+
+  /// No description provided for @nkDeityVishnu.
+  ///
+  /// In en, this message translates to:
+  /// **'Vishnu'**
+  String get nkDeityVishnu;
+
+  /// No description provided for @nkDeityVasus.
+  ///
+  /// In en, this message translates to:
+  /// **'Vasus'**
+  String get nkDeityVasus;
+
+  /// No description provided for @nkDeityVaruna.
+  ///
+  /// In en, this message translates to:
+  /// **'Varuna'**
+  String get nkDeityVaruna;
+
+  /// No description provided for @nkDeityAjaEkapada.
+  ///
+  /// In en, this message translates to:
+  /// **'Aja Ekapada'**
+  String get nkDeityAjaEkapada;
+
+  /// No description provided for @nkDeityAhirBudhnya.
+  ///
+  /// In en, this message translates to:
+  /// **'Ahir Budhnya'**
+  String get nkDeityAhirBudhnya;
+
+  /// No description provided for @nkDeityPushan.
+  ///
+  /// In en, this message translates to:
+  /// **'Pushan'**
+  String get nkDeityPushan;
+
+  /// Nakshatra symbols — translate descriptively, they are objects rather than names.
+  ///
+  /// In en, this message translates to:
+  /// **'Horse\'s head'**
+  String get nkSymbolHorseHead;
+
+  /// No description provided for @nkSymbolYoni.
+  ///
+  /// In en, this message translates to:
+  /// **'Yoni'**
+  String get nkSymbolYoni;
+
+  /// No description provided for @nkSymbolRazor.
+  ///
+  /// In en, this message translates to:
+  /// **'Razor'**
+  String get nkSymbolRazor;
+
+  /// No description provided for @nkSymbolCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get nkSymbolCart;
+
+  /// No description provided for @nkSymbolDeerHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Deer\'s head'**
+  String get nkSymbolDeerHead;
+
+  /// No description provided for @nkSymbolTeardrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Teardrop'**
+  String get nkSymbolTeardrop;
+
+  /// No description provided for @nkSymbolBowAndQuiver.
+  ///
+  /// In en, this message translates to:
+  /// **'Bow & quiver'**
+  String get nkSymbolBowAndQuiver;
+
+  /// No description provided for @nkSymbolCowUdder.
+  ///
+  /// In en, this message translates to:
+  /// **'Cow\'s udder'**
+  String get nkSymbolCowUdder;
+
+  /// No description provided for @nkSymbolCoiledSerpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Coiled serpent'**
+  String get nkSymbolCoiledSerpent;
+
+  /// No description provided for @nkSymbolThrone.
+  ///
+  /// In en, this message translates to:
+  /// **'Throne'**
+  String get nkSymbolThrone;
+
+  /// No description provided for @nkSymbolFrontLegsOfCot.
+  ///
+  /// In en, this message translates to:
+  /// **'Front legs of a cot'**
+  String get nkSymbolFrontLegsOfCot;
+
+  /// No description provided for @nkSymbolBackLegsOfCot.
+  ///
+  /// In en, this message translates to:
+  /// **'Back legs of a cot'**
+  String get nkSymbolBackLegsOfCot;
+
+  /// No description provided for @nkSymbolHand.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand'**
+  String get nkSymbolHand;
+
+  /// No description provided for @nkSymbolPearl.
+  ///
+  /// In en, this message translates to:
+  /// **'Pearl'**
+  String get nkSymbolPearl;
+
+  /// No description provided for @nkSymbolYoungSprout.
+  ///
+  /// In en, this message translates to:
+  /// **'Young sprout'**
+  String get nkSymbolYoungSprout;
+
+  /// No description provided for @nkSymbolTriumphalArch.
+  ///
+  /// In en, this message translates to:
+  /// **'Triumphal arch'**
+  String get nkSymbolTriumphalArch;
+
+  /// No description provided for @nkSymbolLotus.
+  ///
+  /// In en, this message translates to:
+  /// **'Lotus'**
+  String get nkSymbolLotus;
+
+  /// No description provided for @nkSymbolEarring.
+  ///
+  /// In en, this message translates to:
+  /// **'Earring'**
+  String get nkSymbolEarring;
+
+  /// No description provided for @nkSymbolTiedRoots.
+  ///
+  /// In en, this message translates to:
+  /// **'Tied roots'**
+  String get nkSymbolTiedRoots;
+
+  /// No description provided for @nkSymbolFan.
+  ///
+  /// In en, this message translates to:
+  /// **'Fan'**
+  String get nkSymbolFan;
+
+  /// No description provided for @nkSymbolElephantTusk.
+  ///
+  /// In en, this message translates to:
+  /// **'Elephant tusk'**
+  String get nkSymbolElephantTusk;
+
+  /// No description provided for @nkSymbolThreeFootprints.
+  ///
+  /// In en, this message translates to:
+  /// **'Three footprints'**
+  String get nkSymbolThreeFootprints;
+
+  /// No description provided for @nkSymbolDrum.
+  ///
+  /// In en, this message translates to:
+  /// **'Drum'**
+  String get nkSymbolDrum;
+
+  /// No description provided for @nkSymbolEmptyCircle.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty circle'**
+  String get nkSymbolEmptyCircle;
+
+  /// No description provided for @nkSymbolFrontOfFuneralCot.
+  ///
+  /// In en, this message translates to:
+  /// **'Front of a funeral cot'**
+  String get nkSymbolFrontOfFuneralCot;
+
+  /// No description provided for @nkSymbolBackOfFuneralCot.
+  ///
+  /// In en, this message translates to:
+  /// **'Back of a funeral cot'**
+  String get nkSymbolBackOfFuneralCot;
+
+  /// No description provided for @nkSymbolFish.
+  ///
+  /// In en, this message translates to:
+  /// **'Fish'**
+  String get nkSymbolFish;
 }
 
 class _AppLocalizationsDelegate
