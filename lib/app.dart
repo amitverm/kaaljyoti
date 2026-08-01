@@ -20,6 +20,7 @@ import 'screens/contribute_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/discussion_screen.dart';
 import 'screens/hidden_charts_screen.dart';
+import 'screens/journal_screen.dart';
 import 'screens/kundli_edit_screen.dart';
 import 'screens/kundli_events_screen.dart';
 import 'screens/kundli_list_screen.dart';
@@ -33,6 +34,7 @@ import 'screens/pdf_export_screen.dart';
 import 'screens/request_detail_screen.dart';
 import 'screens/research_board_screen.dart';
 import 'screens/respond_screen.dart';
+import 'screens/scheduled_alerts_screen.dart';
 import 'screens/menu_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/sign_in_screen.dart';
@@ -101,6 +103,11 @@ final _router = GoRouter(
       path: '/kundli/:id/events',
       builder: (_, state) =>
           KundliEventsScreen(kundliId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/kundli/:id/journal',
+      builder: (_, state) =>
+          JournalScreen(kundliId: state.pathParameters['id']!),
     ),
     GoRoute(
       path: '/kundli/:id/arrange/:viewId',
@@ -179,6 +186,10 @@ final _router = GoRouter(
     GoRoute(
         path: '/notifications',
         builder: (_, __) => const NotificationsScreen()),
+    // What is COMING, one tap below what has happened.
+    GoRoute(
+        path: '/notifications/scheduled',
+        builder: (_, __) => const ScheduledAlertsScreen()),
     GoRoute(path: '/muhurta', builder: (_, __) => const MuhurtaScreen()),
     GoRoute(path: '/ashtakoota', builder: (_, __) => const AshtakootaScreen()),
     GoRoute(path: '/compare', builder: (_, __) => const CompareScreen()),
@@ -229,10 +240,23 @@ class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp>
   /// bug), NOT a next-morning launch — Today greets first by design.
   static const _restoreWindow = Duration(minutes: 30);
 
+  /// How long a burst of alert-affecting changes is allowed to settle
+  /// before the schedule is rebuilt. Following six charts in a row is
+  /// one gesture to the user and would otherwise be six full ephemeris
+  /// passes; at two seconds it is one.
+  static const _alertDebounce = Duration(seconds: 2);
+
+  Timer? _alertTimer;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Alerts are rebuilt AFTER the first frame — never before it. The
+    // pass is main-isolate by necessity (sweph), so putting it in the
+    // launch path would trade a visibly slower cold start for a
+    // notification nobody is waiting on.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshAlerts());
     // Read BEFORE attaching the persist listener: go_router notifies
     // once while setting up the initial '/today', and attaching first
     // let that overwrite the saved route before restore could read it
@@ -243,6 +267,7 @@ class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp>
 
   @override
   void dispose() {
+    _alertTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _router.routerDelegate.removeListener(_persistRoute);
     super.dispose();
@@ -258,6 +283,21 @@ class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp>
     if (state == AppLifecycleState.paused) {
       unawaited(AppDb.instance.checkpoint().catchError((_) {}));
     }
+    // Every resume rolls the 30-day alert horizon forward and picks up
+    // whatever changed while we were away (an edited birth time, a
+    // kundli synced in from another device, or simply a week passing).
+    if (state == AppLifecycleState.resumed) _refreshAlerts();
+  }
+
+  /// Rebuild the local alert schedule, debounced. The pass itself lives
+  /// in [AlertRefresher] because the Scheduled alerts screen's "Rebuild
+  /// now" runs the same one, undebounced.
+  void _refreshAlerts() {
+    _alertTimer?.cancel();
+    _alertTimer = Timer(
+      _alertDebounce,
+      () => unawaited(ref.read(alertRefresherProvider).run()),
+    );
   }
 
   void _persistRoute() {
@@ -299,6 +339,14 @@ class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp>
     // everything else; PushService resolves the route (shared with the
     // in-app bell via notificationRoute) and calls back here.
     ref.read(pushServiceProvider)?.onOpenRoute = _router.push;
+    // Same contract for the on-device alerts: the service resolves the
+    // route (/kundli/<id>) and this navigates it.
+    ref.read(kundliAlertServiceProvider).onOpenRoute = _router.push;
+
+    // Anything that changes WHAT would be scheduled re-runs the pass.
+    // Debounced, so toggling a handful of charts costs one scan.
+    ref.listen(followedKundlisProvider, (_, __) => _refreshAlerts());
+    ref.listen(alertSettingsProvider, (_, __) => _refreshAlerts());
 
     // Apply palette + font mode BEFORE the tree builds — widgets and
     // painters read KJColors/KJTheme statics at build/paint time.

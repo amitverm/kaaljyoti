@@ -42,6 +42,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get prashnaHint => 'या इसी क्षण के लिए प्रश्न कुंडली बनाएँ';
 
   @override
+  String get bePrashnaAction => 'प्रश्न';
+
+  @override
   String get trustStatement =>
       'गणना डिवाइस पर ही होती है। जब तक आप सिंक चालू नहीं करते, आपकी कुंडली इस फ़ोन से बाहर नहीं जाती।';
 
@@ -360,6 +363,28 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get ntBackendMissing =>
       'बैकएंड कॉन्फ़िगर होने और आपके साइन इन करने पर सूचनाएँ आती हैं।';
+
+  @override
+  String get saTitle => 'निर्धारित कुंडली सूचनाएँ';
+
+  @override
+  String naScheduledCount(String count) {
+    return 'निर्धारित कुंडली सूचनाएँ ($count)';
+  }
+
+  @override
+  String get naEmpty =>
+      'अभी यहाँ कुछ नहीं। किसी कुंडली का अनुसरण करने पर सूचनाएँ यहाँ दिखेंगी — कोई चार्ट खोलें और ‘सूचनाएँ चालू करें’ चुनें।';
+
+  @override
+  String get naDismissed => 'हटाया गया';
+
+  @override
+  String get kaPast => 'बीती हुई';
+
+  @override
+  String get kaPastNote =>
+      'ये सूचनाएँ दिखाए गए समय पर आने के लिए निर्धारित थीं। जब तक काल ज्योति की सूचनाएँ बंद न हों, सिस्टम इन्हें दिखाता है — ऐप को इसकी जानकारी नहीं मिलती।';
 
   @override
   String get ntRequestMatchNew => 'आपके शोध अनुरोध के लिए नए मिलान';
@@ -757,6 +782,74 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get stResetDefaults => 'डिफ़ॉल्ट पर लौटाएँ';
+
+  @override
+  String get stSectionKundliAlerts => 'कुंडली सूचनाएँ';
+
+  @override
+  String get stAlertsEnabled => 'घटना-सूचनाएँ';
+
+  @override
+  String get stAlertsDasha => 'दशा परिवर्तन';
+
+  @override
+  String get stAlertsTransits => 'गोचर';
+
+  @override
+  String get stAlertsSadeSati => 'साढ़ेसाती';
+
+  @override
+  String saComputedLine(String when, String count) {
+    return 'गणना $when · $count निर्धारित';
+  }
+
+  @override
+  String saCountMismatch(String app, String os) {
+    return 'इस ऐप के अनुसार $app सूचनाएँ हैं; सिस्टम $os लंबित बताता है। अभी भेजी गई परीक्षण सूचना भी सिस्टम की गिनती में आती है।';
+  }
+
+  @override
+  String saReadFailed(String error) {
+    return 'सूची नहीं पढ़ी जा सकी: $error';
+  }
+
+  @override
+  String get saRebuildNow => 'अभी पुनः बनाएँ';
+
+  @override
+  String saRebuilt(String count) {
+    return 'पुनः बनाई गई — $count निर्धारित';
+  }
+
+  @override
+  String get saRebuildFailed => 'सूची पुनः नहीं बनाई जा सकी';
+
+  @override
+  String get saSendTest => 'परीक्षण सूचना भेजें';
+
+  @override
+  String saSendTestNote(String seconds) {
+    return 'लगभग $seconds सेकंड बाद एक वास्तविक सूचना भेजता है, उसी मार्ग से जिससे असली सूचना जाती है।';
+  }
+
+  @override
+  String get saTestTitle => 'परीक्षण सूचना';
+
+  @override
+  String get saTestBody =>
+      'इस डिवाइस पर काल ज्योति की कुंडली सूचनाएँ काम कर रही हैं।';
+
+  @override
+  String saTestScheduled(String seconds) {
+    return 'परीक्षण सूचना निर्धारित — लगभग $seconds सेकंड';
+  }
+
+  @override
+  String get saTestFailed => 'परीक्षण सूचना निर्धारित नहीं की जा सकी';
+
+  @override
+  String get stAlertsNote =>
+      'कुंडली सूचनाएँ इसी डिवाइस पर गणना की जाती हैं, केवल उन कुंडलियों के लिए जिन्हें आपने चुना है, और अगले 30 दिनों की होती हैं। इसके लिए किसी खाते की आवश्यकता नहीं, और कोई भी जानकारी सर्वर पर नहीं भेजी जाती। किसी कुंडली को उसके चार्ट मेनू से, या सूची में चुनकर, अनुसरण करें।';
 
   @override
   String get stSectionKundliData => 'कुंडली डेटा';
@@ -3620,6 +3713,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get weekdaySunday => 'रविवार';
 
   @override
+  String get weekdayAbbrMonday => 'सोम';
+
+  @override
+  String get weekdayAbbrTuesday => 'मंगल';
+
+  @override
+  String get weekdayAbbrWednesday => 'बुध';
+
+  @override
+  String get weekdayAbbrThursday => 'गुरु';
+
+  @override
+  String get weekdayAbbrFriday => 'शुक्र';
+
+  @override
+  String get weekdayAbbrSaturday => 'शनि';
+
+  @override
+  String get weekdayAbbrSunday => 'रवि';
+
+  @override
   String get masaChaitra => 'चैत्र';
 
   @override
@@ -4321,7 +4435,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get beSectionCloudSync => 'क्लाउड सिंक';
+  String get beSectionAfterCasting => 'बनाने के बाद';
 
   @override
   String get beSyncTitle => 'इस कुंडली का बैकअप और सिंक करें';
@@ -4331,7 +4445,20 @@ class AppLocalizationsHi extends AppLocalizations {
       'आपके सभी डिवाइस पर उपलब्ध। कुंडली विवरण में कभी भी बदलें।';
 
   @override
+  String get beFollowAlertsTitle => 'इस कुंडली की सूचनाएँ भेजें';
+
+  @override
+  String get beFollowAlertsSubtitle =>
+      'अगले 30 दिनों के दशा परिवर्तन, गोचर और साढ़ेसाती। बिना किसी खाते के काम करता है; चार्ट मेनू से कभी भी बदलें।';
+
+  @override
   String get beCasting => 'बन रही है…';
+
+  @override
+  String get beFieldRequired => 'आवश्यक';
+
+  @override
+  String get bePlaceNotChosen => 'सूची से कोई स्थान चुनें, या स्वयं दर्ज करें';
 
   @override
   String get dfDay => 'दिन';
@@ -4389,9 +4516,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String beSaveFailed(String e) {
     return 'कुंडली नहीं बन सकी: $e';
   }
-
-  @override
-  String get beRequiredFields => 'नाम, तिथि, समय और स्थान — सभी आवश्यक हैं।';
 
   @override
   String get beLocationDisabled =>
@@ -4455,6 +4579,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String keSaveFailed(String e) {
     return 'परिवर्तन सहेजे नहीं जा सके: $e';
   }
+
+  @override
+  String get keAlertsSubtitle =>
+      'अगले 30 दिनों के दशा परिवर्तन, गोचर और साढ़ेसाती। तुरंत लागू — सहेजने की आवश्यकता नहीं।';
+
+  @override
+  String get keSectionChart => 'चार्ट सेटिंग्स';
+
+  @override
+  String get keSectionSharing => 'साझा और सिंक';
 
   @override
   String get keTitle => 'कुंडली विवरण';
@@ -5735,6 +5869,25 @@ class AppLocalizationsHi extends AppLocalizations {
   String get klUnpin => 'पिन हटाएँ';
 
   @override
+  String get klFollowAlerts => 'सूचनाएँ चालू करें';
+
+  @override
+  String get klUnfollowAlerts => 'सूचनाएँ बंद करें';
+
+  @override
+  String get klFollowingAlerts => 'इस कुंडली की सूचनाएँ चालू हैं';
+
+  @override
+  String klAlertsOnN(String count) {
+    return '$count की सूचनाएँ चालू';
+  }
+
+  @override
+  String klAlertsOffN(String count) {
+    return '$count की सूचनाएँ बंद';
+  }
+
+  @override
   String klPinnedN(String count) {
     return '$count पिन की गईं';
   }
@@ -6229,4 +6382,86 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get nkSymbolFish => 'मछली';
+
+  @override
+  String get jrTitle => 'जर्नल';
+
+  @override
+  String get jrAdd => 'प्रविष्टि जोड़ें';
+
+  @override
+  String get jrEditEntry => 'प्रविष्टि संपादित करें';
+
+  @override
+  String get jrEmpty =>
+      'अभी कोई प्रविष्टि नहीं। परामर्श में जो देखा, कोई भविष्यवाणी कैसी रही, या आगे जाँचने योग्य कोई संकेत — यहाँ दर्ज करें; प्रत्येक प्रविष्टि अपनी तिथि की दशा और गोचर सहेज लेती है।';
+
+  @override
+  String jrLoadError(String e) {
+    return 'जर्नल लोड नहीं हो सका: $e';
+  }
+
+  @override
+  String jrCountSynced(String count) {
+    return '$count प्रविष्टियाँ · आपके खाते में सिंक';
+  }
+
+  @override
+  String jrCountLocal(String count) {
+    return '$count प्रविष्टियाँ · इसी उपकरण पर';
+  }
+
+  @override
+  String get jrWhen => 'तिथि';
+
+  @override
+  String get jrPickDate => 'तिथि चुनें';
+
+  @override
+  String get jrObservation => 'अवलोकन';
+
+  @override
+  String get jrObservationHint => 'जो देखा, कहा, या आगे सत्यापित करना है';
+
+  @override
+  String get jrSaveEntry => 'प्रविष्टि सहेजें';
+
+  @override
+  String get jrSaveChanges => 'परिवर्तन सहेजें';
+
+  @override
+  String get jrSaving => 'सहेजा जा रहा है…';
+
+  @override
+  String get jrNeedText => 'सहेजने से पहले कुछ लिखें।';
+
+  @override
+  String get jrDeleteTitle => 'यह प्रविष्टि हटाएँ?';
+
+  @override
+  String get jrDeleteBody =>
+      'प्रविष्टि और उसके साथ दर्ज ज्योतिषीय संदर्भ हट जाएँगे। इसे वापस नहीं लाया जा सकता।';
+
+  @override
+  String get jrDeleteEntry => 'प्रविष्टि हटाएँ';
+
+  @override
+  String jrMoonChip(String planet, String sign, String nakshatra) {
+    return '$planet $sign · $nakshatra';
+  }
+
+  @override
+  String jrTransitChip(String planet, String sign) {
+    return '$planet $sign';
+  }
+
+  @override
+  String get jrDashaTooltip => 'इस तिथि पर चल रही दशाएँ';
+
+  @override
+  String get jrContextNote =>
+      'प्रविष्टि की तिथि की दशा और गोचर उसी के साथ दर्ज होते हैं — पिछली तिथि निःसंकोच चुनें।';
+
+  @override
+  String get dbJournal => 'जर्नल';
 }

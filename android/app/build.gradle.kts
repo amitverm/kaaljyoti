@@ -22,6 +22,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Required by flutter_local_notifications: it uses java.time on
+        // API levels that predate it. Without desugaring the build fails
+        // outright, so this is not optional once that plugin is linked.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -83,6 +87,10 @@ flutter {
 }
 
 dependencies {
+    // Backport of java.time et al. for flutter_local_notifications — see
+    // isCoreLibraryDesugaringEnabled above.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+
     // Google Block Store — carries the SQLCipher passphrase to the user's
     // next device (E2E-encrypted with the lockscreen, rides cloud backup
     // and device-to-device transfer), unlike the Keystore, which is

@@ -36,8 +36,40 @@ class PlaceResult {
   final double longitude;
   final String timezoneName;
 
+  /// Empty parts are dropped rather than joined: the geocoder can return
+  /// a place with no country (or no name), and the old form emitted a
+  /// dangling "Pune, " for those. Dropping them also lets
+  /// [placeFromStoredName] round-trip a stored place string exactly.
   String get displayName =>
-      [name, if (admin.isNotEmpty) admin, country].join(', ');
+      [name, admin, country].where((p) => p.isNotEmpty).join(', ');
+}
+
+/// Rebuilds a [PlaceResult] from what a saved kundli stores: the place
+/// STRING plus its coordinates and zone.
+///
+/// The split is chosen so [PlaceResult.displayName] reconstitutes
+/// [placeName] character for character — re-picking a recent place must
+/// save the same text the earlier chart carries, or the two charts would
+/// disagree about a place the user believes is one place. [name] takes
+/// the first segment so the summary line's short name is the city.
+PlaceResult placeFromStoredName({
+  required String placeName,
+  required double latitude,
+  required double longitude,
+  required String timezoneName,
+}) {
+  final parts = [
+    for (final p in placeName.split(',')) p.trim(),
+  ]..removeWhere((p) => p.isEmpty);
+  return PlaceResult(
+    name: parts.isEmpty ? placeName.trim() : parts.first,
+    admin:
+        parts.length > 2 ? parts.sublist(1, parts.length - 1).join(', ') : '',
+    country: parts.length > 1 ? parts.last : '',
+    latitude: latitude,
+    longitude: longitude,
+    timezoneName: timezoneName,
+  );
 }
 
 class PlaceLookupService {
@@ -111,8 +143,13 @@ class PlaceLookupService {
   }
 
   /// UTC offset (minutes) in [timezoneName] at the given LOCAL wall
-  /// time, plus the resolved UTC instant.
-  ({int offsetMinutes, DateTime utc}) resolveLocalTime(
+  /// time, plus the resolved UTC instant and the zone's abbreviation at
+  /// that instant.
+  ///
+  /// [abbreviation] is null when the zone has no real abbreviation for
+  /// that moment — see [zoneAbbreviation]. Callers that show it must
+  /// then fall back to the bare offset rather than inventing a name.
+  ({int offsetMinutes, DateTime utc, String? abbreviation}) resolveLocalTime(
     String timezoneName,
     DateTime localWallTime,
   ) {
@@ -129,6 +166,21 @@ class PlaceLookupService {
     return (
       offsetMinutes: local.timeZoneOffset.inMinutes,
       utc: local.toUtc(),
+      abbreviation: zoneAbbreviation(local.timeZoneName),
     );
   }
+}
+
+/// A zone's abbreviation, or null when tz has none for that instant.
+///
+/// The tz database reports either a real abbreviation ("IST", "EDT",
+/// "GMT", "JST") or a NUMERIC stand-in when the zone has never had a
+/// letter form — "+0630" for 1943 Kolkata war time and for Yangon,
+/// "+0845" for Eucla. The numeric form is not an abbreviation; showing
+/// it as one would put "+0630 +06:30" on screen, and inventing a letter
+/// name for it would be worse. Null means "say the offset alone".
+String? zoneAbbreviation(String raw) {
+  final name = raw.trim();
+  if (name.isEmpty) return null;
+  return (name.startsWith('+') || name.startsWith('-')) ? null : name;
 }

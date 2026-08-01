@@ -422,6 +422,24 @@ String weekdayLabel(AppLocalizations l10n, int weekday) => [
       l10n.weekdaySunday,
     ][(weekday - 1) % 7];
 
+/// Short civil weekday name — abbr counterpart of [weekdayLabel], for
+/// places where a whole line has to fit and the day is a confirmation
+/// rather than the subject (the birth entry summary).
+///
+/// In Hindi these coincide with several planet labels (मंगल, बुध, गुरु,
+/// शुक्र, शनि) because the day names derive from the grahas. They are
+/// deliberately their OWN keys anyway: a day is not a planet, and
+/// aliasing them would break the first time someone retitles a graha.
+String weekdayAbbrLabel(AppLocalizations l10n, int weekday) => [
+      l10n.weekdayAbbrMonday,
+      l10n.weekdayAbbrTuesday,
+      l10n.weekdayAbbrWednesday,
+      l10n.weekdayAbbrThursday,
+      l10n.weekdayAbbrFriday,
+      l10n.weekdayAbbrSaturday,
+      l10n.weekdayAbbrSunday,
+    ][(weekday - 1) % 7];
+
 /// Compass direction name. Exhaustive over [Direction].
 extension DirectionL10n on Direction {
   String label(AppLocalizations l10n) => switch (this) {

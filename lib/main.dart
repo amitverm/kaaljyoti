@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+// latest_all, matching place_lookup_service — see the note there on why
+// the trimmed zone set is not safe.
+import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'app.dart';
 import 'charts/chart_tuning.dart';
@@ -58,6 +61,12 @@ Future<void> _run() async {
 
   // Swiss Ephemeris bindings — one-time init.
   await EphemerisService.init();
+
+  // tz database. Already loaded lazily inside place_lookup_service for
+  // birth-place offsets, but scheduling a local notification needs it
+  // before that path is ever taken — zonedSchedule resolves the
+  // device's zone through tz.local. Idempotent; ~2ms.
+  tzdata.initializeTimeZones();
 
   // Chart text settings (Settings > Chart text) — seed the notifier the
   // chart painters read before the first frame paints.

@@ -14,6 +14,10 @@
   "placeOfBirth": "Place of birth",
   "castKundli": "Cast Kundli",
   "prashnaHint": "Or cast a Prashna kundli for this exact moment",
+  "bePrashnaAction": "Prashna",
+  "@bePrashnaAction": {
+    "description": "Header action on the birth entry form: switches to casting a Prashna (question) chart for the current moment. Short because it is an AppBar action; prashnaHint carries the full explanation."
+  },
   "trustStatement": "Computed on-device. Your kundali never leaves this phone unless you turn on sync.",
   "savedEncrypted": "{count} saved · encrypted on this device",
   "@savedEncrypted": {
@@ -201,6 +205,25 @@
   },
   "ntSignInPrompt": "Sign in to receive research notifications.",
   "ntBackendMissing": "Notifications arrive once the backend is configured and you are signed in.",
+  "saTitle": "Scheduled kundli alerts",
+  "naScheduledCount": "Scheduled kundli alerts ({count})",
+  "@naScheduledCount": {
+    "description": "Pinned option at the bottom of the Notifications screen; opens the schedule. Count is how many alerts are still ahead.",
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "naEmpty": "Nothing here yet. Alerts appear once you follow a kundli — open a chart and choose Follow alerts.",
+  "@naEmpty": {
+    "description": "Empty state for the whole Notifications screen. Must not mention accounts or signing in: nothing on this screen requires either."
+  },
+  "naDismissed": "Removed",
+  "kaPast": "Past",
+  "@kaPast": {
+    "description": "Alerts whose fire time has passed. NEVER label this 'Delivered' — neither platform gives the app a delivery receipt, so the app cannot know."
+  },
+  "kaPastNote": "These alerts were scheduled to fire at the times shown. The system shows them unless notifications are switched off for Kaal Jyoti — the app is not told either way.",
+  "@kaPastNote": {
+    "description": "Honesty footnote on the Past list. States what the app asked for and what it cannot know. Must not claim delivery."
+  },
   "ntRequestMatchNew": "New matches for your research request",
   "ntYourChartMatched": "Your chart matched a research request",
   "ntRequestApproved": "Your research request is live",
@@ -421,6 +444,62 @@
   "stSignLabelSize": "Sign label size",
   "stTextAreaInHouse": "Text area within house",
   "stResetDefaults": "Reset to defaults",
+  "stSectionKundliAlerts": "Kundli alerts",
+  "@stSectionKundliAlerts": {
+    "description": "Settings section for LOCAL, on-device alerts about followed kundlis. Deliberately not 'Notifications' — that is the separate, sign-in-gated server notifications screen (notificationsTitle), and users conflated the two."
+  },
+  "stAlertsEnabled": "Event alerts",
+  "@stAlertsEnabled": {
+    "description": "Master switch for local notifications about followed kundlis."
+  },
+  "stAlertsDasha": "Dasha changes",
+  "stAlertsTransits": "Transits",
+  "stAlertsSadeSati": "Sade Sati",
+  "saComputedLine": "Computed {when} · {count} scheduled",
+  "@saComputedLine": {
+    "description": "Header of the Scheduled alerts screen: when the last scheduling pass ran, and how many alerts it handed to the OS.",
+    "placeholders": {
+      "when": { "type": "String" },
+      "count": { "type": "String" }
+    }
+  },
+  "saCountMismatch": "This app recorded {app} alerts; the system reports {os} pending. A test alert you just sent counts towards the system total.",
+  "@saCountMismatch": {
+    "description": "Diagnostic note shown only when the app's own record and the OS's pending count disagree. States both numbers without interpreting them.",
+    "placeholders": {
+      "app": { "type": "String" },
+      "os": { "type": "String" }
+    }
+  },
+  "saReadFailed": "Could not read the schedule: {error}",
+  "@saReadFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "saRebuildNow": "Rebuild now",
+  "saRebuilt": "Rebuilt — {count} scheduled",
+  "@saRebuilt": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "saRebuildFailed": "Could not rebuild the schedule",
+  "saSendTest": "Send test alert",
+  "saSendTestNote": "Fires one real notification about {seconds} seconds from now, through the same path as a real alert.",
+  "@saSendTestNote": {
+    "placeholders": { "seconds": { "type": "String" } }
+  },
+  "saTestTitle": "Test alert",
+  "saTestBody": "Kaal Jyoti kundli alerts are working on this device.",
+  "@saTestBody": {
+    "description": "Body of the diagnostic test notification. States a fact about the device, never anything astrological."
+  },
+  "saTestScheduled": "Test alert scheduled — about {seconds} seconds",
+  "@saTestScheduled": {
+    "placeholders": { "seconds": { "type": "String" } }
+  },
+  "saTestFailed": "Could not schedule the test alert",
+  "stAlertsNote": "Kundli alerts are worked out on this device, for the kundlis you follow, and cover the next 30 days. No account is needed and nothing is sent to a server. Follow a kundli from its chart menu, or by selecting it in the list.",
+  "@stAlertsNote": {
+    "description": "Explains that on-device alerts are local-only and follow-gated. Must stay factual — it describes what the app does, never what an event means."
+  },
   "stSectionKundliData": "Kundli data",
   "stSignedOutNotice": "Kundlis are stored only on this device — sign in to keep them across devices.",
   "stSyncAllTitle": "Sync all kundlis to cloud",
@@ -2056,6 +2135,16 @@
   "weekdayFriday": "Friday",
   "weekdaySaturday": "Saturday",
   "weekdaySunday": "Sunday",
+  "weekdayAbbrMonday": "Mon",
+  "@weekdayAbbrMonday": {
+    "description": "SHORT civil weekday names (through weekdayAbbrSunday) for the birth entry summary line, where the whole confirmation has to fit on one line. Same distinction from the vara* keys as the full weekday* set above. Hindi uses the conventional short forms — सोम, मंगल, बुध…; note these coincide with several planetXxx values because Hindi day names derive from the grahas, but they are NOT the same strings and must not be aliased to them."
+  },
+  "weekdayAbbrTuesday": "Tue",
+  "weekdayAbbrWednesday": "Wed",
+  "weekdayAbbrThursday": "Thu",
+  "weekdayAbbrFriday": "Fri",
+  "weekdayAbbrSaturday": "Sat",
+  "weekdayAbbrSunday": "Sun",
   "masaChaitra": "Chaitra",
   "@masaChaitra": {
     "description": "LUNAR MONTH (maasa) names, Chaitra … Phalguna — fixed terms, transliterate (hi: चैत्र …)."
@@ -2621,10 +2710,26 @@
       }
     }
   },
-  "beSectionCloudSync": "CLOUD SYNC",
+  "beSectionAfterCasting": "After casting",
+  "@beSectionAfterCasting": {
+    "description": "One section heading on the birth entry form covering what happens to the chart once it exists: cloud sync and kundli alerts."
+  },
   "beSyncTitle": "Back up & sync this kundli",
   "beSyncSubtitle": "Available on all your devices. Change anytime in Kundli Details.",
+  "beFollowAlertsTitle": "Alert me about this kundli",
+  "@beFollowAlertsTitle": {
+    "description": "Birth entry toggle, default ON. Sibling of beSyncTitle, but needs no account — alerts are computed on this device."
+  },
+  "beFollowAlertsSubtitle": "Dasha changes, transits and Sade Sati for the next 30 days. Works without an account; change anytime from the chart menu.",
   "beCasting": "Casting…",
+  "beFieldRequired": "Required",
+  "@beFieldRequired": {
+    "description": "Inline validation on the birth entry form, shown under whichever required input is empty after Cast is pressed."
+  },
+  "bePlaceNotChosen": "Pick a place from the list, or enter it manually",
+  "@bePlaceNotChosen": {
+    "description": "Shown when the place box has text but no place was actually selected — the field looks filled in, so 'Required' would read as a bug."
+  },
   "dfDay": "Day",
   "dfMonth": "Month",
   "dfYear": "Year",
@@ -2649,7 +2754,6 @@
       }
     }
   },
-  "beRequiredFields":"Name, date, time and place are all required.",
   "beLocationDisabled": "Location is disabled for this app — enable it in Settings.",
   "beLocationUnavailable": "Location unavailable — type the place instead.",
   "beLocationFailed": "Could not get your location — type the place.",
@@ -2689,6 +2793,18 @@
         "type": "String"
       }
     }
+  },
+  "keAlertsSubtitle": "Dasha changes, transits and Sade Sati for the next 30 days. Takes effect immediately — no need to save.",
+  "@keAlertsSubtitle": {
+    "description": "Kundli Details alerts row. Says what is covered and that the switch is live rather than save-bound, since every other edit on that screen waits for Save."
+  },
+  "keSectionChart": "Chart settings",
+  "@keSectionChart": {
+    "description": "Kundli Details section heading over the per-chart display and calculation options (chart style, ayanamsa override)."
+  },
+  "keSectionSharing": "Sharing & sync",
+  "@keSectionSharing": {
+    "description": "Kundli Details section heading over cloud sync and Mahakosh."
   },
   "keTitle": "Kundli Details",
   "keNoteLabel": "Note (optional)",
@@ -3533,6 +3649,20 @@
   "klClearFilters": "Clear search and filters",
   "klPin": "Pin",
   "klUnpin": "Unpin",
+  "klFollowAlerts": "Follow alerts",
+  "@klFollowAlerts": {
+    "description": "Turns on local, on-device notifications for a kundli's upcoming dasha changes, transits and Sade Sati."
+  },
+  "klUnfollowAlerts": "Stop alerts",
+  "klFollowingAlerts": "Alerts on for this kundli",
+  "klAlertsOnN": "Alerts on for {count}",
+  "@klAlertsOnN": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "klAlertsOffN": "Alerts off for {count}",
+  "@klAlertsOffN": {
+    "placeholders": { "count": { "type": "String" } }
+  },
   "klPinnedN": "{count} pinned",
   "@klPinnedN": {
     "placeholders": { "count": { "type": "String" } }
@@ -3774,5 +3904,33 @@
   "nkSymbolEmptyCircle": "Empty circle",
   "nkSymbolFrontOfFuneralCot": "Front of a funeral cot",
   "nkSymbolBackOfFuneralCot": "Back of a funeral cot",
-  "nkSymbolFish": "Fish"
+  "nkSymbolFish": "Fish",
+  "jrTitle": "Journal",
+  "jrAdd": "Add entry",
+  "jrEditEntry": "Edit entry",
+  "jrEmpty": "No journal entries yet. Record what you observed in a consultation, how a prediction turned out, or a pattern worth checking later — every entry keeps the dasha and transits of its own date.",
+  "jrLoadError": "Could not load the journal: {e}",
+  "@jrLoadError": {"placeholders": {"e": {"type": "String"}}},
+  "jrCountSynced": "{count} entries · synced to your account",
+  "@jrCountSynced": {"placeholders": {"count": {"type": "String"}}},
+  "jrCountLocal": "{count} entries · on this device",
+  "@jrCountLocal": {"placeholders": {"count": {"type": "String"}}},
+  "jrWhen": "DATE",
+  "jrPickDate": "Pick a date",
+  "jrObservation": "Observation",
+  "jrObservationHint": "What you saw, said, or want to verify later",
+  "jrSaveEntry": "Save entry",
+  "jrSaveChanges": "Save changes",
+  "jrSaving": "Saving…",
+  "jrNeedText": "Write something before saving.",
+  "jrDeleteTitle": "Delete this entry?",
+  "jrDeleteBody": "The entry and the astro context recorded with it are removed. This can't be undone.",
+  "jrDeleteEntry": "Delete entry",
+  "jrMoonChip": "{planet} {sign} · {nakshatra}",
+  "@jrMoonChip": {"placeholders": {"planet": {"type": "String"}, "sign": {"type": "String"}, "nakshatra": {"type": "String"}}},
+  "jrTransitChip": "{planet} {sign}",
+  "@jrTransitChip": {"placeholders": {"planet": {"type": "String"}, "sign": {"type": "String"}}},
+  "jrDashaTooltip": "Periods running on this date",
+  "jrContextNote": "The dasha and transits of the entry's date are recorded with it — backdate freely.",
+  "dbJournal": "Journal"
 }

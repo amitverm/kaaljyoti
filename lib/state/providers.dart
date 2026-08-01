@@ -2,6 +2,7 @@
 /// mutations (e.g. ref.invalidate(kundlisProvider)).
 library;
 
+import 'package:flutter/widgets.dart' show Locale, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -11,6 +12,7 @@ import '../core/astro/bhava_bala.dart';
 import '../core/astro/compare.dart';
 import '../core/astro/dasha/dasha.dart';
 import '../core/astro/ephemeris_service.dart';
+import '../core/astro/event_feed.dart';
 import '../core/astro/models.dart';
 import '../core/astro/shadbala.dart';
 import '../core/astro/snapshot_builder.dart';
@@ -20,15 +22,18 @@ import '../core/constants.dart';
 import '../core/date_format.dart';
 import '../data/dashboard_repository.dart';
 import '../data/export_repository.dart';
+import '../data/journal_repository.dart';
 import '../data/kundli_event_repository.dart';
 import '../data/kundli_repository.dart';
 import '../data/models.dart';
 import '../data/settings_repository.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../mahakosh/compare_subject.dart';
 import '../mahakosh/discussion_repository.dart';
 import '../mahakosh/mahakosh_repository.dart';
 import '../mahakosh/models.dart';
 import '../mahakosh/research_repository.dart';
+import '../services/kundli_alert_service.dart';
 import '../services/place_lookup_service.dart';
 import '../services/push_service.dart';
 import '../services/sync_service.dart';
@@ -38,6 +43,7 @@ import '../widgetsystem/astro_module.dart';
 
 final kundliRepoProvider = Provider((ref) => KundliRepository());
 final kundliEventRepoProvider = Provider((ref) => KundliEventRepository());
+final journalRepoProvider = Provider((ref) => JournalRepository());
 final dashboardRepoProvider = Provider((ref) => DashboardRepository());
 final exportRepoProvider = Provider((ref) => ExportRepository());
 final settingsRepoProvider = Provider((ref) => SettingsRepository());
@@ -166,7 +172,7 @@ final syncServiceProvider = Provider<SyncService?>((ref) {
   return client == null
       ? null
       : SyncService(client, ref.watch(kundliRepoProvider),
-          ref.watch(kundliEventRepoProvider));
+          ref.watch(kundliEventRepoProvider), ref.watch(journalRepoProvider));
 });
 
 final adminRepoProvider = Provider<AdminRepository?>((ref) {
@@ -191,6 +197,8 @@ final liveSyncProvider = Provider<void>((ref) {
     // Events sync inside the kundli payload — refresh any open Events screen
     // too (invalidating the family clears every per-kundli instance).
     ref.invalidate(kundliEventsProvider);
+    // Journal entries ride the same payload, so they need the same refresh.
+    ref.invalidate(journalEntriesProvider);
   });
   ref.onDispose(sync.stop);
 });
@@ -343,6 +351,202 @@ class PinnedKundlisNotifier extends StateNotifier<Set<String>> {
 final pinnedKundlisProvider =
     StateNotifierProvider<PinnedKundlisNotifier, Set<String>>(
   (ref) => PinnedKundlisNotifier(ref.watch(settingsRepoProvider)),
+);
+
+/// Kundli ids the astrologer follows for event alerts. Same shape and
+/// same device-local storage as the pins (see
+/// [SettingsRepository.followedKundliIds]); the alert scheduler watches
+/// this set and re-runs whenever it changes.
+class FollowedKundlisNotifier extends StateNotifier<Set<String>> {
+  FollowedKundlisNotifier(this._repo) : super(const {}) {
+    _repo.followedKundliIds().then((ids) {
+      // Don't clobber a follow made before prefs finished loading.
+      if (mounted && state.isEmpty) state = ids.toSet();
+    });
+  }
+
+  final SettingsRepository _repo;
+
+  bool isFollowed(String id) => state.contains(id);
+
+  void toggle(String id) {
+    final next = {...state};
+    if (!next.remove(id)) next.add(id);
+    _set(next);
+  }
+
+  void addAll(Iterable<String> ids) => _set({...state, ...ids});
+
+  void removeAll(Iterable<String> ids) =>
+      _set({...state}..removeAll(ids.toSet()));
+
+  void _set(Set<String> ids) {
+    state = ids;
+    _repo.setFollowedKundliIds(ids.toList(growable: false));
+  }
+}
+
+final followedKundlisProvider =
+    StateNotifierProvider<FollowedKundlisNotifier, Set<String>>(
+  (ref) => FollowedKundlisNotifier(ref.watch(settingsRepoProvider)),
+);
+
+/// The on-device alert scheduler. One per app; the root widget wires
+/// its route callback and drives [KundliAlertService.reschedule].
+final kundliAlertServiceProvider =
+    Provider<KundliAlertService>((ref) => KundliAlertService());
+
+/// Event-alert switches — synchronous state so a flipped switch takes
+/// effect (and reschedules) immediately, loaded from prefs at startup.
+class AlertSettingsNotifier extends StateNotifier<AlertSettings> {
+  AlertSettingsNotifier(this._repo) : super(const AlertSettings()) {
+    _repo.alertSettings().then((s) {
+      if (mounted && !_touched) state = s;
+    });
+  }
+
+  final SettingsRepository _repo;
+  bool _touched = false;
+
+  void update(AlertSettings s) {
+    // Don't let the async load overwrite a switch the user flipped
+    // while prefs were still resolving.
+    _touched = true;
+    state = s;
+    _repo.setAlertSettings(s);
+  }
+}
+
+final alertSettingsProvider =
+    StateNotifierProvider<AlertSettingsNotifier, AlertSettings>(
+  (ref) => AlertSettingsNotifier(ref.watch(settingsRepoProvider)),
+);
+
+/// Gathers everything a scheduling pass needs and runs it.
+///
+/// Shared deliberately: the app root drives this on launch/resume behind
+/// its debounce, and the Scheduled alerts screen calls the same [run]
+/// directly for its "Rebuild now" action. Two call sites assembling the
+/// same five inputs independently is how they drift.
+class AlertRefresher {
+  AlertRefresher(this._ref);
+
+  final Ref _ref;
+
+  /// Runs one full pass and returns how many alerts it scheduled (null
+  /// if the pass could not run at all). Safe to call from a button: it
+  /// never throws.
+  Future<int?> run() async {
+    try {
+      final service = _ref.read(kundliAlertServiceProvider);
+      await service.init();
+      await service.reschedule(
+        kundlis: await _ref.read(kundliRepoProvider).saved(),
+        followedIds: _ref.read(followedKundlisProvider),
+        defaultAyanamsaId:
+            await _ref.read(settingsRepoProvider).defaultAyanamsaId(),
+        l10n: lookupAppLocalizations(locale()),
+        settings: _ref.read(alertSettingsProvider),
+      );
+      return (await service.lastSchedule()).alerts.length;
+    } catch (_) {
+      // Alerts are an accessory to the app, not a part of it: a missing
+      // plugin, a denied permission or one unreadable chart must never
+      // surface as an app-level failure.
+      return null;
+    } finally {
+      // UNCONDITIONALLY, including the failure path: a pass begins with
+      // cancelAll, so even one that throws half way has already changed
+      // what the OS holds. Leaving the old answer on screen after that
+      // is the worse outcome.
+      //
+      // autoDispose alone only covers a screen MOUNTED after the pass.
+      // This covers the screen already open while a debounced pass
+      // lands under it — which is the actual repro: unfollow on the
+      // dashboard, walk over to the schedule, watch it not change.
+      _ref.invalidate(alertScheduleSummaryProvider);
+      _ref.invalidate(alertHistoryProvider);
+      _ref.invalidate(alertPendingCountProvider);
+    }
+  }
+
+  /// Which language notification text is written in. Notifications are
+  /// composed with no BuildContext, so the locale is resolved the way
+  /// the app root resolves it for `Intl.defaultLocale`: the Settings
+  /// override, else the device locale, clamped to a language we ship.
+  Locale locale() {
+    final language = _ref.read(languageProvider);
+    final code = language == 'system'
+        ? WidgetsBinding.instance.platformDispatcher.locale.languageCode
+        : language;
+    return AppLocalizations.supportedLocales.any((l) => l.languageCode == code)
+        ? Locale(code)
+        : const Locale('en');
+  }
+}
+
+final alertRefresherProvider =
+    Provider<AlertRefresher>((ref) => AlertRefresher(ref));
+
+/// The last pass's schedule.
+///
+/// AUTODISPOSE IS LOAD-BEARING, not a micro-optimisation. These three
+/// providers all depend on [kundliAlertServiceProvider], which is a
+/// plain Provider and therefore never changes identity — so a cached
+/// FutureProvider would resolve once and serve that first answer for
+/// the life of the app, no matter how many scheduling passes ran
+/// underneath it. That was the bug: unfollow every kundli, the pass
+/// cancels the OS schedule correctly, and the screen goes on showing
+/// the alerts it read minutes ago. They read SharedPreferences (and one
+/// platform channel), so re-reading per screen visit is cheap.
+final alertScheduleSummaryProvider =
+    FutureProvider.autoDispose<AlertScheduleSummary>(
+        (ref) async => ref.watch(kundliAlertServiceProvider).lastSchedule());
+
+/// Past alerts, newest first. Reading this SWEEPS: alerts fire while the
+/// app is closed, so without a sweep on read the list would only catch
+/// up on the next scheduling pass — which may be days away. autoDispose
+/// is what makes that promise true; cached, the sweep ran exactly once.
+final alertHistoryProvider =
+    FutureProvider.autoDispose<List<ScheduledAlertRecord>>(
+  (ref) => ref.watch(kundliAlertServiceProvider).pastAlerts(),
+);
+
+/// Server notification ids swiped away on this device.
+///
+/// The server has no delete: public.notifications is select+update only
+/// under RLS, so hiding them locally is the only removal available (see
+/// [SettingsRepository.dismissedNotificationIds]).
+class DismissedNotificationsNotifier extends StateNotifier<Set<String>> {
+  DismissedNotificationsNotifier(this._repo) : super(const {}) {
+    _repo.dismissedNotificationIds().then((ids) {
+      if (mounted && state.isEmpty) state = ids.toSet();
+    });
+  }
+
+  final SettingsRepository _repo;
+
+  void dismiss(String id) => _set({...state, id});
+
+  void restore(String id) => _set({...state}..remove(id));
+
+  void _set(Set<String> ids) {
+    state = ids;
+    _repo.setDismissedNotificationIds(ids.toList(growable: false));
+  }
+}
+
+final dismissedNotificationsProvider =
+    StateNotifierProvider<DismissedNotificationsNotifier, Set<String>>(
+  (ref) => DismissedNotificationsNotifier(ref.watch(settingsRepoProvider)),
+);
+
+/// What the OS says it is actually holding — the cross-check against
+/// [alertScheduleSummaryProvider]. Null when the platform won't answer.
+/// autoDispose for the same reason as the two above: a cross-check that
+/// answers from a cache is not a cross-check.
+final alertPendingCountProvider = FutureProvider.autoDispose<int?>(
+  (ref) => ref.watch(kundliAlertServiceProvider).pendingCount(),
 );
 
 /// Opened-kundli ids, most recent first. Drives both the recents strip
@@ -532,6 +736,13 @@ final kundliListDataProvider = Provider<AsyncValue<KundliListData>>((ref) {
 /// add/edit/delete on the Events screen.
 final kundliEventsProvider = FutureProvider.family<List<KundliEvent>, String>(
   (ref, kundliId) => ref.watch(kundliEventRepoProvider).forKundli(kundliId),
+);
+
+/// The practitioner's journal for a kundli, newest entry first. Invalidated
+/// after any add/edit/delete on the Journal screen, and by live sync.
+final journalEntriesProvider =
+    FutureProvider.family<List<JournalEntry>, String>(
+  (ref, kundliId) => ref.watch(journalRepoProvider).forKundli(kundliId),
 );
 
 /// Route id prefix for a Mahakosh community chart viewed through the
@@ -849,12 +1060,6 @@ final maasaPraveshProvider = FutureProvider.family<MaasaPraveshData,
   return MaasaPraveshData(
       month: month, praveshUtc: praveshUtc, snapshot: snap, dayPravesha: day);
 });
-
-/// Natal reference points for a transit scan: the 9 grahas + Lagna.
-Map<String, double> natalPointsFor(AstroSnapshot s) => {
-      for (final p in s.positions.values) p.planet.displayName: p.longitude,
-      'Lagna': s.ascendant,
-    };
 
 /// Gochar (transit) events for a kundli over the next [months] from
 /// now. Memoized per (kundli, months) — the Gochar module and the

@@ -189,7 +189,7 @@ class AppDb {
     return _opener(
       path,
       password: password,
-      version: 9,
+      version: 10,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -306,6 +306,11 @@ class AppDb {
           await db.execute(_createExportTemplateSql);
           await _migrateLegacyExportConfigs(db);
         }
+        if (oldVersion < 10) {
+          // v10: the practitioner's journal — date-stamped observations
+          // per kundli, each carrying the astro context of its own date.
+          await _createJournalEntries(db);
+        }
       },
       onCreate: (db, version) async {
         await db.execute('''
@@ -332,6 +337,7 @@ class AppDb {
           )
         ''');
         await db.execute(_createKundliEventsSql);
+        await _createJournalEntries(db);
         await db.execute('''
           CREATE TABLE dashboard_views (
             id TEXT PRIMARY KEY,
@@ -453,6 +459,30 @@ Future<void> _migrateLegacyExportConfigs(Database db) async {
     );
   }
   await db.execute('DROP TABLE export_configs');
+}
+
+/// Per-kundli journal entries (v10+): the practitioner's own date-stamped
+/// observations, each with the astro context computed for its entry date
+/// frozen into `context_json` (schema-versioned, stable keys — see
+/// core/astro/journal_context.dart). Cascade-deletes with the kundli, like
+/// [_createKundliEventsSql]. Both statements are idempotent, and this
+/// helper is shared between onCreate and the v10 migration so the schema
+/// stays identical on both paths.
+Future<void> _createJournalEntries(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS journal_entries (
+      id TEXT PRIMARY KEY,
+      kundli_id TEXT NOT NULL REFERENCES kundlis(id) ON DELETE CASCADE,
+      at INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      context_json TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  ''');
+  // The only query shape is "every entry for this kundli, newest first".
+  await db.execute('CREATE INDEX IF NOT EXISTS idx_journal_entries_kundli '
+      'ON journal_entries(kundli_id)');
 }
 
 /// Per-kundli life events. FK CASCADE means deleting a kundli removes its

@@ -4,6 +4,8 @@
 /// devices.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +16,7 @@ import '../core/astro/ayanamsa.dart';
 import '../core/date_format.dart';
 import '../core/theme/theme.dart';
 import '../core/theme/type_scale.dart';
+import '../data/settings_repository.dart';
 import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
@@ -133,6 +136,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 20),
+          _label(l10n.stSectionKundliAlerts.toUpperCase()),
+          _notificationsCard(),
+          const SizedBox(height: 6),
+          Text(
+            l10n.stAlertsNote,
+            style: TextStyle(fontSize: 12, color: KJColors.inkSoft),
+          ),
+          const SizedBox(height: 20),
           _label(l10n.stSectionKundliData.toUpperCase()),
           _kundliDataCard(),
           const SizedBox(height: 20),
@@ -147,6 +158,84 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _label('APPEARANCE'),
           _appearanceCard(),
         ],
+      ),
+    );
+  }
+
+  /// Event alerts (Settings ▸ Notifications). The master switch defaults
+  /// ON and still notifies nobody: the follow-set is what actually
+  /// schedules anything, so "on" here means "when you follow a chart,
+  /// you'll hear about it" — no prompt, no traffic, nothing scheduled
+  /// until the user asks for a specific chart.
+  ///
+  /// The three categories narrow what a followed chart raises. They stay
+  /// visible but disabled while the master switch is off, so the shape
+  /// of the feature is legible either way.
+  Widget _notificationsCard() {
+    final l10n = context.l10n;
+    final alerts = ref.watch(alertSettingsProvider);
+
+    void set(AlertSettings next) {
+      ref.read(alertSettingsProvider.notifier).update(next);
+      // Turning the master switch on is the other moment a permission
+      // prompt is warranted (the first follow is the usual one).
+      if (next.enabled && !alerts.enabled) {
+        unawaited(ref.read(kundliAlertServiceProvider).ensurePermission());
+      }
+    }
+
+    Widget row({
+      required String title,
+      required bool value,
+      required ValueChanged<bool> onChanged,
+      bool enabled = true,
+    }) =>
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: Text(
+            title,
+            style: TextStyle(
+              fontSize: 13.5,
+              color: enabled ? null : KJColors.inkSoft,
+            ),
+          ),
+          activeThumbColor: KJColors.maroon,
+          value: value,
+          onChanged: enabled ? onChanged : null,
+        );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        child: Column(
+          children: [
+            row(
+              title: l10n.stAlertsEnabled,
+              value: alerts.enabled,
+              onChanged: (v) => set(alerts.copyWith(enabled: v)),
+            ),
+            const Divider(height: 1),
+            row(
+              title: l10n.stAlertsDasha,
+              value: alerts.dasha,
+              enabled: alerts.enabled,
+              onChanged: (v) => set(alerts.copyWith(dasha: v)),
+            ),
+            row(
+              title: l10n.stAlertsTransits,
+              value: alerts.transits,
+              enabled: alerts.enabled,
+              onChanged: (v) => set(alerts.copyWith(transits: v)),
+            ),
+            row(
+              title: l10n.stAlertsSadeSati,
+              value: alerts.sadeSati,
+              enabled: alerts.enabled,
+              onChanged: (v) => set(alerts.copyWith(sadeSati: v)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -282,7 +371,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             _scopeOption(ctx, 'device', ctx.l10n.stDeleteAllDeviceOption,
                 ctx.l10n.stDeleteAllDeviceNote),
-            _scopeOption(ctx, 'everywhere',
+            _scopeOption(
+                ctx,
+                'everywhere',
                 ctx.l10n.stDeleteAllEverywhereOption,
                 ctx.l10n.stDeleteAllEverywhereNote),
             SimpleDialogOption(
@@ -370,8 +461,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 style:
                     const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(height: 2),
-            Text(note,
-                style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
+            Text(note, style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
           ],
         ),
       );

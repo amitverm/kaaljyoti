@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/painting.dart' show FontWeight;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,6 +32,138 @@ class AppearanceSettings {
         serifHeadings: serifHeadings ?? this.serifHeadings,
         paletteName: paletteName ?? this.paletteName,
       );
+}
+
+/// Which kinds of change the user wants to hear about (Settings ▸
+/// Notifications). [enabled] is the master switch — off means nothing
+/// is scheduled at all, regardless of the categories.
+class AlertSettings {
+  const AlertSettings({
+    this.enabled = true,
+    this.dasha = true,
+    this.transits = true,
+    this.sadeSati = true,
+  });
+
+  final bool enabled;
+  final bool dasha;
+  final bool transits;
+  final bool sadeSati;
+
+  /// Nothing to schedule when every category is off, even with the
+  /// master switch on — worth short-circuiting before any ephemeris
+  /// work happens.
+  bool get anyCategory => dasha || transits || sadeSati;
+
+  AlertSettings copyWith({
+    bool? enabled,
+    bool? dasha,
+    bool? transits,
+    bool? sadeSati,
+  }) =>
+      AlertSettings(
+        enabled: enabled ?? this.enabled,
+        dasha: dasha ?? this.dasha,
+        transits: transits ?? this.transits,
+        sadeSati: sadeSati ?? this.sadeSati,
+      );
+
+  @override
+  bool operator ==(Object other) =>
+      other is AlertSettings &&
+      other.enabled == enabled &&
+      other.dasha == dasha &&
+      other.transits == transits &&
+      other.sadeSati == sadeSati;
+
+  @override
+  int get hashCode => Object.hash(enabled, dasha, transits, sadeSati);
+}
+
+/// One alert that a scheduling pass handed to the OS.
+///
+/// DISPLAY DATA ONLY. The OS owns the real schedule; this is what the
+/// app *believes* it asked for, recorded so the Scheduled alerts screen
+/// can show something without re-running a 30-day ephemeris scan. When
+/// the two disagree, that disagreement is the interesting fact — the
+/// screen surfaces both counts rather than trusting this one.
+class ScheduledAlertRecord {
+  const ScheduledAlertRecord({
+    required this.when,
+    required this.title,
+    required this.body,
+    required this.kundliId,
+    this.id = 0,
+  });
+
+  final DateTime when;
+  final String title;
+  final String body;
+  final String kundliId;
+
+  /// The OS notification id. Carried so the past-alerts sweep can dedupe
+  /// on it: an alert survives many rebuild passes with the same id, and
+  /// would otherwise be appended to history once per pass.
+  final int id;
+
+  /// Stable identity for deduping. Falls back to the content tuple for
+  /// records written before ids were stored — a summary persisted by an
+  /// earlier build has no `id`, and reading it back must not make every
+  /// legacy entry collide on 0.
+  String get dedupeKey => id != 0
+      ? 'id:$id'
+      : 'c:${when.toUtc().millisecondsSinceEpoch}|$kundliId|$body';
+
+  Map<String, Object?> toJson() => {
+        'when': when.toUtc().toIso8601String(),
+        'title': title,
+        'body': body,
+        'kundliId': kundliId,
+        'id': id,
+      };
+
+  static ScheduledAlertRecord? fromJson(Object? raw) {
+    if (raw is! Map) return null;
+    final when = DateTime.tryParse('${raw['when']}');
+    if (when == null) return null;
+    return ScheduledAlertRecord(
+      when: when,
+      title: '${raw['title'] ?? ''}',
+      body: '${raw['body'] ?? ''}',
+      kundliId: '${raw['kundliId'] ?? ''}',
+      id: switch (raw['id']) { final int i => i, _ => 0 },
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ScheduledAlertRecord &&
+      other.when.isAtSameMomentAs(when) &&
+      other.title == title &&
+      other.body == body &&
+      other.kundliId == kundliId &&
+      other.id == id;
+
+  @override
+  int get hashCode => Object.hash(when.toUtc(), title, body, kundliId, id);
+}
+
+/// What the last scheduling pass produced: when it ran, and what it
+/// scheduled. [computedAt] null means no pass has ever run on this
+/// device (distinct from a pass that ran and scheduled nothing).
+class AlertScheduleSummary {
+  const AlertScheduleSummary({this.computedAt, this.alerts = const []});
+
+  final DateTime? computedAt;
+  final List<ScheduledAlertRecord> alerts;
+
+  bool get hasRun => computedAt != null;
+
+  /// Soonest first — the order the screen wants and the order a reader
+  /// expects; the pass already produces them this way, but a summary
+  /// read back from disk should not have to trust that.
+  List<ScheduledAlertRecord> get byTime =>
+      [...alerts]..sort((a, b) => a.when.compareTo(b.when));
 }
 
 /// App-wide defaults (Profile screen 15). Per-kundli overrides live on
@@ -108,6 +242,15 @@ class SettingsRepository {
   static const _kListSort = 'kundli_list_sort';
   static const _kListDensity = 'kundli_list_density';
   static const _kPinned = 'kundli_pinned_ids';
+  static const _kFollowed = 'kundli_followed_ids';
+  static const _kAlertsEnabled = 'alerts_enabled';
+  static const _kAlertsDasha = 'alerts_dasha';
+  static const _kAlertsTransits = 'alerts_transits';
+  static const _kAlertsSadeSati = 'alerts_sade_sati';
+  static const _kAlertsSummary = 'alerts_last_schedule';
+  static const _kAlertsSummaryAt = 'alerts_last_schedule_at';
+  static const _kAlertsHistory = 'alerts_history';
+  static const _kDismissedNotifs = 'dismissed_notification_ids';
   static const _kRecent = 'kundli_recent_ids';
   static const _kRecentMahakosh = 'mahakosh_recent_codes';
 
@@ -149,6 +292,142 @@ class SettingsRepository {
   Future<void> setPinnedKundliIds(List<String> ids) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_kPinned, ids);
+  }
+
+  /// Kundlis whose upcoming events raise LOCAL notifications on this
+  /// device. Device-local for the same reasons as the pins above, plus
+  /// one that is not optional: the alerts themselves are scheduled by
+  /// THIS device's OS from THIS device's ephemeris run. Syncing the flag
+  /// would promise alerts on a phone that has never computed them, and
+  /// would silently opt a second device into notifications the user
+  /// only ever asked one device for.
+  Future<List<String>> followedKundliIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kFollowed) ?? const [];
+  }
+
+  Future<void> setFollowedKundliIds(List<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kFollowed, ids);
+  }
+
+  /// Event-alert switches (Settings ▸ Notifications). Everything
+  /// defaults ON, which costs nothing until the user follows a kundli:
+  /// the follow-set is the real gate, so the categories are there to
+  /// narrow alerts the user has already asked for, not to enable them.
+  Future<AlertSettings> alertSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    return AlertSettings(
+      enabled: prefs.getBool(_kAlertsEnabled) ?? true,
+      dasha: prefs.getBool(_kAlertsDasha) ?? true,
+      transits: prefs.getBool(_kAlertsTransits) ?? true,
+      sadeSati: prefs.getBool(_kAlertsSadeSati) ?? true,
+    );
+  }
+
+  Future<void> setAlertSettings(AlertSettings s) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kAlertsEnabled, s.enabled);
+    await prefs.setBool(_kAlertsDasha, s.dasha);
+    await prefs.setBool(_kAlertsTransits, s.transits);
+    await prefs.setBool(_kAlertsSadeSati, s.sadeSati);
+  }
+
+  /// What the last scheduling pass handed to the OS — the Scheduled
+  /// alerts screen's data source. Written on EVERY pass including an
+  /// empty one, so the screen can distinguish "nothing is scheduled" from
+  /// "nothing has run yet"; a corrupt or half-written value reads back as
+  /// an empty summary rather than throwing on a diagnostics screen.
+  Future<AlertScheduleSummary> alertScheduleSummary() async {
+    final prefs = await SharedPreferences.getInstance();
+    final atMs = prefs.getInt(_kAlertsSummaryAt);
+    if (atMs == null) return const AlertScheduleSummary();
+    final raw = prefs.getString(_kAlertsSummary);
+    var alerts = const <ScheduledAlertRecord>[];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) {
+          alerts = [
+            for (final entry in decoded)
+              if (ScheduledAlertRecord.fromJson(entry) case final r?) r,
+          ];
+        }
+      } catch (_) {
+        // Keep the timestamp: "a pass ran, its list is unreadable" is
+        // still more useful than pretending none ever ran.
+      }
+    }
+    return AlertScheduleSummary(
+      computedAt: DateTime.fromMillisecondsSinceEpoch(atMs),
+      alerts: alerts,
+    );
+  }
+
+  Future<void> setAlertScheduleSummary(AlertScheduleSummary summary) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _kAlertsSummary,
+      jsonEncode([for (final a in summary.alerts) a.toJson()]),
+    );
+    await prefs.setInt(
+      _kAlertsSummaryAt,
+      (summary.computedAt ?? DateTime.now()).millisecondsSinceEpoch,
+    );
+  }
+
+  /// Alerts whose fire time has passed, newest first — the "Past" list.
+  ///
+  /// A rolling record kept BY THE APP, not read back from the OS, which
+  /// offers no delivery receipt of any kind. That is why nothing in this
+  /// feature says "delivered": all the app can honestly claim is that it
+  /// asked for these and their moment has been and gone.
+  Future<List<ScheduledAlertRecord>> alertHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kAlertsHistory);
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return [
+        for (final entry in decoded)
+          if (ScheduledAlertRecord.fromJson(entry) case final r?) r,
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> setAlertHistory(List<ScheduledAlertRecord> history) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _kAlertsHistory,
+      jsonEncode([for (final a in history) a.toJson()]),
+    );
+  }
+
+  /// Server notification ids the user has swiped away.
+  ///
+  /// DEVICE-LOCAL BECAUSE THE SERVER OFFERS NO ALTERNATIVE: public
+  /// .notifications carries select and update policies only (0001_init),
+  /// so a client DELETE is refused by RLS and the repository exposes no
+  /// delete at all. Dismissing therefore hides the row here and marks it
+  /// read upstream — which is the honest half of the job we can actually
+  /// do, and it at least stops a dismissed item relighting the bell.
+  /// The trade-off is that a dismissal does not follow the user to
+  /// another device; same as pins and the alert follow-set.
+  Future<List<String>> dismissedNotificationIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kDismissedNotifs) ?? const [];
+  }
+
+  Future<void> setDismissedNotificationIds(List<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    // Bounded: the list only ever grows, and the server itself caps the
+    // feed at 100 rows, so anything beyond a few hundred is dead weight
+    // referring to notifications that can no longer be returned.
+    await prefs.setStringList(
+        _kDismissedNotifs, ids.take(500).toList(growable: false));
   }
 
   /// Opened-kundli ids, most recent first.

@@ -20,9 +20,17 @@ class DateFieldsRow extends StatefulWidget {
     required this.onChanged,
     this.firstYear = 1800,
     this.lastYear = 2100,
+    this.errorText,
   });
 
   final DateTime? initial;
+
+  /// Validation message shown beneath the row, styled like an
+  /// [InputDecoration.errorText]. One message for the three fields
+  /// because they are one input: "the date is missing" is the fact, and
+  /// hanging it under whichever box happens to be blank would be both
+  /// noisier and less true.
+  final String? errorText;
 
   /// Fires with the parsed date, or null while the fields are
   /// incomplete or form an impossible date (Feb 30).
@@ -80,7 +88,7 @@ class _DateFieldsRowState extends State<DateFieldsRow> {
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).toString();
     final monthFmt = DateFormat.MMMM(locale);
-    return Row(
+    final row = Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
@@ -142,6 +150,25 @@ class _DateFieldsRowState extends State<DateFieldsRow> {
             );
             if (d != null) _setDate(d);
           },
+        ),
+      ],
+    );
+
+    final error = widget.errorText;
+    if (error == null) return row;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        row,
+        Padding(
+          padding: const EdgeInsets.only(left: 12, top: 6),
+          child: Text(
+            error,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: Theme.of(context).colorScheme.error),
+          ),
         ),
       ],
     );
