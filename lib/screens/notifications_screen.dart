@@ -23,17 +23,19 @@
 /// sync, Settings ▸ Kundli data.
 ///
 /// HONESTY. Past alerts are not "delivered" alerts and nothing here says
-/// they are: neither platform gives an app a delivery receipt. We know
-/// what we asked the OS for and that the moment has passed; if the user
-/// has notifications blocked, every entry is one that never appeared and
-/// the app cannot tell.
+/// they are: neither platform gives an app a delivery receipt. What the
+/// OS WILL answer is whether it would show them at all — so when
+/// notifications are blocked the screen says so plainly, with a way to
+/// fix it, instead of listing rows nobody ever saw.
 library;
 
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/date_format.dart';
 import '../core/notification_routes.dart';
@@ -94,7 +96,8 @@ class NotificationsScreen extends ConsumerStatefulWidget {
       _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
+    with WidgetsBindingObserver {
   /// Rows swiped away in this build, by dismiss key.
   ///
   /// Dismissible demands the widget leave the tree in the SAME frame the
@@ -104,6 +107,35 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   /// the key goes in here immediately, the durable removal follows.
   final _removed = <String>{};
 
+  /// Set once the OS has refused the permission and there is nothing
+  /// left to ask it — on Android that is a dead end for the app, so the
+  /// banner spells out the settings path instead.
+  bool _showSettingsPath = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// The permission is edited OUTSIDE the app — in the OS Settings the
+  /// blocked banner itself sends people to — so the one moment the
+  /// cached answer is suspect is exactly when the app comes back to the
+  /// foreground. Without this, the banner would linger (or stay absent)
+  /// until a manual pull-to-refresh.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(notificationsEnabledProvider);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -111,6 +143,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final server = ref.watch(notificationsProvider).valueOrNull ?? const [];
     final dismissed = ref.watch(dismissedNotificationsProvider);
     final past = _mergePast(l10n, history, server, dismissed);
+    // Optimistic while the platform is still answering: a warning shown
+    // to someone whose alerts work is worse than a beat of no warning.
+    final enabled = ref.watch(notificationsEnabledProvider).valueOrNull ?? true;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notificationsTitle)),
@@ -119,16 +154,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           ref.invalidate(notificationsProvider);
           ref.invalidate(alertHistoryProvider);
           ref.invalidate(alertScheduleSummaryProvider);
+          ref.invalidate(notificationsEnabledProvider);
         },
         child: past.isEmpty
-            ? _empty()
+            ? _empty(enabled)
             : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 children: [
-                  Text(
-                    l10n.kaPastNote,
-                    style: TextStyle(fontSize: 12, color: KJColors.inkSoft),
-                  ),
+                  if (!enabled)
+                    _blockedBanner()
+                  else
+                    Text(
+                      l10n.kaPastNote,
+                      style: TextStyle(fontSize: 12, color: KJColors.inkSoft),
+                    ),
                   const SizedBox(height: 10),
                   for (final item in past) _pastRow(item),
                 ],
@@ -177,14 +216,82 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   /// One line, whatever the reason there is nothing to show. It does not
   /// mention accounts, because nothing on this screen needs one.
-  Widget _empty() => ListView(
+  ///
+  /// The blocked banner belongs here too, and arguably most of all:
+  /// notifications off is a very good reason for an empty history, and
+  /// this is the person who most needs telling.
+  Widget _empty(bool enabled) => ListView(
         children: [
+          if (!enabled)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: _blockedBanner(),
+            ),
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.6,
             child: EmptyState(message: context.l10n.naEmpty),
           ),
         ],
       );
+
+  // --- Blocked ---------------------------------------------------------
+
+  /// The one thing about delivery the OS does tell us. Without this,
+  /// every row above is an alert nobody saw and the screen looks fine.
+  Widget _blockedBanner() {
+    final l10n = context.l10n;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: KJColors.maroon.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: KJColors.maroon.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.naNotificationsOff,
+            style: TextStyle(fontSize: 12.5, color: KJColors.maroon),
+          ),
+          const SizedBox(height: 8),
+          if (_showSettingsPath)
+            // No button: the OS will not ask again, so one would be a
+            // control that does nothing.
+            Text(
+              l10n.naNotificationsOffPath,
+              style: TextStyle(fontSize: 12.5, color: KJColors.maroon),
+            )
+          else
+            FilledButton(
+              onPressed: _enableNotifications,
+              style: FilledButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 8)),
+              child: Text(l10n.naEnableNotifications),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _enableNotifications() async {
+    final granted =
+        await ref.read(kundliAlertServiceProvider).requestPermissions();
+    if (!mounted) return;
+    if (granted) {
+      ref.invalidate(notificationsEnabledProvider);
+      return;
+    }
+    // Refused. iOS hands the user straight to our own settings pane;
+    // Android has no equivalent without another dependency, so the path
+    // is written out instead.
+    if (Platform.isIOS) {
+      await launchUrl(Uri.parse('app-settings:'));
+    } else {
+      setState(() => _showSettingsPath = true);
+    }
+  }
 
   // --- Past ----------------------------------------------------------
 

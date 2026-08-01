@@ -549,6 +549,13 @@ final alertPendingCountProvider = FutureProvider.autoDispose<int?>(
   (ref) => ref.watch(kundliAlertServiceProvider).pendingCount(),
 );
 
+/// Whether the OS will show our alerts at all. autoDispose again, and
+/// here it matters most: this answer is changed OUTSIDE the app, in
+/// system settings, so a cached "off" would outlive the fix.
+final notificationsEnabledProvider = FutureProvider.autoDispose<bool>(
+  (ref) => ref.watch(kundliAlertServiceProvider).notificationsEnabled(),
+);
+
 /// Opened-kundli ids, most recent first. Drives both the recents strip
 /// and the default sort.
 class RecentKundlisNotifier extends StateNotifier<List<String>> {

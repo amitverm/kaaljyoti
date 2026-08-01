@@ -97,6 +97,12 @@ class FakeScheduler implements AlertScheduler {
     return true;
   }
 
+  /// What the "OS" says about the app's notification switch.
+  bool enabled = true;
+
+  @override
+  Future<bool> notificationsEnabled() async => enabled;
+
   @override
   Future<void> cancelAll() async {
     cancelAllCalls++;

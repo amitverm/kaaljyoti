@@ -385,8 +385,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kaPast => 'Past';
 
   @override
-  String get kaPastNote =>
-      'These alerts were scheduled to fire at the times shown. The system shows them unless notifications are switched off for Kaal Jyoti — the app is not told either way.';
+  String get kaPastNote => 'Newest first, with the time each alert was due.';
+
+  @override
+  String get naNotificationsOff =>
+      'Notifications are turned off for Kaal Jyoti, so alerts won\'t appear.';
+
+  @override
+  String get naEnableNotifications => 'Enable notifications';
+
+  @override
+  String get naNotificationsOffPath =>
+      'Turn them on in your phone\'s Settings → Apps → Kaal Jyoti → Notifications.';
 
   @override
   String get ntRequestMatchNew => 'New matches for your research request';

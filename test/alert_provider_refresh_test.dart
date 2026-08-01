@@ -50,6 +50,8 @@ class _FakeScheduler implements AlertScheduler {
   Future<String?> launchPayload() async => null;
   @override
   Future<bool> requestPermissions() async => true;
+  @override
+  Future<bool> notificationsEnabled() async => true;
 }
 
 Kundli _kundli(String id, String name) => Kundli(

@@ -30,6 +30,8 @@ class _StubScheduler implements AlertScheduler {
   @override
   Future<bool> requestPermissions() async => true;
   @override
+  Future<bool> notificationsEnabled() async => true;
+  @override
   Future<void> cancelAll() async {}
   @override
   Future<void> schedule(PendingAlert alert) async {}

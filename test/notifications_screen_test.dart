@@ -21,10 +21,20 @@ import 'package:kaaljyoti/services/kundli_alert_service.dart';
 import 'package:kaaljyoti/state/providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Minimal scheduler: the screen only ever asks it for a pending count.
+/// Minimal scheduler: the screen asks it for a pending count and for
+/// whether the OS would show anything at all.
 class _StubScheduler implements AlertScheduler {
-  _StubScheduler([this.pending]);
+  _StubScheduler({this.pending, this.enabled = true, this.grants = true});
   final int? pending;
+
+  /// What the "OS" reports about the app's notification switch. A
+  /// granted request flips it, exactly as the real one would.
+  bool enabled;
+
+  /// Whether a permission request is answered yes.
+  final bool grants;
+
+  int permissionRequests = 0;
 
   @override
   Future<int?> pendingCount() async => pending;
@@ -33,7 +43,14 @@ class _StubScheduler implements AlertScheduler {
   @override
   Future<String?> launchPayload() async => null;
   @override
-  Future<bool> requestPermissions() async => true;
+  Future<bool> requestPermissions() async {
+    permissionRequests++;
+    if (grants) enabled = true;
+    return grants;
+  }
+
+  @override
+  Future<bool> notificationsEnabled() async => enabled;
   @override
   Future<void> cancelAll() async {}
   @override
@@ -68,6 +85,8 @@ Future<AppLocalizations> _pump(
   List<AppNotification> server = const [],
   DateTime? computedAt,
   int? pending,
+  bool notificationsEnabled = true,
+  bool grantsPermission = true,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final repo = SettingsRepository();
@@ -86,7 +105,10 @@ Future<AppLocalizations> _pump(
       notificationsProvider.overrideWith((ref) async => server),
       kundliAlertServiceProvider.overrideWithValue(
         KundliAlertService(
-          scheduler: _StubScheduler(pending),
+          scheduler: _StubScheduler(
+              pending: pending,
+              enabled: notificationsEnabled,
+              grants: grantsPermission),
           events: ({
             required kundli,
             required defaultAyanamsaId,
@@ -174,6 +196,81 @@ void main() {
         scheduled: [_rec(older, 'Asha', 'aged out', id: 5)],
       );
       expect(find.text('aged out'), findsOneWidget);
+    });
+  });
+
+  group('notifications switched off', () {
+    testWidgets('warns above the Past list instead of the preface',
+        (tester) async {
+      final l10n = await _pump(
+        tester,
+        computedAt: DateTime(2026, 8, 1, 7),
+        history: [_rec(recent, 'Alert', 'body', id: 1)],
+        notificationsEnabled: false,
+      );
+      expect(find.text(l10n.naNotificationsOff), findsOneWidget);
+      expect(find.text(l10n.naEnableNotifications), findsOneWidget);
+      expect(find.text(l10n.kaPastNote), findsNothing);
+      // The history is still there — the warning explains it, not hides it.
+      expect(find.text('Alert'), findsOneWidget);
+    });
+
+    testWidgets('warns on an empty history too', (tester) async {
+      // Notifications off is an excellent reason for an empty list, and
+      // this is exactly the person who needs telling.
+      final l10n = await _pump(tester, notificationsEnabled: false);
+      expect(find.text(l10n.naNotificationsOff), findsOneWidget);
+      expect(find.text(l10n.naEnableNotifications), findsOneWidget);
+      expect(find.text(l10n.naEmpty), findsOneWidget);
+    });
+
+    testWidgets('Enable asks the OS and the banner goes once granted',
+        (tester) async {
+      final l10n = await _pump(
+        tester,
+        computedAt: DateTime(2026, 8, 1, 7),
+        history: [_rec(recent, 'Alert', 'body', id: 1)],
+        notificationsEnabled: false,
+      );
+      await tester.tap(find.text(l10n.naEnableNotifications));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.naNotificationsOff), findsNothing);
+      expect(find.text(l10n.naEnableNotifications), findsNothing);
+      expect(find.text(l10n.kaPastNote), findsOneWidget);
+    });
+
+    testWidgets('a refusal spells out the settings path', (tester) async {
+      // Android cannot be handed the notification settings pane, so the
+      // banner has to say where they are.
+      final l10n = await _pump(
+        tester,
+        computedAt: DateTime(2026, 8, 1, 7),
+        history: [_rec(recent, 'Alert', 'body', id: 1)],
+        notificationsEnabled: false,
+        grantsPermission: false,
+      );
+      expect(find.text(l10n.naNotificationsOffPath), findsNothing);
+
+      await tester.tap(find.text(l10n.naEnableNotifications));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.naNotificationsOffPath), findsOneWidget);
+      expect(find.text(l10n.naNotificationsOff), findsOneWidget);
+      // The button is gone: the OS will not ask again.
+      expect(find.text(l10n.naEnableNotifications), findsNothing);
+    });
+
+    testWidgets('enabled, the preface is one plain line and no banner',
+        (tester) async {
+      final l10n = await _pump(
+        tester,
+        computedAt: DateTime(2026, 8, 1, 7),
+        history: [_rec(recent, 'Alert', 'body', id: 1)],
+      );
+      expect(find.text(l10n.kaPastNote), findsOneWidget);
+      expect(find.text(l10n.naNotificationsOff), findsNothing);
+      expect(find.text(l10n.naEnableNotifications), findsNothing);
     });
   });
 

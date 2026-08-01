@@ -137,6 +137,11 @@ abstract interface class AlertScheduler {
   /// what would be notified, is the reliable way to get a "no".
   Future<bool> requestPermissions();
 
+  /// Whether the OS will actually show what we schedule. Unlike
+  /// delivery, this the platform WILL tell us — so the Past list can
+  /// stop guessing and say plainly that alerts are switched off.
+  Future<bool> notificationsEnabled();
+
   Future<void> cancelAll();
 
   Future<void> schedule(PendingAlert alert);
@@ -232,6 +237,21 @@ class LocalAlertScheduler implements AlertScheduler {
           false;
     }
     return false;
+  }
+
+  @override
+  Future<bool> notificationsEnabled() async {
+    final android = _android;
+    if (android != null) {
+      return await android.areNotificationsEnabled() ?? true;
+    }
+    final ios = _ios;
+    if (ios != null) {
+      return (await ios.checkPermissions())?.isEnabled ?? true;
+    }
+    // Neither platform object resolves (tests, desktop). Default TRUE:
+    // accusing a working OS of blocking alerts is the worse error.
+    return true;
   }
 
   @override
@@ -386,6 +406,16 @@ class KundliAlertService {
   void _open(String kundliId) => onOpenRoute?.call('/kundli/$kundliId');
 
   Future<bool> requestPermissions() => scheduler.requestPermissions();
+
+  /// Whether alerts can reach the user at all. Optimistic on failure for
+  /// the same reason as [LocalAlertScheduler.notificationsEnabled].
+  Future<bool> notificationsEnabled() async {
+    try {
+      return await scheduler.notificationsEnabled();
+    } catch (_) {
+      return true;
+    }
+  }
 
   /// Ask for the notification permission at the moment the user first
   /// asks for a notification — following a kundli, or switching the

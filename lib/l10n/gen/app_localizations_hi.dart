@@ -383,8 +383,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get kaPast => 'बीती हुई';
 
   @override
-  String get kaPastNote =>
-      'ये सूचनाएँ दिखाए गए समय पर आने के लिए निर्धारित थीं। जब तक काल ज्योति की सूचनाएँ बंद न हों, सिस्टम इन्हें दिखाता है — ऐप को इसकी जानकारी नहीं मिलती।';
+  String get kaPastNote => 'नवीनतम पहले, हर सूचना के नियत समय के साथ।';
+
+  @override
+  String get naNotificationsOff =>
+      'Kaal Jyoti के लिए सूचनाएँ बंद हैं, इसलिए अलर्ट नहीं दिखेंगे।';
+
+  @override
+  String get naEnableNotifications => 'सूचनाएँ चालू करें';
+
+  @override
+  String get naNotificationsOffPath =>
+      'इन्हें अपने फ़ोन की Settings → Apps → Kaal Jyoti → Notifications में चालू करें।';
 
   @override
   String get ntRequestMatchNew => 'आपके शोध अनुरोध के लिए नए मिलान';

@@ -752,11 +752,29 @@ abstract class AppLocalizations {
   /// **'Past'**
   String get kaPast;
 
-  /// Honesty footnote on the Past list. States what the app asked for and what it cannot know. Must not claim delivery.
+  /// One-line preface to the Past list. Must not claim delivery — neither platform gives the app a receipt — and must not describe app internals.
   ///
   /// In en, this message translates to:
-  /// **'These alerts were scheduled to fire at the times shown. The system shows them unless notifications are switched off for Kaal Jyoti — the app is not told either way.'**
+  /// **'Newest first, with the time each alert was due.'**
   String get kaPastNote;
+
+  /// Warning banner on the Notifications screen when the OS reports notifications are blocked for the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are turned off for Kaal Jyoti, so alerts won\'t appear.'**
+  String get naNotificationsOff;
+
+  /// Button in the blocked-notifications banner. Asks the OS for permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notifications'**
+  String get naEnableNotifications;
+
+  /// Shown after the permission request is refused on Android, where the app cannot open notification settings directly.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn them on in your phone\'s Settings → Apps → Kaal Jyoti → Notifications.'**
+  String get naNotificationsOffPath;
 
   /// No description provided for @ntRequestMatchNew.
   ///
