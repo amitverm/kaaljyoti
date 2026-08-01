@@ -348,6 +348,78 @@ class KundliEvent {
       );
 }
 
+/// One dated journal entry on a kundli — the practitioner's own running
+/// record (consultation notes, event correlations, research remarks).
+///
+/// Distinct from [KundliEvent]: an event is a fact about the native's life
+/// on a curated timeline; a journal entry is the astrologer's free-text
+/// observation, stamped with the astro context of the date it refers to
+/// ([contextJson], written once at save time). That frozen context is what
+/// makes an old entry re-readable years later without recomputing — and
+/// keeping it as opaque JSON here means [JournalEntry] stays a plain data
+/// model with no dependency on the astro layer.
+class JournalEntry {
+  const JournalEntry({
+    required this.id,
+    required this.kundliId,
+    required this.at, // the date the entry is ABOUT (backdating allowed)
+    required this.text,
+    this.contextJson, // encoded JournalContext; null when capture failed
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  final String id;
+  final String kundliId;
+  final DateTime at;
+  final String text;
+  final String? contextJson;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  JournalEntry copyWith({
+    DateTime? at,
+    String? text,
+    String? contextJson,
+    bool clearContextJson = false,
+    DateTime? updatedAt,
+  }) =>
+      JournalEntry(
+        id: id,
+        kundliId: kundliId,
+        at: at ?? this.at,
+        text: text ?? this.text,
+        contextJson:
+            clearContextJson ? null : (contextJson ?? this.contextJson),
+        createdAt: createdAt,
+        updatedAt: updatedAt ?? DateTime.now().toUtc(),
+      );
+
+  Map<String, Object?> toRow() => {
+        'id': id,
+        'kundli_id': kundliId,
+        'at': at.millisecondsSinceEpoch,
+        'text': text,
+        'context_json': contextJson,
+        'created_at': createdAt.millisecondsSinceEpoch,
+        'updated_at': updatedAt.millisecondsSinceEpoch,
+      };
+
+  static JournalEntry fromRow(Map<String, Object?> r) => JournalEntry(
+        id: r['id'] as String,
+        kundliId: r['kundli_id'] as String,
+        at: DateTime.fromMillisecondsSinceEpoch((r['at'] as int?) ?? 0),
+        text: (r['text'] as String?) ?? '',
+        contextJson: r['context_json'] as String?,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(
+            (r['created_at'] as int?) ?? 0,
+            isUtc: true),
+        updatedAt: DateTime.fromMillisecondsSinceEpoch(
+            (r['updated_at'] as int?) ?? 0,
+            isUtc: true),
+      );
+}
+
 /// A named GLOBAL dashboard layout ("Overview", "Today", …). Layouts
 /// are lenses applied to whichever kundli is open — arrange once,
 /// applies to every chart (the professional's 50 clients share one

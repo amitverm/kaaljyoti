@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import '../pdf/pw.dart' as pw;
 
 import '../core/astro/dasha/dasha.dart';
+import '../core/astro/event_feed.dart';
 import '../core/astro/models.dart';
 import '../core/astro/transit_scan.dart';
 import '../core/date_format.dart';
@@ -26,30 +27,6 @@ import 'common.dart';
 String _upcomingEventsTitle(AppLocalizations l10n) =>
     l10n.moduleUpcomingEventsTitle;
 
-enum FeedSource { dasha, transit, sadeSati }
-
-class FeedEvent {
-  const FeedEvent({
-    required this.time,
-    required this.label,
-    required this.source,
-    this.planet,
-  });
-
-  final DateTime time;
-  final String label;
-  final FeedSource source;
-  final Planet? planet; // colors + filters the label, where known
-
-  String sourceLabel(AppLocalizations l10n) => switch (source) {
-        FeedSource.dasha => l10n.ueSourceDasha,
-        FeedSource.transit => l10n.ueSourceTransit,
-        FeedSource.sadeSati => l10n.ueSourceSadeSati,
-      };
-}
-
-const _levelTag = {1: 'MD', 2: 'AD', 3: 'PD', 4: 'SD', 5: 'PrD'};
-
 /// The 5 planets worth a dedicated filter chip — the same "watch"
 /// list the old Gochar module used (Rahu/Ketu/Saturn/Jupiter/Mars are
 /// the slow movers whose ingresses and natal hits matter most for
@@ -61,83 +38,6 @@ const _kFilterPlanets = [
   Planet.ketu,
   Planet.mars,
 ];
-
-/// Walks the WHOLE dasha tree (not just the currently-active chain),
-/// recursing only into branches that overlap [now, to], and emits an
-/// event for every period at level <= [maxLevel] whose `end` falls
-/// inside the window — this is the fix for the original bug, which
-/// only ever looked at `chainAt(now)` (one period per level: whatever
-/// is active RIGHT now) and so silently dropped every subsequent
-/// change within a longer window (e.g. a 24-month window spanning two
-/// antardasha changes only ever showed the first).
-void _walkDashaLevel(
-  AppLocalizations l10n,
-  List<DashaPeriod> siblings,
-  DateTime now,
-  DateTime to,
-  int maxLevel,
-  List<FeedEvent> out,
-) {
-  for (var i = 0; i < siblings.length; i++) {
-    final p = siblings[i];
-    final overlapsWindow = p.start.isBefore(to) && p.end.isAfter(now);
-    if (!overlapsWindow) continue;
-    if (p.level <= maxLevel && p.end.isAfter(now) && !p.end.isAfter(to)) {
-      final next = i + 1 < siblings.length ? siblings[i + 1] : null;
-      final tag = _levelTag[p.level] ?? p.levelName;
-      out.add(FeedEvent(
-        time: p.end,
-        label: next == null
-            ? l10n.ueDashaEnds(tag, dashaLordLabel(l10n, p))
-            : l10n.ueDashaEndsBegins(
-                tag, dashaLordLabel(l10n, p), dashaLordLabel(l10n, next)),
-        source: FeedSource.dasha,
-        planet: p.planet,
-      ));
-    }
-    if (p.level < maxLevel) {
-      _walkDashaLevel(l10n, p.children, now, to, maxLevel, out);
-    }
-  }
-}
-
-List<FeedEvent> _dashaChangeEvents(
-  AppLocalizations l10n,
-  ModuleContext ctx,
-  DashaSystem system,
-  DateTime now,
-  DateTime to, {
-  required bool fineLevels,
-}) {
-  final result = ctx.dasha(system);
-  final maxLevel = fineLevels ? 5 : 3;
-  final out = <FeedEvent>[];
-  _walkDashaLevel(l10n, result.periods, now, to, maxLevel, out);
-  return out;
-}
-
-/// Sade Sati phase starts/ends clipped to [now, to] (the full-lifetime
-/// series is shared via [sadeSatiPhasesProvider] — this just filters).
-List<FeedEvent> _sadeSatiFeedEvents(AppLocalizations l10n,
-    List<SadeSatiPhase> phases, DateTime now, DateTime to) {
-  final out = <FeedEvent>[];
-  bool within(DateTime t) => !t.isBefore(now) && !t.isAfter(to);
-  for (final ph in phases) {
-    if (within(ph.start)) {
-      out.add(FeedEvent(
-          time: ph.start,
-          label: l10n.ueSadeSatiBegins(ph.kind.label(l10n)),
-          source: FeedSource.sadeSati));
-    }
-    if (within(ph.end)) {
-      out.add(FeedEvent(
-          time: ph.end,
-          label: l10n.ueSadeSatiEnds(ph.kind.label(l10n)),
-          source: FeedSource.sadeSati));
-    }
-  }
-  return out;
-}
 
 // Full-date formatters follow the user's app-wide date-format choice; the
 // month-only formatter stays fixed.
@@ -228,7 +128,7 @@ class UpcomingEventsModule extends AstroModule {
     final to = DateTime.utc(now.year, now.month + months, now.day);
 
     final dashaEvents =
-        _dashaChangeEvents(l10n, ctx, system, now, to, fineLevels: fine);
+        dashaChangeEvents(l10n, ctx.dasha(system), now, to, fineLevels: fine);
     final s = ctx.snapshot;
     final transitEvents = scanGochar(
       natalPoints: natalPointsFor(s),
@@ -242,15 +142,10 @@ class UpcomingEventsModule extends AstroModule {
       to: s.birth.dateTimeUtc.add(const Duration(days: 36525)),
       ayanamsaId: s.ayanamsaId,
     );
-    final sadeSatiEvents = _sadeSatiFeedEvents(l10n, phases, now, to);
+    final sadeSatiEvents = sadeSatiFeedEvents(l10n, phases, now, to);
     final all = [
       ...dashaEvents,
-      for (final e in transitEvents)
-        FeedEvent(
-            time: e.time,
-            label: transitEventLabel(l10n, e),
-            source: FeedSource.transit,
-            planet: e.planet),
+      ...transitFeedEvents(l10n, transitEvents),
       ...sadeSatiEvents,
     ]..sort((a, b) => a.time.compareTo(b.time));
 
@@ -323,18 +218,12 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
 
     final now = DateTime.now().toUtc();
     final to = DateTime.utc(now.year, now.month + widget.months, now.day);
-    final dashaEvents = _dashaChangeEvents(l10n, ctx, widget.system, now, to,
+    final dashaEvents = dashaChangeEvents(
+        l10n, ctx.dasha(widget.system), now, to,
         fineLevels: widget.fineLevels);
     final sadeSatiEvents =
-        _sadeSatiFeedEvents(l10n, sadeSatiAsync.value!, now, to);
-    final transitEvents = [
-      for (final e in gocharAsync.value!)
-        FeedEvent(
-            time: e.time,
-            label: transitEventLabel(l10n, e),
-            source: FeedSource.transit,
-            planet: e.planet),
-    ];
+        sadeSatiFeedEvents(l10n, sadeSatiAsync.value!, now, to);
+    final transitEvents = transitFeedEvents(l10n, gocharAsync.value!);
     var all = [...dashaEvents, ...transitEvents, ...sadeSatiEvents]
       ..sort((a, b) => a.time.compareTo(b.time));
 

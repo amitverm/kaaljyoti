@@ -183,7 +183,7 @@ void main() {
 
     final rows = await db.query('kundlis');
     expect(rows, hasLength(1), reason: 'the kundli must survive');
-    expect(await db.getVersion(), 9);
+    expect(await db.getVersion(), 10);
     await appDb.close();
   });
 
@@ -205,7 +205,7 @@ void main() {
 
     final appDb = newDb();
     final db = await appDb.database;
-    expect(await db.getVersion(), 9);
+    expect(await db.getVersion(), 10);
     expect(await db.query('kundlis'), hasLength(1));
     await appDb.close();
   });
@@ -232,12 +232,16 @@ void main() {
     final appDb = newDb();
     final db = await appDb.database;
 
-    expect(await db.getVersion(), 9);
+    expect(await db.getVersion(), 10);
     final columns = await db.rawQuery('PRAGMA table_info(kundlis)');
     final names = columns.map((c) => c['name']).toSet();
     expect(names, containsAll(['labels', 'note', 'is_ephemeral']));
     // Every table the later versions introduce is present exactly once.
-    for (final table in ['export_template', 'kundli_events']) {
+    for (final table in [
+      'export_template',
+      'kundli_events',
+      'journal_entries'
+    ]) {
       final found = await db.rawQuery(
           "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
           [table]);
@@ -261,8 +265,81 @@ void main() {
 
     final appDb = newDb();
     final db = await appDb.database;
-    expect(await db.getVersion(), 9);
+    expect(await db.getVersion(), 10);
     expect(await db.query('kundlis'), hasLength(1));
+    await appDb.close();
+  });
+
+  test('v9 → v10 adds journal_entries with its index', () async {
+    await seed(9, extra: [
+      'ALTER TABLE kundlis ADD COLUMN labels TEXT',
+      '''CREATE TABLE export_template (
+           id INTEGER PRIMARY KEY CHECK (id = 1),
+           blocks TEXT NOT NULL,
+           paper TEXT NOT NULL DEFAULT 'a4',
+           cover_page INTEGER NOT NULL DEFAULT 1,
+           branding TEXT NOT NULL DEFAULT ''
+         )''',
+    ]);
+
+    final appDb = newDb();
+    final db = await appDb.database;
+    expect(await db.getVersion(), 10);
+
+    final columns = await db.rawQuery('PRAGMA table_info(journal_entries)');
+    expect(
+      columns.map((c) => c['name']),
+      containsAll(
+          ['id', 'kundli_id', 'at', 'text', 'context_json', 'updated_at']),
+    );
+    expect(
+      await db.rawQuery("SELECT name FROM sqlite_master WHERE type='index' "
+          "AND name='idx_journal_entries_kundli'"),
+      hasLength(1),
+    );
+
+    // The FK must actually cascade — foreign_keys is ON via onConfigure,
+    // and a journal that outlives its kundli would resurface under a
+    // recycled id.
+    await db.insert('journal_entries', {
+      'id': 'j1',
+      'kundli_id': 'existing',
+      'at': 1700000000000,
+      'text': 'first consultation',
+      'created_at': 0,
+      'updated_at': 0,
+    });
+    await db.delete('kundlis', where: 'id = ?', whereArgs: ['existing']);
+    expect(await db.query('journal_entries'), isEmpty);
+    await appDb.close();
+  });
+
+  test('a half-applied v10 upgrade recovers instead of bricking', () async {
+    // journal_entries created by an upgrade that then aborted, so
+    // user_version is still 9. Re-running must not trip over the table
+    // (or the index) that is already there.
+    await seed(9, extra: [
+      'ALTER TABLE kundlis ADD COLUMN labels TEXT',
+      '''CREATE TABLE journal_entries (
+           id TEXT PRIMARY KEY,
+           kundli_id TEXT NOT NULL REFERENCES kundlis(id) ON DELETE CASCADE,
+           at INTEGER NOT NULL,
+           text TEXT NOT NULL,
+           context_json TEXT,
+           created_at INTEGER NOT NULL,
+           updated_at INTEGER NOT NULL
+         )''',
+      'CREATE INDEX idx_journal_entries_kundli ON journal_entries(kundli_id)',
+      '''INSERT INTO journal_entries (id, kundli_id, at, text, created_at,
+           updated_at)
+         VALUES ('j1', 'existing', 1700000000000, 'kept', 0, 0)''',
+    ]);
+
+    final appDb = newDb();
+    final db = await appDb.database;
+    expect(await db.getVersion(), 10);
+    expect(await db.query('journal_entries'), hasLength(1),
+        reason: 'recovery must not wipe entries already written');
     await appDb.close();
   });
 
@@ -274,7 +351,7 @@ void main() {
 
     final second = newDb();
     final db = await second.database;
-    expect(await db.getVersion(), 9);
+    expect(await db.getVersion(), 10);
     expect(await db.query('kundlis'), hasLength(1));
     await second.close();
   });

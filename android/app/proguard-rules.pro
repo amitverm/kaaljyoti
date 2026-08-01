@@ -48,6 +48,22 @@
 # ---- geolocator / geocoding (Baseflow) ----
 -keep class com.baseflow.** { *; }
 
+# ---- flutter_local_notifications (kundli event alerts) ----
+# The plugin serializes scheduled notifications to disk with GSON and
+# reads them back on reboot; R8 renaming those model classes or stripping
+# their generic signatures makes every pending alert vanish after a
+# restart. Rules mirror GSON's own recommended set.
+-keep class com.dexterous.flutterlocalnotifications.** { *; }
+-keep class com.google.gson.** { *; }
+-keep class * extends com.google.gson.TypeAdapter
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+-keepclassmembers,allowobfuscation class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+-dontwarn com.google.gson.**
+
 # ---- Flutter embedding / plugins (safety) ----
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }

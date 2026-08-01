@@ -3,6 +3,21 @@
          requested only as the OS pairs them. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!-- Kundli event alerts (flutter_local_notifications). Local only —
+         nothing here talks to a server.
+         POST_NOTIFICATIONS: Android 13+ runtime permission, requested
+           the first time the user follows a kundli, never at launch.
+         RECEIVE_BOOT_COMPLETED: lets the plugin re-arm pending alarms
+           after a reboot; without it every scheduled alert is silently
+           lost when the phone restarts.
+         VIBRATE: default notification behaviour.
+         NOTE the two exact-alarm permissions are deliberately ABSENT:
+         alerts are scheduled inexact (see kundli_alert_service.dart), so
+         SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM — and the store review
+         they attract — are not needed for a month-out dasha change. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
     <!-- Backup rules keep device-bound secrets (SQLCipher DB + Keystore-
          wrapped key material) out of Auto Backup — restoring them to a new
          device bricked the app (KAALJYOTI-PROD-E). -->
@@ -57,6 +72,23 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_transit_info" />
+        </receiver>
+        <!-- flutter_local_notifications: the receiver that actually
+             posts a scheduled kundli alert when its alarm fires, and
+             the boot receiver that re-arms every pending alarm after a
+             restart or an app update (Android drops alarms on both). -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
         </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

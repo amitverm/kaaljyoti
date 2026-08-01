@@ -58,6 +58,13 @@ dependencies:
   sentry_flutter: ^8.14.2
   firebase_core: ^4.11.0
   firebase_messaging: ^16.4.1
+
+  # On-device event alerts for followed kundlis. Purely LOCAL: every
+  # notification is computed and scheduled here, nothing is sent to or
+  # from a server (that's firebase_messaging's job, above, and it is
+  # build-time gated). Pinned to 18.x — 19+ requires timezone ^0.10,
+  # and timezone is shared with place_lookup_service.
+  flutter_local_notifications: ^18.0.1
   package_info_plus: ^9.0.1
   lat_lng_to_timezone: ^0.2.0
   share_plus: ^12.0.2

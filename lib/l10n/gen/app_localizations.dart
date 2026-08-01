@@ -716,6 +716,42 @@ abstract class AppLocalizations {
   /// **'Notifications arrive once the backend is configured and you are signed in.'**
   String get ntBackendMissing;
 
+  /// No description provided for @saTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled kundli alerts'**
+  String get saTitle;
+
+  /// Pinned option at the bottom of the Notifications screen; opens the schedule. Count is how many alerts are still ahead.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled kundli alerts ({count})'**
+  String naScheduledCount(String count);
+
+  /// Empty state for the whole Notifications screen. Must not mention accounts or signing in: nothing on this screen requires either.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet. Alerts appear once you follow a kundli — open a chart and choose Follow alerts.'**
+  String get naEmpty;
+
+  /// No description provided for @naDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get naDismissed;
+
+  /// Alerts whose fire time has passed. NEVER label this 'Delivered' — neither platform gives the app a delivery receipt, so the app cannot know.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get kaPast;
+
+  /// Honesty footnote on the Past list. States what the app asked for and what it cannot know. Must not claim delivery.
+  ///
+  /// In en, this message translates to:
+  /// **'These alerts were scheduled to fire at the times shown. The system shows them unless notifications are switched off for Kaal Jyoti — the app is not told either way.'**
+  String get kaPastNote;
+
   /// No description provided for @ntRequestMatchNew.
   ///
   /// In en, this message translates to:
@@ -1399,6 +1435,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset to defaults'**
   String get stResetDefaults;
+
+  /// Settings section for LOCAL, on-device alerts about followed kundlis. Deliberately not 'Notifications' — that is the separate, sign-in-gated server notifications screen (notificationsTitle), and users conflated the two.
+  ///
+  /// In en, this message translates to:
+  /// **'Kundli alerts'**
+  String get stSectionKundliAlerts;
+
+  /// Master switch for local notifications about followed kundlis.
+  ///
+  /// In en, this message translates to:
+  /// **'Event alerts'**
+  String get stAlertsEnabled;
+
+  /// No description provided for @stAlertsDasha.
+  ///
+  /// In en, this message translates to:
+  /// **'Dasha changes'**
+  String get stAlertsDasha;
+
+  /// No description provided for @stAlertsTransits.
+  ///
+  /// In en, this message translates to:
+  /// **'Transits'**
+  String get stAlertsTransits;
+
+  /// No description provided for @stAlertsSadeSati.
+  ///
+  /// In en, this message translates to:
+  /// **'Sade Sati'**
+  String get stAlertsSadeSati;
+
+  /// Header of the Scheduled alerts screen: when the last scheduling pass ran, and how many alerts it handed to the OS.
+  ///
+  /// In en, this message translates to:
+  /// **'Computed {when} · {count} scheduled'**
+  String saComputedLine(String when, String count);
+
+  /// Diagnostic note shown only when the app's own record and the OS's pending count disagree. States both numbers without interpreting them.
+  ///
+  /// In en, this message translates to:
+  /// **'This app recorded {app} alerts; the system reports {os} pending. A test alert you just sent counts towards the system total.'**
+  String saCountMismatch(String app, String os);
+
+  /// No description provided for @saReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the schedule: {error}'**
+  String saReadFailed(String error);
+
+  /// No description provided for @saRebuildNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuild now'**
+  String get saRebuildNow;
+
+  /// No description provided for @saRebuilt.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuilt — {count} scheduled'**
+  String saRebuilt(String count);
+
+  /// No description provided for @saRebuildFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not rebuild the schedule'**
+  String get saRebuildFailed;
+
+  /// No description provided for @saSendTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send test alert'**
+  String get saSendTest;
+
+  /// No description provided for @saSendTestNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Fires one real notification about {seconds} seconds from now, through the same path as a real alert.'**
+  String saSendTestNote(String seconds);
+
+  /// No description provided for @saTestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Test alert'**
+  String get saTestTitle;
+
+  /// Body of the diagnostic test notification. States a fact about the device, never anything astrological.
+  ///
+  /// In en, this message translates to:
+  /// **'Kaal Jyoti kundli alerts are working on this device.'**
+  String get saTestBody;
+
+  /// No description provided for @saTestScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Test alert scheduled — about {seconds} seconds'**
+  String saTestScheduled(String seconds);
+
+  /// No description provided for @saTestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not schedule the test alert'**
+  String get saTestFailed;
+
+  /// Explains that on-device alerts are local-only and follow-gated. Must stay factual — it describes what the app does, never what an event means.
+  ///
+  /// In en, this message translates to:
+  /// **'Kundli alerts are worked out on this device, for the kundlis you follow, and cover the next 30 days. No account is needed and nothing is sent to a server. Follow a kundli from its chart menu, or by selecting it in the list.'**
+  String get stAlertsNote;
 
   /// No description provided for @stSectionKundliData.
   ///
@@ -7821,6 +7965,18 @@ abstract class AppLocalizations {
   /// **'Available on all your devices. Change anytime in Kundli Details.'**
   String get beSyncSubtitle;
 
+  /// Birth entry toggle, default ON. Sibling of beSyncTitle, but needs no account — alerts are computed on this device.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert me about this kundli'**
+  String get beFollowAlertsTitle;
+
+  /// No description provided for @beFollowAlertsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dasha changes, transits and Sade Sati for the next 30 days. Works without an account; change anytime from the chart menu.'**
+  String get beFollowAlertsSubtitle;
+
   /// No description provided for @beCasting.
   ///
   /// In en, this message translates to:
@@ -10157,6 +10313,36 @@ abstract class AppLocalizations {
   /// **'Unpin'**
   String get klUnpin;
 
+  /// Turns on local, on-device notifications for a kundli's upcoming dasha changes, transits and Sade Sati.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow alerts'**
+  String get klFollowAlerts;
+
+  /// No description provided for @klUnfollowAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop alerts'**
+  String get klUnfollowAlerts;
+
+  /// No description provided for @klFollowingAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts on for this kundli'**
+  String get klFollowingAlerts;
+
+  /// No description provided for @klAlertsOnN.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts on for {count}'**
+  String klAlertsOnN(String count);
+
+  /// No description provided for @klAlertsOffN.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts off for {count}'**
+  String klAlertsOffN(String count);
+
   /// No description provided for @klPinnedN.
   ///
   /// In en, this message translates to:
@@ -10516,6 +10702,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load community charts: {error}'**
   String msBrowseError(String error);
+
+  /// No description provided for @jrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get jrTitle;
+
+  /// No description provided for @jrAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add entry'**
+  String get jrAdd;
+
+  /// No description provided for @jrEditEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit entry'**
+  String get jrEditEntry;
+
+  /// No description provided for @jrEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No journal entries yet. Record what you observed in a consultation, how a prediction turned out, or a pattern worth checking later — every entry keeps the dasha and transits of its own date.'**
+  String get jrEmpty;
+
+  /// No description provided for @jrLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the journal: {e}'**
+  String jrLoadError(String e);
+
+  /// No description provided for @jrCountSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} entries · synced to your account'**
+  String jrCountSynced(String count);
+
+  /// No description provided for @jrCountLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} entries · on this device'**
+  String jrCountLocal(String count);
+
+  /// No description provided for @jrWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'DATE'**
+  String get jrWhen;
+
+  /// No description provided for @jrPickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get jrPickDate;
+
+  /// No description provided for @jrObservation.
+  ///
+  /// In en, this message translates to:
+  /// **'Observation'**
+  String get jrObservation;
+
+  /// No description provided for @jrObservationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What you saw, said, or want to verify later'**
+  String get jrObservationHint;
+
+  /// No description provided for @jrSaveEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Save entry'**
+  String get jrSaveEntry;
+
+  /// No description provided for @jrSaveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get jrSaveChanges;
+
+  /// No description provided for @jrSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get jrSaving;
+
+  /// No description provided for @jrNeedText.
+  ///
+  /// In en, this message translates to:
+  /// **'Write something before saving.'**
+  String get jrNeedText;
+
+  /// No description provided for @jrDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this entry?'**
+  String get jrDeleteTitle;
+
+  /// No description provided for @jrDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The entry and the astro context recorded with it are removed. This can\'t be undone.'**
+  String get jrDeleteBody;
+
+  /// No description provided for @jrDeleteEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete entry'**
+  String get jrDeleteEntry;
+
+  /// No description provided for @jrMoonChip.
+  ///
+  /// In en, this message translates to:
+  /// **'{planet} {sign} · {nakshatra}'**
+  String jrMoonChip(String planet, String sign, String nakshatra);
+
+  /// No description provided for @jrTransitChip.
+  ///
+  /// In en, this message translates to:
+  /// **'{planet} {sign}'**
+  String jrTransitChip(String planet, String sign);
+
+  /// No description provided for @jrDashaTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Periods running on this date'**
+  String get jrDashaTooltip;
+
+  /// No description provided for @jrContextNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The dasha and transits of the entry\'s date are recorded with it — backdate freely.'**
+  String get jrContextNote;
+
+  /// No description provided for @dbJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get dbJournal;
 }
 
 class _AppLocalizationsDelegate

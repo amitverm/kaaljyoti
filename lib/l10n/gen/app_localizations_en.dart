@@ -364,6 +364,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notifications arrive once the backend is configured and you are signed in.';
 
   @override
+  String get saTitle => 'Scheduled kundli alerts';
+
+  @override
+  String naScheduledCount(String count) {
+    return 'Scheduled kundli alerts ($count)';
+  }
+
+  @override
+  String get naEmpty =>
+      'Nothing here yet. Alerts appear once you follow a kundli — open a chart and choose Follow alerts.';
+
+  @override
+  String get naDismissed => 'Removed';
+
+  @override
+  String get kaPast => 'Past';
+
+  @override
+  String get kaPastNote =>
+      'These alerts were scheduled to fire at the times shown. The system shows them unless notifications are switched off for Kaal Jyoti — the app is not told either way.';
+
+  @override
   String get ntRequestMatchNew => 'New matches for your research request';
 
   @override
@@ -756,6 +778,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stResetDefaults => 'Reset to defaults';
+
+  @override
+  String get stSectionKundliAlerts => 'Kundli alerts';
+
+  @override
+  String get stAlertsEnabled => 'Event alerts';
+
+  @override
+  String get stAlertsDasha => 'Dasha changes';
+
+  @override
+  String get stAlertsTransits => 'Transits';
+
+  @override
+  String get stAlertsSadeSati => 'Sade Sati';
+
+  @override
+  String saComputedLine(String when, String count) {
+    return 'Computed $when · $count scheduled';
+  }
+
+  @override
+  String saCountMismatch(String app, String os) {
+    return 'This app recorded $app alerts; the system reports $os pending. A test alert you just sent counts towards the system total.';
+  }
+
+  @override
+  String saReadFailed(String error) {
+    return 'Could not read the schedule: $error';
+  }
+
+  @override
+  String get saRebuildNow => 'Rebuild now';
+
+  @override
+  String saRebuilt(String count) {
+    return 'Rebuilt — $count scheduled';
+  }
+
+  @override
+  String get saRebuildFailed => 'Could not rebuild the schedule';
+
+  @override
+  String get saSendTest => 'Send test alert';
+
+  @override
+  String saSendTestNote(String seconds) {
+    return 'Fires one real notification about $seconds seconds from now, through the same path as a real alert.';
+  }
+
+  @override
+  String get saTestTitle => 'Test alert';
+
+  @override
+  String get saTestBody =>
+      'Kaal Jyoti kundli alerts are working on this device.';
+
+  @override
+  String saTestScheduled(String seconds) {
+    return 'Test alert scheduled — about $seconds seconds';
+  }
+
+  @override
+  String get saTestFailed => 'Could not schedule the test alert';
+
+  @override
+  String get stAlertsNote =>
+      'Kundli alerts are worked out on this device, for the kundlis you follow, and cover the next 30 days. No account is needed and nothing is sent to a server. Follow a kundli from its chart menu, or by selecting it in the list.';
 
   @override
   String get stSectionKundliData => 'Kundli data';
@@ -4335,6 +4425,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Available on all your devices. Change anytime in Kundli Details.';
 
   @override
+  String get beFollowAlertsTitle => 'Alert me about this kundli';
+
+  @override
+  String get beFollowAlertsSubtitle =>
+      'Dasha changes, transits and Sade Sati for the next 30 days. Works without an account; change anytime from the chart menu.';
+
+  @override
   String get beCasting => 'Casting…';
 
   @override
@@ -5737,6 +5834,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get klUnpin => 'Unpin';
 
   @override
+  String get klFollowAlerts => 'Follow alerts';
+
+  @override
+  String get klUnfollowAlerts => 'Stop alerts';
+
+  @override
+  String get klFollowingAlerts => 'Alerts on for this kundli';
+
+  @override
+  String klAlertsOnN(String count) {
+    return 'Alerts on for $count';
+  }
+
+  @override
+  String klAlertsOffN(String count) {
+    return 'Alerts off for $count';
+  }
+
+  @override
   String klPinnedN(String count) {
     return '$count pinned';
   }
@@ -5942,4 +6058,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String msBrowseError(String error) {
     return 'Couldn\'t load community charts: $error';
   }
+
+  @override
+  String get jrTitle => 'Journal';
+
+  @override
+  String get jrAdd => 'Add entry';
+
+  @override
+  String get jrEditEntry => 'Edit entry';
+
+  @override
+  String get jrEmpty =>
+      'No journal entries yet. Record what you observed in a consultation, how a prediction turned out, or a pattern worth checking later — every entry keeps the dasha and transits of its own date.';
+
+  @override
+  String jrLoadError(String e) {
+    return 'Could not load the journal: $e';
+  }
+
+  @override
+  String jrCountSynced(String count) {
+    return '$count entries · synced to your account';
+  }
+
+  @override
+  String jrCountLocal(String count) {
+    return '$count entries · on this device';
+  }
+
+  @override
+  String get jrWhen => 'DATE';
+
+  @override
+  String get jrPickDate => 'Pick a date';
+
+  @override
+  String get jrObservation => 'Observation';
+
+  @override
+  String get jrObservationHint => 'What you saw, said, or want to verify later';
+
+  @override
+  String get jrSaveEntry => 'Save entry';
+
+  @override
+  String get jrSaveChanges => 'Save changes';
+
+  @override
+  String get jrSaving => 'Saving…';
+
+  @override
+  String get jrNeedText => 'Write something before saving.';
+
+  @override
+  String get jrDeleteTitle => 'Delete this entry?';
+
+  @override
+  String get jrDeleteBody =>
+      'The entry and the astro context recorded with it are removed. This can\'t be undone.';
+
+  @override
+  String get jrDeleteEntry => 'Delete entry';
+
+  @override
+  String jrMoonChip(String planet, String sign, String nakshatra) {
+    return '$planet $sign · $nakshatra';
+  }
+
+  @override
+  String jrTransitChip(String planet, String sign) {
+    return '$planet $sign';
+  }
+
+  @override
+  String get jrDashaTooltip => 'Periods running on this date';
+
+  @override
+  String get jrContextNote =>
+      'The dasha and transits of the entry\'s date are recorded with it — backdate freely.';
+
+  @override
+  String get dbJournal => 'Journal';
 }

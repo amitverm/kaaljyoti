@@ -22,6 +22,24 @@ import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
 
+/// Whether a freshly created kundli joins the alert follow-set.
+///
+/// Named and pure so the invariant is testable and stated once. The
+/// exclusions are not cosmetic: [KundliAlertService] skips ephemeral
+/// charts inside the scheduling pass, so following one would put an id
+/// in the set that can never produce an alert — a quiet inconsistency
+/// between what the UI claims and what the scheduler does. [prashna] is
+/// the screen's own distinction (an unkept instant Prashna arrives via
+/// the list screen and is ephemeral too); both are checked because a
+/// Prashna cast from THIS form is saved and non-ephemeral, so neither
+/// condition implies the other.
+bool shouldFollowNewKundli({
+  required bool toggleOn,
+  required bool prashna,
+  required bool isEphemeral,
+}) =>
+    toggleOn && !prashna && !isEphemeral;
+
 class BirthEntryScreen extends ConsumerStatefulWidget {
   const BirthEntryScreen({super.key, this.prashna = false});
   final bool prashna;
@@ -49,6 +67,12 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
   ChartStyle _style = ChartStyle.north;
   String _relationTag = 'Client';
   bool _syncEnabled = true; // default ON for signed-in users
+  // Default ON, and per-creation only — exactly like _syncEnabled above,
+  // which is a plain field and not a stored preference either. A chart
+  // you just cast is the one you are about to work with, so alerts for
+  // it are the useful default; a "follow new kundlis by default"
+  // setting would be a preference nobody asked for.
+  bool _followAlerts = true;
   bool _saving = false;
 
   // Client-first ordering — this app is used by professional astrologers,
@@ -202,6 +226,21 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
       if (kundli.syncEnabled) {
         // Fire-and-forget initial backup; sync is best-effort.
         ref.read(syncServiceProvider)?.pushAll();
+      }
+      if (shouldFollowNewKundli(
+        toggleOn: _followAlerts,
+        prashna: widget.prashna,
+        isEphemeral: kundli.isEphemeral,
+      )) {
+        ref.read(followedKundlisProvider.notifier).addAll([kundli.id]);
+        // Creation with the toggle defaulted ON is now the earliest
+        // point a user can have asked for a notification, so it is where
+        // the permission prompt belongs. No-op after the first time.
+        unawaited(ref.read(kundliAlertServiceProvider).ensurePermission());
+        // No reschedule call here on purpose: the app root listens to
+        // followedKundlisProvider and runs one debounced pass. Adding a
+        // second trigger would just mean two ephemeris passes for one
+        // chart.
       }
       ref.invalidate(kundlisProvider);
       // Replace the form with the dashboard: Home stays underneath, so
@@ -432,6 +471,27 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
                 style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
               ),
               onChanged: (v) => setState(() => _syncEnabled = v),
+            ),
+          ],
+          // Sibling of the Cloud sync block above, with one deliberate
+          // difference: this one is NOT gated on being signed in. Alerts
+          // are computed and scheduled on this device, so an account has
+          // nothing to do with them — and the whole point of the recent
+          // rename was to stop the two reading as one feature.
+          if (!widget.prashna) ...[
+            const SizedBox(height: 20),
+            _sectionLabel(l10n.stSectionKundliAlerts.toUpperCase()),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _followAlerts,
+              activeThumbColor: KJColors.maroon,
+              title: Text(l10n.beFollowAlertsTitle,
+                  style: const TextStyle(fontSize: 13.5)),
+              subtitle: Text(
+                l10n.beFollowAlertsSubtitle,
+                style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
+              ),
+              onChanged: (v) => setState(() => _followAlerts = v),
             ),
           ],
           const SizedBox(height: 28),

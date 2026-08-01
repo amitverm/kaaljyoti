@@ -160,7 +160,7 @@ void main() {
 
       final appDb = newDb();
       final db = await appDb.database;
-      expect(await db.getVersion(), 9);
+      expect(await db.getVersion(), 10);
       expect(
         await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' "
             "AND name='export_configs'"),
@@ -215,7 +215,7 @@ void main() {
 
       final second = newDb();
       final db = await second.database;
-      expect(await db.getVersion(), 9);
+      expect(await db.getVersion(), 10);
       expect(await db.query('export_template'), hasLength(1));
       expect((await ExportRepository(db: second).load())!.blocks, hasLength(1));
       await second.close();

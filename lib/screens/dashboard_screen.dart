@@ -13,6 +13,7 @@
 /// controller into the body, matching the pre-refactor behaviour.
 library;
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -136,6 +137,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: _menuRow(
                       Icons.event_note_outlined, ctx.l10n.dbLifeEvents),
                 ),
+              // The practitioner's own notes on this native — same local
+              // child store as life events, so the same Mahakosh guard.
+              if (!isMahakoshKundliId(kundliId))
+                PopupMenuItem(
+                  onTap: () => context.push('/kundli/$kundliId/journal'),
+                  child: _menuRow(Icons.menu_book_outlined, ctx.l10n.dbJournal),
+                ),
+              // Follow alerts — device-local, per chart. Hidden for
+              // Mahakosh community charts (read-only, anonymized: no
+              // birth time to compute an alert timeline from) and for
+              // an unkept Prashna, which isn't a saved chart yet.
+              if (!isMahakoshKundliId(kundliId) &&
+                  !(kundliAsync.value?.isEphemeral ?? false))
+                PopupMenuItem(
+                  onTap: () => _toggleFollow(kundliId),
+                  child: Consumer(builder: (context, ref, _) {
+                    final followed =
+                        ref.watch(followedKundlisProvider).contains(kundliId);
+                    return _menuRow(
+                      followed
+                          ? Icons.notifications_off_outlined
+                          : Icons.notifications_active_outlined,
+                      followed
+                          ? ctx.l10n.klUnfollowAlerts
+                          : ctx.l10n.klFollowAlerts,
+                    );
+                  }),
+                ),
               PopupMenuItem(
                 onTap: () => context.push('/kundli/$kundliId/export'),
                 child: _menuRow(
@@ -184,6 +213,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
     );
+  }
+
+  /// Toggle event alerts for this chart, and tell the user which way it
+  /// went — the menu closes on tap, so the switch has no visible state
+  /// of its own at the moment it is flipped.
+  void _toggleFollow(String kundliId) {
+    final follows = ref.read(followedKundlisProvider.notifier);
+    final nowFollowed = !follows.isFollowed(kundliId);
+    follows.toggle(kundliId);
+    if (nowFollowed) {
+      unawaited(ref.read(kundliAlertServiceProvider).ensurePermission());
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(nowFollowed
+          ? context.l10n.klAlertsOnN('1')
+          : context.l10n.klAlertsOffN('1')),
+    ));
   }
 
   /// One overflow-menu entry: glyph + label. The icons carry over from

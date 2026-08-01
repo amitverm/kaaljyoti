@@ -14,6 +14,8 @@
 ///     costs no astronomy at all.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -152,6 +154,13 @@ class KundliListScreen extends ConsumerWidget {
               : () => _bulkPin(context, ref, selection),
         ),
         IconButton(
+          icon: const Icon(Icons.notifications_active_outlined),
+          tooltip: l10n.klFollowAlerts,
+          onPressed: selection.isEmpty
+              ? null
+              : () => _bulkFollow(context, ref, selection),
+        ),
+        IconButton(
           icon: const Icon(Icons.sell_outlined),
           tooltip: l10n.klLabels,
           onPressed: selection.isEmpty
@@ -206,6 +215,35 @@ class KundliListScreen extends ConsumerWidget {
     ));
   }
 
+  /// Follows the selection for event alerts — or unfollows it when every
+  /// selected chart is already followed, exactly like [_bulkPin].
+  ///
+  /// Mahakosh community charts are never eligible: they are read-only,
+  /// server-owned and anonymized (no birth time), so there is nothing
+  /// this device could compute alerts from. The list itself only ever
+  /// contains saved, non-ephemeral kundlis, but the guard is cheap and
+  /// keeps a stray id out of the follow-set.
+  void _bulkFollow(BuildContext context, WidgetRef ref, Set<String> selection) {
+    final eligible = selection.where((id) => !isMahakoshKundliId(id)).toSet();
+    if (eligible.isEmpty) return;
+    final follows = ref.read(followedKundlisProvider.notifier);
+    final allFollowed = eligible.every(follows.isFollowed);
+    if (allFollowed) {
+      follows.removeAll(eligible);
+    } else {
+      follows.addAll(eligible);
+      // First follow is the moment the permission prompt makes sense —
+      // the user has just asked to be notified about something.
+      unawaited(ref.read(kundliAlertServiceProvider).ensurePermission());
+    }
+    ref.read(kundliMultiSelectProvider.notifier).state = null;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(allFollowed
+          ? context.l10n.klAlertsOffN('${eligible.length}')
+          : context.l10n.klAlertsOnN('${eligible.length}')),
+    ));
+  }
+
   Future<void> _bulkLabel(
       BuildContext context, WidgetRef ref, Set<String> selection) async {
     final all = ref.read(kundliListDataProvider).value;
@@ -237,8 +275,8 @@ class KundliListScreen extends ConsumerWidget {
               child: Text(ctx.l10n.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(ctx.l10n.delete,
-                style: TextStyle(color: KJColors.maroon)),
+            child:
+                Text(ctx.l10n.delete, style: TextStyle(color: KJColors.maroon)),
           ),
         ],
       ),
@@ -254,8 +292,11 @@ class KundliListScreen extends ConsumerWidget {
       // dialog above promised the opposite.
       sync?.deleteRemote(id);
     }
-    // A deleted chart must not keep a slot in the recents strip or the pins.
+    // A deleted chart must not keep a slot in the recents strip, the
+    // pins, or the alert follow-set (a stale follow would keep costing
+    // an ephemeris pass and schedule alerts for a chart that is gone).
     ref.read(pinnedKundlisProvider.notifier).removeAll(selection);
+    ref.read(followedKundlisProvider.notifier).removeAll(selection);
     ref.read(recentKundlisProvider.notifier).forget(selection);
     ref.invalidate(kundlisProvider);
     ref.read(kundliMultiSelectProvider.notifier).state = null;
@@ -326,23 +367,22 @@ class _Library extends ConsumerWidget {
     final searching = query.trim().isNotEmpty || filter != null;
 
     final showSearch = data.totalCount >= _searchThreshold;
-    final showRecents =
-        data.totalCount >= _recentsThreshold && !searching && data.recents.isNotEmpty;
+    final showRecents = data.totalCount >= _recentsThreshold &&
+        !searching &&
+        data.recents.isNotEmpty;
     // A–Z grouping only makes sense in name order, and only once the list
     // is long enough that the letters actually break it up.
-    final grouped =
-        sort == KundliSort.name && data.others.length >= _sectionHeaderThreshold;
+    final grouped = sort == KundliSort.name &&
+        data.others.length >= _sectionHeaderThreshold;
 
     return CustomScrollView(
       slivers: [
-        if (showSearch)
-          const SliverToBoxAdapter(child: _SearchField()),
+        if (showSearch) const SliverToBoxAdapter(child: _SearchField()),
         if (data.labels.isNotEmpty || data.relationTags.length > 1)
           SliverToBoxAdapter(child: _FilterChips(data: data)),
         if (showRecents)
           SliverToBoxAdapter(child: _RecentsStrip(recents: data.recents)),
-        if (showSignIn)
-          SliverToBoxAdapter(child: _signInBanner(context)),
+        if (showSignIn) SliverToBoxAdapter(child: _signInBanner(context)),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -426,8 +466,8 @@ class _Library extends ConsumerWidget {
   }
 
   Widget _signInBanner(BuildContext context) => Card(
-        margin: const EdgeInsets.fromLTRB(
-            KJSpace.lg, 0, KJSpace.lg, KJSpace.md),
+        margin:
+            const EdgeInsets.fromLTRB(KJSpace.lg, 0, KJSpace.lg, KJSpace.md),
         child: Padding(
           padding: const EdgeInsets.all(KJSpace.md + 2),
           child: Row(
@@ -533,7 +573,8 @@ class _SearchFieldState extends ConsumerState<_SearchField> {
         decoration: InputDecoration(
           hintText: context.l10n.klSearchHint,
           isDense: true,
-          prefixIcon: Icon(Icons.search, size: KJIcon.lg, color: KJColors.inkSoft),
+          prefixIcon:
+              Icon(Icons.search, size: KJIcon.lg, color: KJColors.inkSoft),
           suffixIcon: query.isEmpty
               ? null
               : IconButton(
@@ -581,15 +622,15 @@ class _FilterChips extends ConsumerWidget {
               label: relationTagLabel(l10n, tag),
               selected: active?.kind == KundliFilterKind.relation &&
                   active?.value == tag,
-              onTap: () => select((kind: KundliFilterKind.relation, value: tag)),
+              onTap: () =>
+                  select((kind: KundliFilterKind.relation, value: tag)),
             ),
           for (final label in data.labels)
             _chip(
               label: label,
               selected: active?.kind == KundliFilterKind.label &&
                   active?.value == label,
-              onTap: () =>
-                  select((kind: KundliFilterKind.label, value: label)),
+              onTap: () => select((kind: KundliFilterKind.label, value: label)),
               isLabel: true,
             ),
         ],
@@ -682,7 +723,8 @@ class _RecentsStrip extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: KJType.caption(size: 11, color: KJColors.inkSoft),
+                        style:
+                            KJType.caption(size: 11, color: KJColors.inkSoft),
                       ),
                     ],
                   ),
@@ -819,6 +861,7 @@ class _KundliRow extends ConsumerWidget {
     final selecting = selection != null;
     final isSelected = selection?.contains(kundli.id) ?? false;
     final isPinned = ref.watch(pinnedKundlisProvider).contains(kundli.id);
+    final isFollowed = ref.watch(followedKundlisProvider).contains(kundli.id);
     final compact = density == KundliDensity.compact;
 
     void toggleSelection() {
@@ -829,7 +872,8 @@ class _KundliRow extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.fromLTRB(KJSpace.lg, 0, KJSpace.lg, KJSpace.sm),
-      color: isSelected ? KJColors.maroon.withValues(alpha: KJTint.faint) : null,
+      color:
+          isSelected ? KJColors.maroon.withValues(alpha: KJTint.faint) : null,
       child: InkWell(
         borderRadius: KJRadius.all(KJRadius.lg),
         onLongPress: () =>
@@ -839,7 +883,8 @@ class _KundliRow extends ConsumerWidget {
             : () => openKundli(context, ref, kundli.id),
         child: Padding(
           padding: EdgeInsets.symmetric(
-              horizontal: KJSpace.md, vertical: compact ? KJSpace.sm : KJSpace.md),
+              horizontal: KJSpace.md,
+              vertical: compact ? KJSpace.sm : KJSpace.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -875,13 +920,22 @@ class _KundliRow extends ConsumerWidget {
                             _secondaryLine(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: KJType.data(
-                                size: 12, color: KJColors.inkSoft),
+                            style:
+                                KJType.data(size: 12, color: KJColors.inkSoft),
                           ),
                         ],
                       ],
                     ),
                   ),
+                  if (isFollowed)
+                    Padding(
+                      padding: const EdgeInsets.only(left: KJSpace.xs),
+                      child: Tooltip(
+                        message: l10n.klFollowingAlerts,
+                        child: Icon(Icons.notifications_active,
+                            size: KJIcon.sm - 2, color: KJColors.maroon),
+                      ),
+                    ),
                   if (isPinned)
                     Padding(
                       padding: const EdgeInsets.only(left: KJSpace.xs),

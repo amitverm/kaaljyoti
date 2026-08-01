@@ -8,15 +8,17 @@ import 'dart:convert';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/journal_repository.dart';
 import '../data/kundli_event_repository.dart';
 import '../data/kundli_repository.dart';
 import '../data/models.dart';
 
 class SyncService {
-  SyncService(this._client, this._kundlis, this._events);
+  SyncService(this._client, this._kundlis, this._events, this._journal);
   final SupabaseClient _client;
   final KundliRepository _kundlis;
   final KundliEventRepository _events;
+  final JournalRepository _journal;
 
   String? get _userId => _client.auth.currentUser?.id;
   bool get isSignedIn => _userId != null;
@@ -41,12 +43,17 @@ class SyncService {
     for (final k in toPush) {
       final deletedAt = tombstones[k.id];
       if (deletedAt != null && deletedAt.isAfter(k.updatedAt)) continue;
-      // The kundli's life events ride along inside the same payload so they
-      // stay together and last-write-wins applies to the pair atomically.
+      // The kundli's life events and journal ride along inside the same
+      // payload so they stay together and last-write-wins applies to the
+      // set atomically. Both are plain arrays of rows: a device running an
+      // older build simply ignores the key it doesn't know, and a server
+      // migration is not needed because the payload is opaque JSON.
       final events = await _events.forKundli(k.id);
+      final journal = await _journal.forKundli(k.id);
       final payload = {
         ...k.toRow(),
         'events': [for (final e in events) e.toRow()],
+        'journal': [for (final j in journal) j.toRow()],
       };
       // Conflict target is the composite key (0022): another account
       // may legitimately hold a row for the same kundli id (a chart
@@ -86,9 +93,12 @@ class SyncService {
       }
       final map = (jsonDecode(r['payload_encrypted'] as String) as Map)
           .cast<String, Object?>();
-      // Split the events array back out before Kundli.fromRow (which only
-      // reads the kundli columns; older payloads have no 'events' key).
+      // Split the child arrays back out before Kundli.fromRow (which only
+      // reads the kundli columns). A missing key means "no children" —
+      // that is how payloads written by an older build read, and it is the
+      // correct reading: those builds had nothing to send.
       final eventsJson = map.remove('events') as List?;
+      final journalJson = map.remove('journal') as List?;
       final remote = Kundli.fromRow(map);
       final local = await _kundlis.byId(remote.id);
       if (local == null || remote.updatedAt.isAfter(local.updatedAt)) {
@@ -96,6 +106,10 @@ class SyncService {
         await _events.replaceForKundli(remote.id, [
           for (final e in eventsJson ?? const [])
             KundliEvent.fromRow((e as Map).cast<String, Object?>()),
+        ]);
+        await _journal.replaceForKundli(remote.id, [
+          for (final j in journalJson ?? const [])
+            JournalEntry.fromRow((j as Map).cast<String, Object?>()),
         ]);
         applied++;
       }

@@ -142,7 +142,7 @@ void main() {
     await appDb.close();
   });
 
-  test('a fresh v8 database has the labels column from onCreate', () async {
+  test('a fresh database has the labels column from onCreate', () async {
     // onCreate and onUpgrade define the schema separately, so they drift
     // silently unless both are exercised.
     final appDb = AppDb.forTest(
@@ -153,5 +153,39 @@ void main() {
     expect(columns.map((c) => c['name']), contains('labels'));
 
     await appDb.close();
+  });
+
+  test('onCreate and onUpgrade agree on the child tables', () async {
+    // The same drift risk, one level up: a table added to onCreate but not
+    // to the migration (or the reverse) only shows up on the device that
+    // took the other path.
+    Future<Set<String>> tablesOf(String path) async {
+      final appDb = AppDb.forTest(
+          path: path, opener: _ffiOpener, passphrase: 'test-passphrase');
+      final db = await appDb.database;
+      final rows = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table'");
+      final names = {for (final r in rows) r['name'] as String};
+      await appDb.close();
+      return names;
+    }
+
+    // Seeded at v6 — below every version that introduces a child table,
+    // so the upgrade path has to create all of them (a v7 fixture would
+    // already carry kundli_events, hiding half the comparison).
+    final legacy = await databaseFactoryFfi.openDatabase(
+      dbPath,
+      options: OpenDatabaseOptions(
+          version: 6, onCreate: (db, _) async => db.execute(_v7Kundlis)),
+    );
+    await legacy.close();
+
+    final fresh = await tablesOf('${dir.path}/fresh.db');
+    final upgraded = await tablesOf(dbPath);
+
+    for (final table in ['kundli_events', 'journal_entries']) {
+      expect(fresh, contains(table), reason: '$table missing from onCreate');
+      expect(upgraded, contains(table), reason: '$table missing from upgrade');
+    }
   });
 }

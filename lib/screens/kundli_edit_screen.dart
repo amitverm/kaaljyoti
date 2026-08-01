@@ -204,6 +204,7 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
     // Drop the device-local list state too, so the chart can't linger in
     // the pinned section or the recents strip.
     ref.read(pinnedKundlisProvider.notifier).removeAll([widget.kundliId]);
+    ref.read(followedKundlisProvider.notifier).removeAll([widget.kundliId]);
     ref.read(recentKundlisProvider.notifier).forget([widget.kundliId]);
     ref.invalidate(kundlisProvider);
     if (mounted) context.go('/');
