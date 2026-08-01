@@ -13,6 +13,12 @@ import '../core/theme/theme.dart';
 /// waxing (Shukla paksha, elongation < 180°) and on the left while
 /// waning. No text and no locale — a painter has no BuildContext, and
 /// the card labels the disc itself.
+///
+/// Polarity follows the printed-panchang convention (● Amavasya,
+/// ○ Purnima) and the sky: the LIT fraction is the light one. Inking
+/// the lit side instead reads exactly backwards to a panchang-literate
+/// eye — a Krishna gibbous would render as a near-black disc, i.e. as
+/// almost-Amavasya.
 class MoonPhasePainter extends CustomPainter {
   const MoonPhasePainter({
     required this.elongation,
@@ -31,8 +37,8 @@ class MoonPhasePainter extends CustomPainter {
   /// Theme-coloured disc for the app's own surfaces.
   factory MoonPhasePainter.themed(double elongation) => MoonPhasePainter(
         elongation: elongation,
-        lit: KJColors.ink,
-        dark: KJColors.paperAlt,
+        lit: KJColors.paper,
+        dark: KJColors.ink,
         rim: KJColors.hairline,
       );
 

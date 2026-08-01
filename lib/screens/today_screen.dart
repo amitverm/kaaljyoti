@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../charts/chart_style.dart';
 import '../charts/chart_view.dart';
+import '../charts/moon_phase_painter.dart';
 import '../charts/planet_token.dart';
 import '../core/astro/daily_panchang.dart';
 import '../core/astro/muhurta.dart' show abhijitApplies;
@@ -383,10 +384,35 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                             '${_till(l10n, d.karanaEnds)}'),
                         _row(l10n.tdSunriseSunset,
                             '${_hm(d.sunrise)} / ${_hm(d.sunset)}'),
-                        _row(
-                            l10n.planetMoon,
-                            '${d.positions[Planet.moon]!.sign.label(l10n)} · '
-                            '${formatDegreeInSign(d.positions[Planet.moon]!.degreesInSign)}'),
+                        // Moon row with the phase disc — cut from the
+                        // same Sun→Moon elongation the tithi rows above
+                        // are counted from, so the picture and the
+                        // numbers can never disagree.
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              Text(l10n.planetMoon,
+                                  style: TextStyle(
+                                      fontSize: 12.5,
+                                      color: KJColors.inkSoft)),
+                              const Spacer(),
+                              MoonPhaseDisc(
+                                elongation:
+                                    d.positions[Planet.moon]!.longitude -
+                                        d.positions[Planet.sun]!.longitude,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${d.positions[Planet.moon]!.sign.label(l10n)} · '
+                                '${formatDegreeInSign(d.positions[Planet.moon]!.degreesInSign)}',
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
