@@ -35,12 +35,21 @@ class MoonPhasePainter extends CustomPainter {
   final Color rim;
 
   /// Theme-coloured disc for the app's own surfaces.
-  factory MoonPhasePainter.themed(double elongation) => MoonPhasePainter(
-        elongation: elongation,
-        lit: KJColors.paper,
-        dark: KJColors.ink,
-        rim: KJColors.hairline,
-      );
+  ///
+  /// The lit fraction must be the LIGHT colour in every palette, but
+  /// paper/ink swap luminance in the dark theme — so the pair is picked
+  /// by brightness, not by role. Either way the shadowed part matches
+  /// the card ground and the lit part is the one that contrasts, which
+  /// is how the sky itself works at night.
+  factory MoonPhasePainter.themed(double elongation) {
+    final darkTheme = KJColors.current.isDark;
+    return MoonPhasePainter(
+      elongation: elongation,
+      lit: darkTheme ? KJColors.ink : KJColors.paper,
+      dark: darkTheme ? KJColors.paper : KJColors.ink,
+      rim: KJColors.hairline,
+    );
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
