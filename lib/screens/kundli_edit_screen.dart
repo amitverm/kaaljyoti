@@ -15,6 +15,7 @@ import '../core/theme/theme.dart';
 import '../data/models.dart';
 import '../mahakosh/models.dart';
 import '../services/place_lookup_service.dart';
+import '../ui/birth_form.dart';
 import '../ui/date_fields.dart';
 import '../ui/manual_place_dialog.dart';
 import '../l10n/astro_l10n.dart';
@@ -42,6 +43,39 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
   Timer? _debounce;
   bool _dirtyBirthData = false;
   bool _placeSearchFailed = false;
+  bool _saving = false;
+
+  /// Required fields flagged by the last failed Save. Empty until the
+  /// user actually presses it: reddening a form before anyone has
+  /// claimed to be finished is nagging, not validation.
+  Set<BirthField> _missing = {};
+
+  final _scroll = ScrollController();
+  static final _fieldKeys = {
+    for (final f in BirthField.values) f: birthFieldKey(f),
+  };
+
+  void _clearMissing(BirthField field) {
+    if (_missing.contains(field)) {
+      setState(() => _missing = {..._missing}..remove(field));
+    }
+  }
+
+  /// The place a Save would actually use, or null when there isn't one.
+  ///
+  /// Three states, and only the middle one is obvious:
+  ///   * a freshly picked place — use it;
+  ///   * the box still holding the STORED name, untouched — the stored
+  ///     place stands, and nothing is missing;
+  ///   * text that is neither — typed and never picked. Saving that
+  ///     silently kept the old coordinates while the field claimed
+  ///     otherwise, which is the quiet version of a wrong chart.
+  Object? _effectivePlace(Kundli k) {
+    if (_newPlace != null) return _newPlace;
+    final typed = _placeController.text.trim();
+    if (typed.isEmpty) return null;
+    return typed == k.placeName.trim() ? k : null;
+  }
 
   @override
   void initState() {
@@ -63,6 +97,7 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _scroll.dispose();
     _nameController.dispose();
     _placeController.dispose();
     _noteController.dispose();
@@ -90,11 +125,32 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
       _placeSearchFailed = false;
       _dirtyBirthData = true;
     });
+    _clearMissing(BirthField.place);
   }
 
   Future<void> _save() async {
     final k = _kundli;
     if (k == null) return;
+    // Inline, exactly as on the entry screen. Clearing the date or
+    // retyping the place without picking used to save silently — the
+    // birth block was skipped and nothing said so.
+    final missing = missingBirthFields(
+      name: _nameController.text,
+      date: _date,
+      time: _time,
+      place: _effectivePlace(k),
+    );
+    if (missing.isNotEmpty) {
+      setState(() => _missing = missing);
+      final first = firstMissingBirthField(missing);
+      final ctx = first == null ? null : _fieldKeys[first]?.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(ctx,
+            duration: const Duration(milliseconds: 250), alignment: 0.1);
+      }
+      return;
+    }
+    setState(() => _saving = true);
     // Captured before the awaits — the catch below must not touch
     // context (use_build_context_synchronously is an error here).
     final messenger = ScaffoldMessenger.of(context);
@@ -133,6 +189,8 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
       // Same belt as birth entry: a bad place/timezone (or repo error)
       // must surface, not crash — the form stays filled for a retry.
       messenger.showSnackBar(SnackBar(content: Text(l10n.keSaveFailed('$e'))));
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -153,8 +211,7 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
               InputChip(
                 label: Text(label),
                 onDeleted: () => setState(() {
-                  _kundli = k.copyWith(
-                      labels: [...k.labels]..remove(label));
+                  _kundli = k.copyWith(labels: [...k.labels]..remove(label));
                 }),
               ),
             ActionChip(
@@ -170,7 +227,8 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
                 final current = _kundli ?? k;
                 if (current.labels.contains(picked)) return;
                 setState(() {
-                  _kundli = current.copyWith(labels: [...current.labels, picked]);
+                  _kundli =
+                      current.copyWith(labels: [...current.labels, picked]);
                 });
               },
             ),
@@ -279,10 +337,33 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
       appBar: AppBar(
         title: Text(context.l10n.keTitle),
         actions: [
-          TextButton(onPressed: _save, child: Text(context.l10n.save)),
+          // Delete lives here, not at the foot of the scroll where it
+          // used to sit — with Save now pinned to the bottom edge, the
+          // old position put a destructive button directly above the
+          // primary one, under the same thumb. Behind a menu and behind
+          // a confirm dialog is the right distance for it.
+          PopupMenuButton<void>(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                onTap: _delete,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.delete_outline,
+                        size: 20, color: KJColors.maroon),
+                    const SizedBox(width: 12),
+                    Text(ctx.l10n.deleteKundli,
+                        style: TextStyle(color: KJColors.maroon)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: ListView(
+        controller: _scroll,
         padding: formPadding(context),
         children: [
           Container(
@@ -299,48 +380,65 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
             ),
           ),
           TextField(
+            key: _fieldKeys[BirthField.name],
             controller: _nameController,
-            decoration: InputDecoration(labelText: context.l10n.nameLabel),
+            decoration: InputDecoration(
+              labelText: context.l10n.nameLabel,
+              errorText: _missing.contains(BirthField.name)
+                  ? context.l10n.beFieldRequired
+                  : null,
+            ),
+            onChanged: (v) {
+              if (v.trim().isNotEmpty) _clearMissing(BirthField.name);
+              setState(() {});
+            },
           ),
           const SizedBox(height: 12),
           // Day · named month · year — same unambiguous entry as the
           // create screen (see date_fields.dart).
           DateFieldsRow(
+            key: _fieldKeys[BirthField.date],
             initial: _date,
-            onChanged: (d) => setState(() {
-              _date = d;
-              _dirtyBirthData = true;
-            }),
+            errorText: _missing.contains(BirthField.date)
+                ? context.l10n.beFieldRequired
+                : null,
+            onChanged: (d) {
+              setState(() {
+                _date = d;
+                _dirtyBirthData = true;
+              });
+              if (d != null) _clearMissing(BirthField.date);
+            },
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () async {
-                    final t = await showTimePicker(
-                        context: context,
-                        initialTime:
-                            _time ?? const TimeOfDay(hour: 6, minute: 0),
-                        initialEntryMode: TimePickerEntryMode.input);
-                    if (t != null)
-                      setState(() {
-                        _time = t;
-                        _dirtyBirthData = true;
-                      });
-                  },
-                  child: Text(_time == null
-                      ? context.l10n.keTime
-                      : _time!.format(context)),
-                ),
-              ),
-            ],
+          TimeFieldTile(
+            key: _fieldKeys[BirthField.time],
+            time: _time,
+            label: context.l10n.keTime,
+            errorText: _missing.contains(BirthField.time)
+                ? context.l10n.beFieldRequired
+                : null,
+            onPick: (t) {
+              setState(() {
+                _time = t;
+                _dirtyBirthData = true;
+              });
+              _clearMissing(BirthField.time);
+            },
           ),
           const SizedBox(height: 12),
           TextField(
+            key: _fieldKeys[BirthField.place],
             controller: _placeController,
             decoration: InputDecoration(
               labelText: context.l10n.placeOfBirth,
+              // Typed-but-not-chosen gets its own message: the box LOOKS
+              // filled in, so "Required" would read as a bug.
+              errorText: !_missing.contains(BirthField.place)
+                  ? null
+                  : _placeController.text.trim().isEmpty
+                      ? context.l10n.beFieldRequired
+                      : context.l10n.bePlaceNotChosen,
               // Coordinates in play: the pending pick, else what's stored —
               // so a manual/typeahead change is verifiable before Save.
               helperText: _newPlace != null
@@ -359,8 +457,7 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
               _debounce?.cancel();
               _debounce = Timer(const Duration(milliseconds: 350), () async {
                 try {
-                  final results =
-                      await ref.read(placeLookupProvider).search(q);
+                  final results = await ref.read(placeLookupProvider).search(q);
                   if (mounted) {
                     setState(() {
                       _placeResults = results;
@@ -396,11 +493,14 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
                     ListTile(
                       dense: true,
                       title: Text(r.displayName),
-                      onTap: () => setState(() {
-                        _newPlace = r;
-                        _placeController.text = r.displayName;
-                        _placeResults = [];
-                      }),
+                      onTap: () {
+                        setState(() {
+                          _newPlace = r;
+                          _placeController.text = r.displayName;
+                          _placeResults = [];
+                        });
+                        _clearMissing(BirthField.place);
+                      },
                     ),
                 ],
               ),
@@ -426,7 +526,8 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
           ),
           const SizedBox(height: 20),
           _labelEditor(k),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          _sectionLabel(context.l10n.keSectionChart),
           _settingBlock(
             title: context.l10n.labelChartStyle,
             subtitle: ChartStyle.values
@@ -452,6 +553,8 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
                   : context.l10n.keChange),
             ),
           ),
+          const SizedBox(height: 20),
+          _sectionLabel(context.l10n.keSectionSharing),
           _settingBlock(
             title: context.l10n.cloudSync,
             subtitle: user == null
@@ -465,7 +568,7 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
                     child: Text(context.l10n.signIn))
                 : Switch(
                     value: k.syncEnabled,
-                    activeColor: KJColors.maroon,
+                    activeThumbColor: KJColors.maroon,
                     onChanged: (v) async {
                       // Captured before the first await — context must not
                       // be used across suspension points, and the error
@@ -515,18 +618,81 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
                 child: Text(context.l10n.keUpdate),
               ),
             ),
-          const SizedBox(height: 24),
-          OutlinedButton(
-            onPressed: _delete,
-            style: OutlinedButton.styleFrom(
-                foregroundColor: KJColors.maroon,
-                side: BorderSide(color: KJColors.maroon)),
-            child: Text(context.l10n.deleteKundli),
-          ),
+          // Its own section, deliberately NOT folded into "Sharing &
+          // sync" above. Sync is a server feature behind an account;
+          // alerts are computed and scheduled on this device and need
+          // neither. Housing them together is precisely the conflation
+          // the "Kundli alerts" rename was made to undo.
+          //
+          // Ephemeral charts are excluded because the scheduling pass
+          // skips them, so a follow would be an id that can never
+          // produce an alert. A Mahakosh id cannot reach this screen at
+          // all (byId finds nothing in the local store and the form
+          // never loads), but the guard costs nothing and states the
+          // rule where a reader will look for it.
+          if (!k.isEphemeral && !isMahakoshKundliId(k.id)) ...[
+            const SizedBox(height: 20),
+            _sectionLabel(context.l10n.stSectionKundliAlerts),
+            _settingBlock(
+              title: context.l10n.beFollowAlertsTitle,
+              subtitle: context.l10n.keAlertsSubtitle,
+              child: Switch(
+                value: ref.watch(followedKundlisProvider).contains(k.id),
+                activeThumbColor: KJColors.maroon,
+                // Live-bound and immediate, like the dashboard's own
+                // follow toggle — NOT save-bound. Flipping it is the
+                // whole action; the app root listens to the follow-set
+                // and runs one debounced rescheduling pass. Routing it
+                // through Save would mean a switch that lies until you
+                // press a button somewhere else.
+                onChanged: (v) {
+                  final follows = ref.read(followedKundlisProvider.notifier);
+                  if (v) {
+                    follows.addAll([k.id]);
+                    // May be this user's first-ever follow.
+                    unawaited(ref
+                        .read(kundliAlertServiceProvider)
+                        .ensurePermission());
+                  } else {
+                    follows.removeAll([k.id]);
+                  }
+                },
+              ),
+            ),
+          ],
         ],
+      ),
+      bottomNavigationBar: PinnedActionBar(
+        summary: _summaryLine(k),
+        summaryKey: const Key('birthSummary'),
+        actionLabel: context.l10n.save,
+        onAction: _saving ? null : _save,
       ),
     );
   }
+
+  /// The resolution summary for the values as currently edited.
+  ///
+  /// Falls back to the STORED zone and place exactly as [_save] does, so
+  /// the line always describes what a Save would write — including
+  /// before anything has been touched, which is the point: opening this
+  /// screen is how you check a chart cast years ago, and a birth whose
+  /// offset was historic (1943 Kolkata is +06:30) never said so
+  /// anywhere until now.
+  String? _summaryLine(Kundli k) {
+    final place = _newPlace;
+    return birthResolutionSummary(
+      lookup: ref.read(placeLookupProvider),
+      l10n: context.l10n,
+      name: _nameController.text,
+      date: _date,
+      time: _time,
+      timezoneName: place?.timezoneName ?? k.timezoneName,
+      placeShortName: shortPlaceName(place?.displayName ?? k.placeName),
+    );
+  }
+
+  Widget _sectionLabel(String t) => KJSectionLabel(t, padded: true);
 
   Widget _settingBlock({
     required String title,

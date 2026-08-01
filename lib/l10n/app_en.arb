@@ -14,6 +14,10 @@
   "placeOfBirth": "Place of birth",
   "castKundli": "Cast Kundli",
   "prashnaHint": "Or cast a Prashna kundli for this exact moment",
+  "bePrashnaAction": "Prashna",
+  "@bePrashnaAction": {
+    "description": "Header action on the birth entry form: switches to casting a Prashna (question) chart for the current moment. Short because it is an AppBar action; prashnaHint carries the full explanation."
+  },
   "trustStatement": "Computed on-device. Your kundali never leaves this phone unless you turn on sync.",
   "savedEncrypted": "{count} saved · encrypted on this device",
   "@savedEncrypted": {
@@ -2131,6 +2135,16 @@
   "weekdayFriday": "Friday",
   "weekdaySaturday": "Saturday",
   "weekdaySunday": "Sunday",
+  "weekdayAbbrMonday": "Mon",
+  "@weekdayAbbrMonday": {
+    "description": "SHORT civil weekday names (through weekdayAbbrSunday) for the birth entry summary line, where the whole confirmation has to fit on one line. Same distinction from the vara* keys as the full weekday* set above. Hindi uses the conventional short forms — सोम, मंगल, बुध…; note these coincide with several planetXxx values because Hindi day names derive from the grahas, but they are NOT the same strings and must not be aliased to them."
+  },
+  "weekdayAbbrTuesday": "Tue",
+  "weekdayAbbrWednesday": "Wed",
+  "weekdayAbbrThursday": "Thu",
+  "weekdayAbbrFriday": "Fri",
+  "weekdayAbbrSaturday": "Sat",
+  "weekdayAbbrSunday": "Sun",
   "masaChaitra": "Chaitra",
   "@masaChaitra": {
     "description": "LUNAR MONTH (maasa) names, Chaitra … Phalguna — fixed terms, transliterate (hi: चैत्र …)."
@@ -2696,7 +2710,10 @@
       }
     }
   },
-  "beSectionCloudSync": "CLOUD SYNC",
+  "beSectionAfterCasting": "After casting",
+  "@beSectionAfterCasting": {
+    "description": "One section heading on the birth entry form covering what happens to the chart once it exists: cloud sync and kundli alerts."
+  },
   "beSyncTitle": "Back up & sync this kundli",
   "beSyncSubtitle": "Available on all your devices. Change anytime in Kundli Details.",
   "beFollowAlertsTitle": "Alert me about this kundli",
@@ -2705,6 +2722,14 @@
   },
   "beFollowAlertsSubtitle": "Dasha changes, transits and Sade Sati for the next 30 days. Works without an account; change anytime from the chart menu.",
   "beCasting": "Casting…",
+  "beFieldRequired": "Required",
+  "@beFieldRequired": {
+    "description": "Inline validation on the birth entry form, shown under whichever required input is empty after Cast is pressed."
+  },
+  "bePlaceNotChosen": "Pick a place from the list, or enter it manually",
+  "@bePlaceNotChosen": {
+    "description": "Shown when the place box has text but no place was actually selected — the field looks filled in, so 'Required' would read as a bug."
+  },
   "dfDay": "Day",
   "dfMonth": "Month",
   "dfYear": "Year",
@@ -2729,7 +2754,6 @@
       }
     }
   },
-  "beRequiredFields":"Name, date, time and place are all required.",
   "beLocationDisabled": "Location is disabled for this app — enable it in Settings.",
   "beLocationUnavailable": "Location unavailable — type the place instead.",
   "beLocationFailed": "Could not get your location — type the place.",
@@ -2769,6 +2793,18 @@
         "type": "String"
       }
     }
+  },
+  "keAlertsSubtitle": "Dasha changes, transits and Sade Sati for the next 30 days. Takes effect immediately — no need to save.",
+  "@keAlertsSubtitle": {
+    "description": "Kundli Details alerts row. Says what is covered and that the switch is live rather than save-bound, since every other edit on that screen waits for Save."
+  },
+  "keSectionChart": "Chart settings",
+  "@keSectionChart": {
+    "description": "Kundli Details section heading over the per-chart display and calculation options (chart style, ayanamsa override)."
+  },
+  "keSectionSharing": "Sharing & sync",
+  "@keSectionSharing": {
+    "description": "Kundli Details section heading over cloud sync and Mahakosh."
   },
   "keTitle": "Kundli Details",
   "keNoteLabel": "Note (optional)",

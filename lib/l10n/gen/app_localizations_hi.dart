@@ -42,6 +42,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get prashnaHint => 'या इसी क्षण के लिए प्रश्न कुंडली बनाएँ';
 
   @override
+  String get bePrashnaAction => 'प्रश्न';
+
+  @override
   String get trustStatement =>
       'गणना डिवाइस पर ही होती है। जब तक आप सिंक चालू नहीं करते, आपकी कुंडली इस फ़ोन से बाहर नहीं जाती।';
 
@@ -3710,6 +3713,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get weekdaySunday => 'रविवार';
 
   @override
+  String get weekdayAbbrMonday => 'सोम';
+
+  @override
+  String get weekdayAbbrTuesday => 'मंगल';
+
+  @override
+  String get weekdayAbbrWednesday => 'बुध';
+
+  @override
+  String get weekdayAbbrThursday => 'गुरु';
+
+  @override
+  String get weekdayAbbrFriday => 'शुक्र';
+
+  @override
+  String get weekdayAbbrSaturday => 'शनि';
+
+  @override
+  String get weekdayAbbrSunday => 'रवि';
+
+  @override
   String get masaChaitra => 'चैत्र';
 
   @override
@@ -4411,7 +4435,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get beSectionCloudSync => 'क्लाउड सिंक';
+  String get beSectionAfterCasting => 'बनाने के बाद';
 
   @override
   String get beSyncTitle => 'इस कुंडली का बैकअप और सिंक करें';
@@ -4429,6 +4453,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get beCasting => 'बन रही है…';
+
+  @override
+  String get beFieldRequired => 'आवश्यक';
+
+  @override
+  String get bePlaceNotChosen => 'सूची से कोई स्थान चुनें, या स्वयं दर्ज करें';
 
   @override
   String get dfDay => 'दिन';
@@ -4486,9 +4516,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String beSaveFailed(String e) {
     return 'कुंडली नहीं बन सकी: $e';
   }
-
-  @override
-  String get beRequiredFields => 'नाम, तिथि, समय और स्थान — सभी आवश्यक हैं।';
 
   @override
   String get beLocationDisabled =>
@@ -4552,6 +4579,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String keSaveFailed(String e) {
     return 'परिवर्तन सहेजे नहीं जा सके: $e';
   }
+
+  @override
+  String get keAlertsSubtitle =>
+      'अगले 30 दिनों के दशा परिवर्तन, गोचर और साढ़ेसाती। तुरंत लागू — सहेजने की आवश्यकता नहीं।';
+
+  @override
+  String get keSectionChart => 'चार्ट सेटिंग्स';
+
+  @override
+  String get keSectionSharing => 'साझा और सिंक';
 
   @override
   String get keTitle => 'कुंडली विवरण';

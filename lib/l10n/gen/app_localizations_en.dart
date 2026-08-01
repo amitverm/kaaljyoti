@@ -42,6 +42,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prashnaHint => 'Or cast a Prashna kundli for this exact moment';
 
   @override
+  String get bePrashnaAction => 'Prashna';
+
+  @override
   String get trustStatement =>
       'Computed on-device. Your kundali never leaves this phone unless you turn on sync.';
 
@@ -3714,6 +3717,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weekdaySunday => 'Sunday';
 
   @override
+  String get weekdayAbbrMonday => 'Mon';
+
+  @override
+  String get weekdayAbbrTuesday => 'Tue';
+
+  @override
+  String get weekdayAbbrWednesday => 'Wed';
+
+  @override
+  String get weekdayAbbrThursday => 'Thu';
+
+  @override
+  String get weekdayAbbrFriday => 'Fri';
+
+  @override
+  String get weekdayAbbrSaturday => 'Sat';
+
+  @override
+  String get weekdayAbbrSunday => 'Sun';
+
+  @override
   String get masaChaitra => 'Chaitra';
 
   @override
@@ -4415,7 +4439,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get beSectionCloudSync => 'CLOUD SYNC';
+  String get beSectionAfterCasting => 'After casting';
 
   @override
   String get beSyncTitle => 'Back up & sync this kundli';
@@ -4433,6 +4457,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get beCasting => 'Casting…';
+
+  @override
+  String get beFieldRequired => 'Required';
+
+  @override
+  String get bePlaceNotChosen =>
+      'Pick a place from the list, or enter it manually';
 
   @override
   String get dfDay => 'Day';
@@ -4490,9 +4521,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String beSaveFailed(String e) {
     return 'Could not create the kundli: $e';
   }
-
-  @override
-  String get beRequiredFields => 'Name, date, time and place are all required.';
 
   @override
   String get beLocationDisabled =>
@@ -4556,6 +4584,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String keSaveFailed(String e) {
     return 'Could not save changes: $e';
   }
+
+  @override
+  String get keAlertsSubtitle =>
+      'Dasha changes, transits and Sade Sati for the next 30 days. Takes effect immediately — no need to save.';
+
+  @override
+  String get keSectionChart => 'Chart settings';
+
+  @override
+  String get keSectionSharing => 'Sharing & sync';
 
   @override
   String get keTitle => 'Kundli Details';

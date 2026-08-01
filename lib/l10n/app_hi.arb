@@ -11,6 +11,7 @@
   "placeOfBirth": "जन्म स्थान",
   "castKundli": "कुंडली बनाएँ",
   "prashnaHint": "या इसी क्षण के लिए प्रश्न कुंडली बनाएँ",
+  "bePrashnaAction": "प्रश्न",
   "trustStatement": "गणना डिवाइस पर ही होती है। जब तक आप सिंक चालू नहीं करते, आपकी कुंडली इस फ़ोन से बाहर नहीं जाती।",
   "savedEncrypted": "{count} सहेजी गईं · इस डिवाइस पर एन्क्रिप्टेड",
   "signInBanner": "अभी कुंडलियाँ केवल इस डिवाइस पर हैं। सिंक + महाकोश अनलॉक करने के लिए साइन इन करें।",
@@ -1687,6 +1688,13 @@
   "weekdayFriday": "शुक्रवार",
   "weekdaySaturday": "शनिवार",
   "weekdaySunday": "रविवार",
+  "weekdayAbbrMonday": "सोम",
+  "weekdayAbbrTuesday": "मंगल",
+  "weekdayAbbrWednesday": "बुध",
+  "weekdayAbbrThursday": "गुरु",
+  "weekdayAbbrFriday": "शुक्र",
+  "weekdayAbbrSaturday": "शनि",
+  "weekdayAbbrSunday": "रवि",
   "masaChaitra": "चैत्र",
   "masaVaishakha": "वैशाख",
   "masaJyeshtha": "ज्येष्ठ",
@@ -2008,12 +2016,14 @@
       }
     }
   },
-  "beSectionCloudSync": "क्लाउड सिंक",
+  "beSectionAfterCasting": "बनाने के बाद",
   "beSyncTitle": "इस कुंडली का बैकअप और सिंक करें",
   "beSyncSubtitle": "आपके सभी डिवाइस पर उपलब्ध। कुंडली विवरण में कभी भी बदलें।",
   "beFollowAlertsTitle": "इस कुंडली की सूचनाएँ भेजें",
   "beFollowAlertsSubtitle": "अगले 30 दिनों के दशा परिवर्तन, गोचर और साढ़ेसाती। बिना किसी खाते के काम करता है; चार्ट मेनू से कभी भी बदलें।",
   "beCasting": "बन रही है…",
+  "beFieldRequired": "आवश्यक",
+  "bePlaceNotChosen": "सूची से कोई स्थान चुनें, या स्वयं दर्ज करें",
   "dfDay": "दिन",
   "dfMonth": "माह",
   "dfYear": "वर्ष",
@@ -2037,7 +2047,6 @@
       }
     }
   },
-  "beRequiredFields": "नाम, तिथि, समय और स्थान — सभी आवश्यक हैं।",
   "beLocationDisabled": "इस ऐप के लिए लोकेशन बंद है — Settings में चालू करें।",
   "beLocationUnavailable": "लोकेशन उपलब्ध नहीं — स्थान हाथ से लिखें।",
   "beLocationFailed": "आपका स्थान नहीं मिल सका — स्थान हाथ से लिखें।",
@@ -2078,6 +2087,9 @@
       }
     }
   },
+  "keAlertsSubtitle": "अगले 30 दिनों के दशा परिवर्तन, गोचर और साढ़ेसाती। तुरंत लागू — सहेजने की आवश्यकता नहीं।",
+  "keSectionChart": "चार्ट सेटिंग्स",
+  "keSectionSharing": "साझा और सिंक",
   "keTitle": "कुंडली विवरण",
   "keNoteLabel": "टिप्पणी (वैकल्पिक)",
   "keChange": "बदलें…",

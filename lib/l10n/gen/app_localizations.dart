@@ -164,6 +164,12 @@ abstract class AppLocalizations {
   /// **'Or cast a Prashna kundli for this exact moment'**
   String get prashnaHint;
 
+  /// Header action on the birth entry form: switches to casting a Prashna (question) chart for the current moment. Short because it is an AppBar action; prashnaHint carries the full explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Prashna'**
+  String get bePrashnaAction;
+
   /// No description provided for @trustStatement.
   ///
   /// In en, this message translates to:
@@ -6735,6 +6741,48 @@ abstract class AppLocalizations {
   /// **'Sunday'**
   String get weekdaySunday;
 
+  /// SHORT civil weekday names (through weekdayAbbrSunday) for the birth entry summary line, where the whole confirmation has to fit on one line. Same distinction from the vara* keys as the full weekday* set above. Hindi uses the conventional short forms — सोम, मंगल, बुध…; note these coincide with several planetXxx values because Hindi day names derive from the grahas, but they are NOT the same strings and must not be aliased to them.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get weekdayAbbrMonday;
+
+  /// No description provided for @weekdayAbbrTuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get weekdayAbbrTuesday;
+
+  /// No description provided for @weekdayAbbrWednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get weekdayAbbrWednesday;
+
+  /// No description provided for @weekdayAbbrThursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get weekdayAbbrThursday;
+
+  /// No description provided for @weekdayAbbrFriday.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get weekdayAbbrFriday;
+
+  /// No description provided for @weekdayAbbrSaturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get weekdayAbbrSaturday;
+
+  /// No description provided for @weekdayAbbrSunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get weekdayAbbrSunday;
+
   /// LUNAR MONTH (maasa) names, Chaitra … Phalguna — fixed terms, transliterate (hi: चैत्र …).
   ///
   /// In en, this message translates to:
@@ -7947,11 +7995,11 @@ abstract class AppLocalizations {
   /// **'More… ({name})'**
   String beMoreWith(String name);
 
-  /// No description provided for @beSectionCloudSync.
+  /// One section heading on the birth entry form covering what happens to the chart once it exists: cloud sync and kundli alerts.
   ///
   /// In en, this message translates to:
-  /// **'CLOUD SYNC'**
-  String get beSectionCloudSync;
+  /// **'After casting'**
+  String get beSectionAfterCasting;
 
   /// No description provided for @beSyncTitle.
   ///
@@ -7982,6 +8030,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Casting…'**
   String get beCasting;
+
+  /// Inline validation on the birth entry form, shown under whichever required input is empty after Cast is pressed.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get beFieldRequired;
+
+  /// Shown when the place box has text but no place was actually selected — the field looks filled in, so 'Required' would read as a bug.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a place from the list, or enter it manually'**
+  String get bePlaceNotChosen;
 
   /// No description provided for @dfDay.
   ///
@@ -8079,12 +8139,6 @@ abstract class AppLocalizations {
   /// **'Could not create the kundli: {e}'**
   String beSaveFailed(String e);
 
-  /// No description provided for @beRequiredFields.
-  ///
-  /// In en, this message translates to:
-  /// **'Name, date, time and place are all required.'**
-  String get beRequiredFields;
-
   /// No description provided for @beLocationDisabled.
   ///
   /// In en, this message translates to:
@@ -8156,6 +8210,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save changes: {e}'**
   String keSaveFailed(String e);
+
+  /// Kundli Details alerts row. Says what is covered and that the switch is live rather than save-bound, since every other edit on that screen waits for Save.
+  ///
+  /// In en, this message translates to:
+  /// **'Dasha changes, transits and Sade Sati for the next 30 days. Takes effect immediately — no need to save.'**
+  String get keAlertsSubtitle;
+
+  /// Kundli Details section heading over the per-chart display and calculation options (chart style, ayanamsa override).
+  ///
+  /// In en, this message translates to:
+  /// **'Chart settings'**
+  String get keSectionChart;
+
+  /// Kundli Details section heading over cloud sync and Mahakosh.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing & sync'**
+  String get keSectionSharing;
 
   /// No description provided for @keTitle.
   ///
