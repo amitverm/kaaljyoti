@@ -40,6 +40,11 @@ const List<String> kVarnaNames = [
 
 String varnaNameOf(ZodiacSign sign) => kVarnaNames[_varnaRank[sign]!];
 
+/// Varna rank 1–4 (Shudra … Brahmin) — the index into [kVarnaNames],
+/// exposed so the presentation layer can localize a varna without
+/// reverse-matching [varnaNameOf]'s English.
+int varnaRankOf(ZodiacSign sign) => _varnaRank[sign]!;
+
 /// Groom's Varna must be equal to or higher than the bride's.
 double varnaKoota(ZodiacSign brideMoonSign, ZodiacSign groomMoonSign) =>
     _varnaRank[groomMoonSign]! >= _varnaRank[brideMoonSign]! ? 1 : 0;

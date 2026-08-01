@@ -452,8 +452,8 @@ class DashboardBody extends ConsumerWidget {
   final ValueChanged<String> onSelectView;
 
   /// Read-only mode: the view chips become pure switchers (no "new view"
-  /// chip, no long-press rename/delete) and cards lose their editing
-  /// affordances (per-widget menu, drag-rearrange, drop targets, the
+  /// chip, no rename/delete sheet, no drag-to-reorder) and cards lose
+  /// their editing affordances (per-widget menu, drag-rearrange, drop targets, the
   /// add/edit-widgets button). Set by the Kundli Compare hosts — in
   /// compare, editing happens only from the main kundli area (spec §3.3).
   final bool readOnly;
@@ -496,7 +496,14 @@ class DashboardBody extends ConsumerWidget {
             _viewChips(context, ref, views, activeView),
             Expanded(
               child: _WidgetGrid(
-                key: ValueKey('grid:$kundliId'),
+                // Keyed by kundli AND view: the grid's internal scroll
+                // controller is built once per State, so without the
+                // view in the key a view switch reused the previous
+                // view's controller — the new board opened at the old
+                // one's offset, and the listener then overwrote the new
+                // view's saved offset with it. Remounting per view makes
+                // each board restore its own position.
+                key: ValueKey('grid:$kundliId:${activeView.id}'),
                 view: activeView,
                 kundliId: kundliId,
                 moduleCtx: moduleCtx,
@@ -514,43 +521,100 @@ class DashboardBody extends ConsumerWidget {
 
   Widget _viewChips(BuildContext context, WidgetRef ref,
       List<DashboardView> views, DashboardView active) {
+    // Read-only (compare) hosts get a plain strip: chips are pure
+    // switchers there, and chip ORDER is shared global state that is
+    // edited only from the main kundli area.
+    if (readOnly) {
+      return SizedBox(
+        height: 46,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            for (final v in views)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _viewChip(context, ref, views, v, active),
+              ),
+          ],
+        ),
+      );
+    }
     return SizedBox(
       height: 46,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
         children: [
-          for (final v in views)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: GestureDetector(
-                // Long-press a view chip for rename/delete — suppressed in
-                // read-only (compare) mode, where chips are pure switchers.
-                onLongPress: readOnly
-                    ? null
-                    : () => _viewActions(context, ref, views, v),
-                child: ChoiceChip(
-                  label: Text(v.name),
-                  selected: v.id == active.id,
-                  labelStyle: TextStyle(
-                      color: v.id == active.id ? KJColors.paper : KJColors.ink),
-                  onSelected: (_) => onSelectView(v.id),
-                ),
-              ),
+          // Shrink-wrapped so the "+ New" chip still sits immediately
+          // after the last view chip; once the chips outgrow the width
+          // the strip scrolls inside this slot and "+ New" stays pinned
+          // (it used to scroll off the end).
+          Flexible(
+            child: ReorderableListView(
+              scrollDirection: Axis.horizontal,
+              shrinkWrap: true,
+              // The chips ARE the drag handles (a handle glyph on a chip
+              // is unreadable at this size) — see the listener below.
+              buildDefaultDragHandles: false,
+              padding: const EdgeInsets.only(left: 16),
+              onReorderItem: (from, to) => _reorderViews(ref, views, from, to),
+              children: [
+                for (var i = 0; i < views.length; i++)
+                  ReorderableDelayedDragStartListener(
+                    key: ValueKey(views[i].id),
+                    index: i,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _viewChip(context, ref, views, views[i], active),
+                    ),
+                  ),
+              ],
             ),
-          // The "new view" affordance is hidden in read-only (compare)
-          // mode — views are created/edited only from the main kundli area.
-          if (!readOnly)
-            ActionChip(
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: ActionChip(
               label: Text(context.l10n.dbNewView),
               onPressed: () => _newView(context, ref),
             ),
+          ),
         ],
       ),
     );
   }
 
-  /// Long-press menu on a view chip: rename / delete.
+  /// One view chip. Tapping a chip that is ALREADY active opens its
+  /// rename/delete sheet — long-press now starts a reorder drag, so the
+  /// actions needed a gesture of their own, and "tap the thing you are
+  /// already looking at" is the one that can't be triggered by accident
+  /// while switching views.
+  Widget _viewChip(BuildContext context, WidgetRef ref,
+      List<DashboardView> views, DashboardView v, DashboardView active) {
+    final isActive = v.id == active.id;
+    return ChoiceChip(
+      label: Text(v.name),
+      selected: isActive,
+      labelStyle: TextStyle(color: isActive ? KJColors.paper : KJColors.ink),
+      onSelected: (_) => isActive && !readOnly
+          ? _viewActions(context, ref, views, v)
+          : onSelectView(v.id),
+    );
+  }
+
+  /// Commit a chip drag. Positions are global (views are shared by every
+  /// kundli), so this writes through immediately rather than holding an
+  /// optimistic local order. [to] is already post-removal (onReorderItem
+  /// guarantees that, unlike the deprecated onReorder), so the moved id
+  /// drops straight in.
+  Future<void> _reorderViews(
+      WidgetRef ref, List<DashboardView> views, int from, int to) async {
+    final ids = views.map((v) => v.id).toList();
+    final moved = ids.removeAt(from);
+    ids.insert(to, moved);
+    await ref.read(dashboardRepoProvider).reorderViews(ids);
+    ref.invalidate(dashboardViewsProvider);
+  }
+
+  /// Rename / delete sheet for a view — opened by tapping the active chip.
   Future<void> _viewActions(BuildContext context, WidgetRef ref,
       List<DashboardView> views, DashboardView view) async {
     final repo = ref.read(dashboardRepoProvider);
@@ -753,19 +817,26 @@ class _WidgetGridState extends ConsumerState<_WidgetGrid> {
   // The board's scroll controller. When the host owns one (compare's
   // shared per-tab controller) we use it directly; otherwise we keep an
   // internal controller that restores the board's scroll position when
-  // the grid remounts (e.g. returning from a module detail screen) —
-  // the offset is persisted per view in [dashboardScrollOffsetProvider].
+  // the grid remounts (e.g. returning from a module detail screen, or
+  // switching back to this view) — the offset is persisted per view PER
+  // KUNDLI in [dashboardScrollOffsetProvider]. Views are global, so the
+  // kundli has to be part of the key or opening a second chart would
+  // land on the first one's position.
   ScrollController? _internalScroll;
+
+  DashboardScrollKey get _offsetKey =>
+      (kundliId: widget.kundliId, viewId: view.id);
 
   ScrollController get _scroll =>
       widget.externalScroll ?? (_internalScroll ??= _makeInternal());
 
   ScrollController _makeInternal() => ScrollController(
-        initialScrollOffset: ref.read(dashboardScrollOffsetProvider(view.id)),
+        initialScrollOffset:
+            ref.read(dashboardScrollOffsetProvider(_offsetKey)),
       )..addListener(_saveOffset);
 
   void _saveOffset() {
-    ref.read(dashboardScrollOffsetProvider(view.id).notifier).state =
+    ref.read(dashboardScrollOffsetProvider(_offsetKey).notifier).state =
         _internalScroll!.offset;
   }
 

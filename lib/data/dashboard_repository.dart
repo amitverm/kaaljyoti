@@ -96,6 +96,25 @@ class DashboardRepository {
         where: 'id = ?', whereArgs: [viewId]);
   }
 
+  /// Persist a new left-to-right order for the view chips. Positions are
+  /// rewritten to the list index — the same whole-list rewrite [reorder]
+  /// does for widget instances, which keeps `position` dense and makes
+  /// the `ORDER BY position` in [views] total. Ids not in the list are
+  /// left alone; the caller always passes the full set.
+  Future<void> reorderViews(List<String> idsInOrder) async {
+    final db = await _db.database;
+    final batch = db.batch();
+    for (var i = 0; i < idsInOrder.length; i++) {
+      batch.update(
+        'dashboard_views',
+        {'position': i},
+        where: 'id = ?',
+        whereArgs: [idsInOrder[i]],
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
   Future<void> deleteView(String viewId) async {
     final db = await _db.database;
     await db.delete('dashboard_views', where: 'id = ?', whereArgs: [viewId]);

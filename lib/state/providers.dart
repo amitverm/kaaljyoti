@@ -1177,11 +1177,20 @@ final varshphalYearProvider =
 final transitFixedTimeProvider =
     StateProvider.family<DateTime?, String>((ref, kundliId) => null);
 
-/// Last dashboard scroll offset per view — restored when the widget
-/// grid remounts after returning from a detail screen, so the board
-/// doesn't jump back to the top.
+/// Identifies one scrolling board: a view id alone is not enough,
+/// because views are GLOBAL — the same view id is rendered for every
+/// kundli, so a view-only key made kundli B open at kundli A's
+/// position. A record key is value-equal, so the family caches per
+/// (kundli, view) pair as intended.
+typedef DashboardScrollKey = ({String kundliId, String viewId});
+
+/// Last dashboard scroll offset per view PER KUNDLI — restored when the
+/// widget grid remounts after returning from a detail screen (or after
+/// switching back to this view), so the board doesn't jump back to the
+/// top. Session state only: opening a different kundli starts each of
+/// its views at the top.
 final dashboardScrollOffsetProvider =
-    StateProvider.family<double, String>((ref, viewId) => 0);
+    StateProvider.family<double, DashboardScrollKey>((ref, key) => 0);
 
 // --- Dashboard views ---------------------------------------------------------
 
