@@ -49,17 +49,23 @@ Future<AppLocalizations> _pump(WidgetTester tester,
 }
 
 Kundli _kundliAt(String place, DateTime created,
-        {double lat = 18.52, double lon = 73.86, String tz = 'Asia/Kolkata'}) =>
+        {double lat = 18.52,
+        double lon = 73.86,
+        String tz = 'Asia/Kolkata',
+        List<String> labels = const [],
+        bool isArchived = false}) =>
     Kundli(
       id: place,
       name: place,
       relationTag: 'Client',
+      labels: labels,
       birthUtc: DateTime.utc(1990, 1, 1),
       latitude: lat,
       longitude: lon,
       timezoneName: tz,
       utcOffsetMinutes: 330,
       placeName: place,
+      isArchived: isArchived,
       createdAt: created,
       updatedAt: created,
     );
@@ -551,6 +557,13 @@ void main() {
   });
 
   group('speed', () {
+    /// The recent-place chips only. The form also carries an add-label
+    /// ActionChip, so a bare byType finder counts the wrong things.
+    final placeChips = find.descendant(
+      of: find.byKey(kRecentPlaceChipsKey),
+      matching: find.byType(ActionChip),
+    );
+
     testWidgets('the name field takes focus on open', (tester) async {
       await _pump(tester);
       final field = tester.widget<TextField>(
@@ -564,7 +577,7 @@ void main() {
     testWidgets('no recent-place chips when the library is empty',
         (tester) async {
       await _pump(tester);
-      expect(find.byType(ActionChip), findsNothing);
+      expect(placeChips, findsNothing);
     });
 
     testWidgets('offers the three most recent places as chips', (tester) async {
@@ -593,7 +606,7 @@ void main() {
       // The field is filled, the chips are gone, and the helper line
       // shows the coordinates and zone the chip carried — the same
       // things a search hit would have set.
-      expect(find.byType(ActionChip), findsNothing);
+      expect(placeChips, findsNothing);
       expect(find.text('16.8000, 96.1500 · Asia/Yangon'), findsOneWidget);
 
       // …and the place no longer counts as missing.
@@ -607,12 +620,12 @@ void main() {
       await _pump(tester, library: [
         _kundliAt('Delhi, India', DateTime(2026, 2, 1)),
       ]);
-      expect(find.byType(ActionChip), findsOneWidget);
+      expect(placeChips, findsOneWidget);
       await tester.enterText(
           find.byKey(const GlobalObjectKey(BirthField.place)), 'Kol');
       await tester.pump();
       // A shortcut past the search, not a filter on it.
-      expect(find.byType(ActionChip), findsNothing);
+      expect(placeChips, findsNothing);
     });
   });
 
@@ -806,6 +819,132 @@ void main() {
         ),
       );
       expect(tile.value, isFalse);
+    });
+  });
+
+  group('the labels section', () {
+    Kundli labelled(String place, List<String> labels,
+            {bool isArchived = false}) =>
+        _kundliAt(place, DateTime(2026, 1, 1),
+            labels: labels, isArchived: isArchived);
+
+    FilterChip chipFor(WidgetTester tester, String label) =>
+        tester.widget<FilterChip>(find.widgetWithText(FilterChip, label));
+
+    testWidgets('shows every label already in use, for one-tap reuse',
+        (tester) async {
+      // The point of the section: labels only group anything if the same
+      // string is reused, and recall is what produces "2026 clients",
+      // "2026 Clients" and "clients 2026" as three separate groups.
+      final l10n = await _pump(tester, library: [
+        labelled('Pune', const ['2026 clients']),
+        labelled('Delhi', const ['matchmaking', '2026 clients']),
+      ]);
+
+      expect(find.text(l10n.klLabels.toUpperCase()), findsOneWidget);
+      expect(find.widgetWithText(FilterChip, '2026 clients'), findsOneWidget);
+      expect(find.widgetWithText(FilterChip, 'matchmaking'), findsOneWidget);
+      // De-duplicated across charts, not one chip per use.
+      expect(find.byType(FilterChip), findsNWidgets(2));
+    });
+
+    testWidgets('starts with nothing selected and toggles on tap',
+        (tester) async {
+      await _pump(tester, library: [
+        labelled('Pune', const ['2026 clients', 'matchmaking']),
+      ]);
+
+      expect(chipFor(tester, '2026 clients').selected, isFalse);
+
+      await tester.tap(find.widgetWithText(FilterChip, '2026 clients'));
+      await tester.pumpAndSettle();
+      expect(chipFor(tester, '2026 clients').selected, isTrue);
+      expect(chipFor(tester, 'matchmaking').selected, isFalse,
+          reason: 'multi-select, so one pick does not displace another');
+
+      // …and off again.
+      await tester.tap(find.widgetWithText(FilterChip, '2026 clients'));
+      await tester.pumpAndSettle();
+      expect(chipFor(tester, '2026 clients').selected, isFalse);
+    });
+
+    testWidgets('more than one label can be selected at once', (tester) async {
+      await _pump(tester, library: [
+        labelled('Pune', const ['2026 clients', 'matchmaking']),
+      ]);
+
+      await tester.tap(find.widgetWithText(FilterChip, '2026 clients'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilterChip, 'matchmaking'));
+      await tester.pumpAndSettle();
+
+      expect(chipFor(tester, '2026 clients').selected, isTrue);
+      expect(chipFor(tester, 'matchmaking').selected, isTrue);
+    });
+
+    testWidgets('offers the add affordance with an empty library',
+        (tester) async {
+      // Nothing to reuse yet, so the section is just the way to coin the
+      // first one — the heading still names what the button is for.
+      final l10n = await _pump(tester);
+      expect(find.text(l10n.klLabels.toUpperCase()), findsOneWidget);
+      expect(find.byType(FilterChip), findsNothing);
+      expect(find.widgetWithText(ActionChip, l10n.klAddLabel), findsOneWidget);
+    });
+
+    testWidgets('a newly coined label is added and pre-selected',
+        (tester) async {
+      final l10n = await _pump(tester);
+      await tester.tap(find.widgetWithText(ActionChip, l10n.klAddLabel));
+      await tester.pumpAndSettle();
+
+      // The dialog offers no existing-label list here: every one of them
+      // is already a chip on the form behind it.
+      expect(find.text(l10n.klExistingLabels.toUpperCase()), findsNothing);
+
+      await tester.enterText(
+          find.widgetWithText(TextField, l10n.klLabelHint), 'court cases');
+      await tester.tap(find.widgetWithText(TextButton, l10n.add));
+      await tester.pumpAndSettle();
+
+      expect(chipFor(tester, 'court cases').selected, isTrue);
+    });
+
+    testWidgets('labels living only on archived charts are not offered',
+        (tester) async {
+      // Same rule as the edit screen, which reads the same provider: the
+      // archive is out of the working vocabulary until asked for.
+      await _pump(tester, library: [
+        labelled('Pune', const ['2026 clients']),
+        labelled('Delhi', const ['retired'], isArchived: true),
+      ]);
+
+      expect(find.widgetWithText(FilterChip, '2026 clients'), findsOneWidget);
+      expect(find.widgetWithText(FilterChip, 'retired'), findsNothing);
+    });
+
+    testWidgets('sits between relation and note, as on the edit screen',
+        (tester) async {
+      final l10n = await _pump(tester, library: [
+        labelled('Pune', const ['2026 clients']),
+      ]);
+      double y(String t) => tester.getTopLeft(find.text(t)).dy;
+      expect(y(l10n.beSectionRelation.toUpperCase()),
+          lessThan(y(l10n.klLabels.toUpperCase())));
+      expect(y(l10n.klLabels.toUpperCase()),
+          lessThan(y(l10n.beSectionNoteOptional.toUpperCase())));
+    });
+
+    testWidgets('a Prashna cast from this form gets labels too',
+        (tester) async {
+      // It is a SAVED chart that lands in the list like any other — the
+      // ephemeral one comes from the list's long-press instead. The note
+      // field above it sets the same precedent.
+      final l10n = await _pump(tester, prashna: true, library: [
+        labelled('Pune', const ['2026 clients']),
+      ]);
+      expect(find.text(l10n.klLabels.toUpperCase()), findsOneWidget);
+      expect(find.widgetWithText(FilterChip, '2026 clients'), findsOneWidget);
     });
   });
 

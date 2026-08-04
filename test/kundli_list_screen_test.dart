@@ -24,6 +24,7 @@ Kundli _k({
   String? note,
   List<String> labels = const [],
   bool syncEnabled = false,
+  bool isArchived = false,
 }) =>
     Kundli(
       id: id,
@@ -31,6 +32,7 @@ Kundli _k({
       relationTag: relationTag,
       note: note,
       labels: labels,
+      isArchived: isArchived,
       birthUtc: DateTime.utc(1987, 3, 12, 3, 22),
       latitude: 18.52,
       longitude: 73.86,
@@ -287,11 +289,185 @@ void main() {
     expect(find.text('Chart 7'), findsNWidgets(2));
   });
 
+  group('the archived filter chip', () {
+    /// Scoped to the app bar: the chip carries the archive glyph too, so
+    /// a bare byIcon finder cannot tell the bulk action from the filter.
+    Finder barIcon(IconData icon) => find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byIcon(icon),
+        );
+
+    testWidgets('does not render when nothing is archived', (tester) async {
+      await pump(tester, [
+        _k(id: 'a', name: 'Aarti', labels: const ['matchmaking']),
+      ]);
+      expect(find.textContaining('Archived'), findsNothing);
+    });
+
+    testWidgets('shows the count and sits last in the row', (tester) async {
+      await pump(tester, [
+        _k(id: 'a', name: 'Aarti', labels: const ['matchmaking']),
+        _k(id: 'b', name: 'Bela', isArchived: true),
+        _k(id: 'c', name: 'Chetan', isArchived: true),
+      ]);
+
+      expect(find.text('Archived (2)'), findsOneWidget);
+      // Last: to the right of the "All" chip and of the label chip.
+      double x(String t) => tester.getTopLeft(find.text(t)).dx;
+      expect(x('Archived (2)'), greaterThan(x('All')));
+      expect(x('Archived (2)'), greaterThan(x('matchmaking')));
+    });
+
+    testWidgets('appears even when it is the only thing to filter by',
+        (tester) async {
+      // No labels and a single relation tag, so the row's other two
+      // reasons to exist are both absent — and the archive would
+      // otherwise be unreachable.
+      await pump(tester, [
+        _k(id: 'a', name: 'Aarti'),
+        _k(id: 'b', name: 'Bela', isArchived: true),
+      ]);
+      expect(find.text('Archived (1)'), findsOneWidget);
+    });
+
+    testWidgets('archived charts stay out of the list until it is tapped',
+        (tester) async {
+      await pump(tester, [
+        _k(id: 'a', name: 'Aarti'),
+        _k(id: 'b', name: 'Bela', isArchived: true),
+      ]);
+      expect(find.text('Aarti'), findsOneWidget);
+      expect(find.text('Bela'), findsNothing);
+    });
+
+    testWidgets('selecting it swaps the body for the archived charts',
+        (tester) async {
+      await pump(tester, [
+        _k(id: 'a', name: 'Aarti'),
+        _k(id: 'b', name: 'Bela', isArchived: true),
+      ]);
+
+      await tester.tap(find.text('Archived (1)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bela'), findsOneWidget);
+      expect(find.text('Aarti'), findsNothing,
+          reason: 'the archived view replaces the list, it does not append');
+    });
+
+    testWidgets('tapping it again returns to the active library',
+        (tester) async {
+      final container = await pump(tester, [
+        _k(id: 'a', name: 'Aarti'),
+        _k(id: 'b', name: 'Bela', isArchived: true),
+      ]);
+
+      await tester.tap(find.text('Archived (1)'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Archived (1)'));
+      await tester.pumpAndSettle();
+
+      expect(container.read(kundliFilterProvider), isNull);
+      expect(find.text('Aarti'), findsOneWidget);
+      expect(find.text('Bela'), findsNothing);
+    });
+
+    testWidgets('search composes with it', (tester) async {
+      await pump(tester, [
+        for (var i = 0; i < 20; i++) _k(id: '$i', name: 'Chart $i'),
+        _k(id: 'x', name: 'Ramesh Sharma', isArchived: true),
+        _k(id: 'y', name: 'Sunita Patil', isArchived: true),
+      ]);
+
+      await tester.tap(find.text('Archived (2)'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'ramesh');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ramesh Sharma'), findsOneWidget);
+      expect(find.text('Sunita Patil'), findsNothing);
+    });
+
+    testWidgets('no pinned section inside the archived view', (tester) async {
+      // Archiving drops the pin, but a chart can arrive archived from
+      // another device while this one still holds the pin locally.
+      final container = await pump(tester, [
+        _k(id: 'a', name: 'Aarti'),
+        _k(id: 'b', name: 'Bela', isArchived: true),
+      ]);
+      container.read(pinnedKundlisProvider.notifier).toggle('b');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Archived (1)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('PINNED'), findsNothing);
+      expect(find.text('Bela'), findsOneWidget);
+    });
+
+    testWidgets('bulk-select there offers Unarchive', (tester) async {
+      await pump(tester, [
+        _k(id: 'a', name: 'Aarti'),
+        _k(id: 'b', name: 'Bela', isArchived: true),
+      ]);
+
+      await tester.longPress(find.text('Aarti'));
+      await tester.pumpAndSettle();
+      expect(barIcon(Icons.archive_outlined), findsOneWidget);
+      expect(barIcon(Icons.unarchive_outlined), findsNothing);
+
+      // An all-archived selection flips the one button round.
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Archived (1)'));
+      await tester.pumpAndSettle();
+      await tester.longPress(find.text('Bela'));
+      await tester.pumpAndSettle();
+      expect(barIcon(Icons.unarchive_outlined), findsOneWidget);
+      expect(barIcon(Icons.archive_outlined), findsNothing);
+    });
+  });
+
   testWidgets('first run shows the empty state, not the search chrome',
       (tester) async {
     await pump(tester, []);
 
     expect(find.byType(TextField), findsNothing);
     expect(find.text('New Kundli'), findsOneWidget);
+  });
+
+  // The nav pill clipped on the right on narrow real phones (seen on a
+  // 360dp Android) and in every phone-width test — five sections of text
+  // can outgrow the screen, and the test font's square glyphs make the
+  // labels wider still. KJNavPill now scales down instead of clipping,
+  // and these pins hold at the sizes that used to fail. Overflow needs
+  // no explicit assert: the tester turns RenderFlex overflow into a
+  // test failure on its own.
+  group('the nav pill fits phone widths', () {
+    Future<void> pumpAt(WidgetTester tester, Size logical,
+        {double textScale = 1.0}) async {
+      tester.view.physicalSize = logical;
+      tester.view.devicePixelRatio = 1.0;
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearAllTestValues);
+      await pump(tester, [_k(id: 'a', name: 'Ramesh Sharma')]);
+    }
+
+    testWidgets('393x852 (iPhone 15) — used to overflow by 106px',
+        (tester) async {
+      await pumpAt(tester, const Size(393, 852));
+    });
+
+    testWidgets('360x800 (narrow Android) — used to overflow by 139px',
+        (tester) async {
+      await pumpAt(tester, const Size(360, 800));
+    });
+
+    testWidgets('360x800 with a raised system font size', (tester) async {
+      // The classmate case: narrow screen AND a user-scaled font. The
+      // pill must absorb both at once.
+      await pumpAt(tester, const Size(360, 800), textScale: 1.3);
+    });
   });
 }

@@ -220,6 +220,90 @@ void main() {
     });
   });
 
+  group('global (ingress) events', () {
+    test('only transit ingresses are global', () {
+      expect(isGlobalAlertEvent(_ingress(Planet.saturn, 1)), isTrue);
+      expect(isGlobalAlertEvent(_ingress(Planet.mercury, 1)), isTrue,
+          reason: 'globalness is about the sky, not about the band');
+      expect(isGlobalAlertEvent(_aspect(Planet.saturn, 1)), isFalse);
+      expect(isGlobalAlertEvent(_dasha(1, 1)), isFalse);
+      expect(isGlobalAlertEvent(_sadeSati(1)), isFalse);
+    });
+
+    test('collapses repeats of one ingress, keeping the first', () {
+      final first = _ingress(Planet.saturn, 3);
+      final deduped = dedupeGlobalAlertEvents([
+        first,
+        _ingress(Planet.saturn, 3),
+        _ingress(Planet.saturn, 3),
+      ]);
+      expect(deduped, hasLength(1));
+      expect(identical(deduped.single, first), isTrue);
+    });
+
+    test('keys on instant AND label, so distinct ingresses both survive', () {
+      final deduped = dedupeGlobalAlertEvents([
+        _ingress(Planet.saturn, 3),
+        _ingress(Planet.jupiter, 3), // same instant, different label
+        _ingress(Planet.saturn, 9), // same label stem, different instant
+      ]);
+      expect(deduped, hasLength(3));
+    });
+
+    test('an ayanamsa override lands on its own instant and survives', () {
+      // Not a heuristic for "the same event": a chart with its own
+      // ayanamsa genuinely crosses the sign boundary at another moment,
+      // and that is a different fact about the sky under that setting.
+      final shared = _ingress(Planet.saturn, 3);
+      final shifted = FeedEvent(
+        time: shared.time.add(const Duration(minutes: 4)),
+        label: shared.label,
+        source: FeedSource.transit,
+        planet: Planet.saturn,
+        transitKind: TransitEventKind.ingress,
+      );
+      expect(dedupeGlobalAlertEvents([shared, shared, shifted]), hasLength(2));
+    });
+
+    test('non-global events pass through untouched, order preserved', () {
+      final events = [
+        _dasha(1, 5),
+        _sadeSati(5), // same instant as the dasha change
+        _aspect(Planet.saturn, 5), // …and as the aspect
+        _sadeSati(5),
+        _ingress(Planet.saturn, 2),
+        _dasha(2, 1),
+        _ingress(Planet.saturn, 2),
+      ];
+      final deduped = dedupeGlobalAlertEvents(events);
+      expect(deduped.map((e) => e.label), [
+        'dasha L1 d5',
+        'sade sati d5',
+        'Saturn aspect d5',
+        'sade sati d5',
+        'Saturn ingress d2',
+        'dasha L2 d1',
+      ]);
+    });
+
+    test('duplicates of one ingress consume a single slot under the cap', () {
+      // Ten followed charts, each reporting the same sign change plus
+      // its own aspect. Undeduped, the ingresses would take ten of the
+      // twelve slots and starve the aspects.
+      final all = [
+        for (var chart = 0; chart < 10; chart++) ...[
+          _ingress(Planet.saturn, 3),
+          _aspect(Planet.mars, chart + 1),
+        ],
+      ];
+      final picked = selectAlertEvents(dedupeGlobalAlertEvents(all), cap: 11);
+      expect(picked.where((e) => alertBandOf(e) == AlertBand.slowIngress),
+          hasLength(1));
+      expect(picked.where((e) => alertBandOf(e) == AlertBand.aspect),
+          hasLength(10));
+    });
+  });
+
   group('followedKundlisProvider', () {
     setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -587,6 +671,111 @@ void main() {
       await s.ensurePermission();
       await s.ensurePermission();
       expect(fake.permissionRequests, 1);
+    });
+
+    group('a global ingress is scheduled once, for nobody in particular', () {
+      /// One shared sign change plus one chart-specific event each — the
+      /// shape every followed chart's scan really produces.
+      List<FeedEvent> events({
+        required Kundli kundli,
+        required int defaultAyanamsaId,
+        required AppLocalizations l10n,
+        required AlertSettings settings,
+        required DateTime from,
+        required DateTime to,
+      }) =>
+          [
+            FeedEvent(
+              time: from.add(const Duration(days: 4)),
+              label: 'Saturn enters Kumbha',
+              source: FeedSource.transit,
+              planet: Planet.saturn,
+              transitKind: TransitEventKind.ingress,
+            ),
+            FeedEvent(
+              time: from.add(const Duration(days: 6)),
+              label: '${kundli.id} MD',
+              source: FeedSource.dasha,
+              dashaLevel: 1,
+            ),
+          ];
+
+      KundliAlertService service() =>
+          KundliAlertService(scheduler: fake, events: events);
+
+      PendingAlert ingressAlert() =>
+          fake.scheduled.singleWhere((a) => a.title == 'Saturn enters Kumbha');
+
+      test('two charts reporting it yield one anonymous notification',
+          () async {
+        await run(service(), followed: {'k1', 'k2'});
+        // Two mahadasha changes, one shared ingress — not three and one.
+        expect(fake.scheduled, hasLength(3));
+        final ingress = ingressAlert();
+        expect(ingress.payload, '', reason: 'it belongs to no chart');
+        expect(ingress.body, l10n.ueSourceTransit);
+        expect(fake.scheduled.where((a) => a.payload == 'k1'), hasLength(1));
+        expect(fake.scheduled.where((a) => a.payload == 'k2'), hasLength(1));
+      });
+
+      test('the persisted record carries an empty kundli id too', () async {
+        // The alerts screen keys navigation off kundliId; an empty one
+        // is what makes the row non-navigating rather than a link to a
+        // chart the event says nothing about.
+        await run(service(), followed: {'k1', 'k2'});
+        final summary = await SettingsRepository().alertScheduleSummary();
+        final record = summary.alerts
+            .singleWhere((a) => a.title == 'Saturn enters Kumbha');
+        expect(record.kundliId, '');
+      });
+
+      test('its id is the anonymous one, and stable across passes', () async {
+        final s = service();
+        await run(s, followed: {'k1', 'k2'});
+        final first = ingressAlert();
+        expect(
+          first.id,
+          alertNotificationId('', first.when, 'Saturn enters Kumbha'),
+        );
+        await run(s, followed: {'k1', 'k2'});
+        expect(ingressAlert().id, first.id);
+      });
+
+      test('same-instant events that are not ingresses stay per chart',
+          () async {
+        // Identical time AND label from two charts: a Sade Sati boundary
+        // is a fact about a natal Moon, so two charts sharing one is two
+        // alerts, not one.
+        final s = KundliAlertService(
+          scheduler: fake,
+          events: ({
+            required kundli,
+            required defaultAyanamsaId,
+            required l10n,
+            required settings,
+            required from,
+            required to,
+          }) =>
+              [
+            FeedEvent(
+              time: from.add(const Duration(days: 4)),
+              label: 'Sade Sati begins',
+              source: FeedSource.sadeSati,
+            ),
+            FeedEvent(
+              time: from.add(const Duration(days: 4)),
+              label: 'Saturn aspect',
+              source: FeedSource.transit,
+              planet: Planet.saturn,
+              transitKind: TransitEventKind.aspect,
+            ),
+          ],
+        );
+        await run(s, followed: {'k1', 'k2'});
+        expect(fake.scheduled, hasLength(4));
+        expect(fake.scheduled.map((a) => a.payload).toSet(), {'k1', 'k2'});
+        expect(fake.scheduled.map((a) => a.id).toSet(), hasLength(4));
+      });
     });
 
     group('diagnostics summary', () {

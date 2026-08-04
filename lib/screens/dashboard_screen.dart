@@ -37,6 +37,7 @@ import '../ui/module_config_chips.dart';
 import '../widgetsystem/astro_module.dart';
 import '../widgetsystem/registry.dart';
 import '../widgetsystem/view_templates.dart';
+import 'kundli_list_screen.dart' show setKundlisArchived;
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key, required this.kundliId});
@@ -180,6 +181,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   onTap: () => context.push('/kundli/$kundliId/edit'),
                   child: _menuRow(Icons.edit_outlined, ctx.l10n.klEditKundli),
                 ),
+              // Archive / unarchive. Same two exclusions as the follow
+              // toggle: a Mahakosh community chart has no local row to
+              // flag, and an unkept Prashna isn't in the list this would
+              // remove it from. Reached only from here — list rows carry
+              // no per-row menu by design.
+              if (!isMahakoshKundliId(kundliId) &&
+                  !(kundliAsync.value?.isEphemeral ?? false))
+                PopupMenuItem(
+                  onTap: () =>
+                      _toggleArchived(kundliAsync.value?.isArchived ?? false),
+                  child: _menuRow(
+                    (kundliAsync.value?.isArchived ?? false)
+                        ? Icons.unarchive_outlined
+                        : Icons.archive_outlined,
+                    (kundliAsync.value?.isArchived ?? false)
+                        ? ctx.l10n.klUnarchive
+                        : ctx.l10n.klArchive,
+                  ),
+                ),
             ],
           ),
         ],
@@ -229,6 +249,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       content: Text(nowFollowed
           ? context.l10n.klAlertsOnN('1')
           : context.l10n.klAlertsOffN('1')),
+    ));
+  }
+
+  /// Archive this chart (or bring it back), with an Undo — the menu
+  /// closes on tap, so the snackbar is the only thing that says which
+  /// way it went, and archiving from a mis-tap is otherwise only
+  /// recoverable by going and finding the collapsed section.
+  ///
+  /// The dashboard itself is unaffected either way: an archived chart is
+  /// still fully open here, and stays reachable by direct navigation.
+  Future<void> _toggleArchived(bool wasArchived) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final id = widget.kundliId;
+    await setKundlisArchived(ref, [id], archived: !wasArchived);
+    messenger.showSnackBar(SnackBar(
+      content: Text(
+          wasArchived ? l10n.klUnarchivedN('1') : l10n.klArchivedN('1')),
+      action: SnackBarAction(
+        label: l10n.klUndo,
+        onPressed: () => setKundlisArchived(ref, [id], archived: wasArchived),
+      ),
     ));
   }
 
@@ -397,6 +439,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     name: name,
                     isEphemeral: false,
                   ));
+              // Keep is a creation — the only one that does not arrive
+              // through KundliRepository.create.
+              ref.read(devicePingServiceProvider)?.pingSoon();
               ref.invalidate(kundlisProvider);
               ref.invalidate(kundliByIdProvider(kundli.id));
             },
@@ -404,6 +449,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           TextButton(
             onPressed: () async {
+              // No pingSoon here: this banner only ever shows on an
+              // EPHEMERAL Prashna, so discarding it changes neither
+              // number a ping reports. delete() still marks the counters
+              // dirty (it cannot tell ephemeral from saved without a
+              // point-read), and that spurious flag simply rides along
+              // with the next ping rather than earning one of its own.
               await ref.read(kundliRepoProvider).delete(kundli.id);
               ref.invalidate(kundlisProvider);
               if (context.mounted) context.go('/');

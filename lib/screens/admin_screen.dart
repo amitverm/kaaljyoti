@@ -10,6 +10,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../admin/admin_repository.dart';
 import '../core/date_format.dart';
 import '../core/theme/theme.dart';
 import '../mahakosh/models.dart';
@@ -39,6 +40,12 @@ final _pendingCommentReportsProvider =
   final repo = ref.watch(adminRepoProvider);
   if (repo == null) return Future.value([]);
   return repo.pendingCommentReports();
+});
+
+final _appStatsProvider = FutureProvider.autoDispose<AppStats?>((ref) {
+  final repo = ref.watch(adminRepoProvider);
+  if (repo == null) return Future.value(null);
+  return repo.appStats();
 });
 
 class AdminScreen extends ConsumerStatefulWidget {
@@ -81,10 +88,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         ref.invalidate(_pendingRequestsProvider);
         ref.invalidate(_pendingReportsProvider);
         ref.invalidate(_pendingCommentReportsProvider);
+        ref.invalidate(_appStatsProvider);
       },
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
         children: [
+          _label('USAGE'),
+          _statsCard(ref),
+          const SizedBox(height: 24),
           _label('PENDING RESEARCH REQUESTS'),
           requests.when(
             loading: () => const Padding(
@@ -155,6 +166,73 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       ),
     );
   }
+
+  /// The seven counts from 0030's app_stats, in two rows because they are
+  /// two different measurements: devices (anonymous pings, complete but
+  /// approximate) and kundlis (device sums, with the exact synced pair
+  /// underneath as a secondary line). A failure here is not worth a red
+  /// error string in a moderation queue — the numbers are informational,
+  /// so an unavailable count reads as an em-dash and the rest of the
+  /// screen carries on.
+  Widget _statsCard(WidgetRef ref) {
+    const dash = '—';
+    final stats = ref.watch(_appStatsProvider).valueOrNull;
+    String n(int? value) => value?.toString() ?? dash;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _label('DEVICES'),
+            Row(
+              children: [
+                Expanded(child: _stat('Total', n(stats?.devicesTotal))),
+                Expanded(
+                    child: _stat('Active (30d)', n(stats?.devicesActive30d))),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _label('KUNDLIS'),
+            Row(
+              children: [
+                Expanded(
+                    child:
+                        _stat('Created ever', n(stats?.kundlisCreatedTotal))),
+                Expanded(child: _stat('Current', n(stats?.kundlisCurrent))),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // Two qualifications on the row above, both secondary and
+            // both worth keeping. "active 30d" is the conservative twin
+            // of Current — the same sum with dormant devices dropped, so
+            // the pair reads as a range. "synced" counts only kundlis
+            // whose owner enabled sync: never the headline number, but
+            // never forgotten either, since it is the one figure here
+            // that is not an estimate.
+            Text(
+              'active 30d: ${n(stats?.kundlisCurrentActive30d)}'
+              ' · synced: ${n(stats?.syncedCreatedTotal)} ever'
+              ' · ${n(stats?.syncedCurrent)} now',
+              style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _stat(String label, String value) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(value, style: KJTheme.mono(size: 20)),
+          const SizedBox(height: 2),
+          Text(label,
+              style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft)),
+        ],
+      );
 
   Widget _label(String t) => Padding(
         padding: const EdgeInsets.only(bottom: 8),

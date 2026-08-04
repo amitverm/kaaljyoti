@@ -23,6 +23,7 @@ import '../ui/manual_place_dialog.dart';
 import '../l10n/astro_l10n.dart';
 import '../state/providers.dart';
 import '../ui/common.dart';
+import 'kundli_list_screen.dart' show showLabelPicker;
 
 /// Whether a freshly created kundli joins the alert follow-set.
 ///
@@ -72,6 +73,11 @@ List<PlaceResult> recentBirthPlaces(
   return out;
 }
 
+/// Identifies the recent-birth-place chip row, so a test can ask about
+/// those chips specifically rather than about every ActionChip on the
+/// form.
+const kRecentPlaceChipsKey = Key('recentPlaceChips');
+
 class BirthEntryScreen extends ConsumerStatefulWidget {
   const BirthEntryScreen({super.key, this.prashna = false});
   final bool prashna;
@@ -98,6 +104,11 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
   // per kundli on the Kundli Details screen.
   ChartStyle _style = ChartStyle.north;
   String _relationTag = 'Client';
+
+  /// Labels chosen for the chart being cast. Local until Cast, exactly
+  /// like [_relationTag] and the note — nothing is written before the
+  /// kundli exists.
+  final Set<String> _labels = {};
   bool _syncEnabled = true; // default ON for signed-in users
   // Default ON, and per-creation only — exactly like _syncEnabled above,
   // which is a plain field and not a stored preference either. A chart
@@ -126,17 +137,6 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
       setState(() => _missing = {..._missing}..remove(field));
     }
   }
-
-  // Client-first ordering — this app is used by professional astrologers,
-  // so the chart is usually someone other than the user.
-  static const _relationTags = [
-    'Client',
-    'Self',
-    'Spouse',
-    'Family',
-    'Friend',
-    'Other',
-  ];
 
   @override
   void initState() {
@@ -266,6 +266,10 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
             note: _noteController.text.trim().isEmpty
                 ? null
                 : _noteController.text.trim(),
+            // Ordered for the row, not for the Set's iteration order —
+            // labels render in a Wrap and a stable order is one less
+            // thing to differ between this device and a synced one.
+            labels: _labels.toList()..sort(),
             birthUtc: resolved.utc,
             latitude: _place!.latitude,
             longitude: _place!.longitude,
@@ -282,6 +286,9 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
         // Fire-and-forget initial backup; sync is best-effort.
         ref.read(syncServiceProvider)?.pushAll();
       }
+      // Outside the sync branch on purpose: the anonymous device count
+      // exists precisely to see the charts that never sync.
+      ref.read(devicePingServiceProvider)?.pingSoon();
       if (shouldFollowNewKundli(
         toggleOn: _followAlerts,
         prashna: widget.prashna,
@@ -478,7 +485,7 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
               // The STORED tag stays English (it's persisted on the row
               // and read back by relationTagLabel); only the chip's text
               // is localized.
-              for (final tag in _relationTags)
+              for (final tag in kRelationTags)
                 ChoiceChip(
                   label: Text(relationTagLabel(l10n, tag)),
                   selected: _relationTag == tag,
@@ -489,6 +496,20 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
                 ),
             ],
           ),
+          const SizedBox(height: 20),
+          // Same slot as on the edit screen (birth → relation → labels →
+          // note), so the two forms stay readable as one form. Labels sit
+          // before the free-text note: both group-by-tap steps together,
+          // then prose.
+          //
+          // Offered for a Prashna too: a Prashna cast from THIS screen is
+          // a saved chart that lands in the list like any other (the
+          // ephemeral one comes from the list's long-press instead), so
+          // it files under the same groupings. The note field sets the
+          // same precedent — what the Prashna variant hides is the
+          // "after casting" block, which is about a chart's afterlife,
+          // not about identifying it.
+          _labelPicker(l10n),
           const SizedBox(height: 20),
           _sectionLabel(l10n.beSectionNoteOptional),
           TextField(
@@ -629,6 +650,70 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
 
   Widget _sectionLabel(String t) => KJSectionLabel(t, padded: true);
 
+  /// Labels for the chart about to be cast: every label already in use
+  /// as a one-tap FilterChip, plus an "Add label" chip for coining a new
+  /// one.
+  ///
+  /// Showing the existing set is the whole point. Labels are only worth
+  /// anything when the same string is reused — a library where the same
+  /// group is spelled "2026 clients", "2026 Clients" and "clients 2026"
+  /// is three groups and no grouping. Making the user recall the exact
+  /// wording at the moment they are casting a chart is how that happens;
+  /// showing them the words removes the chance.
+  ///
+  /// The source is [kundliListDataProvider], as on the edit screen —
+  /// which means labels living only on archived charts are not offered.
+  /// That is the same rule everywhere: the archive is out of the working
+  /// set until you go and ask for it.
+  Widget _labelPicker(AppLocalizations l10n) {
+    final existing = ref.watch(kundliListDataProvider).value?.labels ??
+        const <String>[];
+    // Union, so a label just coined in the dialog keeps its chip even
+    // though no saved chart carries it yet.
+    final offered = {...existing, ..._labels}.toList()..sort();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionLabel(l10n.klLabels),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final label in offered)
+              FilterChip(
+                label: Text(label),
+                selected: _labels.contains(label),
+                // The theme's selectedColor is maroon, so the label and
+                // the tick both have to flip to paper to stay legible.
+                labelStyle: TextStyle(
+                    color: _labels.contains(label)
+                        ? KJColors.paper
+                        : KJColors.ink),
+                checkmarkColor: KJColors.paper,
+                onSelected: (on) => setState(
+                    () => on ? _labels.add(label) : _labels.remove(label)),
+              ),
+            ActionChip(
+              avatar: const Icon(Icons.add, size: 16),
+              label: Text(l10n.klAddLabel),
+              onPressed: () async {
+                // No `existing:` list passed, unlike the edit screen's
+                // version of this call: there the dialog is the only
+                // place the vocabulary is visible, whereas here every
+                // label is already a chip two lines up. Offering the
+                // same set twice in one glance reads as a bug.
+                final picked = await showLabelPicker(context, existing: const []);
+                if (picked == null || !mounted) return;
+                setState(() => _labels.add(picked));
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   /// Up to three previously-used birth places, offered while the place
   /// box is empty.
   ///
@@ -647,6 +732,10 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Wrap(
+        // Keyed so tests can scope to THESE chips. The form carries a
+        // second ActionChip now (add-label), and a bare byType finder
+        // silently starts counting it.
+        key: kRecentPlaceChipsKey,
         spacing: 8,
         runSpacing: 8,
         children: [

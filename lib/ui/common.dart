@@ -72,67 +72,80 @@ class KJNavPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      minimum: const EdgeInsets.only(bottom: 12),
+      // 8pt at the sides so the scaled-down pill below never touches the
+      // screen edge on the devices that force the scaling.
+      minimum: const EdgeInsets.fromLTRB(8, 0, 8, 12),
       // heightFactor: 1 keeps the bar at its intrinsic height — a bare
       // Center would expand to fill the screen and crush the body.
       child: Center(
         heightFactor: 1,
-        child: Container(
-          padding: const EdgeInsets.all(KJSpace.xs),
-          decoration: BoxDecoration(
-            color: KJColors.ink,
-            borderRadius: KJRadius.all(KJRadius.pill),
-            boxShadow: [
-              BoxShadow(
-                color: KJColors.ink.withValues(alpha: KJTint.medium),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final (section, label, icon, path)
-                  in _itemsFor(context.l10n))
-                GestureDetector(
-                  onTap: () => context.go(path),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: icon != null ? KJSpace.md + 1 : KJSpace.lg,
-                        vertical: KJSpace.sm + 1),
-                    decoration: BoxDecoration(
-                      color: section == current
-                          ? KJColors.maroon
-                          : Colors.transparent,
-                      borderRadius: KJRadius.all(KJRadius.pill),
-                    ),
-                    child: icon != null
-                        ? Icon(
-                            icon,
-                            size: KJIcon.md,
-                            color: section == current
-                                ? KJColors.paper
-                                : KJColors.paper
-                                    .withValues(alpha: KJTint.inactive),
-                          )
-                        : Text(
-                            label!,
-                            style: KJType.chip(
-                              size: 12.5,
+        // scaleDown: at its intrinsic width the pill renders untouched —
+        // this is a no-op on typical phones. But five sections of real
+        // text CAN outgrow a narrow screen (360dp Androids, a large
+        // system font size, the longer Hindi labels), and the pill used
+        // to clip on the right when they did. Scaling the whole pill
+        // keeps every section visible and the grammar intact; a slightly
+        // smaller pill beats a nav bar missing its last two entries.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Container(
+            padding: const EdgeInsets.all(KJSpace.xs),
+            decoration: BoxDecoration(
+              color: KJColors.ink,
+              borderRadius: KJRadius.all(KJRadius.pill),
+              boxShadow: [
+                BoxShadow(
+                  color: KJColors.ink.withValues(alpha: KJTint.medium),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final (section, label, icon, path)
+                    in _itemsFor(context.l10n))
+                  GestureDetector(
+                    onTap: () => context.go(path),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal:
+                              icon != null ? KJSpace.md + 1 : KJSpace.lg,
+                          vertical: KJSpace.sm + 1),
+                      decoration: BoxDecoration(
+                        color: section == current
+                            ? KJColors.maroon
+                            : Colors.transparent,
+                        borderRadius: KJRadius.all(KJRadius.pill),
+                      ),
+                      child: icon != null
+                          ? Icon(
+                              icon,
+                              size: KJIcon.md,
                               color: section == current
                                   ? KJColors.paper
                                   : KJColors.paper
                                       .withValues(alpha: KJTint.inactive),
-                            ).copyWith(
-                              fontWeight: section == current
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
+                            )
+                          : Text(
+                              label!,
+                              style: KJType.chip(
+                                size: 12.5,
+                                color: section == current
+                                    ? KJColors.paper
+                                    : KJColors.paper
+                                        .withValues(alpha: KJTint.inactive),
+                              ).copyWith(
+                                fontWeight: section == current
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                              ),
                             ),
-                          ),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

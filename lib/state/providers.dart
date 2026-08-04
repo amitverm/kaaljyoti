@@ -33,6 +33,7 @@ import '../mahakosh/discussion_repository.dart';
 import '../mahakosh/mahakosh_repository.dart';
 import '../mahakosh/models.dart';
 import '../mahakosh/research_repository.dart';
+import '../services/device_ping_service.dart';
 import '../services/kundli_alert_service.dart';
 import '../services/place_lookup_service.dart';
 import '../services/push_service.dart';
@@ -175,6 +176,22 @@ final syncServiceProvider = Provider<SyncService?>((ref) {
           ref.watch(kundliEventRepoProvider), ref.watch(journalRepoProvider));
 });
 
+/// The app's only telemetry (see device_ping_service.dart's header).
+/// Null when the backend is unconfigured, exactly like the sync service
+/// above — an offline build has nowhere to ping and nothing to say.
+final devicePingServiceProvider = Provider<DevicePingService?>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  if (client == null) return null;
+  final service = DevicePingService(client,
+      kundlis: ref.watch(kundliRepoProvider),
+      settings: ref.watch(settingsRepoProvider));
+  // The service holds a debounce timer (pingSoon). Rebuilding this
+  // provider — a sign-in, say — would otherwise leave the old instance's
+  // timer alive to fire through a client nobody is using any more.
+  ref.onDispose(service.dispose);
+  return service;
+});
+
 final adminRepoProvider = Provider<AdminRepository?>((ref) {
   final client = ref.watch(supabaseClientProvider);
   return client == null ? null : AdminRepository(client);
@@ -257,10 +274,18 @@ final activeKundliIdProvider = StateProvider<String?>((ref) => null);
 // charts findable: ordering, pinning, recency, search, and filtering.
 
 /// What a filter chip stands for. Relation tags come from the closed set
-/// on the kundli row; labels are user-created.
-enum KundliFilterKind { relation, label }
+/// on the kundli row; labels are user-created; [archived] is the one
+/// chip with no value of its own — it swaps the list body for the
+/// charts every other view deliberately leaves out.
+enum KundliFilterKind { relation, label, archived }
 
 typedef KundliFilter = ({KundliFilterKind kind, String value});
+
+/// The archived chip's filter. A constant rather than a literal at each
+/// call site, so the empty [KundliFilter.value] can't drift into
+/// something a `==` comparison would miss.
+const kArchivedFilter =
+    (kind: KundliFilterKind.archived, value: '');
 
 /// Free-text query over name, note, place, labels, and relation tag.
 final kundliSearchProvider = StateProvider<String>((ref) => '');
@@ -601,31 +626,49 @@ class KundliListData {
     required this.pinned,
     required this.others,
     required this.recents,
+    required this.archivedCount,
     required this.labels,
     required this.relationTags,
     required this.totalCount,
   });
 
-  /// Pinned matches, in the active sort order.
+  /// Pinned matches, in the active sort order. Always empty under the
+  /// archived filter — archiving drops a chart's pin, so a pinned
+  /// section there would be a heading over nothing.
   final List<Kundli> pinned;
 
   /// Everything else that survived search + filter, in sort order.
+  /// Archived charts appear here ONLY under the archived filter: to
+  /// every other view they don't exist, which is the whole point.
   final List<Kundli> others;
 
   /// Head of the recents list — the strip. Excludes pinned charts,
-  /// which already have a permanent home above.
+  /// which already have a permanent home above, and archived ones,
+  /// which the user has just asked to stop seeing.
   final List<Kundli> recents;
 
+  /// How many charts are archived, across the whole library — the
+  /// "Archived (n)" chip's count, and the reason it renders at all.
+  /// Counted before search/filter, like [labels] and [relationTags], so
+  /// the chip that leaves the archived view can never itself be filtered
+  /// out of existence.
+  final int archivedCount;
+
   /// Every label in use across the whole library, alphabetical — the
-  /// filter chip source. Computed over all kundlis, not the filtered
-  /// set, so selecting a chip never removes the other chips.
+  /// filter chip source. Computed over all UNARCHIVED kundlis, not the
+  /// filtered set, so selecting a chip never removes the other chips,
+  /// and a label that now only lives on archived charts stops taking up
+  /// room in the row.
   final List<String> labels;
 
   /// Relation tags actually in use, so the chip row doesn't offer
-  /// "Spouse" to someone who has none.
+  /// "Spouse" to someone who has none. Archived charts excluded, as
+  /// for [labels].
   final List<String> relationTags;
 
   /// Size of the library before search/filter — for the "n of m" line.
+  /// Counts archived charts: they still exist, still sync, and still
+  /// occupy the encrypted store the line is describing.
   final int totalCount;
 
   int get visibleCount => pinned.length + others.length;
@@ -655,16 +698,31 @@ final kundliListDataProvider = Provider<AsyncValue<KundliListData>>((ref) {
   final recentIds = ref.watch(recentKundlisProvider);
 
   return async.whenData((all) {
-    final labels = <String>{for (final k in all) ...k.labels}.toList()..sort();
-    final relationTags = <String>{for (final k in all) k.relationTag}.toList()
+    // Chip sources come from the ACTIVE library only. An archived chart
+    // is out of the roll call, so the tag it carries must not keep
+    // offering a filter that lands on an empty main list.
+    final active = [
+      for (final k in all)
+        if (!k.isArchived) k,
+    ];
+    final labels = <String>{for (final k in active) ...k.labels}.toList()
+      ..sort();
+    final relationTags = <String>{for (final k in active) k.relationTag}
+        .toList()
       ..sort();
 
+    // The archived flag is folded INTO the filter rather than applied
+    // beside it, because the two are the same question asked once:
+    // every view except the archived one is a view of the active
+    // library. Keeping it here means no caller has to remember to
+    // exclude archived charts a second time.
     bool matchesFilter(Kundli k) => switch (filter) {
-          null => true,
+          null => !k.isArchived,
           (kind: KundliFilterKind.relation, value: final v) =>
-            k.relationTag == v,
+            !k.isArchived && k.relationTag == v,
           (kind: KundliFilterKind.label, value: final v) =>
-            k.labels.contains(v),
+            !k.isArchived && k.labels.contains(v),
+          (kind: KundliFilterKind.archived, value: _) => k.isArchived,
         };
 
     bool matchesQuery(Kundli k) {
@@ -719,19 +777,28 @@ final kundliListDataProvider = Provider<AsyncValue<KundliListData>>((ref) {
     matched.sort(compare);
 
     final byId = {for (final k in all) k.id: k};
+    // Under the archived filter the whole body is one flat list: pins
+    // were dropped at archive time, so splitting a pinned section out of
+    // it would only ever produce an empty heading.
+    final showPinned = filter?.kind != KundliFilterKind.archived;
     return KundliListData(
       pinned: [
-        for (final k in matched)
-          if (pinnedIds.contains(k.id)) k,
+        if (showPinned)
+          for (final k in matched)
+            if (pinnedIds.contains(k.id)) k,
       ],
       others: [
         for (final k in matched)
-          if (!pinnedIds.contains(k.id)) k,
+          if (!showPinned || !pinnedIds.contains(k.id)) k,
       ],
       recents: [
         for (final id in recentIds)
-          if (byId[id] != null && !pinnedIds.contains(id)) byId[id]!,
+          if (byId[id] != null &&
+              !byId[id]!.isArchived &&
+              !pinnedIds.contains(id))
+            byId[id]!,
       ],
+      archivedCount: all.length - active.length,
       labels: labels,
       relationTags: relationTags,
       totalCount: all.length,

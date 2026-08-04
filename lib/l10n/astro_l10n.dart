@@ -547,6 +547,25 @@ String yogaName(AppLocalizations l10n, DetectedYoga y) => switch (y.code) {
       _ => y.name,
     };
 
+/// The relation tags a user can choose from, in the order the chips are
+/// offered. Client-first ordering — this app is used by professional
+/// astrologers, so the chart is usually someone other than the user.
+///
+/// Canonical and shared: create (birth entry) and edit both build their
+/// chip row from this list, so a tag can never be offerable on one screen
+/// and unreachable on the other. The values stay ENGLISH — they are what
+/// gets persisted on the row and read back by [relationTagLabel].
+/// 'Prashna' and 'Mahakosh' are deliberately absent: both are assigned by
+/// the app, never picked.
+const kRelationTags = [
+  'Client',
+  'Self',
+  'Spouse',
+  'Family',
+  'Friend',
+  'Other',
+];
+
 /// Localized display for a stored relation tag ('Client', 'Self', …) —
 /// the stored value stays English (it's persisted on the kundli row);
 /// unknown values pass through unchanged.

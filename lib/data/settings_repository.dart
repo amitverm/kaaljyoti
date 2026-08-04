@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/painting.dart' show FontWeight;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../charts/chart_tuning.dart';
 import '../core/astro/ayanamsa.dart';
@@ -253,6 +254,10 @@ class SettingsRepository {
   static const _kDismissedNotifs = 'dismissed_notification_ids';
   static const _kRecent = 'kundli_recent_ids';
   static const _kRecentMahakosh = 'mahakosh_recent_codes';
+  static const _kInstallId = 'analytics_install_id';
+  static const _kCreatedTotal = 'analytics_kundlis_created_total';
+  static const _kLastPingAt = 'analytics_last_ping_at';
+  static const _kCountersDirty = 'analytics_counters_dirty';
 
   /// How many opened-kundli ids to remember. Deep enough to order a
   /// large library by recency, shallow enough that the list stays cheap
@@ -659,5 +664,94 @@ class SettingsRepository {
   Future<void> setMasaSystem(MasaSystem system) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kMasaSystem, system.name);
+  }
+
+  // --- Anonymous device analytics (0030) ------------------------------------
+  //
+  // The four prefs behind DevicePingService — the whole of this app's
+  // telemetry, and all of it device-local until a ping sends the numbers.
+  // Read device_ping_service.dart's header for what is and is not sent.
+
+  /// This install's random identity — a uuid v4 minted on first read and
+  /// stable for the life of the install.
+  ///
+  /// Derived from NOTHING: no hardware id, no advertising id, no account.
+  /// It exists so the server can tell "the same phone pinged twice" from
+  /// "two phones pinged once", and it can do nothing else. Reinstalling
+  /// mints a fresh one, which is the intended (and only honest) outcome
+  /// of an identifier that is a coin flip.
+  Future<String> installId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getString(_kInstallId);
+    if (existing != null && existing.isNotEmpty) return existing;
+    final minted = const Uuid().v4();
+    await prefs.setString(_kInstallId, minted);
+    return minted;
+  }
+
+  /// How many kundlis have been created ON THIS DEVICE, ever — including
+  /// ones since deleted. Counted locally because nothing else can: a
+  /// chart that never syncs leaves no server trace at all.
+  ///
+  /// [seedIfAbsent] is consulted ONLY when the counter has never been
+  /// written — on the first launch of a build that has this feature, on
+  /// a device that may already hold a library. It should supply the
+  /// current number of saved kundlis, and the caller supplies it because
+  /// this repository has no database of its own (and should not grow
+  /// one). The seed is the same estimate philosophy as 0029's backfill:
+  /// it does not claim to be the true historical total, only "at least
+  /// this many were created here". Deleted-before-today charts are lost
+  /// to the count, exactly as they are server-side.
+  Future<int> kundlisCreatedTotal(Future<int> Function() seedIfAbsent) async {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getInt(_kCreatedTotal);
+    if (existing != null) return existing;
+    final seed = await seedIfAbsent();
+    final clamped = seed < 0 ? 0 : seed;
+    await prefs.setInt(_kCreatedTotal, clamped);
+    return clamped;
+  }
+
+  /// Record one creation, seeding the counter first if this is the first
+  /// one we have ever seen. Returns the new total.
+  Future<int> bumpKundlisCreatedTotal(
+      Future<int> Function() seedIfAbsent) async {
+    final next = await kundlisCreatedTotal(seedIfAbsent) + 1;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kCreatedTotal, next);
+    return next;
+  }
+
+  /// When this device last successfully sent its ping — null until one
+  /// has succeeded. Only success is recorded, so an offline stretch
+  /// leaves the next launch still due rather than swallowing a day.
+  Future<DateTime?> lastPingAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ms = prefs.getInt(_kLastPingAt);
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  Future<void> setLastPingAt(DateTime at) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kLastPingAt, at.millisecondsSinceEpoch);
+  }
+
+  /// Do the numbers on this device differ from what the server was last
+  /// told? Set by [KundliRepository] whenever a local count changes,
+  /// cleared by DevicePingService after a ping succeeds.
+  ///
+  /// Persisted rather than held in memory on purpose: a create followed
+  /// by the user killing the app before the debounced ping fires would
+  /// otherwise leave the server a day out of date with no record that
+  /// anything was owed. On disk, the next launch simply sees the flag
+  /// and pings straight away.
+  Future<bool> countersDirty() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kCountersDirty) ?? false;
+  }
+
+  Future<void> setCountersDirty(bool dirty) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kCountersDirty, dirty);
   }
 }

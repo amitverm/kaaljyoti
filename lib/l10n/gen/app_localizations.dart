@@ -10487,6 +10487,42 @@ abstract class AppLocalizations {
   /// **'Edit kundli'**
   String get klEditKundli;
 
+  /// Takes a kundli out of the main list into the collapsed Archived section. Not a delete — the chart stays complete and can be unarchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get klArchive;
+
+  /// No description provided for @klUnarchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get klUnarchive;
+
+  /// Last chip in the kundli list's filter row. Selecting it shows the archived charts instead of the active library.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived ({count})'**
+  String klArchived(String count);
+
+  /// No description provided for @klArchivedN.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} archived'**
+  String klArchivedN(String count);
+
+  /// No description provided for @klUnarchivedN.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unarchived'**
+  String klUnarchivedN(String count);
+
+  /// No description provided for @klUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get klUndo;
+
   /// No description provided for @moduleGrahaDrishtiTitle.
   ///
   /// In en, this message translates to:

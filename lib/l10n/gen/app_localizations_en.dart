@@ -5935,6 +5935,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get klEditKundli => 'Edit kundli';
 
   @override
+  String get klArchive => 'Archive';
+
+  @override
+  String get klUnarchive => 'Unarchive';
+
+  @override
+  String klArchived(String count) {
+    return 'Archived ($count)';
+  }
+
+  @override
+  String klArchivedN(String count) {
+    return '$count archived';
+  }
+
+  @override
+  String klUnarchivedN(String count) {
+    return '$count unarchived';
+  }
+
+  @override
+  String get klUndo => 'Undo';
+
+  @override
   String get moduleGrahaDrishtiTitle => 'Graha Drishti';
 
   @override

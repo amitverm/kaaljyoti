@@ -10,6 +10,11 @@
 /// [PushService] is the server-driven pipe for Mahakosh/research
 /// notifications, and stays build-time gated.)
 ///
+/// SCOPE: sign ingresses are the sky's business, not a chart's, so they
+/// are scheduled ONCE for the whole library — anonymously, with no
+/// kundli attached — rather than once per followed kundli. Everything
+/// else here is per-chart.
+///
 /// COPY RULE: notification text states what CHANGES and nothing else —
 /// "Saturn enters Kumbha", "AD ends: Venus · begins: Sun". It never
 /// says what a change means, is never framed as good or bad, and never
@@ -119,7 +124,9 @@ class PendingAlert {
   /// Absolute instant. Converted to the device's zone at schedule time.
   final DateTime when;
 
-  /// Kundli id — the tap target.
+  /// Kundli id — the tap target. Empty when the alert belongs to no
+  /// chart (a sign ingress, the test alert): the tap then just opens
+  /// the app.
   final String payload;
 }
 
@@ -548,7 +555,11 @@ class KundliAlertService {
     // not claim are scheduled.
     final accepted = <ScheduledAlertRecord>[];
 
-    for (final event in selectAlertEvents(all)) {
+    // Deduped BEFORE selection: a library of 40 charts produces 40
+    // copies of every ingress, and the cap is applied to whatever it is
+    // given — unfiltered, one sign change would spend 40 of the 60
+    // slots that per-chart alerts need.
+    for (final event in selectAlertEvents(dedupeGlobalAlertEvents(all))) {
       // The plugin REJECTS a past instant outright, and because the
       // list is in time order the offender is the first iteration —
       // one slipped event would otherwise abort the loop and silently
@@ -556,24 +567,37 @@ class KundliAlertService {
       // Nothing is lost by dropping it: an alert for a moment that has
       // already passed has no value to deliver.
       if (!event.time.toUtc().isAfter(cutoff)) continue;
-      final kundli = owner[event]!;
+
+      // A global event names no chart, so it gets none: empty kundli id
+      // throughout — the tap handler ignores an empty payload and just
+      // opens the app, the alerts screen renders such a record without a
+      // destination, and the id is hashed with '' so all N charts land
+      // on the one slot. `owner` is only meaningful on the other branch.
+      final global = isGlobalAlertEvent(event);
+      final kundli = global ? null : owner[event]!;
+      final kundliId = kundli?.id ?? '';
       // "what changed · where it came from" — no reading, no advice.
-      final body = '${event.label} · ${event.sourceLabel(l10n)}';
-      final id = alertNotificationId(kundli.id, event.time, event.label);
+      // A global alert has nowhere to put the chart name, so the change
+      // itself becomes the title and the source stands alone as body.
+      final title = global ? event.label : kundli!.name;
+      final body = global
+          ? event.sourceLabel(l10n)
+          : '${event.label} · ${event.sourceLabel(l10n)}';
+      final id = alertNotificationId(kundliId, event.time, event.label);
       try {
         await scheduler.schedule(PendingAlert(
           id: id,
-          title: kundli.name,
+          title: title,
           body: body,
           when: event.time,
-          payload: kundli.id,
+          payload: kundliId,
         ));
         accepted.add(ScheduledAlertRecord(
           id: id,
           when: event.time,
-          title: kundli.name,
+          title: title,
           body: body,
-          kundliId: kundli.id,
+          kundliId: kundliId,
         ));
       } catch (_) {
         // Per alert, for the same reason: a single rejection (a

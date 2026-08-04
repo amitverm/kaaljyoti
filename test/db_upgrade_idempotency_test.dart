@@ -183,7 +183,7 @@ void main() {
 
     final rows = await db.query('kundlis');
     expect(rows, hasLength(1), reason: 'the kundli must survive');
-    expect(await db.getVersion(), 10);
+    expect(await db.getVersion(), 11);
     await appDb.close();
   });
 
@@ -205,7 +205,7 @@ void main() {
 
     final appDb = newDb();
     final db = await appDb.database;
-    expect(await db.getVersion(), 10);
+    expect(await db.getVersion(), 11);
     expect(await db.query('kundlis'), hasLength(1));
     await appDb.close();
   });
@@ -232,10 +232,11 @@ void main() {
     final appDb = newDb();
     final db = await appDb.database;
 
-    expect(await db.getVersion(), 10);
+    expect(await db.getVersion(), 11);
     final columns = await db.rawQuery('PRAGMA table_info(kundlis)');
     final names = columns.map((c) => c['name']).toSet();
-    expect(names, containsAll(['labels', 'note', 'is_ephemeral']));
+    expect(names,
+        containsAll(['labels', 'note', 'is_ephemeral', 'is_archived']));
     // Every table the later versions introduce is present exactly once.
     for (final table in [
       'export_template',
@@ -265,7 +266,7 @@ void main() {
 
     final appDb = newDb();
     final db = await appDb.database;
-    expect(await db.getVersion(), 10);
+    expect(await db.getVersion(), 11);
     expect(await db.query('kundlis'), hasLength(1));
     await appDb.close();
   });
@@ -284,7 +285,7 @@ void main() {
 
     final appDb = newDb();
     final db = await appDb.database;
-    expect(await db.getVersion(), 10);
+    expect(await db.getVersion(), 11);
 
     final columns = await db.rawQuery('PRAGMA table_info(journal_entries)');
     expect(
@@ -337,9 +338,47 @@ void main() {
 
     final appDb = newDb();
     final db = await appDb.database;
-    expect(await db.getVersion(), 10);
+    expect(await db.getVersion(), 11);
     expect(await db.query('journal_entries'), hasLength(1),
         reason: 'recovery must not wipe entries already written');
+    await appDb.close();
+  });
+
+  test('v10 → v11 adds is_archived, defaulted off for existing rows',
+      () async {
+    await seed(10, extra: [
+      'ALTER TABLE kundlis ADD COLUMN labels TEXT',
+    ]);
+
+    final appDb = newDb();
+    final db = await appDb.database;
+    expect(await db.getVersion(), 11);
+
+    final columns = await db.rawQuery('PRAGMA table_info(kundlis)');
+    expect(columns.map((c) => c['name']), contains('is_archived'));
+    // A chart that existed before archiving did must not come back
+    // hidden from its owner.
+    expect(Kundli.fromRow((await db.query('kundlis')).single).isArchived,
+        isFalse);
+    await appDb.close();
+  });
+
+  test('a half-applied v11 upgrade recovers instead of bricking', () async {
+    // is_archived already added by an upgrade that then aborted, so
+    // user_version is still 10. Re-running must not hit "duplicate
+    // column name" — the failure mode that bricks the app for good.
+    await seed(10, extra: [
+      'ALTER TABLE kundlis ADD COLUMN labels TEXT',
+      'ALTER TABLE kundlis ADD COLUMN is_archived INTEGER NOT NULL DEFAULT 0',
+      'UPDATE kundlis SET is_archived = 1',
+    ]);
+
+    final appDb = newDb();
+    final db = await appDb.database;
+    expect(await db.getVersion(), 11);
+    expect(Kundli.fromRow((await db.query('kundlis')).single).isArchived,
+        isTrue,
+        reason: 'recovery must not wipe the column it is repairing');
     await appDb.close();
   });
 
@@ -351,7 +390,7 @@ void main() {
 
     final second = newDb();
     final db = await second.database;
-    expect(await db.getVersion(), 10);
+    expect(await db.getVersion(), 11);
     expect(await db.query('kundlis'), hasLength(1));
     await second.close();
   });

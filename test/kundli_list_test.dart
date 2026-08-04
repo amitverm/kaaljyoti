@@ -19,6 +19,7 @@ Kundli _k({
   String? note,
   List<String> labels = const [],
   String placeName = 'Pune, Maharashtra, India',
+  bool isArchived = false,
   DateTime? birth,
   DateTime? created,
 }) =>
@@ -28,6 +29,7 @@ Kundli _k({
       relationTag: relationTag,
       note: note,
       labels: labels,
+      isArchived: isArchived,
       birthUtc: birth ?? DateTime.utc(1987, 3, 12, 8, 52),
       latitude: 18.52,
       longitude: 73.86,
@@ -333,6 +335,164 @@ void main() {
       final row = _k(id: 'a', name: 'Aarti').toRow()
         ..['labels'] = '["good", 7, null, "  "]';
       expect(Kundli.fromRow(row).labels, ['good']);
+    });
+  });
+
+  group('archiving', () {
+    final library = [
+      _k(id: 'a', name: 'Aarti', relationTag: 'Client', labels: const ['2026']),
+      _k(
+          id: 'b',
+          name: 'Bela',
+          relationTag: 'Family',
+          labels: const ['retired'],
+          isArchived: true),
+    ];
+
+    /// Puts the list into the archived view, as tapping the chip does.
+    void selectArchived(ProviderContainer c) =>
+        c.read(kundliFilterProvider.notifier).state = kArchivedFilter;
+
+    test('an archived chart is absent from the unfiltered list', () async {
+      final data = await _read(_containerWith(library));
+      expect(data.others.map((k) => k.id), ['a']);
+      expect(data.pinned, isEmpty);
+      expect(data.visibleCount, 1);
+    });
+
+    test('and is the whole list under the archived filter', () async {
+      final c = _containerWith(library);
+      selectArchived(c);
+      final data = await _read(c);
+      expect(data.others.map((k) => k.id), ['b']);
+      expect(data.visibleCount, 1);
+    });
+
+    test('the chip count is the whole archive, not the filtered view',
+        () async {
+      // It is the way back out of the archived view, so a search inside
+      // that view must not be able to shrink it to zero and strand the
+      // user there.
+      final c = _containerWith(library);
+      selectArchived(c);
+      c.read(kundliSearchProvider.notifier).state = 'nothing matches';
+      final data = await _read(c);
+      expect(data.archivedCount, 1);
+      expect(data.isEmpty, isTrue);
+    });
+
+    test('the count is zero when nothing is archived', () async {
+      final data = await _read(_containerWith([_k(id: 'a', name: 'Aarti')]));
+      expect(data.archivedCount, 0);
+    });
+
+    test('the library count still includes it', () async {
+      // Archiving is not deleting — the chart still exists, still syncs,
+      // and still sits in the encrypted store the count describes.
+      expect((await _read(_containerWith(library))).totalCount, 2);
+    });
+
+    test('its relation tag and labels drop out of the filter chips',
+        () async {
+      // Otherwise the row offers a "Family" chip that filters the main
+      // list down to nothing.
+      final data = await _read(_containerWith(library));
+      expect(data.relationTags, ['Client']);
+      expect(data.labels, ['2026']);
+    });
+
+    test('a relation filter never surfaces an archived chart', () async {
+      final c = _containerWith(library);
+      c.read(kundliFilterProvider.notifier).state =
+          (kind: KundliFilterKind.relation, value: 'Family');
+      expect((await _read(c)).isEmpty, isTrue);
+    });
+
+    test('a pinned chart that is archived leaves the pinned section',
+        () async {
+      final c = _containerWith(library);
+      c.read(pinnedKundlisProvider.notifier).toggle('b');
+      expect((await _read(c)).pinned, isEmpty);
+    });
+
+    test('and gets no pinned section inside the archived view either',
+        () async {
+      // A pin can outlive archiving when the flag arrives from another
+      // device; a one-row "Pinned" heading over an archive is noise.
+      final c = _containerWith(library);
+      c.read(pinnedKundlisProvider.notifier).toggle('b');
+      selectArchived(c);
+      final data = await _read(c);
+      expect(data.pinned, isEmpty);
+      expect(data.others.map((k) => k.id), ['b']);
+    });
+
+    test('it is kept out of the recents strip', () async {
+      final c = _containerWith(library);
+      c.read(recentKundlisProvider.notifier).touch('b');
+      expect((await _read(c)).recents, isEmpty);
+    });
+
+    test('the archived view sorts like the main one', () async {
+      final c = _containerWith([
+        _k(id: 'z', name: 'Zubin', isArchived: true),
+        _k(id: 'm', name: 'Mohan', isArchived: true),
+        _k(id: 'a', name: 'Aarti', isArchived: true),
+      ]);
+      c.read(kundliSortProvider.notifier).select(KundliSort.name);
+      selectArchived(c);
+      expect((await _read(c)).others.map((k) => k.id), ['a', 'm', 'z']);
+    });
+
+    test('search composes with the archived filter', () async {
+      // The chip exists so an archived chart stays findable; a search
+      // that skipped it would make archiving a one-way door.
+      final c = _containerWith([
+        ...library,
+        _k(id: 'c', name: 'Bela Rao', isArchived: true),
+      ]);
+      selectArchived(c);
+      c.read(kundliSearchProvider.notifier).state = 'rao';
+      expect((await _read(c)).others.single.id, 'c');
+    });
+
+    test('search outside the archived view still skips archived charts',
+        () async {
+      final c = _containerWith(library);
+      c.read(kundliSearchProvider.notifier).state = 'bela';
+      expect((await _read(c)).isEmpty, isTrue);
+    });
+  });
+
+  group('the archive flag on the model', () {
+    test('survives a row round-trip', () {
+      final k = _k(id: 'a', name: 'Aarti', isArchived: true);
+      final row = k.toRow();
+      expect(row['is_archived'], 1, reason: 'stored as 0/1, like is_ephemeral');
+      expect(Kundli.fromRow(row).isArchived, isTrue);
+    });
+
+    test('defaults to not archived', () {
+      final row = _k(id: 'a', name: 'Aarti').toRow();
+      expect(row['is_archived'], 0);
+      expect(Kundli.fromRow(row).isArchived, isFalse);
+    });
+
+    test('an ABSENT key reads as not archived', () {
+      // A sync payload pushed by a build that predates archiving has no
+      // is_archived key at all. Pulling it must not crash, and must not
+      // invent a state the other device never asked for.
+      final row = _k(id: 'a', name: 'Aarti').toRow()..remove('is_archived');
+      expect(Kundli.fromRow(row).isArchived, isFalse);
+      expect(Kundli.fromRow(row).name, 'Aarti');
+    });
+
+    test('copyWith flips it both ways', () {
+      final k = _k(id: 'a', name: 'Aarti');
+      expect(k.copyWith(isArchived: true).isArchived, isTrue);
+      expect(
+          k.copyWith(isArchived: true).copyWith(isArchived: false).isArchived,
+          isFalse);
     });
   });
 

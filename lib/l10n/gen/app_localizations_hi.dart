@@ -5932,6 +5932,30 @@ class AppLocalizationsHi extends AppLocalizations {
   String get klEditKundli => 'कुंडली संपादित करें';
 
   @override
+  String get klArchive => 'संग्रह करें';
+
+  @override
+  String get klUnarchive => 'संग्रह से निकालें';
+
+  @override
+  String klArchived(String count) {
+    return 'संग्रहित ($count)';
+  }
+
+  @override
+  String klArchivedN(String count) {
+    return '$count संग्रहित की गईं';
+  }
+
+  @override
+  String klUnarchivedN(String count) {
+    return '$count संग्रह से निकाली गईं';
+  }
+
+  @override
+  String get klUndo => 'पूर्ववत करें';
+
+  @override
   String get moduleGrahaDrishtiTitle => 'ग्रह दृष्टि';
 
   @override

@@ -1,6 +1,8 @@
-/// The v7 → v8 migration that adds the `labels` column. Every existing
-/// user is on v7 or earlier, so this path runs on their first launch
-/// after the update — an untested ALTER here bricks the app on open.
+/// Label persistence, end to end: the v7 → v8 migration that adds the
+/// `labels` column, and the repository writes that fill it. Every
+/// existing user is on v7 or earlier, so that migration runs on their
+/// first launch after the update — an untested ALTER here bricks the app
+/// on open.
 ///
 /// Runs against sqflite_common_ffi (plain sqlite3), like db_recovery_test.
 library;
@@ -9,7 +11,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kaaljyoti/data/db.dart';
+import 'package:kaaljyoti/data/kundli_repository.dart';
 import 'package:kaaljyoti/data/models.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 Future<Database> _ffiOpener(
@@ -55,12 +59,15 @@ const _v7Kundlis = '''
 ''';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
 
   late Directory dir;
   late String dbPath;
 
   setUp(() {
+    // KundliRepository writes the creation counter through prefs.
+    SharedPreferences.setMockInitialValues({});
     dir = Directory.systemTemp.createTempSync('kaaljyoti_labels_test');
     dbPath = '${dir.path}/kaaljyoti.db';
   });
@@ -153,6 +160,49 @@ void main() {
     expect(columns.map((c) => c['name']), contains('labels'));
 
     await appDb.close();
+  });
+
+  group('create() writes labels', () {
+    late AppDb appDb;
+    late KundliRepository repo;
+
+    setUp(() {
+      appDb = AppDb.forTest(
+          path: dbPath, opener: _ffiOpener, passphrase: 'test-passphrase');
+      repo = KundliRepository(db: appDb);
+    });
+
+    tearDown(() => appDb.close());
+
+    Future<Kundli> make({List<String> labels = const []}) => repo.create(
+          name: 'Ramesh Sharma',
+          relationTag: 'Client',
+          labels: labels,
+          birthUtc: DateTime.utc(1987, 3, 14, 6, 42),
+          latitude: 18.52,
+          longitude: 73.86,
+          timezoneName: 'Asia/Kolkata',
+          utcOffsetMinutes: 330,
+          placeName: 'Pune',
+        );
+
+    test('the labels chosen at cast time reach the stored row', () async {
+      // The create screen's chips are worth nothing if the selection is
+      // dropped between the form and the row.
+      final created = await make(labels: const ['2026 clients', 'matchmaking']);
+      expect(created.labels, ['2026 clients', 'matchmaking']);
+
+      final stored = await repo.byId(created.id);
+      expect(stored!.labels, ['2026 clients', 'matchmaking']);
+      expect((await repo.saved()).single.labels,
+          ['2026 clients', 'matchmaking']);
+    });
+
+    test('creating without labels stores none', () async {
+      final created = await make();
+      expect(created.labels, isEmpty);
+      expect((await repo.byId(created.id))!.labels, isEmpty);
+    });
   });
 
   test('onCreate and onUpgrade agree on the child tables', () async {

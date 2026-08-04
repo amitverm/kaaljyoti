@@ -218,6 +218,48 @@ AlertBand? alertBandOf(FeedEvent e) {
   }
 }
 
+/// Whether [e] is a fact about the SKY rather than about any one chart.
+///
+/// A sign ingress — "Mars enters Mithuna" — happens once, to everyone;
+/// it carries no natal input at all, so the same instant and the same
+/// label come back out of every followed chart's scan. A drishti hit is
+/// the opposite: it is measured against that chart's natal points, and
+/// two charts hit by the same transiting graha are two different events.
+/// Dasha and Sade Sati are natal by construction.
+///
+/// The distinction is what lets the scheduler announce an ingress once,
+/// anonymously, instead of once per followed kundli.
+bool isGlobalAlertEvent(FeedEvent e) =>
+    e.source == FeedSource.transit &&
+    e.transitKind == TransitEventKind.ingress;
+
+/// Collapses repeats of the same global event down to one.
+///
+/// Must run BEFORE [selectAlertEvents]: the cap is applied to whatever
+/// it is handed, so N copies of one ingress would otherwise eat N slots
+/// and crowd out per-chart alerts from later bands.
+///
+/// Keyed on instant + label, keeping the FIRST occurrence and leaving
+/// order alone; non-global events pass straight through, untouched and
+/// unexamined. A kundli carrying an ayanamsa override computes its
+/// ingress at a genuinely different instant, so its event has a
+/// different key and correctly survives as its own alert — the key is
+/// not a heuristic for "same event", it IS the identity.
+List<FeedEvent> dedupeGlobalAlertEvents(List<FeedEvent> events) {
+  final seen = <String>{};
+  final out = <FeedEvent>[];
+  for (final e in events) {
+    if (!isGlobalAlertEvent(e)) {
+      out.add(e);
+      continue;
+    }
+    if (seen.add('${e.time.toUtc().millisecondsSinceEpoch}|${e.label}')) {
+      out.add(e);
+    }
+  }
+  return out;
+}
+
 /// Total scheduled alerts across ALL followed kundlis. Both platforms
 /// impose their own limits (iOS keeps only 64 pending local
 /// notifications and silently drops the rest), and this sits under the

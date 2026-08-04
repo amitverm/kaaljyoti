@@ -445,6 +445,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
       await repo.deleteAll();
     }
+    // Both wipe branches land here. The largest single move "current"
+    // can make deserves better than waiting for tomorrow's heartbeat.
+    ref.read(devicePingServiceProvider)?.pingSoon();
     ref.read(activeKundliIdProvider.notifier).state = null;
     ref.invalidate(kundlisProvider);
     messenger.showSnackBar(SnackBar(content: Text(l10n.stDeleteAllDone)));

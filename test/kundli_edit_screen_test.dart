@@ -278,6 +278,61 @@ void main() {
     });
   });
 
+  group('the relation chips', () {
+    /// The chip carrying [tag]'s label, scoped to ChoiceChip so it can't
+    /// match the same word elsewhere on the form.
+    Finder chip(AppLocalizations l10n, String tag) =>
+        find.widgetWithText(ChoiceChip, relationTagLabel(l10n, tag));
+
+    testWidgets('offer the same closed list the create screen does',
+        (tester) async {
+      final (l10n, _) = await _pump(tester);
+      expect(find.text(l10n.beSectionRelation.toUpperCase()), findsOneWidget);
+      for (final tag in kRelationTags) {
+        expect(chip(l10n, tag), findsOneWidget, reason: tag);
+      }
+    });
+
+    testWidgets('start on the stored relation', (tester) async {
+      final (l10n, _) = await _pump(tester);
+      expect(tester.widget<ChoiceChip>(chip(l10n, 'Client')).selected, isTrue);
+      expect(tester.widget<ChoiceChip>(chip(l10n, 'Self')).selected, isFalse);
+    });
+
+    testWidgets('a changed relation is written on Save', (tester) async {
+      // The whole point of the feature: before this, a mis-tapped
+      // relation on the create screen was permanent.
+      final (l10n, repo) = await _pump(tester);
+      await tester.tap(chip(l10n, 'Spouse'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<ChoiceChip>(chip(l10n, 'Spouse')).selected, isTrue);
+
+      await tester.tap(find.widgetWithText(FilledButton, l10n.save));
+      await tester.pumpAndSettle();
+
+      expect(repo.updates.single.relationTag, 'Spouse');
+    });
+
+    testWidgets('a pick that is never saved writes nothing', (tester) async {
+      // Save-bound like name, note and labels — backing out discards it.
+      final (l10n, repo) = await _pump(tester);
+      await tester.tap(chip(l10n, 'Friend'));
+      await tester.pumpAndSettle();
+      expect(repo.updates, isEmpty);
+      expect(repo.stored.relationTag, 'Client');
+    });
+
+    testWidgets('sit between the birth block and the note, as on create',
+        (tester) async {
+      final (l10n, _) = await _pump(tester);
+      double y(Finder f) => tester.getTopLeft(f).dy;
+      expect(y(find.byKey(birthFieldKey(BirthField.place))),
+          lessThan(y(find.text(l10n.beSectionRelation.toUpperCase()))));
+      expect(y(find.text(l10n.beSectionRelation.toUpperCase())),
+          lessThan(y(find.text(l10n.klLabels.toUpperCase()))));
+    });
+  });
+
   group('required-field validation', () {
     testWidgets('a cleared name is marked inline and blocks the save',
         (tester) async {

@@ -189,7 +189,7 @@ class AppDb {
     return _opener(
       path,
       password: password,
-      version: 10,
+      version: 11,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -311,6 +311,13 @@ class AppDb {
           // per kundli, each carrying the astro context of its own date.
           await _createJournalEntries(db);
         }
+        if (oldVersion < 11) {
+          // v11: archiving takes a chart out of the main list without
+          // deleting it. A flag on the row, like is_ephemeral, so it
+          // rides the existing sync payload with no server change.
+          await _addColumnIfMissing(
+              db, 'kundlis', 'is_archived', 'INTEGER NOT NULL DEFAULT 0');
+        }
       },
       onCreate: (db, version) async {
         await db.execute('''
@@ -330,6 +337,7 @@ class AppDb {
             chart_style TEXT DEFAULT 'north',
             is_prashna INTEGER NOT NULL DEFAULT 0,
             is_ephemeral INTEGER NOT NULL DEFAULT 0,
+            is_archived INTEGER NOT NULL DEFAULT 0,
             sync_enabled INTEGER NOT NULL DEFAULT 0,
             mahakosh_code TEXT,
             created_at INTEGER NOT NULL,

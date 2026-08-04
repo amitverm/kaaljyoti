@@ -133,7 +133,7 @@ class KundliListScreen extends ConsumerWidget {
   }
 
   /// The multi-select app bar (spec §3.1): "n selected", Compare at 2–4,
-  /// bulk pin / label / delete, and a close button.
+  /// bulk pin / alerts / label / archive / delete, and a close button.
   PreferredSizeWidget _selectAppBar(
       BuildContext context, WidgetRef ref, Set<String> selection) {
     final l10n = context.l10n;
@@ -146,36 +146,51 @@ class KundliListScreen extends ConsumerWidget {
       ),
       title: Text(l10n.klSelected('${selection.length}')),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.push_pin_outlined),
+        _selectAction(
+          icon: Icons.push_pin_outlined,
           tooltip: l10n.klPin,
           onPressed: selection.isEmpty
               ? null
               : () => _bulkPin(context, ref, selection),
         ),
-        IconButton(
-          icon: const Icon(Icons.notifications_active_outlined),
+        _selectAction(
+          icon: Icons.notifications_active_outlined,
           tooltip: l10n.klFollowAlerts,
           onPressed: selection.isEmpty
               ? null
               : () => _bulkFollow(context, ref, selection),
         ),
-        IconButton(
-          icon: const Icon(Icons.sell_outlined),
+        _selectAction(
+          icon: Icons.sell_outlined,
           tooltip: l10n.klLabels,
           onPressed: selection.isEmpty
               ? null
               : () => _bulkLabel(context, ref, selection),
         ),
-        IconButton(
-          icon: const Icon(Icons.delete_outline),
+        // Archive sits next to delete because that is the choice being
+        // made — get this out of my list, permanently or not. Direction
+        // is read from the selection, so the one button toggles.
+        Consumer(builder: (context, ref, _) {
+          final archived = _selectionArchived(ref, selection);
+          return _selectAction(
+            icon:
+                archived ? Icons.unarchive_outlined : Icons.archive_outlined,
+            tooltip: archived ? l10n.klUnarchive : l10n.klArchive,
+            onPressed: selection.isEmpty
+                ? null
+                : () =>
+                    _bulkArchive(context, ref, selection, archived: !archived),
+          );
+        }),
+        _selectAction(
+          icon: Icons.delete_outline,
           tooltip: l10n.delete,
           onPressed: selection.isEmpty
               ? null
               : () => _bulkDelete(context, ref, selection),
         ),
         Padding(
-          padding: const EdgeInsets.only(right: KJSpace.md),
+          padding: const EdgeInsets.only(right: KJSpace.sm),
           child: FilledButton(
             onPressed: canCompare
                 ? () {
@@ -187,15 +202,40 @@ class KundliListScreen extends ConsumerWidget {
                     context.push('/compare');
                   }
                 : null,
+            // Tighter than the app's usual button padding, for the same
+            // reason [_selectAction] is: this bar is the widest thing in
+            // the app and an AppBar's trailing row clips rather than
+            // wraps. Everything here is paying for the space.
             style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: KJSpace.lg, vertical: KJSpace.sm)),
+                    horizontal: KJSpace.md, vertical: KJSpace.sm)),
             child: Text(l10n.klCompareN('${selection.length}')),
           ),
         ),
       ],
     );
   }
+
+  /// One bulk action in the select bar.
+  ///
+  /// Compact by construction: five icon buttons plus "Compare (n)" is
+  /// more than a narrow phone's app bar can hold at the stock 48pt slot,
+  /// and the trailing row of an AppBar clips rather than wraps. 40pt
+  /// keeps a usable target while buying back the width the fifth action
+  /// costs.
+  Widget _selectAction({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback? onPressed,
+  }) =>
+      IconButton(
+        icon: Icon(icon),
+        tooltip: tooltip,
+        onPressed: onPressed,
+        padding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
+        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+      );
 
   /// Pins the selection — or unpins it, when every selected chart is
   /// already pinned, so the one button toggles the way a user expects.
@@ -261,6 +301,42 @@ class KundliListScreen extends ConsumerWidget {
     ref.read(kundliMultiSelectProvider.notifier).state = null;
   }
 
+  /// True when EVERY selected chart is already archived, which is what
+  /// turns the one button into Unarchive — the same rule [_bulkPin] and
+  /// [_bulkFollow] already use. A MIXED selection archives: that is the
+  /// safe direction, since it never drags a chart back into a list the
+  /// user is in the middle of tidying.
+  bool _selectionArchived(WidgetRef ref, Set<String> selection) {
+    if (selection.isEmpty) return false;
+    final all = ref.watch(kundlisProvider).value ?? const <Kundli>[];
+    final byId = {for (final k in all) k.id: k};
+    return selection.every((id) => byId[id]?.isArchived ?? false);
+  }
+
+  Future<void> _bulkArchive(
+    BuildContext context,
+    WidgetRef ref,
+    Set<String> selection, {
+    required bool archived,
+  }) async {
+    // Captured before the awaits inside the helper: the select bar is
+    // gone by the time the snackbar goes up.
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final ids = {...selection};
+    ref.read(kundliMultiSelectProvider.notifier).state = null;
+    await setKundlisArchived(ref, ids, archived: archived);
+    messenger.showSnackBar(SnackBar(
+      content: Text(archived
+          ? l10n.klArchivedN('${ids.length}')
+          : l10n.klUnarchivedN('${ids.length}')),
+      action: SnackBarAction(
+        label: l10n.klUndo,
+        onPressed: () => setKundlisArchived(ref, ids, archived: !archived),
+      ),
+    ));
+  }
+
   Future<void> _bulkDelete(
       BuildContext context, WidgetRef ref, Set<String> selection) async {
     final l10n = context.l10n;
@@ -292,6 +368,10 @@ class KundliListScreen extends ConsumerWidget {
       // dialog above promised the opposite.
       sync?.deleteRemote(id);
     }
+    // Once, after the loop — pingSoon is debounced, so calling it per id
+    // would be harmless, but there is no reason to make the timer do the
+    // coalescing a for-loop boundary already does.
+    ref.read(devicePingServiceProvider)?.pingSoon();
     // A deleted chart must not keep a slot in the recents strip, the
     // pins, or the alert follow-set (a stale follow would keep costing
     // an ephemeris pass and schedule alerts for a chart that is gone).
@@ -378,7 +458,12 @@ class _Library extends ConsumerWidget {
     return CustomScrollView(
       slivers: [
         if (showSearch) const SliverToBoxAdapter(child: _SearchField()),
-        if (data.labels.isNotEmpty || data.relationTags.length > 1)
+        // The row earns its space as soon as there is anything to sort
+        // by — including an archive on its own, which is the only way
+        // back to those charts.
+        if (data.labels.isNotEmpty ||
+            data.relationTags.length > 1 ||
+            data.archivedCount > 0)
           SliverToBoxAdapter(child: _FilterChips(data: data)),
         if (showRecents)
           SliverToBoxAdapter(child: _RecentsStrip(recents: data.recents)),
@@ -591,9 +676,17 @@ class _SearchFieldState extends ConsumerState<_SearchField> {
   }
 }
 
-/// Relation tags and user labels in one scrolling row. Chips rather than
-/// tabs because chips compose with search (Client + "sharma") and cost
-/// no permanent vertical space when there's nothing to filter by.
+/// Relation tags, user labels and the archive in one scrolling row.
+/// Chips rather than tabs because chips compose with search (Client +
+/// "sharma") and cost no permanent vertical space when there's nothing
+/// to filter by.
+///
+/// The archived chip is the odd one out and deliberately so: the other
+/// chips narrow the active library, while this one steps out of it. It
+/// lives here rather than in a section of its own because "which slice
+/// of my charts am I looking at" is one question, and answering it in
+/// two different places (a chip row AND a fold-out at the bottom of a
+/// 200-row list) is how an archive becomes a place things get lost.
 class _FilterChips extends ConsumerWidget {
   const _FilterChips({required this.data});
   final KundliListData data;
@@ -631,7 +724,21 @@ class _FilterChips extends ConsumerWidget {
               selected: active?.kind == KundliFilterKind.label &&
                   active?.value == label,
               onTap: () => select((kind: KundliFilterKind.label, value: label)),
-              isLabel: true,
+              icon: Icons.sell_outlined,
+            ),
+          // Last, and only once something has been archived. It carries
+          // its own glyph so it can't be mistaken for a user label that
+          // happens to be called "Archived" — and unlike every other
+          // chip, selecting it REPLACES the list body rather than
+          // narrowing it. Tapping it again (or "All") comes back.
+          if (data.archivedCount > 0)
+            _chip(
+              label: l10n.klArchived('${data.archivedCount}'),
+              selected: active?.kind == KundliFilterKind.archived,
+              onTap: () => select(active?.kind == KundliFilterKind.archived
+                  ? null
+                  : kArchivedFilter),
+              icon: Icons.archive_outlined,
             ),
         ],
       ),
@@ -642,7 +749,7 @@ class _FilterChips extends ConsumerWidget {
     required String label,
     required bool selected,
     required VoidCallback onTap,
-    bool isLabel = false,
+    IconData? icon,
   }) =>
       Padding(
         padding: const EdgeInsets.only(right: KJSpace.sm),
@@ -664,8 +771,8 @@ class _FilterChips extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (isLabel) ...[
-                  Icon(Icons.sell_outlined,
+                if (icon != null) ...[
+                  Icon(icon,
                       size: KJIcon.inline,
                       color: selected ? KJColors.maroon : KJColors.inkSoft),
                   KJSpace.gapW(KJSpace.xs),
@@ -793,6 +900,54 @@ String densityLabel(AppLocalizations l10n, KundliDensity density) =>
       KundliDensity.comfortable => l10n.klDensityComfortable,
       KundliDensity.detailed => l10n.klDensityDetailed,
     };
+
+/// Archives (or unarchives) [ids] and puts the list back in step.
+///
+/// Shared by the list's bulk action bar and the dashboard's overflow
+/// menu so the two can't drift — archiving is one of those operations
+/// with a tail (pins, recents, sync) that is easy to half-do.
+///
+/// Rows are re-read rather than passed in: the caller may be holding a
+/// Kundli from before an edit, and `update` writes the whole row.
+/// Charts already on the requested side are skipped, so an Undo that
+/// races a second archive doesn't churn `updated_at` for nothing.
+///
+/// No pingSoon: archiving changes neither number the device ping
+/// reports — an archived chart is still a saved chart.
+Future<void> setKundlisArchived(
+  WidgetRef ref,
+  Iterable<String> ids, {
+  required bool archived,
+}) async {
+  final repo = ref.read(kundliRepoProvider);
+  final changed = <String>[];
+  for (final id in ids) {
+    final k = await repo.byId(id);
+    if (k == null || k.isArchived == archived) continue;
+    await repo.update(k.copyWith(isArchived: archived));
+    changed.add(id);
+  }
+  if (changed.isEmpty) return;
+  if (archived) {
+    // The point of archiving is to stop seeing the chart, and both of
+    // these would keep showing it above the fold. Unarchiving does NOT
+    // undo them: a pin the user set months ago is not recoverable from
+    // here, and silently re-pinning would be a guess.
+    ref.read(pinnedKundlisProvider.notifier).removeAll(changed);
+    ref.read(recentKundlisProvider.notifier).forget(changed);
+    // Followed alerts are deliberately NOT dropped. Following is its own
+    // explicit opt-in ("tell me when this native's dasha turns"), and
+    // that request survives the chart leaving the roll call — unlike a
+    // delete, where the subject is gone.
+  }
+  ref.invalidate(kundlisProvider);
+  for (final id in changed) {
+    ref.invalidate(kundliByIdProvider(id));
+  }
+  // The flag rides inside the row payload, so a plain push carries it —
+  // and `update` bumped updated_at, so LWW settles it on every device.
+  ref.read(syncServiceProvider)?.pushAll();
+}
 
 /// Opens a kundli and records the visit, so recency ordering reflects
 /// every entry point rather than just the list.

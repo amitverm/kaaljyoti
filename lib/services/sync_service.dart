@@ -58,10 +58,15 @@ class SyncService {
       // Conflict target is the composite key (0022): another account
       // may legitimately hold a row for the same kundli id (a chart
       // first synced by a different user on this device).
+      //
+      // created_at rides outside the payload purely so the server can
+      // count by it (0029) — its copy inside payload_encrypted is opaque
+      // there. Immutable, so re-sending it on every push is a no-op.
       await _client.from('synced_kundlis').upsert({
         'id': k.id,
         'user_id': _userId,
         'payload_encrypted': jsonEncode(payload),
+        'created_at': k.createdAt.toUtc().toIso8601String(),
         'updated_at': k.updatedAt.toIso8601String(),
         'deleted_at': null,
       }, onConflict: 'id,user_id');

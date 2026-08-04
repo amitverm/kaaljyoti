@@ -194,6 +194,43 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
     }
   }
 
+  /// The relation chips, exactly as the create screen offers them (same
+  /// shared [kRelationTags], same order). Relation used to be a create-
+  /// only decision, which made a mis-tapped chip permanent — the one
+  /// field on the form with no way back.
+  ///
+  /// Save-bound like name, note and labels: the pick lands on the
+  /// in-memory kundli and is written by [_save], so backing out of the
+  /// screen discards it.
+  Widget _relationEditor(Kundli k) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        KJSectionLabel(l10n.beSectionRelation, padded: true),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            // The STORED tag stays English (it's persisted on the row and
+            // read back by relationTagLabel); only the chip text is
+            // localized.
+            for (final tag in kRelationTags)
+              ChoiceChip(
+                label: Text(relationTagLabel(l10n, tag)),
+                selected: k.relationTag == tag,
+                labelStyle: TextStyle(
+                    color:
+                        k.relationTag == tag ? KJColors.paper : KJColors.ink),
+                onSelected: (_) =>
+                    setState(() => _kundli = k.copyWith(relationTag: tag)),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
   /// Labels as removable chips plus an "add" affordance. Edits apply to
   /// the in-memory kundli and persist on Save alongside name and note —
   /// a label added here must not survive the user backing out.
@@ -259,6 +296,7 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
     await ref.read(kundliRepoProvider).delete(widget.kundliId);
     // Tombstone (not hard-delete) so other devices apply the deletion.
     ref.read(syncServiceProvider)?.deleteRemote(widget.kundliId);
+    ref.read(devicePingServiceProvider)?.pingSoon();
     // Drop the device-local list state too, so the chart can't linger in
     // the pinned section or the recents strip.
     ref.read(pinnedKundlisProvider.notifier).removeAll([widget.kundliId]);
@@ -514,6 +552,12 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          // Same slot as on the create screen — after the birth block,
+          // before the note — so the two forms read the same way.
+          _relationEditor(k),
+          const SizedBox(height: 20),
+          _labelEditor(k),
+          const SizedBox(height: 20),
           TextField(
             controller: _noteController,
             textCapitalization: TextCapitalization.sentences,
@@ -524,8 +568,6 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
               hintText: context.l10n.beNoteHint,
             ),
           ),
-          const SizedBox(height: 20),
-          _labelEditor(k),
           const SizedBox(height: 20),
           _sectionLabel(context.l10n.keSectionChart),
           _settingBlock(

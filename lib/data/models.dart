@@ -22,6 +22,7 @@ class Kundli {
     this.chartStyle = 'north',
     this.isPrashna = false,
     this.isEphemeral = false, // instant Prashna, not yet kept
+    this.isArchived = false, // out of the main list, never out of reach
     this.syncEnabled = false,
     this.mahakoshCode, // e.g. 'MK-4831' when shared
     required this.createdAt,
@@ -49,6 +50,21 @@ class Kundli {
   final String chartStyle;
   final bool isPrashna;
   final bool isEphemeral;
+
+  /// Archived: the chart leaves the main list (and the filter chips) but
+  /// stays complete, openable and restorable from the list's own
+  /// "Archived" section. NOT a soft delete — nothing is hidden from the
+  /// chart itself, only from the roll call.
+  ///
+  /// Rides cross-device inside the sync payload ([toRow]), and archiving
+  /// goes through `KundliRepository.update`, which bumps `updated_at` —
+  /// so last-writer-wins carries the flag like any other edit. One
+  /// accepted mixed-version edge: a device on an older build editing the
+  /// same chart re-pushes a payload with no `is_archived` key at all, and
+  /// a newer device pulling that payload reads it as unarchived. Same
+  /// class of tradeoff as the journal's LWW — the loss is a flag the user
+  /// can flip back, never a chart.
+  final bool isArchived;
   final bool syncEnabled;
   final String? mahakoshCode;
   final DateTime createdAt;
@@ -81,6 +97,7 @@ class Kundli {
     bool clearAyanamsaOverride = false,
     String? chartStyle,
     bool? isEphemeral,
+    bool? isArchived,
     bool? syncEnabled,
     String? mahakoshCode,
     bool clearMahakoshCode = false,
@@ -104,6 +121,7 @@ class Kundli {
         chartStyle: chartStyle ?? this.chartStyle,
         isPrashna: isPrashna,
         isEphemeral: isEphemeral ?? this.isEphemeral,
+        isArchived: isArchived ?? this.isArchived,
         syncEnabled: syncEnabled ?? this.syncEnabled,
         mahakoshCode:
             clearMahakoshCode ? null : (mahakoshCode ?? this.mahakoshCode),
@@ -130,6 +148,7 @@ class Kundli {
         'chart_style': chartStyle,
         'is_prashna': isPrashna ? 1 : 0,
         'is_ephemeral': isEphemeral ? 1 : 0,
+        'is_archived': isArchived ? 1 : 0,
         'sync_enabled': syncEnabled ? 1 : 0,
         'mahakosh_code': mahakoshCode,
         'created_at': createdAt.millisecondsSinceEpoch,
@@ -153,6 +172,9 @@ class Kundli {
         chartStyle: (r['chart_style'] as String?) ?? 'north',
         isPrashna: (r['is_prashna'] as int) == 1,
         isEphemeral: ((r['is_ephemeral'] as int?) ?? 0) == 1,
+        // Absent key → false, not a crash: a sync payload written by a
+        // build that predates archiving carries no `is_archived` at all.
+        isArchived: ((r['is_archived'] as int?) ?? 0) == 1,
         syncEnabled: (r['sync_enabled'] as int) == 1,
         mahakoshCode: r['mahakosh_code'] as String?,
         createdAt: DateTime.fromMillisecondsSinceEpoch(r['created_at'] as int,

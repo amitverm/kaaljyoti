@@ -10,6 +10,7 @@ import 'core/theme/theme.dart';
 import 'data/db.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'state/providers.dart';
+import 'ui/demo_touch_overlay.dart';
 import 'screens/admin_screen.dart';
 import 'screens/arrange_screen.dart';
 import 'screens/ashtakoota_screen.dart';
@@ -256,7 +257,10 @@ class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp>
     // pass is main-isolate by necessity (sweph), so putting it in the
     // launch path would trade a visibly slower cold start for a
     // notification nobody is waiting on.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshAlerts());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshAlerts();
+      _pingDevice();
+    });
     // Read BEFORE attaching the persist listener: go_router notifies
     // once while setting up the initial '/today', and attaching first
     // let that overwrite the saved route before restore could read it
@@ -286,7 +290,21 @@ class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp>
     // Every resume rolls the 30-day alert horizon forward and picks up
     // whatever changed while we were away (an edited birth time, a
     // kundli synced in from another device, or simply a week passing).
-    if (state == AppLifecycleState.resumed) _refreshAlerts();
+    if (state == AppLifecycleState.resumed) {
+      _refreshAlerts();
+      _pingDevice();
+    }
+  }
+
+  /// The anonymous device ping — three numbers and a random id, at most
+  /// once a day (device_ping_service.dart says exactly what is and is
+  /// not sent). Fired here beside the alert refresh for the same reason:
+  /// launch and resume are when the app has a moment and a network.
+  /// Unawaited and self-throttling — the service decides whether a ping
+  /// is actually due, and swallows everything either way.
+  void _pingDevice() {
+    final ping = ref.read(devicePingServiceProvider);
+    if (ping != null) unawaited(ping.pingIfDue());
   }
 
   /// Rebuild the local alert schedule, debounced. The pass itself lives
@@ -382,7 +400,11 @@ class _KaalJyotiAppState extends ConsumerState<KaalJyotiApp>
         data: MediaQuery.of(context).copyWith(
           textScaler: TextScaler.linear(appearance.textScale),
         ),
-        child: child ?? const SizedBox(),
+        // Touch indicators for demo recordings; const-folded away unless
+        // built with --dart-define=DEMO_MODE=true.
+        child: DemoTouchOverlay.enabled
+            ? DemoTouchOverlay(child: child ?? const SizedBox())
+            : child ?? const SizedBox(),
       ),
       localizationsDelegates: const [
         AppLocalizations.delegate,
