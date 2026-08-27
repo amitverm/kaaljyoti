@@ -115,6 +115,19 @@ class ChartDetailHeader extends StatelessWidget {
   }
 }
 
+/// The on-screen ® retrograde marker as a span. The circled glyph is
+/// designed superscript-small in most faces — at text size it is
+/// illegible (device QA after the ℞→® swap) — so it is drawn at 1.5×
+/// the text it trails, which lands its visual weight where the old
+/// full-height ℞ sat.
+TextSpan retroMark(double surroundingSize, {Color? color}) => TextSpan(
+      text: ' ®',
+      style: TextStyle(
+        fontSize: surroundingSize * 1.5,
+        color: color ?? KJColors.maroon,
+      ),
+    );
+
 /// On-screen planetary positions table (reused by the Planetary
 /// Positions module card, the Birth Chart detail view, etc.).
 class PositionsTable extends StatelessWidget {
@@ -178,8 +191,14 @@ class PositionsTable extends StatelessWidget {
               border: Border(top: BorderSide(color: KJColors.hairline)),
             ),
             children: [
-              _cell('${p.planet.label(l10n)}${p.isRetrograde ? ' ℞' : ''}',
-                  color: planetInk(p.planet), bold: true),
+              _cellRich(
+                  TextSpan(children: [
+                    TextSpan(text: p.planet.label(l10n)),
+                    if (p.isRetrograde)
+                      retroMark(13, color: planetInk(p.planet)),
+                  ]),
+                  color: planetInk(p.planet),
+                  bold: true),
               _cell(p.sign.label(l10n)),
               _cellMono(formatDegree(p.longitude)),
               _cell('${p.nakshatra.label(l10n)} · ${p.pada}'),
@@ -199,9 +218,13 @@ class PositionsTable extends StatelessWidget {
                 fontWeight: FontWeight.w600)),
       );
 
-  Widget _cell(String t, {Color? color, bool bold = false}) => Padding(
+  Widget _cell(String t, {Color? color, bool bold = false}) =>
+      _cellRich(TextSpan(text: t), color: color, bold: bold);
+
+  Widget _cellRich(TextSpan span, {Color? color, bool bold = false}) =>
+      Padding(
         padding: const EdgeInsets.symmetric(vertical: 7),
-        child: Text(t,
+        child: Text.rich(span,
             style: TextStyle(
                 fontSize: 13,
                 color: color,
@@ -275,8 +298,14 @@ class TransitPositionsTable extends StatelessWidget {
               border: Border(top: BorderSide(color: KJColors.hairline)),
             ),
             children: [
-              _tcell('${p.planet.label(l10n)}${p.isRetrograde ? ' ℞' : ''}',
-                  color: planetInk(p.planet), bold: true),
+              _tcellRich(
+                  TextSpan(children: [
+                    TextSpan(text: p.planet.label(l10n)),
+                    if (p.isRetrograde)
+                      retroMark(13, color: planetInk(p.planet)),
+                  ]),
+                  color: planetInk(p.planet),
+                  bold: true),
               _tcell(p.sign.label(l10n)),
               _tcellMono(formatDegree(p.longitude)),
               _tcell('${p.nakshatra.label(l10n)} · ${p.pada}'),
@@ -296,9 +325,14 @@ class TransitPositionsTable extends StatelessWidget {
                 fontWeight: FontWeight.w600)),
       );
 
-  static Widget _tcell(String t, {Color? color, bool bold = false}) => Padding(
+  static Widget _tcell(String t, {Color? color, bool bold = false}) =>
+      _tcellRich(TextSpan(text: t), color: color, bold: bold);
+
+  static Widget _tcellRich(TextSpan span,
+          {Color? color, bool bold = false}) =>
+      Padding(
         padding: const EdgeInsets.symmetric(vertical: 7),
-        child: Text(t,
+        child: Text.rich(span,
             style: TextStyle(
                 fontSize: 13,
                 color: color,

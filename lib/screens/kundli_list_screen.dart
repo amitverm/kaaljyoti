@@ -320,19 +320,23 @@ class KundliListScreen extends ConsumerWidget {
     required bool archived,
   }) async {
     // Captured before the awaits inside the helper: the select bar is
-    // gone by the time the snackbar goes up.
+    // gone by the time the snackbar goes up — and the CONTAINER rather
+    // than ref, because archiving the view's last visible rows can
+    // dispose this very widget mid-await (and Undo outlives it always).
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
+    final container = ProviderScope.containerOf(context, listen: false);
     final ids = {...selection};
     ref.read(kundliMultiSelectProvider.notifier).state = null;
-    await setKundlisArchived(ref, ids, archived: archived);
+    await setKundlisArchived(container, ids, archived: archived);
     messenger.showSnackBar(SnackBar(
       content: Text(archived
           ? l10n.klArchivedN('${ids.length}')
           : l10n.klUnarchivedN('${ids.length}')),
       action: SnackBarAction(
         label: l10n.klUndo,
-        onPressed: () => setKundlisArchived(ref, ids, archived: !archived),
+        onPressed: () =>
+            setKundlisArchived(container, ids, archived: !archived),
       ),
     ));
   }
@@ -914,12 +918,22 @@ String densityLabel(AppLocalizations l10n, KundliDensity density) =>
 ///
 /// No pingSoon: archiving changes neither number the device ping
 /// reports — an archived chart is still a saved chart.
+///
+/// Takes the ROOT [ProviderContainer], never a WidgetRef: the operation
+/// awaits a row write per chart, and both callers can outlive their
+/// widget mid-await — a bulk archive empties the view it was launched
+/// from, and the snackbar's Undo outlives everything by design. A
+/// WidgetRef used after its element is disposed throws ("Cannot use
+/// ref after the widget was disposed"); the root container lives as
+/// long as the app does. Callers grab it with
+/// `ProviderScope.containerOf(context, listen: false)` BEFORE any
+/// await.
 Future<void> setKundlisArchived(
-  WidgetRef ref,
+  ProviderContainer container,
   Iterable<String> ids, {
   required bool archived,
 }) async {
-  final repo = ref.read(kundliRepoProvider);
+  final repo = container.read(kundliRepoProvider);
   final changed = <String>[];
   for (final id in ids) {
     final k = await repo.byId(id);
@@ -933,20 +947,20 @@ Future<void> setKundlisArchived(
     // these would keep showing it above the fold. Unarchiving does NOT
     // undo them: a pin the user set months ago is not recoverable from
     // here, and silently re-pinning would be a guess.
-    ref.read(pinnedKundlisProvider.notifier).removeAll(changed);
-    ref.read(recentKundlisProvider.notifier).forget(changed);
+    container.read(pinnedKundlisProvider.notifier).removeAll(changed);
+    container.read(recentKundlisProvider.notifier).forget(changed);
     // Followed alerts are deliberately NOT dropped. Following is its own
     // explicit opt-in ("tell me when this native's dasha turns"), and
     // that request survives the chart leaving the roll call — unlike a
     // delete, where the subject is gone.
   }
-  ref.invalidate(kundlisProvider);
+  container.invalidate(kundlisProvider);
   for (final id in changed) {
-    ref.invalidate(kundliByIdProvider(id));
+    container.invalidate(kundliByIdProvider(id));
   }
   // The flag rides inside the row payload, so a plain push carries it —
   // and `update` bumped updated_at, so LWW settles it on every device.
-  ref.read(syncServiceProvider)?.pushAll();
+  container.read(syncServiceProvider)?.pushAll();
 }
 
 /// Opens a kundli and records the visit, so recency ordering reflects

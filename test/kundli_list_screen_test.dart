@@ -7,9 +7,12 @@
 /// tester reports layout exceptions as test failures.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaaljyoti/data/kundli_repository.dart';
 import 'package:kaaljyoti/data/models.dart';
 import 'package:kaaljyoti/data/settings_repository.dart';
 import 'package:kaaljyoti/l10n/gen/app_localizations.dart';
@@ -43,6 +46,28 @@ Kundli _k({
       createdAt: DateTime.utc(2026, 1, 1),
       updatedAt: DateTime.utc(2026, 1, 1),
     );
+
+/// A repository whose first read blocks on [gate] — so a test can hold
+/// an archive operation mid-flight while it tears the screen down.
+class _GatedRepo extends KundliRepository {
+  _GatedRepo(this.gate, this.rows);
+  final Completer<void> gate;
+  final List<Kundli> rows;
+  final List<String> updated = [];
+
+  @override
+  Future<Kundli?> byId(String id) async {
+    await gate.future;
+    return rows.where((k) => k.id == id).firstOrNull;
+  }
+
+  @override
+  Future<void> update(Kundli kundli) async {
+    updated.add(kundli.id);
+    final i = rows.indexWhere((k) => k.id == kundli.id);
+    if (i != -1) rows[i] = kundli;
+  }
+}
 
 Widget _wrap(Widget child) => MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -434,6 +459,53 @@ void main() {
 
     expect(find.byType(TextField), findsNothing);
     expect(find.text('New Kundli'), findsOneWidget);
+  });
+
+  group('bulk archive outliving the screen', () {
+    testWidgets('completes without touching the disposed widget\'s ref',
+        (tester) async {
+      // Field crash (v0.1.2+20 QA): setKundlisArchived held the widget's
+      // ref across its row writes, and a bulk archive can dispose the
+      // very screen it was launched from — "Cannot use ref after the
+      // widget was disposed". The helper now takes the root container,
+      // which outlives every screen. This test archives with the write
+      // gated, disposes the screen mid-await, then releases the gate:
+      // the operation must finish, not throw.
+      final gate = Completer<void>();
+      final repo = _GatedRepo(gate, [_k(id: 'a', name: 'Asha')]);
+      final container = ProviderContainer(overrides: [
+        kundlisProvider.overrideWith((ref) async => repo.rows),
+        kundliRepoProvider.overrideWithValue(repo),
+      ]);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: _wrap(const KundliListScreen()),
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.longPress(find.text('Asha'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.archive_outlined));
+      await tester.pump();
+
+      // The screen dies while the helper is parked on the gated read —
+      // same container, so only the widget is gone. A bare Scaffold
+      // stands in for whatever screen the user navigated to: in the
+      // real app there is always one, and the root messenger needs it
+      // for the operation's snackbar.
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: _wrap(const Scaffold(body: SizedBox())),
+      ));
+
+      gate.complete();
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(repo.updated, ['a'], reason: 'the archive itself must land');
+    });
   });
 
   // The nav pill clipped on the right on narrow real phones (seen on a

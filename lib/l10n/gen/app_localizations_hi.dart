@@ -5585,6 +5585,54 @@ class AppLocalizationsHi extends AppLocalizations {
   String get mnCompareSubtitle => 'Study up to 4 charts with instant switching';
 
   @override
+  String get mnEphemerisSubtitle => 'दैनिक ग्रह अंश — महीने भर की सारणी';
+
+  @override
+  String get epTitle => 'ग्रह स्पष्ट (एफेमेरिस)';
+
+  @override
+  String get epNirayan => 'निरयण';
+
+  @override
+  String get epSayan => 'सायन';
+
+  @override
+  String get epReferenceTime =>
+      'प्रतिदिन 05:30 IST (00:00 UT) की स्थितियाँ — मुद्रित भारतीय पंचांगों का संदर्भ समय';
+
+  @override
+  String epReferenceTimeLocal(String local) {
+    return 'प्रतिदिन 00:00 UT (05:30 IST) की स्थितियाँ — आपकी घड़ी पर $local';
+  }
+
+  @override
+  String epAyanamsaOnFirst(String name, String value) {
+    return '1 तारीख का अयनांश ($name): $value';
+  }
+
+  @override
+  String get epEventsHeader => 'राशि प्रवेश एवं वक्री-मार्गी';
+
+  @override
+  String epStationRetrograde(String planet) {
+    return '$planet वक्री';
+  }
+
+  @override
+  String epStationDirect(String planet) {
+    return '$planet मार्गी';
+  }
+
+  @override
+  String get epBackToCurrentMonth => 'वर्तमान माह पर लौटें';
+
+  @override
+  String get epGoToMonth => 'किसी माह पर जाएँ';
+
+  @override
+  String get epAscPlace => 'लग्न स्थान';
+
+  @override
   String get cmpTitle => 'Compare Kundlis';
 
   @override

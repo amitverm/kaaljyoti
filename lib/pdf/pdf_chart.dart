@@ -182,9 +182,9 @@ class _Annotations {
 
   /// The lunar nodes are retrograde by definition — never worth
   /// flagging — so the marker is suppressed for them, matching the
-  /// on-screen painters. "(R)" (not ℞) matches [pdfPositionsTable]'s
+  /// on-screen painters. "(R)" (not ®) matches [pdfPositionsTable]'s
   /// existing convention, since core PDF fonts don't reliably carry
-  /// the ℞ glyph.
+  /// the ® glyph.
   String _abbr(AppLocalizations l10n, Planet p) {
     final isNode = p == Planet.rahu || p == Planet.ketu;
     final retro = !isNode && (retrograde[p] ?? false);

@@ -73,9 +73,23 @@ class EphemerisService {
   /// Sidereal positions for all nine grahas.
   Map<Planet, PlanetPosition> planetPositions(double jdUt, int ayanamsaId) {
     _setSiderealMode(ayanamsaId);
+    return _allGrahas(jdUt, _baseFlags);
+  }
+
+  /// TROPICAL (sayan) positions for all nine grahas — the Ephemeris
+  /// screen's sayan mode. Same shape as [planetPositions] but without
+  /// the sidereal flag, so no ayanamsa is involved.
+  Map<Planet, PlanetPosition> planetPositionsTropical(double jdUt) {
+    final flags =
+        (useSwissEph ? SwephFlag.SEFLG_SWIEPH : SwephFlag.SEFLG_MOSEPH) |
+            SwephFlag.SEFLG_SPEED;
+    return _allGrahas(jdUt, flags);
+  }
+
+  Map<Planet, PlanetPosition> _allGrahas(double jdUt, SwephFlag flags) {
     final out = <Planet, PlanetPosition>{};
     for (final entry in _bodies.entries) {
-      final r = Sweph.swe_calc_ut(jdUt, entry.value, _baseFlags);
+      final r = Sweph.swe_calc_ut(jdUt, entry.value, flags);
       out[entry.key] = PlanetPosition(
         planet: entry.key,
         longitude: _norm(r.longitude),
@@ -124,6 +138,15 @@ class EphemerisService {
       for (var i = 1; i <= 12; i++) _norm(h.cusps[i]),
     ];
     return (ascendant: asc, cusps: cusps);
+  }
+
+  /// TROPICAL ascendant — the Ephemeris screen's sayan mode; the
+  /// sidereal path is [housesAndAscendant].
+  double ascendantTropical(double jdUt, double latitude, double longitude) {
+    final flags =
+        useSwissEph ? SwephFlag.SEFLG_SWIEPH : SwephFlag.SEFLG_MOSEPH;
+    final h = Sweph.swe_houses_ex(jdUt, flags, latitude, longitude, Hsys.P);
+    return _norm(h.ascmc[0]);
   }
 
   /// Porphyry house cusps (sidereal) — the bhava madhyas of the

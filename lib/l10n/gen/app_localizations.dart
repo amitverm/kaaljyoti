@@ -9909,6 +9909,84 @@ abstract class AppLocalizations {
   /// **'Study up to 4 charts with instant switching'**
   String get mnCompareSubtitle;
 
+  /// No description provided for @mnEphemerisSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily planetary longitudes, month by month'**
+  String get mnEphemerisSubtitle;
+
+  /// No description provided for @epTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ephemeris'**
+  String get epTitle;
+
+  /// No description provided for @epNirayan.
+  ///
+  /// In en, this message translates to:
+  /// **'Nirayan (sidereal)'**
+  String get epNirayan;
+
+  /// No description provided for @epSayan.
+  ///
+  /// In en, this message translates to:
+  /// **'Sayan (tropical)'**
+  String get epSayan;
+
+  /// No description provided for @epReferenceTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily positions at 05:30 IST (00:00 UT) — the reference moment printed Indian ephemerides use'**
+  String get epReferenceTime;
+
+  /// Shown instead of epReferenceTime when the device timezone is not IST. {local} is the SAME instant (00:00 UT on the 1st of the shown month) rendered in the device zone with its date, e.g. "31 Jul 17:00" — the date makes a previous-day rollover west of UTC self-explanatory.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily positions at 00:00 UT (05:30 IST) — {local} on your clock'**
+  String epReferenceTimeLocal(String local);
+
+  /// Info line under the Ephemeris controls, nirayan mode only. {name} is the ayanamsa's catalog name (untranslated, e.g. Lahiri), {value} a formatted degree like 24°17'14".
+  ///
+  /// In en, this message translates to:
+  /// **'Ayanamsa ({name}) on the 1st: {value}'**
+  String epAyanamsaOnFirst(String name, String value);
+
+  /// No description provided for @epEventsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'SIGN CHANGES & STATIONS'**
+  String get epEventsHeader;
+
+  /// Ephemeris footer line; {planet} is the localized graha name. Keep {planet} first where the language allows — the row colours a leading planet name (same convention as ueTransitIngress).
+  ///
+  /// In en, this message translates to:
+  /// **'{planet} turns retrograde'**
+  String epStationRetrograde(String planet);
+
+  /// No description provided for @epStationDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'{planet} turns direct'**
+  String epStationDirect(String planet);
+
+  /// No description provided for @epBackToCurrentMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to current month'**
+  String get epBackToCurrentMonth;
+
+  /// No description provided for @epGoToMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to a month'**
+  String get epGoToMonth;
+
+  /// No description provided for @epAscPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascendant location'**
+  String get epAscPlace;
+
   /// No description provided for @cmpTitle.
   ///
   /// In en, this message translates to:

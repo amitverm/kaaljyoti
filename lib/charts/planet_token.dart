@@ -171,7 +171,10 @@ List<InlineSpan> _natalChipSpans(
     TextSpan(text: t.planet.abbrLabel(l10n), style: base)
   ];
   if (t.showRetrograde) {
-    spans.add(TextSpan(text: '®', style: mod.copyWith(color: ink)));
+    // 1.5× like the ˢ superscript above: the ® glyph is designed
+    // superscript-small, so at annotation size it is illegible.
+    spans.add(TextSpan(
+        text: '®', style: mod.copyWith(color: ink, fontSize: modSize * 1.5)));
   }
   final mark = dignityMark(t.dignity);
   if (mark != null) {
@@ -221,7 +224,7 @@ List<InlineSpan> _transitChipSpans(
   if (!isNode && retrograde) {
     spans.add(TextSpan(
         text: '®',
-        style: KJTheme.mono(size: fontSize * 0.61, color: KJColors.transit)));
+        style: KJTheme.mono(size: fontSize * 0.95, color: KJColors.transit)));
   }
   return spans;
 }

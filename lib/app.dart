@@ -20,6 +20,7 @@ import 'screens/compare_screen.dart';
 import 'screens/contribute_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/discussion_screen.dart';
+import 'screens/ephemeris_screen.dart';
 import 'screens/hidden_charts_screen.dart';
 import 'screens/journal_screen.dart';
 import 'screens/kundli_edit_screen.dart';
@@ -192,6 +193,7 @@ final _router = GoRouter(
         path: '/notifications/scheduled',
         builder: (_, __) => const ScheduledAlertsScreen()),
     GoRoute(path: '/muhurta', builder: (_, __) => const MuhurtaScreen()),
+    GoRoute(path: '/ephemeris', builder: (_, __) => const EphemerisScreen()),
     GoRoute(path: '/ashtakoota', builder: (_, __) => const AshtakootaScreen()),
     GoRoute(path: '/compare', builder: (_, __) => const CompareScreen()),
     GoRoute(

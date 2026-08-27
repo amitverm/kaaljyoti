@@ -3513,6 +3513,53 @@
   "mnHiddenChartsSubtitle": "Charts you've hidden from your own Mahakosh view",
   "mnCompare": "Compare Kundlis",
   "mnCompareSubtitle": "Study up to 4 charts with instant switching",
+  "mnEphemerisSubtitle": "Daily planetary longitudes, month by month",
+  "epTitle": "Ephemeris",
+  "epNirayan": "Nirayan (sidereal)",
+  "epSayan": "Sayan (tropical)",
+  "epReferenceTime": "Daily positions at 05:30 IST (00:00 UT) — the reference moment printed Indian ephemerides use",
+  "epReferenceTimeLocal": "Daily positions at 00:00 UT (05:30 IST) — {local} on your clock",
+  "@epReferenceTimeLocal": {
+    "description": "Shown instead of epReferenceTime when the device timezone is not IST. {local} is the SAME instant (00:00 UT on the 1st of the shown month) rendered in the device zone with its date, e.g. \"31 Jul 17:00\" — the date makes a previous-day rollover west of UTC self-explanatory.",
+    "placeholders": {
+      "local": {
+        "type": "String"
+      }
+    }
+  },
+  "epAyanamsaOnFirst": "Ayanamsa ({name}) on the 1st: {value}",
+  "@epAyanamsaOnFirst": {
+    "description": "Info line under the Ephemeris controls, nirayan mode only. {name} is the ayanamsa's catalog name (untranslated, e.g. Lahiri), {value} a formatted degree like 24°17'14\".",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "epEventsHeader": "SIGN CHANGES & STATIONS",
+  "epStationRetrograde": "{planet} turns retrograde",
+  "@epStationRetrograde": {
+    "description": "Ephemeris footer line; {planet} is the localized graha name. Keep {planet} first where the language allows — the row colours a leading planet name (same convention as ueTransitIngress).",
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      }
+    }
+  },
+  "epStationDirect": "{planet} turns direct",
+  "@epStationDirect": {
+    "placeholders": {
+      "planet": {
+        "type": "String"
+      }
+    }
+  },
+  "epBackToCurrentMonth": "Back to current month",
+  "epGoToMonth": "Go to a month",
+  "epAscPlace": "Ascendant location",
   "cmpTitle": "Compare Kundlis",
   "cmpCustomizeView": "Customize this view",
   "cmpNewComparison": "New comparison",

@@ -5588,6 +5588,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mnCompareSubtitle => 'Study up to 4 charts with instant switching';
 
   @override
+  String get mnEphemerisSubtitle =>
+      'Daily planetary longitudes, month by month';
+
+  @override
+  String get epTitle => 'Ephemeris';
+
+  @override
+  String get epNirayan => 'Nirayan (sidereal)';
+
+  @override
+  String get epSayan => 'Sayan (tropical)';
+
+  @override
+  String get epReferenceTime =>
+      'Daily positions at 05:30 IST (00:00 UT) — the reference moment printed Indian ephemerides use';
+
+  @override
+  String epReferenceTimeLocal(String local) {
+    return 'Daily positions at 00:00 UT (05:30 IST) — $local on your clock';
+  }
+
+  @override
+  String epAyanamsaOnFirst(String name, String value) {
+    return 'Ayanamsa ($name) on the 1st: $value';
+  }
+
+  @override
+  String get epEventsHeader => 'SIGN CHANGES & STATIONS';
+
+  @override
+  String epStationRetrograde(String planet) {
+    return '$planet turns retrograde';
+  }
+
+  @override
+  String epStationDirect(String planet) {
+    return '$planet turns direct';
+  }
+
+  @override
+  String get epBackToCurrentMonth => 'Back to current month';
+
+  @override
+  String get epGoToMonth => 'Go to a month';
+
+  @override
+  String get epAscPlace => 'Ascendant location';
+
+  @override
   String get cmpTitle => 'Compare Kundlis';
 
   @override

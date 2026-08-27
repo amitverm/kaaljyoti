@@ -56,6 +56,13 @@ class MenuScreen extends ConsumerWidget {
             subtitle: context.l10n.mnCompareSubtitle,
             onTap: () => context.push('/compare'),
           ),
+          _tile(
+            context,
+            icon: Icons.calendar_view_month_outlined,
+            title: context.l10n.epTitle,
+            subtitle: context.l10n.mnEphemerisSubtitle,
+            onTap: () => context.push('/ephemeris'),
+          ),
           const SizedBox(height: 18),
           _label(context.l10n.mnSectionAccount),
           _accountCard(context, ref, user),

@@ -174,11 +174,19 @@ Widget _planetsTable(KpChart kp, AppLocalizations l10n,
               border: Border(top: BorderSide(color: KJColors.hairline)),
             ),
             children: [
-              _cell(
-                '${p.planet.abbrLabel(l10n)}'
-                '${p.position.isRetrograde ? ' ℞' : ''}',
-                color: planetInk(p.planet),
-                bold: true,
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text.rich(
+                  TextSpan(children: [
+                    TextSpan(text: p.planet.abbrLabel(l10n)),
+                    if (p.position.isRetrograde)
+                      retroMark(12.5, color: planetInk(p.planet)),
+                  ]),
+                  style: TextStyle(
+                      fontSize: 12.5,
+                      color: planetInk(p.planet),
+                      fontWeight: FontWeight.w600),
+                ),
               ),
               _cellMono(_degInSign(p.position.longitude, l10n)),
               _cell('${p.house}'),

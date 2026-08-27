@@ -262,14 +262,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Future<void> _toggleArchived(bool wasArchived) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
+    // Container, not ref: the user can back out of this screen while
+    // the row write is in flight, and the Undo outlives it regardless.
+    final container = ProviderScope.containerOf(context, listen: false);
     final id = widget.kundliId;
-    await setKundlisArchived(ref, [id], archived: !wasArchived);
+    await setKundlisArchived(container, [id], archived: !wasArchived);
     messenger.showSnackBar(SnackBar(
       content: Text(
           wasArchived ? l10n.klUnarchivedN('1') : l10n.klArchivedN('1')),
       action: SnackBarAction(
         label: l10n.klUndo,
-        onPressed: () => setKundlisArchived(ref, [id], archived: wasArchived),
+        onPressed: () =>
+            setKundlisArchived(container, [id], archived: wasArchived),
       ),
     ));
   }
