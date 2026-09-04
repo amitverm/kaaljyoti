@@ -18,14 +18,31 @@ import 'package:flutter/services.dart';
 class KeyBackupService {
   static const _channel = MethodChannel('kaaljyoti/blockstore');
 
+  /// Why the last [read] came back null, for AppDb's recovery
+  /// diagnostics: 'unsupported' (not Android), 'empty' (Block Store
+  /// answered with nothing) or the platform error code/message.
+  static String? lastReadOutcome;
+
   /// The passphrase a previous device stored, or null when Block Store
   /// has nothing for us (fresh account, unsupported device, iOS).
   Future<String?> read() async {
-    if (!Platform.isAndroid) return null;
+    if (!Platform.isAndroid) {
+      lastReadOutcome = 'unsupported';
+      return null;
+    }
     try {
       final value = await _channel.invokeMethod<String>('read');
-      return (value == null || value.isEmpty) ? null : value;
-    } catch (_) {
+      if (value == null || value.isEmpty) {
+        lastReadOutcome = 'empty';
+        return null;
+      }
+      lastReadOutcome = null;
+      return value;
+    } on PlatformException catch (e) {
+      lastReadOutcome = 'error ${e.code}: ${e.message}';
+      return null;
+    } catch (e) {
+      lastReadOutcome = 'error $e';
       return null;
     }
   }

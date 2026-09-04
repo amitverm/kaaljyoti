@@ -98,6 +98,56 @@ void main() {
     await second.close();
   });
 
+  group('readKeystoreWithRetry', () {
+    // Keystore reads can throw transiently (slow unlock after boot); a
+    // single failed read must not be mistaken for "no key" — that path
+    // quarantines the DB (KAALJYOTI-PROD-R/S/T).
+    test('a read that throws once and then succeeds keeps the key', () async {
+      var calls = 0;
+      final r = await AppDb.readKeystoreWithRetry(
+        () async {
+          calls++;
+          if (calls < 3) throw StateError('keystore busy');
+          return 'the-key';
+        },
+        delay: Duration.zero,
+      );
+      expect(r.value, 'the-key');
+      expect(r.outcome, 'hit on attempt 3');
+      expect(calls, 3);
+    });
+
+    test('a read that keeps throwing gives up with the error recorded',
+        () async {
+      var calls = 0;
+      final r = await AppDb.readKeystoreWithRetry(
+        () async {
+          calls++;
+          throw StateError('bad padding');
+        },
+        delay: Duration.zero,
+      );
+      expect(r.value, isNull);
+      expect(r.outcome, startsWith('threw StateError x3'));
+      expect(r.outcome, contains('bad padding'));
+      expect(calls, 3);
+    });
+
+    test('an empty Keystore is reported as empty, without retrying', () async {
+      var calls = 0;
+      final r = await AppDb.readKeystoreWithRetry(
+        () async {
+          calls++;
+          return null;
+        },
+        delay: Duration.zero,
+      );
+      expect(r.value, isNull);
+      expect(r.outcome, 'empty');
+      expect(calls, 1);
+    });
+  });
+
   test('recovery replaces an existing quarantine generation', () async {
     File(dbPath).writeAsBytesSync([1, 2, 3]);
     File('$dbPath.quarantined').writeAsBytesSync([9, 9, 9]);

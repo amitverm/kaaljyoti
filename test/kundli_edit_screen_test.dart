@@ -161,6 +161,40 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('birthSummary')), findsNothing);
     });
+
+    testWidgets('rides above the keyboard instead of under it', (tester) async {
+      final (l10n, _) = await _pump(tester);
+      // A soft keyboard over the lower 1200px of the window. The old
+      // bottomNavigationBar slot sat at the window's edge, under it.
+      tester.view.viewInsets = const FakeViewPadding(bottom: 1200);
+      await tester.pumpAndSettle();
+      final button =
+          tester.getRect(find.widgetWithText(FilledButton, l10n.save));
+      expect(button.bottom, lessThanOrEqualTo(4000 - 1200));
+    });
+
+    testWidgets('a tap on blank space puts the keyboard away', (tester) async {
+      await _pump(tester);
+      // Typing into the name gives it focus, as a tap on it would.
+      await tester.enterText(find.widgetWithText(TextField, 'Asha'), 'Asha');
+      await tester.pumpAndSettle();
+      final name = tester.widget<EditableText>(find.descendant(
+        of: find.widgetWithText(TextField, 'Asha'),
+        matching: find.byType(EditableText),
+      ));
+      expect(name.focusNode.hasFocus, isTrue);
+      await tester.tap(find.byKey(const Key('birthSummary')));
+      await tester.pumpAndSettle();
+      expect(name.focusNode.hasFocus, isFalse);
+    });
+
+    testWidgets('dragging the form puts the keyboard away', (tester) async {
+      await _pump(tester);
+      expect(
+        tester.widget<ListView>(find.byType(ListView)).keyboardDismissBehavior,
+        ScrollViewKeyboardDismissBehavior.onDrag,
+      );
+    });
   });
 
   group('the time control', () {

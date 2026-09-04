@@ -11,11 +11,17 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../data/settings_repository.dart';
+import 'location_request_lock.dart';
 
 class CurrentLocationService {
   CurrentLocationService._();
 
-  static Future<TodayPlace?> detect() async {
+  /// Serialised app-wide (see location_request_lock.dart): Today's
+  /// first-run auto-detect and a "use current location" tap must never
+  /// have two permission prompts in flight at once.
+  static Future<TodayPlace?> detect() => withLocationLock(_detect);
+
+  static Future<TodayPlace?> _detect() async {
     try {
       if (!await Geolocator.isLocationServiceEnabled()) return null;
       var permission = await Geolocator.checkPermission();

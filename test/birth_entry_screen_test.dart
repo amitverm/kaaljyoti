@@ -48,6 +48,13 @@ Future<AppLocalizations> _pump(WidgetTester tester,
   return lookupAppLocalizations(const Locale('en'));
 }
 
+/// The editable core of the name field, for focus assertions.
+EditableText _nameField(WidgetTester tester) =>
+    tester.widget<EditableText>(find.descendant(
+      of: find.byKey(const GlobalObjectKey(BirthField.name)),
+      matching: find.byType(EditableText),
+    ));
+
 Kundli _kundliAt(String place, DateTime created,
         {double lat = 18.52,
         double lon = 73.86,
@@ -693,13 +700,41 @@ void main() {
         (tester) async {
       final l10n = await _pump(tester);
       expect(find.text(l10n.castKundli), findsOneWidget);
-      // Inside the Scaffold's bottom slot, not the ListView.
+      // In the pinned bar below the list, not in the list.
       expect(
         find.descendant(
           of: find.byType(ListView),
           matching: find.text(l10n.castKundli),
         ),
         findsNothing,
+      );
+    });
+
+    testWidgets('rides above the keyboard instead of under it', (tester) async {
+      final l10n = await _pump(tester);
+      // A soft keyboard over the lower 1200px of the window. The old
+      // bottomNavigationBar slot sat at the window's edge, under it.
+      tester.view.viewInsets = const FakeViewPadding(bottom: 1200);
+      await tester.pumpAndSettle();
+      final button =
+          tester.getRect(find.widgetWithText(FilledButton, l10n.castKundli));
+      expect(button.bottom, lessThanOrEqualTo(4000 - 1200));
+    });
+
+    testWidgets('a tap on blank space puts the keyboard away', (tester) async {
+      final l10n = await _pump(tester);
+      // Name autofocuses on open — the keyboard is up from the start.
+      expect(_nameField(tester).focusNode.hasFocus, isTrue);
+      await tester.tap(find.text(l10n.trustStatement));
+      await tester.pumpAndSettle();
+      expect(_nameField(tester).focusNode.hasFocus, isFalse);
+    });
+
+    testWidgets('dragging the form puts the keyboard away', (tester) async {
+      await _pump(tester);
+      expect(
+        tester.widget<ListView>(find.byType(ListView)).keyboardDismissBehavior,
+        ScrollViewKeyboardDismissBehavior.onDrag,
       );
     });
 

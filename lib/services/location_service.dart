@@ -12,6 +12,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 
+import 'location_request_lock.dart';
 import 'place_lookup_service.dart';
 
 class LocationDenied implements Exception {
@@ -21,7 +22,13 @@ class LocationDenied implements Exception {
 
 class LocationService {
   /// Resolve the device's current position into a [PlaceResult].
-  Future<PlaceResult> currentPlace() async {
+  ///
+  /// Serialised app-wide with [CurrentLocationService] (see
+  /// location_request_lock.dart) so two permission prompts are never in
+  /// flight together.
+  Future<PlaceResult> currentPlace() => withLocationLock(_currentPlace);
+
+  Future<PlaceResult> _currentPlace() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
       throw const LocationDenied(false);
     }

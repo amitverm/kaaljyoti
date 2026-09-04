@@ -238,6 +238,9 @@ class TimeFieldTile extends StatelessWidget {
 /// Deliberately takes ONE action. A destructive button beside the
 /// primary one, in a bar the thumb rests on, is a misclick trap; delete
 /// lives in the header menu instead.
+///
+/// Placed through [PinnedActionBody], not the Scaffold's
+/// bottomNavigationBar slot — see there for why.
 class PinnedActionBar extends StatelessWidget {
   const PinnedActionBar({
     super.key,
@@ -289,6 +292,45 @@ class PinnedActionBar extends StatelessWidget {
                 ),
               ),
             ),
+          ],
+        ),
+      );
+}
+
+/// The body of a form that ends in a [PinnedActionBar]: the scrolling
+/// fields above, the bar at the foot.
+///
+/// A Column inside the body rather than the Scaffold's
+/// bottomNavigationBar slot, on purpose. That slot is laid out at the
+/// bottom of the WINDOW, so on a phone the keyboard covered it and the
+/// primary action vanished the moment a field took focus. The body, by
+/// contrast, shrinks to make room for the keyboard, so a bar at its
+/// foot rides on top of it.
+///
+/// Also the way OUT of the keyboard. Flutter's fields do nothing on a
+/// tap outside on mobile, the iOS numeric keypad (day, year) has no Done
+/// key, and Return in the note field inserts a newline — so there was no
+/// way to put the keyboard away short of leaving the screen. A tap on
+/// anything that isn't itself a control now drops focus. The list should
+/// pair this with [ScrollViewKeyboardDismissBehavior.onDrag], the other
+/// gesture a thumb reaches for.
+class PinnedActionBody extends StatelessWidget {
+  const PinnedActionBody({super.key, required this.form, required this.bar});
+
+  /// The scrolling fields.
+  final Widget form;
+  final PinnedActionBar bar;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        // Opaque so blank space between fields counts as a tap target;
+        // real controls (fields, buttons, tiles) still win the gesture.
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
+          children: [
+            Expanded(child: form),
+            bar,
           ],
         ),
       );

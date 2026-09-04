@@ -400,315 +400,321 @@ class _KundliEditScreenState extends ConsumerState<KundliEditScreen> {
           ),
         ],
       ),
-      body: ListView(
-        controller: _scroll,
-        padding: formPadding(context),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: KJColors.maroon.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: KJColors.maroon.withValues(alpha: 0.3)),
+      body: PinnedActionBody(
+        form: ListView(
+          controller: _scroll,
+          padding: formPadding(context),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: KJColors.maroon.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border:
+                    Border.all(color: KJColors.maroon.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                context.l10n.recalcWarning,
+                style: TextStyle(fontSize: 12.5, color: KJColors.maroon),
+              ),
             ),
-            child: Text(
-              context.l10n.recalcWarning,
-              style: TextStyle(fontSize: 12.5, color: KJColors.maroon),
+            TextField(
+              key: _fieldKeys[BirthField.name],
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: context.l10n.nameLabel,
+                errorText: _missing.contains(BirthField.name)
+                    ? context.l10n.beFieldRequired
+                    : null,
+              ),
+              onChanged: (v) {
+                if (v.trim().isNotEmpty) _clearMissing(BirthField.name);
+                setState(() {});
+              },
             ),
-          ),
-          TextField(
-            key: _fieldKeys[BirthField.name],
-            controller: _nameController,
-            decoration: InputDecoration(
-              labelText: context.l10n.nameLabel,
-              errorText: _missing.contains(BirthField.name)
+            const SizedBox(height: 12),
+            // Day · named month · year — same unambiguous entry as the
+            // create screen (see date_fields.dart).
+            DateFieldsRow(
+              key: _fieldKeys[BirthField.date],
+              initial: _date,
+              errorText: _missing.contains(BirthField.date)
                   ? context.l10n.beFieldRequired
                   : null,
+              onChanged: (d) {
+                setState(() {
+                  _date = d;
+                  _dirtyBirthData = true;
+                });
+                if (d != null) _clearMissing(BirthField.date);
+              },
             ),
-            onChanged: (v) {
-              if (v.trim().isNotEmpty) _clearMissing(BirthField.name);
-              setState(() {});
-            },
-          ),
-          const SizedBox(height: 12),
-          // Day · named month · year — same unambiguous entry as the
-          // create screen (see date_fields.dart).
-          DateFieldsRow(
-            key: _fieldKeys[BirthField.date],
-            initial: _date,
-            errorText: _missing.contains(BirthField.date)
-                ? context.l10n.beFieldRequired
-                : null,
-            onChanged: (d) {
-              setState(() {
-                _date = d;
-                _dirtyBirthData = true;
-              });
-              if (d != null) _clearMissing(BirthField.date);
-            },
-          ),
-          const SizedBox(height: 8),
-          TimeFieldTile(
-            key: _fieldKeys[BirthField.time],
-            time: _time,
-            label: context.l10n.keTime,
-            errorText: _missing.contains(BirthField.time)
-                ? context.l10n.beFieldRequired
-                : null,
-            onPick: (t) {
-              setState(() {
-                _time = t;
-                _dirtyBirthData = true;
-              });
-              _clearMissing(BirthField.time);
-            },
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            key: _fieldKeys[BirthField.place],
-            controller: _placeController,
-            decoration: InputDecoration(
-              labelText: context.l10n.placeOfBirth,
-              // Typed-but-not-chosen gets its own message: the box LOOKS
-              // filled in, so "Required" would read as a bug.
-              errorText: !_missing.contains(BirthField.place)
-                  ? null
-                  : _placeController.text.trim().isEmpty
-                      ? context.l10n.beFieldRequired
-                      : context.l10n.bePlaceNotChosen,
-              // Coordinates in play: the pending pick, else what's stored —
-              // so a manual/typeahead change is verifiable before Save.
-              helperText: _newPlace != null
-                  ? '${_newPlace!.latitude.toStringAsFixed(4)}, '
-                      '${_newPlace!.longitude.toStringAsFixed(4)} · '
-                      '${_newPlace!.timezoneName}'
-                  : '${k.latitude.toStringAsFixed(4)}, '
-                      '${k.longitude.toStringAsFixed(4)} · '
-                      '${k.timezoneName}',
+            const SizedBox(height: 8),
+            TimeFieldTile(
+              key: _fieldKeys[BirthField.time],
+              time: _time,
+              label: context.l10n.keTime,
+              errorText: _missing.contains(BirthField.time)
+                  ? context.l10n.beFieldRequired
+                  : null,
+              onPick: (t) {
+                setState(() {
+                  _time = t;
+                  _dirtyBirthData = true;
+                });
+                _clearMissing(BirthField.time);
+              },
             ),
-            onChanged: (q) {
-              setState(() {
-                _newPlace = null;
-                _dirtyBirthData = true;
-              });
-              _debounce?.cancel();
-              _debounce = Timer(const Duration(milliseconds: 350), () async {
-                try {
-                  final results = await ref.read(placeLookupProvider).search(q);
-                  if (mounted) {
-                    setState(() {
-                      _placeResults = results;
-                      _placeSearchFailed = false;
-                    });
+            const SizedBox(height: 12),
+            TextField(
+              key: _fieldKeys[BirthField.place],
+              controller: _placeController,
+              decoration: InputDecoration(
+                labelText: context.l10n.placeOfBirth,
+                // Typed-but-not-chosen gets its own message: the box LOOKS
+                // filled in, so "Required" would read as a bug.
+                errorText: !_missing.contains(BirthField.place)
+                    ? null
+                    : _placeController.text.trim().isEmpty
+                        ? context.l10n.beFieldRequired
+                        : context.l10n.bePlaceNotChosen,
+                // Coordinates in play: the pending pick, else what's stored —
+                // so a manual/typeahead change is verifiable before Save.
+                helperText: _newPlace != null
+                    ? '${_newPlace!.latitude.toStringAsFixed(4)}, '
+                        '${_newPlace!.longitude.toStringAsFixed(4)} · '
+                        '${_newPlace!.timezoneName}'
+                    : '${k.latitude.toStringAsFixed(4)}, '
+                        '${k.longitude.toStringAsFixed(4)} · '
+                        '${k.timezoneName}',
+              ),
+              onChanged: (q) {
+                setState(() {
+                  _newPlace = null;
+                  _dirtyBirthData = true;
+                });
+                _debounce?.cancel();
+                _debounce = Timer(const Duration(milliseconds: 350), () async {
+                  try {
+                    final results =
+                        await ref.read(placeLookupProvider).search(q);
+                    if (mounted) {
+                      setState(() {
+                        _placeResults = results;
+                        _placeSearchFailed = false;
+                      });
+                    }
+                  } catch (_) {
+                    // Offline / dead network: surface inline rather than
+                    // letting the exception escape the Timer callback and
+                    // get reported as a crash.
+                    if (mounted) {
+                      setState(() {
+                        _placeResults = [];
+                        _placeSearchFailed = true;
+                      });
+                    }
                   }
-                } catch (_) {
-                  // Offline / dead network: surface inline rather than
-                  // letting the exception escape the Timer callback and
-                  // get reported as a crash.
-                  if (mounted) {
-                    setState(() {
-                      _placeResults = [];
-                      _placeSearchFailed = true;
-                    });
-                  }
-                }
-              });
-            },
-          ),
-          if (_placeSearchFailed && _newPlace == null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(context.l10n.placeSearchOffline,
-                  style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
+                });
+              },
             ),
-          if (_placeResults.isNotEmpty && _newPlace == null)
-            Card(
-              margin: const EdgeInsets.only(top: 4),
-              child: Column(
-                children: [
-                  for (final r in _placeResults)
-                    ListTile(
-                      dense: true,
-                      title: Text(r.displayName),
-                      onTap: () {
-                        setState(() {
-                          _newPlace = r;
-                          _placeController.text = r.displayName;
-                          _placeResults = [];
-                        });
-                        _clearMissing(BirthField.place);
+            if (_placeSearchFailed && _newPlace == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(context.l10n.placeSearchOffline,
+                    style: TextStyle(fontSize: 12, color: KJColors.inkSoft)),
+              ),
+            if (_placeResults.isNotEmpty && _newPlace == null)
+              Card(
+                margin: const EdgeInsets.only(top: 4),
+                child: Column(
+                  children: [
+                    for (final r in _placeResults)
+                      ListTile(
+                        dense: true,
+                        title: Text(r.displayName),
+                        onTap: () {
+                          setState(() {
+                            _newPlace = r;
+                            _placeController.text = r.displayName;
+                            _placeResults = [];
+                          });
+                          _clearMissing(BirthField.place);
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: const Icon(Icons.edit_location_alt_outlined, size: 18),
+                label: Text(context.l10n.beManualEntry),
+                onPressed: _enterPlaceManually,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Same slot as on the create screen — after the birth block,
+            // before the note — so the two forms read the same way.
+            _relationEditor(k),
+            const SizedBox(height: 20),
+            _labelEditor(k),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _noteController,
+              textCapitalization: TextCapitalization.sentences,
+              minLines: 1,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: context.l10n.keNoteLabel,
+                hintText: context.l10n.beNoteHint,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _sectionLabel(context.l10n.keSectionChart),
+            _settingBlock(
+              title: context.l10n.labelChartStyle,
+              subtitle: ChartStyle.values
+                  .firstWhere((s) => s.name == k.chartStyle,
+                      orElse: () => ChartStyle.north)
+                  .label(context.l10n),
+              child: TextButton(
+                onPressed: _pickChartStyle,
+                child: Text(context.l10n.keChange),
+              ),
+            ),
+            _settingBlock(
+              title: context.l10n.keAyanamsaOverride,
+              subtitle: k.ayanamsaOverrideId == null
+                  ? context.l10n.keAyanamsaUsingDefault(
+                      Ayanamsa.byId(Ayanamsa.lahiri.id).name)
+                  : context.l10n.keAyanamsaThisKundli(
+                      Ayanamsa.byId(k.ayanamsaOverrideId!).name),
+              child: TextButton(
+                onPressed: _pickAyanamsa,
+                child: Text(k.ayanamsaOverrideId == null
+                    ? context.l10n.keOverride
+                    : context.l10n.keChange),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _sectionLabel(context.l10n.keSectionSharing),
+            _settingBlock(
+              title: context.l10n.cloudSync,
+              subtitle: user == null
+                  ? context.l10n.keSyncSignInPrompt
+                  : (k.syncEnabled
+                      ? context.l10n.keSyncingToAccount
+                      : context.l10n.deviceOnly),
+              child: user == null
+                  ? TextButton(
+                      onPressed: () => context.push('/signin'),
+                      child: Text(context.l10n.signIn))
+                  : Switch(
+                      value: k.syncEnabled,
+                      activeThumbColor: KJColors.maroon,
+                      onChanged: (v) async {
+                        // Captured before the first await — context must not
+                        // be used across suspension points, and the error
+                        // path below must survive the screen being popped.
+                        final l10n = context.l10n;
+                        final messenger = ScaffoldMessenger.of(context);
+                        final updated = k.copyWith(syncEnabled: v);
+                        await ref.read(kundliRepoProvider).update(updated);
+                        setState(() => _kundli = updated);
+                        final sync = ref.read(syncServiceProvider);
+                        try {
+                          if (v) {
+                            await sync?.pushAll();
+                          } else {
+                            await sync?.removeRemote(k.id);
+                          }
+                        } catch (e) {
+                          // A silent sync failure here cost a debugging
+                          // session once (duplicate-id upsert, 0022) —
+                          // never swallow it again.
+                          messenger.showSnackBar(
+                              SnackBar(content: Text(l10n.keSyncFailed('$e'))));
+                        }
                       },
                     ),
-                ],
-              ),
             ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              icon: const Icon(Icons.edit_location_alt_outlined, size: 18),
-              label: Text(context.l10n.beManualEntry),
-              onPressed: _enterPlaceManually,
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Same slot as on the create screen — after the birth block,
-          // before the note — so the two forms read the same way.
-          _relationEditor(k),
-          const SizedBox(height: 20),
-          _labelEditor(k),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _noteController,
-            textCapitalization: TextCapitalization.sentences,
-            minLines: 1,
-            maxLines: 3,
-            decoration: InputDecoration(
-              labelText: context.l10n.keNoteLabel,
-              hintText: context.l10n.beNoteHint,
-            ),
-          ),
-          const SizedBox(height: 20),
-          _sectionLabel(context.l10n.keSectionChart),
-          _settingBlock(
-            title: context.l10n.labelChartStyle,
-            subtitle: ChartStyle.values
-                .firstWhere((s) => s.name == k.chartStyle,
-                    orElse: () => ChartStyle.north)
-                .label(context.l10n),
-            child: TextButton(
-              onPressed: _pickChartStyle,
-              child: Text(context.l10n.keChange),
-            ),
-          ),
-          _settingBlock(
-            title: context.l10n.keAyanamsaOverride,
-            subtitle: k.ayanamsaOverrideId == null
-                ? context.l10n.keAyanamsaUsingDefault(
-                    Ayanamsa.byId(Ayanamsa.lahiri.id).name)
-                : context.l10n.keAyanamsaThisKundli(
-                    Ayanamsa.byId(k.ayanamsaOverrideId!).name),
-            child: TextButton(
-              onPressed: _pickAyanamsa,
-              child: Text(k.ayanamsaOverrideId == null
-                  ? context.l10n.keOverride
-                  : context.l10n.keChange),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _sectionLabel(context.l10n.keSectionSharing),
-          _settingBlock(
-            title: context.l10n.cloudSync,
-            subtitle: user == null
-                ? context.l10n.keSyncSignInPrompt
-                : (k.syncEnabled
-                    ? context.l10n.keSyncingToAccount
-                    : context.l10n.deviceOnly),
-            child: user == null
-                ? TextButton(
-                    onPressed: () => context.push('/signin'),
-                    child: Text(context.l10n.signIn))
-                : Switch(
-                    value: k.syncEnabled,
-                    activeThumbColor: KJColors.maroon,
-                    onChanged: (v) async {
-                      // Captured before the first await — context must not
-                      // be used across suspension points, and the error
-                      // path below must survive the screen being popped.
-                      final l10n = context.l10n;
-                      final messenger = ScaffoldMessenger.of(context);
-                      final updated = k.copyWith(syncEnabled: v);
-                      await ref.read(kundliRepoProvider).update(updated);
-                      setState(() => _kundli = updated);
-                      final sync = ref.read(syncServiceProvider);
-                      try {
-                        if (v) {
-                          await sync?.pushAll();
-                        } else {
-                          await sync?.removeRemote(k.id);
-                        }
-                      } catch (e) {
-                        // A silent sync failure here cost a debugging
-                        // session once (duplicate-id upsert, 0022) —
-                        // never swallow it again.
-                        messenger.showSnackBar(
-                            SnackBar(content: Text(l10n.keSyncFailed('$e'))));
-                      }
-                    },
-                  ),
-          ),
-          _settingBlock(
-            title: context.l10n.mahakoshTitle,
-            subtitle: k.isSharedToMahakosh
-                ? context.l10n.keSharedToMahakosh('${k.mahakoshCode}')
-                : context.l10n.notShared,
-            child: k.isSharedToMahakosh
-                ? TextButton(
-                    onPressed: _withdraw,
-                    child: Text(context.l10n.withdraw,
-                        style: TextStyle(color: KJColors.maroon)))
-                : TextButton(
-                    onPressed: () => context.push('/kundli/${k.id}/contribute'),
-                    child: Text(context.l10n.share)),
-          ),
-          if (k.isSharedToMahakosh)
             _settingBlock(
-              title: context.l10n.keMahakoshEvents,
-              subtitle: context.l10n.keMahakoshEventsSubtitle,
-              child: TextButton(
-                onPressed: _updateMahakoshEvents,
-                child: Text(context.l10n.keUpdate),
-              ),
+              title: context.l10n.mahakoshTitle,
+              subtitle: k.isSharedToMahakosh
+                  ? context.l10n.keSharedToMahakosh('${k.mahakoshCode}')
+                  : context.l10n.notShared,
+              child: k.isSharedToMahakosh
+                  ? TextButton(
+                      onPressed: _withdraw,
+                      child: Text(context.l10n.withdraw,
+                          style: TextStyle(color: KJColors.maroon)))
+                  : TextButton(
+                      onPressed: () =>
+                          context.push('/kundli/${k.id}/contribute'),
+                      child: Text(context.l10n.share)),
             ),
-          // Its own section, deliberately NOT folded into "Sharing &
-          // sync" above. Sync is a server feature behind an account;
-          // alerts are computed and scheduled on this device and need
-          // neither. Housing them together is precisely the conflation
-          // the "Kundli alerts" rename was made to undo.
-          //
-          // Ephemeral charts are excluded because the scheduling pass
-          // skips them, so a follow would be an id that can never
-          // produce an alert. A Mahakosh id cannot reach this screen at
-          // all (byId finds nothing in the local store and the form
-          // never loads), but the guard costs nothing and states the
-          // rule where a reader will look for it.
-          if (!k.isEphemeral && !isMahakoshKundliId(k.id)) ...[
-            const SizedBox(height: 20),
-            _sectionLabel(context.l10n.stSectionKundliAlerts),
-            _settingBlock(
-              title: context.l10n.beFollowAlertsTitle,
-              subtitle: context.l10n.keAlertsSubtitle,
-              child: Switch(
-                value: ref.watch(followedKundlisProvider).contains(k.id),
-                activeThumbColor: KJColors.maroon,
-                // Live-bound and immediate, like the dashboard's own
-                // follow toggle — NOT save-bound. Flipping it is the
-                // whole action; the app root listens to the follow-set
-                // and runs one debounced rescheduling pass. Routing it
-                // through Save would mean a switch that lies until you
-                // press a button somewhere else.
-                onChanged: (v) {
-                  final follows = ref.read(followedKundlisProvider.notifier);
-                  if (v) {
-                    follows.addAll([k.id]);
-                    // May be this user's first-ever follow.
-                    unawaited(ref
-                        .read(kundliAlertServiceProvider)
-                        .ensurePermission());
-                  } else {
-                    follows.removeAll([k.id]);
-                  }
-                },
+            if (k.isSharedToMahakosh)
+              _settingBlock(
+                title: context.l10n.keMahakoshEvents,
+                subtitle: context.l10n.keMahakoshEventsSubtitle,
+                child: TextButton(
+                  onPressed: _updateMahakoshEvents,
+                  child: Text(context.l10n.keUpdate),
+                ),
               ),
-            ),
+            // Its own section, deliberately NOT folded into "Sharing &
+            // sync" above. Sync is a server feature behind an account;
+            // alerts are computed and scheduled on this device and need
+            // neither. Housing them together is precisely the conflation
+            // the "Kundli alerts" rename was made to undo.
+            //
+            // Ephemeral charts are excluded because the scheduling pass
+            // skips them, so a follow would be an id that can never
+            // produce an alert. A Mahakosh id cannot reach this screen at
+            // all (byId finds nothing in the local store and the form
+            // never loads), but the guard costs nothing and states the
+            // rule where a reader will look for it.
+            if (!k.isEphemeral && !isMahakoshKundliId(k.id)) ...[
+              const SizedBox(height: 20),
+              _sectionLabel(context.l10n.stSectionKundliAlerts),
+              _settingBlock(
+                title: context.l10n.beFollowAlertsTitle,
+                subtitle: context.l10n.keAlertsSubtitle,
+                child: Switch(
+                  value: ref.watch(followedKundlisProvider).contains(k.id),
+                  activeThumbColor: KJColors.maroon,
+                  // Live-bound and immediate, like the dashboard's own
+                  // follow toggle — NOT save-bound. Flipping it is the
+                  // whole action; the app root listens to the follow-set
+                  // and runs one debounced rescheduling pass. Routing it
+                  // through Save would mean a switch that lies until you
+                  // press a button somewhere else.
+                  onChanged: (v) {
+                    final follows = ref.read(followedKundlisProvider.notifier);
+                    if (v) {
+                      follows.addAll([k.id]);
+                      // May be this user's first-ever follow.
+                      unawaited(ref
+                          .read(kundliAlertServiceProvider)
+                          .ensurePermission());
+                    } else {
+                      follows.removeAll([k.id]);
+                    }
+                  },
+                ),
+              ),
+            ],
           ],
-        ],
-      ),
-      bottomNavigationBar: PinnedActionBar(
-        summary: _summaryLine(k),
-        summaryKey: const Key('birthSummary'),
-        actionLabel: context.l10n.save,
-        onAction: _saving ? null : _save,
+        ),
+        bar: PinnedActionBar(
+          summary: _summaryLine(k),
+          summaryKey: const Key('birthSummary'),
+          actionLabel: context.l10n.save,
+          onAction: _saving ? null : _save,
+        ),
       ),
     );
   }

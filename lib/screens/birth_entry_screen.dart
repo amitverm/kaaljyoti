@@ -339,281 +339,286 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
             ),
         ],
       ),
-      body: ListView(
-        controller: _scroll,
-        padding: formPadding(context),
-        children: [
-          if (widget.prashna)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                l10n.beQuestionChartNote,
-                style: TextStyle(fontSize: 13, color: KJColors.inkSoft),
+      body: PinnedActionBody(
+        form: ListView(
+          controller: _scroll,
+          padding: formPadding(context),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          children: [
+            if (widget.prashna)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  l10n.beQuestionChartNote,
+                  style: TextStyle(fontSize: 13, color: KJColors.inkSoft),
+                ),
               ),
+            TextField(
+              key: _fieldKeys[BirthField.name],
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: l10n.nameLabel,
+                errorText: _missing.contains(BirthField.name)
+                    ? l10n.beFieldRequired
+                    : null,
+              ),
+              textCapitalization: TextCapitalization.words,
+              // Straight into the first field on open. This form is used
+              // several times a day and always starts the same way; a tap
+              // to begin typing is a tap paid every single time.
+              autofocus: true,
+              // Enter moves on to the day box rather than dismissing the
+              // keyboard. Default traversal already reaches it, so nothing
+              // inside DateFieldsRow had to change.
+              textInputAction: TextInputAction.next,
+              // The summary line is gated on all four fields, so the bar
+              // has to rebuild as the name is typed.
+              onChanged: (v) {
+                if (v.trim().isNotEmpty) _clearMissing(BirthField.name);
+                setState(() {});
+              },
             ),
-          TextField(
-            key: _fieldKeys[BirthField.name],
-            controller: _nameController,
-            decoration: InputDecoration(
-              labelText: l10n.nameLabel,
-              errorText: _missing.contains(BirthField.name)
+            const SizedBox(height: 12),
+            // Day · named month · year — never a bare d/m vs m/d text
+            // field (see date_fields.dart for the wrong-birth-date risk).
+            DateFieldsRow(
+              key: _fieldKeys[BirthField.date],
+              initial: _date,
+              errorText: _missing.contains(BirthField.date)
                   ? l10n.beFieldRequired
                   : null,
+              onChanged: (d) {
+                setState(() => _date = d);
+                if (d != null) _clearMissing(BirthField.date);
+              },
             ),
-            textCapitalization: TextCapitalization.words,
-            // Straight into the first field on open. This form is used
-            // several times a day and always starts the same way; a tap
-            // to begin typing is a tap paid every single time.
-            autofocus: true,
-            // Enter moves on to the day box rather than dismissing the
-            // keyboard. Default traversal already reaches it, so nothing
-            // inside DateFieldsRow had to change.
-            textInputAction: TextInputAction.next,
-            // The summary line is gated on all four fields, so the bar
-            // has to rebuild as the name is typed.
-            onChanged: (v) {
-              if (v.trim().isNotEmpty) _clearMissing(BirthField.name);
-              setState(() {});
-            },
-          ),
-          const SizedBox(height: 12),
-          // Day · named month · year — never a bare d/m vs m/d text
-          // field (see date_fields.dart for the wrong-birth-date risk).
-          DateFieldsRow(
-            key: _fieldKeys[BirthField.date],
-            initial: _date,
-            errorText: _missing.contains(BirthField.date)
-                ? l10n.beFieldRequired
-                : null,
-            onChanged: (d) {
-              setState(() => _date = d);
-              if (d != null) _clearMissing(BirthField.date);
-            },
-          ),
-          const SizedBox(height: 8),
-          TimeFieldTile(
-            key: _fieldKeys[BirthField.time],
-            time: _time,
-            label: l10n.timeLabel,
-            errorText: _missing.contains(BirthField.time)
-                ? l10n.beFieldRequired
-                : null,
-            onPick: (t) {
-              setState(() => _time = t);
-              _clearMissing(BirthField.time);
-            },
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            key: _fieldKeys[BirthField.place],
-            controller: _placeController,
-            decoration: InputDecoration(
-              labelText: l10n.placeOfBirth,
-              helperText: _place == null
-                  ? l10n.bePlaceHelper
-                  : '${_place!.latitude.toStringAsFixed(4)}, '
-                      '${_place!.longitude.toStringAsFixed(4)} · '
-                      '${_place!.timezoneName}',
-              // Typed-but-not-chosen gets its own message: the field
-              // LOOKS filled in, so "Required" would read as a bug.
-              errorText: !_missing.contains(BirthField.place)
-                  ? null
-                  : _placeController.text.trim().isEmpty
-                      ? l10n.beFieldRequired
-                      : l10n.bePlaceNotChosen,
+            const SizedBox(height: 8),
+            TimeFieldTile(
+              key: _fieldKeys[BirthField.time],
+              time: _time,
+              label: l10n.timeLabel,
+              errorText: _missing.contains(BirthField.time)
+                  ? l10n.beFieldRequired
+                  : null,
+              onPick: (t) {
+                setState(() => _time = t);
+                _clearMissing(BirthField.time);
+              },
             ),
-            onChanged: (q) {
-              setState(() => _place = null);
-              _onPlaceQuery(q);
-            },
-          ),
-          if (_placeResults.isNotEmpty && _place == null)
-            Card(
-              margin: const EdgeInsets.only(top: 4),
-              child: Column(
-                children: [
-                  for (final r in _placeResults)
-                    ListTile(
-                      dense: true,
-                      title: Text(r.displayName),
-                      onTap: () => _choosePlace(r),
-                    ),
-                ],
+            const SizedBox(height: 12),
+            TextField(
+              key: _fieldKeys[BirthField.place],
+              controller: _placeController,
+              decoration: InputDecoration(
+                labelText: l10n.placeOfBirth,
+                helperText: _place == null
+                    ? l10n.bePlaceHelper
+                    : '${_place!.latitude.toStringAsFixed(4)}, '
+                        '${_place!.longitude.toStringAsFixed(4)} · '
+                        '${_place!.timezoneName}',
+                // Typed-but-not-chosen gets its own message: the field
+                // LOOKS filled in, so "Required" would read as a bug.
+                errorText: !_missing.contains(BirthField.place)
+                    ? null
+                    : _placeController.text.trim().isEmpty
+                        ? l10n.beFieldRequired
+                        : l10n.bePlaceNotChosen,
               ),
+              onChanged: (q) {
+                setState(() => _place = null);
+                _onPlaceQuery(q);
+              },
             ),
-          if (_placeSearchFailed && _place == null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                l10n.bePlaceSearchOffline,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Theme.of(context).colorScheme.error),
-              ),
-            ),
-          _recentPlaceChips(),
-          // Wrap, not Row: on narrow screens the two labels together
-          // exceed the width and a Row overflows (~26px) — the second
-          // button drops to the next line instead.
-          Wrap(
-            spacing: 4,
-            children: [
-              TextButton.icon(
-                icon: Icon(
-                    _locating ? Icons.hourglass_empty : Icons.my_location,
-                    size: 18),
-                label: Text(
-                    _locating ? l10n.tdLocating : l10n.beUseCurrentLocation),
-                onPressed: _locating ? null : _useCurrentLocation,
-              ),
-              // The geocoder is the only path to a chart otherwise — an
-              // unfound village (Indian ones as much as foreign) or a dead
-              // network must not block kundli creation.
-              TextButton.icon(
-                icon: const Icon(Icons.edit_location_alt_outlined, size: 18),
-                label: Text(l10n.beManualEntry),
-                onPressed: _enterPlaceManually,
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _sectionLabel(l10n.beSectionRelation),
-          Wrap(
-            spacing: 8,
-            children: [
-              // The STORED tag stays English (it's persisted on the row
-              // and read back by relationTagLabel); only the chip's text
-              // is localized.
-              for (final tag in kRelationTags)
-                ChoiceChip(
-                  label: Text(relationTagLabel(l10n, tag)),
-                  selected: _relationTag == tag,
-                  labelStyle: TextStyle(
-                      color:
-                          _relationTag == tag ? KJColors.paper : KJColors.ink),
-                  onSelected: (_) => setState(() => _relationTag = tag),
-                ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Same slot as on the edit screen (birth → relation → labels →
-          // note), so the two forms stay readable as one form. Labels sit
-          // before the free-text note: both group-by-tap steps together,
-          // then prose.
-          //
-          // Offered for a Prashna too: a Prashna cast from THIS screen is
-          // a saved chart that lands in the list like any other (the
-          // ephemeral one comes from the list's long-press instead), so
-          // it files under the same groupings. The note field sets the
-          // same precedent — what the Prashna variant hides is the
-          // "after casting" block, which is about a chart's afterlife,
-          // not about identifying it.
-          _labelPicker(l10n),
-          const SizedBox(height: 20),
-          _sectionLabel(l10n.beSectionNoteOptional),
-          TextField(
-            controller: _noteController,
-            textCapitalization: TextCapitalization.sentences,
-            minLines: 1,
-            maxLines: 3,
-            decoration: InputDecoration(hintText: l10n.beNoteHint),
-          ),
-          const SizedBox(height: 8),
-          // Chart style follows the app-wide default set in Profile / on the
-          // widgets, so it isn't asked here; it can be overridden per kundli
-          // in Kundli Details. Ayanamsa is tucked away — a professional sets
-          // it once and rarely changes it per chart.
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              childrenPadding: const EdgeInsets.only(bottom: 8),
-              expandedCrossAxisAlignment: CrossAxisAlignment.start,
-              title: KJSectionLabel(l10n.beAdvanced),
-              subtitle: Text(
-                l10n.beAyanamsaSubtitle(Ayanamsa.byId(_ayanamsaId).name),
-                style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
-              ),
-              children: [
-                _sectionLabel(l10n.beSectionAyanamsa),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+            if (_placeResults.isNotEmpty && _place == null)
+              Card(
+                margin: const EdgeInsets.only(top: 4),
+                child: Column(
                   children: [
-                    for (final a in Ayanamsa.quickPicks)
-                      ChoiceChip(
-                        label: Text(a.name),
-                        selected: _ayanamsaId == a.id,
-                        labelStyle: TextStyle(
-                            color: _ayanamsaId == a.id
-                                ? KJColors.paper
-                                : KJColors.ink),
-                        onSelected: (_) => setState(() => _ayanamsaId = a.id),
+                    for (final r in _placeResults)
+                      ListTile(
+                        dense: true,
+                        title: Text(r.displayName),
+                        onTap: () => _choosePlace(r),
                       ),
-                    ActionChip(
-                      label: Text(Ayanamsa.quickPicks
-                              .any((a) => a.id == _ayanamsaId)
-                          ? l10n.beMore
-                          : l10n.beMoreWith(Ayanamsa.byId(_ayanamsaId).name)),
-                      onPressed: _showAllAyanamsas,
-                    ),
                   ],
+                ),
+              ),
+            if (_placeSearchFailed && _place == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  l10n.bePlaceSearchOffline,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            _recentPlaceChips(),
+            // Wrap, not Row: on narrow screens the two labels together
+            // exceed the width and a Row overflows (~26px) — the second
+            // button drops to the next line instead.
+            Wrap(
+              spacing: 4,
+              children: [
+                TextButton.icon(
+                  icon: Icon(
+                      _locating ? Icons.hourglass_empty : Icons.my_location,
+                      size: 18),
+                  label: Text(
+                      _locating ? l10n.tdLocating : l10n.beUseCurrentLocation),
+                  onPressed: _locating ? null : _useCurrentLocation,
+                ),
+                // The geocoder is the only path to a chart otherwise — an
+                // unfound village (Indian ones as much as foreign) or a dead
+                // network must not block kundli creation.
+                TextButton.icon(
+                  icon: const Icon(Icons.edit_location_alt_outlined, size: 18),
+                  label: Text(l10n.beManualEntry),
+                  onPressed: _enterPlaceManually,
                 ),
               ],
             ),
-          ),
-          if (!widget.prashna) ...[
             const SizedBox(height: 20),
-            // One section, because to the user these are one question:
-            // what happens to this chart once it exists. They were two
-            // headings only because they were built at different times.
-            _sectionLabel(l10n.beSectionAfterCasting),
-            if (ref.watch(authUserProvider).value != null)
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _syncEnabled,
-                activeThumbColor: KJColors.maroon,
-                title: Text(l10n.beSyncTitle,
-                    style: const TextStyle(fontSize: 13.5)),
+            _sectionLabel(l10n.beSectionRelation),
+            Wrap(
+              spacing: 8,
+              children: [
+                // The STORED tag stays English (it's persisted on the row
+                // and read back by relationTagLabel); only the chip's text
+                // is localized.
+                for (final tag in kRelationTags)
+                  ChoiceChip(
+                    label: Text(relationTagLabel(l10n, tag)),
+                    selected: _relationTag == tag,
+                    labelStyle: TextStyle(
+                        color: _relationTag == tag
+                            ? KJColors.paper
+                            : KJColors.ink),
+                    onSelected: (_) => setState(() => _relationTag = tag),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Same slot as on the edit screen (birth → relation → labels →
+            // note), so the two forms stay readable as one form. Labels sit
+            // before the free-text note: both group-by-tap steps together,
+            // then prose.
+            //
+            // Offered for a Prashna too: a Prashna cast from THIS screen is
+            // a saved chart that lands in the list like any other (the
+            // ephemeral one comes from the list's long-press instead), so
+            // it files under the same groupings. The note field sets the
+            // same precedent — what the Prashna variant hides is the
+            // "after casting" block, which is about a chart's afterlife,
+            // not about identifying it.
+            _labelPicker(l10n),
+            const SizedBox(height: 20),
+            _sectionLabel(l10n.beSectionNoteOptional),
+            TextField(
+              controller: _noteController,
+              textCapitalization: TextCapitalization.sentences,
+              minLines: 1,
+              maxLines: 3,
+              decoration: InputDecoration(hintText: l10n.beNoteHint),
+            ),
+            const SizedBox(height: 8),
+            // Chart style follows the app-wide default set in Profile / on the
+            // widgets, so it isn't asked here; it can be overridden per kundli
+            // in Kundli Details. Ayanamsa is tucked away — a professional sets
+            // it once and rarely changes it per chart.
+            Theme(
+              data:
+                  Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: const EdgeInsets.only(bottom: 8),
+                expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                title: KJSectionLabel(l10n.beAdvanced),
                 subtitle: Text(
-                  l10n.beSyncSubtitle,
+                  l10n.beAyanamsaSubtitle(Ayanamsa.byId(_ayanamsaId).name),
                   style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
                 ),
-                onChanged: (v) => setState(() => _syncEnabled = v),
+                children: [
+                  _sectionLabel(l10n.beSectionAyanamsa),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final a in Ayanamsa.quickPicks)
+                        ChoiceChip(
+                          label: Text(a.name),
+                          selected: _ayanamsaId == a.id,
+                          labelStyle: TextStyle(
+                              color: _ayanamsaId == a.id
+                                  ? KJColors.paper
+                                  : KJColors.ink),
+                          onSelected: (_) => setState(() => _ayanamsaId = a.id),
+                        ),
+                      ActionChip(
+                        label: Text(Ayanamsa.quickPicks
+                                .any((a) => a.id == _ayanamsaId)
+                            ? l10n.beMore
+                            : l10n.beMoreWith(Ayanamsa.byId(_ayanamsaId).name)),
+                        onPressed: _showAllAyanamsas,
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            // NO SIGN-IN GATE, deliberately, and unlike the sync row
-            // directly above it. Alerts are computed and scheduled on
-            // this device, so an account has nothing to do with them —
-            // and the whole point of naming them "Kundli alerts" was to
-            // stop the two reading as one feature. Sharing a section
-            // heading must not quietly re-merge them.
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _followAlerts,
-              activeThumbColor: KJColors.maroon,
-              title: Text(l10n.beFollowAlertsTitle,
-                  style: const TextStyle(fontSize: 13.5)),
-              subtitle: Text(
-                l10n.beFollowAlertsSubtitle,
-                style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
+            ),
+            if (!widget.prashna) ...[
+              const SizedBox(height: 20),
+              // One section, because to the user these are one question:
+              // what happens to this chart once it exists. They were two
+              // headings only because they were built at different times.
+              _sectionLabel(l10n.beSectionAfterCasting),
+              if (ref.watch(authUserProvider).value != null)
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _syncEnabled,
+                  activeThumbColor: KJColors.maroon,
+                  title: Text(l10n.beSyncTitle,
+                      style: const TextStyle(fontSize: 13.5)),
+                  subtitle: Text(
+                    l10n.beSyncSubtitle,
+                    style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
+                  ),
+                  onChanged: (v) => setState(() => _syncEnabled = v),
+                ),
+              // NO SIGN-IN GATE, deliberately, and unlike the sync row
+              // directly above it. Alerts are computed and scheduled on
+              // this device, so an account has nothing to do with them —
+              // and the whole point of naming them "Kundli alerts" was to
+              // stop the two reading as one feature. Sharing a section
+              // heading must not quietly re-merge them.
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _followAlerts,
+                activeThumbColor: KJColors.maroon,
+                title: Text(l10n.beFollowAlertsTitle,
+                    style: const TextStyle(fontSize: 13.5)),
+                subtitle: Text(
+                  l10n.beFollowAlertsSubtitle,
+                  style: TextStyle(fontSize: 11.5, color: KJColors.inkSoft),
+                ),
+                onChanged: (v) => setState(() => _followAlerts = v),
               ),
-              onChanged: (v) => setState(() => _followAlerts = v),
+            ],
+            const SizedBox(height: 24),
+            Text(
+              l10n.trustStatement,
+              textAlign: TextAlign.center,
+              style: KJTheme.mono(size: 11, color: KJColors.inkSoft),
             ),
           ],
-          const SizedBox(height: 24),
-          Text(
-            l10n.trustStatement,
-            textAlign: TextAlign.center,
-            style: KJTheme.mono(size: 11, color: KJColors.inkSoft),
-          ),
-        ],
-      ),
-      bottomNavigationBar: PinnedActionBar(
-        summary: _summaryLine(),
-        summaryKey: const Key('birthSummary'),
-        actionLabel: _saving ? l10n.beCasting : l10n.castKundli,
-        onAction: _saving ? null : _save,
+        ),
+        bar: PinnedActionBar(
+          summary: _summaryLine(),
+          summaryKey: const Key('birthSummary'),
+          actionLabel: _saving ? l10n.beCasting : l10n.castKundli,
+          onAction: _saving ? null : _save,
+        ),
       ),
     );
   }
@@ -666,8 +671,8 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
   /// That is the same rule everywhere: the archive is out of the working
   /// set until you go and ask for it.
   Widget _labelPicker(AppLocalizations l10n) {
-    final existing = ref.watch(kundliListDataProvider).value?.labels ??
-        const <String>[];
+    final existing =
+        ref.watch(kundliListDataProvider).value?.labels ?? const <String>[];
     // Union, so a label just coined in the dialog keeps its chip even
     // though no saved chart carries it yet.
     final offered = {...existing, ..._labels}.toList()..sort();
@@ -703,7 +708,8 @@ class _BirthEntryScreenState extends ConsumerState<BirthEntryScreen> {
                 // place the vocabulary is visible, whereas here every
                 // label is already a chip two lines up. Offering the
                 // same set twice in one glance reads as a bug.
-                final picked = await showLabelPicker(context, existing: const []);
+                final picked =
+                    await showLabelPicker(context, existing: const []);
                 if (picked == null || !mounted) return;
                 setState(() => _labels.add(picked));
               },

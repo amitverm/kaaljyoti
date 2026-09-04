@@ -82,6 +82,13 @@ class AppDb {
     return _db!;
   }
 
+  /// What happened while looking for the key. Attached to the
+  /// undecryptable-DB event so every occurrence says WHY the key was
+  /// missing (Keystore threw vs. empty, Block Store empty vs. errored,
+  /// restored prefs…) — KAALJYOTI-PROD-R/S/T kept recurring on 0.1.3
+  /// without that answer.
+  final Map<String, Object?> _keyDiagnostics = {};
+
   /// Key lookup order: secure storage (Keystore/Keychain) → Block Store
   /// (the copy a previous device backed up) → generate new. Whatever wins
   /// is written back to both stores, so the key is always device-local
@@ -89,14 +96,21 @@ class AppDb {
   Future<String> _passphrase() async {
     if (_passphraseOverride != null) return _passphraseOverride;
     const storage = FlutterSecureStorage();
-    String? pass;
-    try {
-      pass = await storage.read(key: _keyName);
-    } catch (_) {
-      // A restored-from-backup prefs file can hold ciphertext the new
-      // device's Keystore can't decrypt — treat as absent, same as null.
-      pass = null;
-    }
+    final prefs = await SharedPreferences.getInstance();
+    // A done-flag on a launch with no key means the prefs came from a
+    // backup: this is a restore, not a fresh install.
+    _keyDiagnostics['blockstore_done_flag_before'] =
+        prefs.getBool(_kBlockStoreDone);
+    // A restored-from-backup prefs file can hold ciphertext the new
+    // device's Keystore can't decrypt — that throws, and is treated as
+    // absent. A Keystore that is merely slow to unlock after boot throws
+    // too, and treating THAT as absent would quarantine a perfectly good
+    // DB, hence the brief retry.
+    final keystore = await readKeystoreWithRetry(
+      () => storage.read(key: _keyName),
+    );
+    _keyDiagnostics['keystore'] = keystore.outcome;
+    String? pass = keystore.value;
     if (pass != null) {
       await _ensureKeyInBlockStore(pass);
       return pass;
@@ -104,12 +118,14 @@ class AppDb {
     // Empty Keystore but possibly a restored DB: Block Store may hold the
     // key from the previous device — the case that used to brick the app.
     pass = await KeyBackupService().read();
-    final prefs = await SharedPreferences.getInstance();
+    _keyDiagnostics['blockstore'] =
+        pass != null ? 'hit' : KeyBackupService.lastReadOutcome;
     if (pass != null) {
       await storage.write(key: _keyName, value: pass);
       await prefs.setBool(_kBlockStoreDone, true);
       return pass;
     }
+    _keyDiagnostics['key_generated'] = true;
     final rng = Random.secure();
     pass = List.generate(32, (_) => rng.nextInt(256))
         .map((b) => b.toRadixString(16).padLeft(2, '0'))
@@ -119,6 +135,35 @@ class AppDb {
     // carry the done-flag from the old device, and this key is brand new.
     await prefs.setBool(_kBlockStoreDone, await KeyBackupService().write(pass));
     return pass;
+  }
+
+  /// Reads the Keystore-backed passphrase, retrying a throwing read a
+  /// couple of times. Returns the value (null when absent) and a short
+  /// outcome label for diagnostics.
+  @visibleForTesting
+  static Future<({String? value, String outcome})> readKeystoreWithRetry(
+    Future<String?> Function() read, {
+    int attempts = 3,
+    Duration delay = const Duration(milliseconds: 250),
+  }) async {
+    Object? lastError;
+    for (var attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        final value = await read();
+        if (value == null) return (value: null, outcome: 'empty');
+        return (
+          value: value,
+          outcome: attempt == 1 ? 'hit' : 'hit on attempt $attempt',
+        );
+      } catch (e) {
+        lastError = e;
+        if (attempt < attempts) await Future<void>.delayed(delay);
+      }
+    }
+    return (
+      value: null,
+      outcome: 'threw ${lastError.runtimeType} x$attempts: $lastError',
+    );
   }
 
   /// Push the key to Block Store once per install (flag set only on a
@@ -147,19 +192,59 @@ class AppDb {
       // old device — every launch then died here (KAALJYOTI-PROD-E) and
       // the app was permanently bricked. Quarantine the file and start
       // fresh; signed-in users get their synced kundlis back via pullAll.
+      final diagnostics = _recoveryDiagnostics(path);
       _quarantine(path);
-      // Countable in Sentry (no-op in DSN-less AGPL builds).
+      // Countable in Sentry (no-op in DSN-less AGPL builds). One
+      // fingerprint: Sentry otherwise splits this by whichever caller
+      // happened to touch the DB first (PROD-R/S/T were one problem).
       await Sentry.captureMessage(
         'Local DB undecryptable — quarantined and recreated '
         '(backup-restored without key?): $e',
         level: SentryLevel.warning,
-        withScope: (scope) => scope.setContexts('db_recovery', {
-          'error': '$e',
-          'stack': '$stack',
-        }),
+        withScope: (scope) {
+          scope.fingerprint = ['db-undecryptable-recovery'];
+          scope.setContexts('db_recovery', {
+            'error': '$e',
+            'stack': '$stack',
+            ...diagnostics,
+            ..._keyDiagnostics,
+          });
+        },
       );
       return _openAt(path, pass);
     }
+  }
+
+  /// Facts about the unreadable file and its neighbours, gathered before
+  /// quarantine moves things around. A restored FlutterSecureStorage.xml
+  /// (excluded from backups since 0.1.0+15, but older backups carry it)
+  /// or a DB older than the install both point at a backup restore.
+  Map<String, Object?> _recoveryDiagnostics(String path) {
+    final out = <String, Object?>{};
+    try {
+      final db = File(path);
+      if (db.existsSync()) {
+        final stat = db.statSync();
+        out['db_bytes'] = stat.size;
+        out['db_modified'] = stat.modified.toUtc().toIso8601String();
+      } else {
+        out['db_bytes'] = null;
+      }
+      out['quarantined_existed'] = File('$path.quarantined').existsSync();
+      for (final suffix in const ['-wal', '-shm', '-journal']) {
+        out['sidecar$suffix'] = File('$path$suffix').existsSync();
+      }
+      if (_fixedPath == null) {
+        // <app data>/app_flutter/kaaljyoti.db → <app data>/shared_prefs/…
+        final appData = p.dirname(p.dirname(path));
+        out['secure_prefs_file_exists'] = File(
+          p.join(appData, 'shared_prefs', 'FlutterSecureStorage.xml'),
+        ).existsSync();
+      }
+    } catch (e) {
+      out['diagnostics_error'] = '$e';
+    }
+    return out;
   }
 
   /// True for the failure modes of "this file cannot be read with this
