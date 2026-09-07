@@ -907,6 +907,23 @@
   "dashaSystemJaiminiSubtitle": "Sign-based · rashi periods from lord placement",
   "dashaSystemSthira": "Jaimini Sthira",
   "dashaSystemSthiraSubtitle": "Sign-based · fixed 7/8/9-year periods from Brahma",
+  "dashaSystemMandook": "Jaimini Mandook",
+  "dashaSystemMandookSubtitle": "Sign-based · frog-leaps to the 4th sign · years counted to the lord",
+  "dmMandookStartDirect": "Starts from the lagna, {sign} — direct order (odd lagna)",
+  "@dmMandookStartDirect": {
+    "description": "Mandook dasha context line for an odd-sign lagna. Lagna is a fixed term — transliterate.",
+    "placeholders": {"sign": {}}
+  },
+  "dmMandookStartIndirect": "Starts from the 7th house, {sign} — indirect order (even lagna)",
+  "@dmMandookStartIndirect": {
+    "description": "Mandook dasha context line for an even-sign lagna: the sequence begins at the 7th house and runs backwards through the zodiac.",
+    "placeholders": {"sign": {}}
+  },
+  "dmMandookKendraCount": "{count} of 7 grahas in kendras from the lagna",
+  "@dmMandookKendraCount": {
+    "description": "Mandook dasha context line: how many of the seven grahas (Sun–Saturn, never Rahu/Ketu) sit in the 1st/4th/7th/10th houses. A plain fact — the app passes no verdict on applicability. Grahas/kendras/lagna are fixed terms — transliterate.",
+    "placeholders": {"count": {}}
+  },
   "dmSthiraDeities": "Brahma {brahma} · Rudra {rudra} · Maheshwara {maheshwara}",
   "@dmSthiraDeities": {
     "description": "Sthira dasha context line: the three computed deities (K.N. Rao school). Brahma/Rudra/Maheshwara are fixed Sanskrit terms — transliterate, never translate.",

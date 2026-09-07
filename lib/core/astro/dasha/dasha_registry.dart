@@ -3,6 +3,7 @@ library;
 
 import 'dasha.dart';
 import 'jaimini.dart';
+import 'mandook.dart';
 import 'sthira.dart';
 import 'vimshottari.dart';
 import 'yogini.dart';
@@ -12,4 +13,5 @@ final Map<DashaSystem, DashaCalculator> dashaCalculators = {
   DashaSystem.yogini: YoginiCalculator(),
   DashaSystem.jaimini: JaiminiCharaCalculator(),
   DashaSystem.sthira: SthiraDashaCalculator(),
+  DashaSystem.mandook: MandookDashaCalculator(),
 };

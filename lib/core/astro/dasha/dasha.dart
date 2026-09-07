@@ -9,7 +9,9 @@ enum DashaSystem {
   vimshottari('Vimshottari', 'Nakshatra-based · 120-year cycle · 9 lords'),
   yogini('Yogini', 'Nakshatra-based · 36-year cycle · 8 Yoginis'),
   jaimini('Jaimini Chara', 'Sign-based · rashi periods from lord placement'),
-  sthira('Jaimini Sthira', 'Sign-based · fixed 7/8/9-year periods from Brahma');
+  sthira('Jaimini Sthira', 'Sign-based · fixed 7/8/9-year periods from Brahma'),
+  mandook('Jaimini Mandook',
+      'Sign-based · frog-leaps to the 4th sign · years counted to the lord');
 
   const DashaSystem(this.displayName, this.subtitle);
   final String displayName;
@@ -151,3 +153,17 @@ const double kDashaYearDays = 365.25;
 
 DateTime addYears(DateTime from, double years) =>
     from.add(Duration(seconds: (years * kDashaYearDays * 86400).round()));
+
+/// [months] whole calendar months after [t], the day-of-month clamped to
+/// the target month's length (a 31st birthday clamps in a 30-day month,
+/// as calendars do). The K.N. Rao school's rashi dashas (Sthira,
+/// Mandook) run birthday to birthday and month-day to month-day, so
+/// their boundaries are calendar arithmetic rather than solar years.
+DateTime addCalendarMonths(DateTime t, int months) {
+  final zeroBased = t.month - 1 + months;
+  final year = t.year + zeroBased ~/ 12;
+  final month = zeroBased % 12 + 1;
+  final lastDay = DateTime.utc(year, month + 1, 0).day;
+  return DateTime.utc(year, month, t.day > lastDay ? lastDay : t.day, t.hour,
+      t.minute, t.second);
+}

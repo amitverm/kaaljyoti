@@ -3158,6 +3158,36 @@ abstract class AppLocalizations {
   /// **'Sign-based · fixed 7/8/9-year periods from Brahma'**
   String get dashaSystemSthiraSubtitle;
 
+  /// No description provided for @dashaSystemMandook.
+  ///
+  /// In en, this message translates to:
+  /// **'Jaimini Mandook'**
+  String get dashaSystemMandook;
+
+  /// No description provided for @dashaSystemMandookSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-based · frog-leaps to the 4th sign · years counted to the lord'**
+  String get dashaSystemMandookSubtitle;
+
+  /// Mandook dasha context line for an odd-sign lagna. Lagna is a fixed term — transliterate.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts from the lagna, {sign} — direct order (odd lagna)'**
+  String dmMandookStartDirect(Object sign);
+
+  /// Mandook dasha context line for an even-sign lagna: the sequence begins at the 7th house and runs backwards through the zodiac.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts from the 7th house, {sign} — indirect order (even lagna)'**
+  String dmMandookStartIndirect(Object sign);
+
+  /// Mandook dasha context line: how many of the seven grahas (Sun–Saturn, never Rahu/Ketu) sit in the 1st/4th/7th/10th houses. A plain fact — the app passes no verdict on applicability. Grahas/kendras/lagna are fixed terms — transliterate.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 7 grahas in kendras from the lagna'**
+  String dmMandookKendraCount(Object count);
+
   /// Sthira dasha context line: the three computed deities (K.N. Rao school). Brahma/Rudra/Maheshwara are fixed Sanskrit terms — transliterate, never translate.
   ///
   /// In en, this message translates to:

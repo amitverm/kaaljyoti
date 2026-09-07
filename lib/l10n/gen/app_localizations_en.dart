@@ -1729,6 +1729,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign-based · fixed 7/8/9-year periods from Brahma';
 
   @override
+  String get dashaSystemMandook => 'Jaimini Mandook';
+
+  @override
+  String get dashaSystemMandookSubtitle =>
+      'Sign-based · frog-leaps to the 4th sign · years counted to the lord';
+
+  @override
+  String dmMandookStartDirect(Object sign) {
+    return 'Starts from the lagna, $sign — direct order (odd lagna)';
+  }
+
+  @override
+  String dmMandookStartIndirect(Object sign) {
+    return 'Starts from the 7th house, $sign — indirect order (even lagna)';
+  }
+
+  @override
+  String dmMandookKendraCount(Object count) {
+    return '$count of 7 grahas in kendras from the lagna';
+  }
+
+  @override
   String dmSthiraDeities(Object brahma, Object rudra, Object maheshwara) {
     return 'Brahma $brahma · Rudra $rudra · Maheshwara $maheshwara';
   }

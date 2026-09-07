@@ -586,6 +586,7 @@ extension DashaSystemL10n on DashaSystem {
         DashaSystem.yogini => l10n.dashaSystemYogini,
         DashaSystem.jaimini => l10n.dashaSystemJaimini,
         DashaSystem.sthira => l10n.dashaSystemSthira,
+        DashaSystem.mandook => l10n.dashaSystemMandook,
       };
 
   String subtitleLabel(AppLocalizations l10n) => switch (this) {
@@ -593,6 +594,7 @@ extension DashaSystemL10n on DashaSystem {
         DashaSystem.yogini => l10n.dashaSystemYoginiSubtitle,
         DashaSystem.jaimini => l10n.dashaSystemJaiminiSubtitle,
         DashaSystem.sthira => l10n.dashaSystemSthiraSubtitle,
+        DashaSystem.mandook => l10n.dashaSystemMandookSubtitle,
       };
 }
 

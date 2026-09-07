@@ -274,8 +274,8 @@ class SthiraDashaCalculator implements DashaCalculator {
     while (monthsFromBirth < kDashaHorizonYears * 12) {
       final sign = ZodiacSign.values[(startSign.index + i) % 12];
       final years = sthiraYears(sign);
-      final start = _addCalendarMonths(birth, monthsFromBirth);
-      final end = _addCalendarMonths(birth, monthsFromBirth + years * 12);
+      final start = addCalendarMonths(birth, monthsFromBirth);
+      final end = addCalendarMonths(birth, monthsFromBirth + years * 12);
       periods.add(_buildPeriod(sign, years, start, end, 1));
       monthsFromBirth += years * 12;
       i++;
@@ -311,10 +311,10 @@ class SthiraDashaCalculator implements DashaCalculator {
               if (level == 1) {
                 for (var i = 0; i < 12; i++) {
                   final sub = ZodiacSign.values[(sign.index + i) % 12];
-                  final subStart = _addCalendarMonths(parent.start, i * years);
+                  final subStart = addCalendarMonths(parent.start, i * years);
                   final subEnd = i == 11
                       ? parent.end
-                      : _addCalendarMonths(parent.start, (i + 1) * years);
+                      : addCalendarMonths(parent.start, (i + 1) * years);
                   children.add(
                       _buildPeriod(sub, years, subStart, subEnd, level + 1));
                 }
@@ -333,16 +333,4 @@ class SthiraDashaCalculator implements DashaCalculator {
             },
     );
   }
-}
-
-/// [months] whole calendar months after [t], the day-of-month clamped to
-/// the target month's length (a 31st birthday clamps in a 30-day month,
-/// as calendars do).
-DateTime _addCalendarMonths(DateTime t, int months) {
-  final zeroBased = t.month - 1 + months;
-  final year = t.year + zeroBased ~/ 12;
-  final month = zeroBased % 12 + 1;
-  final lastDay = DateTime.utc(year, month + 1, 0).day;
-  return DateTime.utc(year, month, t.day > lastDay ? lastDay : t.day, t.hour,
-      t.minute, t.second);
 }

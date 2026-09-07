@@ -2,6 +2,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kaaljyoti/core/astro/dasha/dasha.dart';
 import 'package:kaaljyoti/core/astro/dasha/jaimini.dart';
+import 'package:kaaljyoti/core/astro/dasha/mandook.dart';
 import 'package:kaaljyoti/core/astro/dasha/vimshottari.dart';
 import 'package:kaaljyoti/core/astro/dasha/yogini.dart';
 import 'package:kaaljyoti/core/astro/models.dart';
@@ -51,11 +52,13 @@ void main() {
     VimshottariCalculator(),
     YoginiCalculator(),
     JaiminiCharaCalculator(),
+    MandookDashaCalculator(),
   ];
   final expectedBranch = {
     DashaSystem.vimshottari: 9,
     DashaSystem.yogini: 8,
     DashaSystem.jaimini: 12,
+    DashaSystem.mandook: 12,
   };
 
   for (final calc in calcs) {

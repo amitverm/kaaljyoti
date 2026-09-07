@@ -1731,6 +1731,28 @@ class AppLocalizationsHi extends AppLocalizations {
       'राशि-आधारित · ब्रह्मा से 7/8/9 वर्ष की स्थिर अवधियाँ';
 
   @override
+  String get dashaSystemMandook => 'जैमिनी मण्डूक';
+
+  @override
+  String get dashaSystemMandookSubtitle =>
+      'राशि-आधारित · चौथी राशि पर मेंढक-छलांग · स्वामी तक गिनकर वर्ष';
+
+  @override
+  String dmMandookStartDirect(Object sign) {
+    return 'लग्न $sign से आरम्भ — सीधा क्रम (विषम लग्न)';
+  }
+
+  @override
+  String dmMandookStartIndirect(Object sign) {
+    return 'सप्तम भाव $sign से आरम्भ — उल्टा क्रम (सम लग्न)';
+  }
+
+  @override
+  String dmMandookKendraCount(Object count) {
+    return 'लग्न से केंद्र में 7 में से $count ग्रह';
+  }
+
+  @override
   String dmSthiraDeities(Object brahma, Object rudra, Object maheshwara) {
     return 'ब्रह्मा $brahma · रुद्र $rudra · महेश्वर $maheshwara';
   }

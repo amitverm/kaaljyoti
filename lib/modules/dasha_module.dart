@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../pdf/pw.dart' as pw;
 
 import '../core/astro/dasha/dasha.dart';
+import '../core/astro/dasha/mandook.dart';
 import '../core/astro/dasha/sthira.dart';
 import '../core/astro/models.dart';
 import '../core/date_format.dart';
@@ -124,6 +125,22 @@ String? _sandhiText(AppLocalizations l10n, DashaPeriod p, DateTime t) {
     return l10n.dmSandhiBegan(_lenText(l10n, sinceStart));
   }
   return null;
+}
+
+/// Mandook context: where the sequence starts, and how many of the
+/// seven grahas sit in kendras — the fact K.N. Rao's applicability test
+/// reads, stated without a verdict: whether to use the dasha is the
+/// astrologer's call, not the app's.
+(String start, String kendras) _mandookLines(
+    AppLocalizations l10n, AstroSnapshot snapshot) {
+  final mc = computeMandookContext(snapshot);
+  final sign = mc.startSign.label(l10n);
+  return (
+    mc.direct
+        ? l10n.dmMandookStartDirect(sign)
+        : l10n.dmMandookStartIndirect(sign),
+    l10n.dmMandookKendraCount('${mc.kendraGrahas}'),
+  );
 }
 
 /// Natal placement of the period's lord: sign · house · nakshatra-pada
@@ -507,6 +524,16 @@ class DashaModule extends AstroModule {
                   ),
                   style: pdfBody(size: 9.5),
                 );
+              }(),
+            ),
+          // Mandook context: start sign + direction, and the kendra count
+          // the book's applicability test reads (no verdict drawn).
+          if (system == DashaSystem.mandook)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 2),
+              child: () {
+                final (start, kendras) = _mandookLines(l10n, ctx.snapshot);
+                return pw.Text('$start\n$kendras', style: pdfBody(size: 9.5));
               }(),
             ),
           // Active chain down to pran, as of print time. Glued rather
@@ -1009,6 +1036,18 @@ class _DashaDetailBodyState extends State<_DashaDetailBody> {
               ),
               style: TextStyle(fontSize: 12.5, color: KJColors.ink),
             );
+          }),
+        ],
+        // Mandook context: start sign + direction, and the kendra count
+        // the book's applicability test reads. No verdict — the
+        // astrologer decides whether the dasha applies.
+        if (_system == DashaSystem.mandook) ...[
+          const SizedBox(height: 6),
+          Builder(builder: (context) {
+            final (start, kendras) =
+                _mandookLines(context.l10n, widget.ctx.snapshot);
+            return Text('$start\n$kendras',
+                style: TextStyle(fontSize: 12.5, color: KJColors.ink));
           }),
         ],
         const SizedBox(height: 14),
